@@ -1,9 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  experimental: {
-    optimizePackageImports: ['recharts'],
-  }
+  /* eslint-disable @typescript-eslint/no-empty-object-type */
 };
 
 export default nextConfig;
