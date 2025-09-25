@@ -38,8 +38,8 @@ export function LoginForm({
         password,
       });
       if (error) throw error;
-      // Update this route to redirect to an authenticated route. The user already has an active session.
-      router.push("/protected");
+  // Rediriger vers le tableau de bord après connexion
+  router.push("/dashboard");
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "An error occurred");
     } finally {
@@ -67,6 +67,7 @@ export function LoginForm({
                   placeholder="m@example.com"
                   required
                   value={email}
+                  aria-invalid={!!error}
                   onChange={(e) => setEmail(e.target.value)}
                 />
               </div>
@@ -85,10 +86,15 @@ export function LoginForm({
                   type="password"
                   required
                   value={password}
+                  aria-invalid={!!error}
                   onChange={(e) => setPassword(e.target.value)}
                 />
               </div>
-              {error && <p className="text-sm text-red-500">{error}</p>}
+              {error && (
+                <p className="text-sm text-red-500" role="alert" aria-live="polite">
+                  {error}
+                </p>
+              )}
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? "Logging in..." : "Login"}
               </Button>
