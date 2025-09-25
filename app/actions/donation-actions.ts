@@ -14,8 +14,16 @@ export async function submitSupportTransaction(formData: FormData) {
     redirect('/auth/login')
   }
 
-  // Extraction et validation des données du formulaire
-  const amount = parseFloat(formData.get('amount') as string)
+  // Extraction et validation sécurisée des données du formulaire
+  const amountStr = formData.get('amount') as string
+  if (!amountStr || typeof amountStr !== 'string' || amountStr.trim() === '' || isNaN(Number(amountStr))) {
+    return { success: false, errors: ['Montant invalide'] }
+  }
+  const amount = Number(amountStr)
+  if (amount <= 0 || amount > 10000) {
+    return { success: false, errors: ['Le montant doit être entre 0,01€ et 10 000€'] }
+  }
+
   const calendar_accepted = formData.get('calendar_accepted') === 'true'
   const supporter_name = formData.get('supporter_name') as string || undefined
   const supporter_email = formData.get('supporter_email') as string || undefined
@@ -25,8 +33,8 @@ export async function submitSupportTransaction(formData: FormData) {
   const tournee_id = formData.get('tournee_id') as string
   const consent_email = formData.get('consent_email') === 'true'
 
-  // Validation des données essentielles
-  if (!amount || amount <= 0) {
+  // Validation des données essentielles (amount déjà validé ci-dessus)
+  if (amount <= 0) {
     return { 
       success: false, 
       errors: ['Le montant doit être positif'] 
@@ -55,11 +63,11 @@ export async function submitSupportTransaction(formData: FormData) {
     }
   }
 
-  // Validation format email si fourni
-  if (supporter_email && !/\S+@\S+\.\S+/.test(supporter_email)) {
-    return { 
-      success: false, 
-      errors: ['Format email invalide'] 
+  // Validation format email si fourni - Regex RFC 5322 améliorée
+  if (supporter_email && !/^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/.test(supporter_email.trim())) {
+    return {
+      success: false,
+      errors: ['Format email invalide']
     }
   }
 
@@ -123,7 +131,7 @@ export async function submitSupportTransaction(formData: FormData) {
       console.error('Erreur insertion transaction:', insertError)
       return { 
         success: false, 
-        errors: [`Erreur lors de la sauvegarde: ${insertError.message}`] 
+        errors: ['Erreur lors de la sauvegarde du don. Veuillez réessayer.'] 
       }
     }
 
@@ -146,7 +154,7 @@ export async function submitSupportTransaction(formData: FormData) {
     console.error('Erreur serveur complète:', error)
     return { 
       success: false, 
-      errors: [`Erreur serveur: ${error instanceof Error ? error.message : 'Erreur inconnue'}`] 
+      errors: ['Une erreur est survenue. Veuillez réessayer.'] 
     }
   }
 }
