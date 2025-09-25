@@ -4,10 +4,12 @@ import { Card, CardHeader, CardTitle, CardDescription, CardFooter } from "@/comp
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { getActiveTourneeWithTransactions } from "@/lib/supabase/tournee";
+import { getEquipesSummaryForCharts } from "@/lib/supabase/equipes";
 import { DonationModal } from "@/components/donation-modal";
 import { TourneeClotureModal } from "@/components/tournee-cloture-modal";
-import { 
-  Calendar, 
+import { TeamProgressChart } from "@/components/charts/TeamProgressChart";
+import {
+  Calendar,
   CheckCircle,
   Receipt,
   TrendingUp,
@@ -41,13 +43,16 @@ export default async function MaTourneePage() {
 
   // Récupération des données réelles de la tournée active
   const tourneeData = await getActiveTourneeWithTransactions();
-  
+
   if (!tourneeData) {
     // Rediriger vers la page calendriers si aucune tournée active
     redirect("/dashboard/calendriers");
   }
 
   const { tournee, transactions, summary } = tourneeData;
+
+  // Récupération des données des équipes pour le graphique
+  const equipesData = await getEquipesSummaryForCharts();
 
   // Si aucune tournée active, rediriger
   if (!tournee) {
@@ -164,6 +169,14 @@ export default async function MaTourneePage() {
             </CardFooter>
           </Card>
         </div>
+
+        {/* Graphique de progression des équipes */}
+        {equipesData.length > 0 && (
+          <TeamProgressChart
+            data={equipesData}
+            className="hover:shadow-lg transition-all duration-200"
+          />
+        )}
 
         {/* Résumé de la tournée - Style compact conditionnel */}
         {(calendarsDistributed > 0 || amountCollected > 0) && (
