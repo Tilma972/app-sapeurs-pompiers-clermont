@@ -281,3 +281,4 @@ npm list lucide-react
 
 **Testez maintenant** : Votre classement des équipes devrait s'afficher avec des cartes élégantes, des icônes de podium et des métriques détaillées !
 
+

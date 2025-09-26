@@ -283,3 +283,4 @@ La correction de l'incompatibilité Recharts/React 19 est **complète et fonctio
 
 **Testez maintenant** : Redémarrez le serveur et naviguez vers `/dashboard/calendriers` pour voir le graphique fonctionner ! 📊
 
+

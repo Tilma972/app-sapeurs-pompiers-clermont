@@ -284,3 +284,4 @@ La Server Action `submitSupportTransaction` est maintenant **100% robuste** et c
 - **Débogage** : Logs détaillés pour faciliter le diagnostic
 - **UX** : Messages de succès contextuels pour l'utilisateur
 
+

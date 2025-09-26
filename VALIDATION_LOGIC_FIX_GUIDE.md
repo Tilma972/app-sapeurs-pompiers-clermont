@@ -197,3 +197,4 @@ La logique de validation est maintenant **parfaitement adaptée** aux cas d'usag
 - **Export des données** : PDF ou Excel des résultats
 - **Notifications** : Rappels de clôture
 
+

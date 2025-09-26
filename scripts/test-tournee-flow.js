@@ -148,3 +148,4 @@ console.log('   4. Vérifier l\'affichage de la tournée active');
 console.log('   5. Retourner sur /dashboard/calendriers');
 console.log('   6. Vérifier le bouton "Continuer ma tournée"');
 
+

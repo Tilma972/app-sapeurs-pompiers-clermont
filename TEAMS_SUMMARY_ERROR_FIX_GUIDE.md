@@ -228,3 +228,4 @@ La fonction `getTeamsSummary` est maintenant **robuste et fiable** :
 
 **Testez maintenant** : Appliquez les migrations et naviguez vers `/dashboard/calendriers` pour voir le graphique des équipes fonctionner ! 📊
 
+

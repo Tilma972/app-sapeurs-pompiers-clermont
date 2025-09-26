@@ -222,3 +222,4 @@ Le composant `TourneeClotureModal` est maintenant **ultra-ergonomique** et **par
 - **Responsive** : Adaptation parfaite à tous les écrans
 - **Cohérence** : Utilisation standardisée des composants shadcn/ui
 
+

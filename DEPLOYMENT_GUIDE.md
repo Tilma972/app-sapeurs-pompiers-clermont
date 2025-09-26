@@ -196,3 +196,4 @@ Si vous rencontrez des problèmes :
 - **Permissions** : Vérifier que les utilisateurs ont les bonnes permissions
 - **Performance** : Les index améliorent les performances des requêtes
 
+

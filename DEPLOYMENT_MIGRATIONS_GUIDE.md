@@ -208,3 +208,4 @@ Après le déploiement des migrations :
 
 **Testez maintenant** : Appliquez les migrations et naviguez vers `/dashboard` et `/dashboard/calendriers` ! 🚀
 
+

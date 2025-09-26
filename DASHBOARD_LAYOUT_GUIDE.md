@@ -421,3 +421,4 @@ npm run dev
 
 **Structure de type "dashboard" classique avec sidebar et menu mobile implémentée avec succès.**
 
+

@@ -129,3 +129,4 @@ console.log('   npm run dev');
 console.log('   # Vérifier les dépendances');
 console.log('   npm list recharts');
 
+

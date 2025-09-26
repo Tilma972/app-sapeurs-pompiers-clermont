@@ -327,3 +327,4 @@ LIMIT 5;
 
 **🎉 La fonction `getTeamsSummary` fonctionne maintenant parfaitement avec une solution robuste et performante !**
 
+

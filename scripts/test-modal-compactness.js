@@ -135,3 +135,4 @@ console.log('   5. Vérifier la lisibilité des textes');
 console.log('   6. Tester la saisie des champs');
 console.log('   7. Valider la soumission du formulaire');
 
+

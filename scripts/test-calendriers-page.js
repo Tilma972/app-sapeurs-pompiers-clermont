@@ -194,3 +194,4 @@ console.log('   6. Tester le responsive design');
 console.log('   7. Vérifier les états vides');
 console.log('   8. Tester la navigation');
 
+

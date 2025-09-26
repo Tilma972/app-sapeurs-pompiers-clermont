@@ -113,3 +113,4 @@ COMMENT ON COLUMN public.tournees.notes IS 'Notes sur la tournée';
 COMMENT ON COLUMN public.tournees.created_at IS 'Date de création de la tournée';
 COMMENT ON COLUMN public.tournees.updated_at IS 'Date de dernière modification';
 
+

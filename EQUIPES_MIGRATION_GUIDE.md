@@ -289,3 +289,4 @@ SELECT * FROM public.equipes; -- Doit fonctionner pour tous les utilisateurs
 
 **Prochaines étapes** : Exécuter la migration SQL et configurer les chefs d'équipe selon la réalité de Clermont l'Hérault.
 
+

@@ -118,3 +118,4 @@ try {
 
 console.log('\n✅ Le composant est maintenant compatible avec la nouvelle structure de données !');
 
+
