@@ -3,8 +3,12 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { Database } from '@/lib/database.types'
+import { createLogger } from '@/lib/log'
+import { sendEmail } from '@/lib/email/resend-client'
+import { buildSubject, buildHtml, buildText } from '@/lib/email/receipt-templates'
 
 export async function submitSupportTransaction(formData: FormData) {
+  const log = createLogger('actions/donation')
   const supabase = await createSupabaseServerClient()
   
   // Récupération de l'utilisateur
@@ -81,7 +85,7 @@ export async function submitSupportTransaction(formData: FormData) {
     .single()
 
   if (tourneeError) {
-    console.error('Erreur vérification tournée:', tourneeError)
+    log.error('Erreur vérification tournée', tourneeError)
     return { 
       success: false, 
       errors: ['Erreur lors de la vérification de la tournée'] 
@@ -128,7 +132,7 @@ export async function submitSupportTransaction(formData: FormData) {
       .single()
 
     if (insertError) {
-      console.error('Erreur insertion transaction:', insertError)
+      log.error('Erreur insertion transaction', insertError)
       return { 
         success: false, 
         errors: ['Erreur lors de la sauvegarde du don. Veuillez réessayer.'] 
@@ -138,6 +142,40 @@ export async function submitSupportTransaction(formData: FormData) {
     // Génération du reçu si email fourni
     if (supporter_email) {
       await generateReceipt(transaction.id, supabase)
+
+      // Essayer un envoi email (soft-fail)
+      try {
+        const params = {
+          supporterName: supporter_name,
+          amount,
+          receiptNumber: transaction.receipt_number as string | null,
+          transactionType: transaction.receipt_type as 'fiscal' | 'soutien',
+        }
+        const subject = buildSubject(params)
+        const html = buildHtml(params)
+        const text = buildText(params)
+        const result = await sendEmail({ to: supporter_email, subject, html, text })
+        if (result.success) {
+          // Marquer le reçu comme envoyé
+          const { error: updateErr } = await supabase
+            .from('receipts')
+            .update({
+              email_sent: true,
+              email_sent_at: new Date().toISOString(),
+              email_delivery_status: 'sent',
+              status: 'sent',
+            })
+            .eq('transaction_id', transaction.id)
+
+          if (updateErr) {
+            log.warn('MAJ statut reçu après envoi email a échoué', { transactionId: transaction.id })
+          }
+        } else if (!('skipped' in result)) {
+          log.warn('Envoi email échoué (voir Resend)', { transactionId: transaction.id })
+        }
+      } catch (e) {
+        log.warn('Exception envoi email ignorée', { message: (e as Error)?.message })
+      }
     }
 
     // Revalidation des pages
@@ -151,7 +189,8 @@ export async function submitSupportTransaction(formData: FormData) {
     }
 
   } catch (error) {
-    console.error('Erreur serveur complète:', error)
+    const log = createLogger('actions/donation')
+    log.error('Erreur serveur complète', { message: (error as Error)?.message })
     return { 
       success: false, 
       errors: ['Une erreur est survenue. Veuillez réessayer.'] 
@@ -165,7 +204,8 @@ async function generateReceipt(transactionId: string, supabase: Awaited<ReturnTy
     const { data: receiptNumber } = await supabase.rpc('generate_receipt_number')
     
     if (!receiptNumber) {
-      console.error('Impossible de générer le numéro de reçu')
+      const log = createLogger('actions/donation')
+      log.warn('Impossible de générer le numéro de reçu')
       return
     }
 
@@ -177,7 +217,8 @@ async function generateReceipt(transactionId: string, supabase: Awaited<ReturnTy
       .single()
 
     if (!transaction) {
-      console.error('Transaction non trouvée pour génération reçu')
+      const log = createLogger('actions/donation')
+      log.error('Transaction non trouvée pour génération reçu')
       return
     }
 
@@ -197,7 +238,8 @@ async function generateReceipt(transactionId: string, supabase: Awaited<ReturnTy
       })
 
     if (receiptError) {
-      console.error('Erreur création reçu:', receiptError)
+      const log = createLogger('actions/donation')
+      log.error('Erreur création reçu', receiptError)
       return
     }
 
@@ -211,7 +253,8 @@ async function generateReceipt(transactionId: string, supabase: Awaited<ReturnTy
     // TODO: Envoi email asynchrone
 
   } catch (error) {
-    console.error('Erreur génération reçu:', error)
+    const log = createLogger('actions/donation')
+    log.error('Erreur génération reçu', { message: (error as Error)?.message })
   }
 }
 

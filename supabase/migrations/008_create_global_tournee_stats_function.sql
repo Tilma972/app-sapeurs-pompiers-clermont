@@ -14,10 +14,14 @@ AS $$
 BEGIN
     RETURN QUERY
     SELECT 
-        COALESCE(SUM(calendriers_distribues), 0) as total_calendriers_distribues,
-        COALESCE(SUM(montant_collecte), 0) as total_montant_collecte,
-        COUNT(CASE WHEN statut = 'active' THEN 1 END) as total_tournees_actives
-    FROM public.tournees;
+        -- Totaux issus des support_transactions (via la vue agrégée)
+        COALESCE(SUM(ts.calendars_distributed), 0) as total_calendriers_distribues,
+        COALESCE(SUM(ts.montant_total), 0) as total_montant_collecte,
+        -- Nombre de tournées actives basé sur la table tournees
+        (
+          SELECT COUNT(*) FROM public.tournees t WHERE t.statut = 'active'
+        ) as total_tournees_actives
+    FROM public.tournee_summary ts;
 END;
 $$;
 
