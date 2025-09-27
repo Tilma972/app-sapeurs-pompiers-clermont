@@ -68,3 +68,130 @@
     @apply bg-background text-foreground;
   }
 }
+
+@layer components {
+  /* Glassmorphism Effects - Ma signature créative */
+  .glass-card {
+    @apply bg-card/80 backdrop-blur-xl border border-white/20 shadow-xl;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  }
+  
+  .glass-header {
+    @apply bg-background/80 backdrop-blur-xl border-b border-white/20;
+    box-shadow: 0 4px 32px rgba(0, 0, 0, 0.1);
+  }
+  
+  .glass-button {
+    @apply bg-background/60 backdrop-blur-sm border border-white/30 hover:bg-background/80;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Animations personnalisées */
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+  
+  .animate-glow {
+    animation: glow 2s ease-in-out infinite alternate;
+  }
+  
+  /* Gradients personnalisés */
+  .gradient-text {
+    @apply bg-gradient-to-r from-primary via-blue-600 to-red-600 bg-clip-text text-transparent;
+  }
+  
+  .gradient-border {
+    background: linear-gradient(45deg, hsl(var(--primary)), hsl(var(--chart-1)), hsl(var(--chart-2)));
+    padding: 2px;
+    border-radius: 0.75rem;
+  }
+  
+  .gradient-border > * {
+    @apply bg-background rounded-[calc(0.75rem-2px)];
+  }
+  
+  /* Premium Icons - Style sophistiqué */
+  .glass-icon {
+    @apply bg-white/10 backdrop-blur-sm border border-white/20;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  }
+  
+  .glass-icon:hover {
+    @apply bg-white/20 border-white/30;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  }
+  
+  .gradient-icon {
+    @apply bg-gradient-to-br from-primary/20 via-primary/10 to-transparent;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 16px rgba(59, 130, 246, 0.1);
+  }
+  
+  .gradient-icon:hover {
+    @apply from-primary/30 via-primary/20 to-transparent;
+    box-shadow: 0 8px 32px rgba(59, 130, 246, 0.2);
+  }
+  
+  .minimal-icon {
+    @apply bg-slate-100/50 dark:bg-slate-800/50;
+    border: 1px solid rgba(148, 163, 184, 0.2);
+  }
+  
+  .minimal-icon:hover {
+    @apply bg-slate-200/70 dark:bg-slate-700/70;
+    border-color: rgba(148, 163, 184, 0.3);
+  }
+  
+  .glow-icon {
+    @apply bg-primary/10 border border-primary/20;
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.2);
+  }
+  
+  .glow-icon:hover {
+    @apply bg-primary/20 border-primary/30;
+    box-shadow: 0 0 30px rgba(59, 130, 246, 0.4);
+  }
+  
+  /* Icônes avec couleurs contextuelles */
+  .icon-shield {
+    @apply text-blue-600 dark:text-blue-400;
+  }
+  
+  .icon-heart {
+    @apply text-red-500 dark:text-red-400;
+  }
+  
+  .icon-users {
+    @apply text-green-600 dark:text-green-400;
+  }
+  
+  .icon-zap {
+    @apply text-purple-600 dark:text-purple-400;
+  }
+  
+  .icon-target {
+    @apply text-orange-600 dark:text-orange-400;
+  }
+  
+  .icon-award {
+    @apply text-slate-600 dark:text-slate-400;
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+@keyframes glow {
+  from {
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+  }
+  to {
+    box-shadow: 0 0 30px rgba(59, 130, 246, 0.8);
+  }
+}
