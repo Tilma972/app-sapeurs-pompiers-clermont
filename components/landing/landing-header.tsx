@@ -3,16 +3,19 @@
 import { Button } from "@/components/ui/button";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import { LogoutButton } from "@/components/logout-button";
-import { PremiumIcon } from "@/components/landing/premium-icon";
-import { Shield, Menu, LogIn } from "lucide-react";
+import { Menu, LogIn } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const navigation = [
   { name: "Accueil", href: "#hero" },
-  { name: "Missions", href: "#missions" },
-  { name: "Équipes", href: "#teams" },
+  { name: "Actions", href: "#actions" },
+  { name: "Boutique", href: "#boutique" },
+  { name: "Témoignages", href: "#temoignages" },
+  { name: "Prévention", href: "#prevention" },
+  { name: "Actualités", href: "#actualites" },
   { name: "Contact", href: "#contact" },
 ];
 
@@ -34,12 +37,15 @@ export function LandingHeader({ user }: LandingHeaderProps) {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-3 group">
-            <PremiumIcon 
-              icon={Shield} 
-              size="sm" 
-              variant="glass" 
-              className="icon-shield"
-            />
+            <div className="relative w-10 h-10">
+              <Image
+                src="https://npyfregghvnmqxwgkfea.supabase.co/storage/v1/object/public/logo/logo_amicale.svg"
+                alt="Logo Amicale des Sapeurs-Pompiers"
+                fill
+                className="object-contain group-hover:scale-105 transition-transform duration-300"
+                priority
+              />
+            </div>
             <div className="hidden sm:block">
               <h1 className="text-lg font-bold text-foreground group-hover:text-primary transition-colors">
                 Amicale SP

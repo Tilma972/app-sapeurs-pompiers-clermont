@@ -1,9 +1,12 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import { HeroSection } from "@/components/landing/hero-section";
-import { MissionSection } from "@/components/landing/mission-section";
-import { TeamSection } from "@/components/landing/team-section";
-import { CTASection } from "@/components/landing/cta-section";
+import { HeroSimple } from "@/components/landing/hero-simple";
+import { ActionsSection } from "@/components/landing/actions-section";
+import { ShopSection } from "@/components/landing/shop-section";
+import { TestimonialsSection } from "@/components/landing/testimonials-section";
+import { PreventionSection } from "@/components/landing/prevention-section";
+import { NewsSection } from "@/components/landing/news-section";
+import { ContactSection } from "@/components/landing/contact-section";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { LandingHeaderWrapper } from "@/components/landing/landing-header-wrapper";
 
@@ -18,24 +21,33 @@ export default async function Home() {
   // }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+    <div className="min-h-screen">
       {/* Header avec navigation */}
       <LandingHeaderWrapper user={user} />
       
-      {/* Contenu principal */}
-      <main className="relative">
-        {/* Hero Section avec glassmorphism */}
-        <HeroSection />
-        
-        {/* Section Missions */}
-        <MissionSection />
-        
-        {/* Section Équipes */}
-        <TeamSection />
-        
-        {/* Section CTA avec transition vers auth */}
-        <CTASection />
-      </main>
+      {/* Hero Simple avec Ken Burns */}
+      <HeroSimple />
+      
+          {/* Contenu principal */}
+          <main className="relative">
+            {/* Section Actions de l'amicale */}
+            <ActionsSection />
+            
+            {/* Section Boutique */}
+            <ShopSection />
+            
+            {/* Section Témoignages */}
+            <TestimonialsSection />
+            
+            {/* Section Prévention */}
+            <PreventionSection />
+            
+            {/* Section Actualités */}
+            <NewsSection />
+            
+            {/* Section Contact */}
+            <ContactSection />
+          </main>
       
       {/* Footer */}
       <LandingFooter />

@@ -2,9 +2,9 @@
 
 import { Button } from "@/components/ui/button";
 import { ThemeSwitcher } from "@/components/theme-switcher";
-import { PremiumIcon } from "@/components/landing/premium-icon";
-import { Shield, Mail, Phone, MapPin, Facebook, Twitter, Instagram } from "lucide-react";
+import { Mail, Phone, MapPin, Facebook, Twitter, Instagram } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { motion } from "framer-motion";
 
 const footerLinks = {
@@ -48,12 +48,14 @@ export function LandingFooter() {
             className="lg:col-span-1"
           >
             <Link href="/" className="flex items-center gap-3 mb-6 group">
-              <PremiumIcon 
-                icon={Shield} 
-                size="md" 
-                variant="glass" 
-                className="icon-shield"
-              />
+              <div className="relative w-12 h-12">
+                <Image
+                  src="https://npyfregghvnmqxwgkfea.supabase.co/storage/v1/object/public/logo/logo_amicale.svg"
+                  alt="Logo Amicale des Sapeurs-Pompiers"
+                  fill
+                  className="object-contain group-hover:scale-105 transition-transform duration-300"
+                />
+              </div>
               <div>
                 <h3 className="text-xl font-bold group-hover:text-primary transition-colors">
                   Amicale SP

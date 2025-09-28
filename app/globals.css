@@ -4,26 +4,26 @@
 
 @layer base {
   :root {
-    /* Charte graphique : Slate (base) + Blue (primaire) */
+    /* Charte graphique inspirée du logo : Rouge pompier + Teal + Beige */
     --background: 0 0% 100%;
-    --foreground: 215 25% 27%;
+    --foreground: 30 20% 20%;
     --card: 0 0% 100%;
-    --card-foreground: 215 25% 27%;
+    --card-foreground: 30 20% 20%;
     --popover: 0 0% 100%;
-    --popover-foreground: 215 25% 27%;
-    --primary: 221 83% 53%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 215 25% 27%;
-    --muted: 210 40% 96%;
-    --muted-foreground: 215 16% 47%;
-    --accent: 210 40% 96%;
-    --accent-foreground: 215 25% 27%;
+    --popover-foreground: 30 20% 20%;
+    --primary: 8 70% 45%; /* Rouge pompier #C63320 */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 180 30% 90%; /* Teal clair */
+    --secondary-foreground: 180 30% 20%;
+    --muted: 30 20% 95%; /* Beige crème du logo */
+    --muted-foreground: 30 20% 40%;
+    --accent: 170 50% 40%; /* Teal #33988A */
+    --accent-foreground: 0 0% 100%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 221 83% 53%;
+    --border: 30 20% 90%;
+    --input: 30 20% 95%;
+    --ring: 8 70% 45%; /* Rouge pompier #C63320 */
     --chart-1: 12 76% 61%;
     --chart-2: 173 58% 39%;
     --chart-3: 197 37% 24%;
@@ -32,21 +32,21 @@
     --radius: 0.5rem;
   }
   .dark {
-    /* Thème sombre cohérent avec la charte */
-    --background: 215 28% 17%;
-    --foreground: 210 40% 98%;
-    --card: 215 28% 17%;
-    --card-foreground: 210 40% 98%;
-    --popover: 215 28% 17%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 217 91% 60%;
-    --primary-foreground: 215 28% 17%;
-    --secondary: 215 25% 27%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 215 25% 27%;
-    --muted-foreground: 215 16% 65%;
-    --accent: 215 25% 27%;
-    --accent-foreground: 210 40% 98%;
+    /* Thème sombre cohérent avec le logo */
+    --background: 30 20% 8%;
+    --foreground: 30 20% 95%;
+    --card: 30 20% 10%;
+    --card-foreground: 30 20% 95%;
+    --popover: 30 20% 10%;
+    --popover-foreground: 30 20% 95%;
+    --primary: 8 70% 55%; /* Rouge pompier #C63320 plus clair */
+    --primary-foreground: 30 20% 8%;
+    --secondary: 180 30% 20%;
+    --secondary-foreground: 180 30% 90%;
+    --muted: 30 20% 15%;
+    --muted-foreground: 30 20% 70%;
+    --accent: 170 50% 35%; /* Teal #33988A plus clair */
+    --accent-foreground: 30 20% 95%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
     --border: 215 25% 27%;
@@ -152,29 +152,29 @@
     box-shadow: 0 0 30px rgba(59, 130, 246, 0.4);
   }
   
-  /* Icônes avec couleurs contextuelles */
+  /* Icônes avec couleurs exactes du logo */
   .icon-shield {
-    @apply text-blue-600 dark:text-blue-400;
+    color: #C63320; /* Rouge pompier exact */
   }
   
   .icon-heart {
-    @apply text-red-500 dark:text-red-400;
+    color: #C63320; /* Rouge pompier exact */
   }
   
   .icon-users {
-    @apply text-green-600 dark:text-green-400;
+    color: #33988A; /* Teal exact */
   }
   
   .icon-zap {
-    @apply text-purple-600 dark:text-purple-400;
+    color: #C63320; /* Rouge pompier pour l'énergie */
   }
   
   .icon-target {
-    @apply text-orange-600 dark:text-orange-400;
+    color: #33988A; /* Teal pour la précision */
   }
   
   .icon-award {
-    @apply text-slate-600 dark:text-slate-400;
+    color: #C63320; /* Rouge pompier pour l'excellence */
   }
 }
 
@@ -194,4 +194,119 @@
   to {
     box-shadow: 0 0 30px rgba(59, 130, 246, 0.8);
   }
+}
+
+/* Ken Burns Effect - Hero Carousel */
+@keyframes kenburns-zoom {
+  0% { 
+    transform: scale(1); 
+  }
+  100% { 
+    transform: scale(1.1); 
+  }
+}
+
+.kenburns-image {
+  animation: kenburns-zoom 15s ease-out infinite;
+  transform-origin: center center;
+}
+
+/* Hero Carousel Styles */
+.hero-carousel {
+  position: relative;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.hero-slide {
+  position: relative;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hero-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(0, 0, 0, 0.4) 0%,
+    rgba(0, 0, 0, 0.2) 50%,
+    rgba(0, 0, 0, 0.6) 100%
+  );
+  z-index: 1;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  max-width: 4xl;
+  padding: 0 1rem;
+}
+
+.hero-dots {
+  position: absolute;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 3;
+  display: flex;
+  gap: 0.75rem;
+}
+
+.hero-dot {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.hero-dot.active {
+  background: rgba(255, 255, 255, 0.9);
+  transform: scale(1.2);
+}
+
+/* Fix scrollbar rouge */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(var(--background));
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground));
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--foreground));
+}
+
+/* Fix pour Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--muted-foreground)) hsl(var(--background));
+}
+
+/* Z-index pour navigation dots */
+.hero-dots {
+  z-index: 50 !important;
+}
+
+/* Fix pour les éléments qui masquent la navigation */
+.hero-content {
+  z-index: 2 !important;
+}
+
+.hero-overlay {
+  z-index: 1 !important;
 }
