@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import QRCode from 'react-qr-code'
 import toast from 'react-hot-toast'
-import { createCheckoutSession } from '@/app/actions/card-payments'
+import { createCheckoutSession, createHelloAssoCheckout } from '@/app/actions/card-payments'
 import { createClient as createBrowserClient } from '@/lib/supabase/client'
 
 export function ClientQR({ tourneeId }: { tourneeId: string }) {
@@ -25,7 +25,10 @@ export function ClientQR({ tourneeId }: { tourneeId: string }) {
     if (!isValid) return
     try {
       setLoading(true)
-      const res = await createCheckoutSession(tourneeId, parseFloat(amount))
+      const useHelloAsso = process.env.NEXT_PUBLIC_HELLOASSO_ENABLED === '1'
+      const res = useHelloAsso
+        ? await createHelloAssoCheckout(tourneeId, parseFloat(amount))
+        : await createCheckoutSession(tourneeId, parseFloat(amount))
       if (res?.success && res.url) {
         setQrUrl(res.url)
         setPaymentId(res.paymentId || null)

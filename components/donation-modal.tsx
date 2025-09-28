@@ -21,6 +21,8 @@ import {
   getTransactionTypeDescription,
 } from "@/lib/types/support-transactions";
 import { submitSupportTransaction } from "@/app/actions/donation-actions";
+import { QRCodeModal } from '@/components/qr-code-modal'
+import { createDonationIntent } from '@/app/actions/donation-intent'
 
 interface DonationModalProps {
   trigger: React.ReactNode;
@@ -39,6 +41,8 @@ export function DonationModal({ trigger, tourneeId }: DonationModalProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [showQRModal, setShowQRModal] = useState(false)
+  const [qrCodeData, setQRCodeData] = useState<{ intentId: string; url: string; expiresAt: string } | null>(null)
 
   // État principal : soutien (avec calendrier) vs fiscal
   const [calendarAccepted, setCalendarAccepted] = useState(true);
@@ -72,6 +76,25 @@ export function DonationModal({ trigger, tourneeId }: DonationModalProps) {
     }
 
     try {
+      // Carte -> créer l'intention + QR vers la page publique
+      if (formData.paymentMethod === 'carte') {
+        const result = await createDonationIntent({
+          tourneeId,
+          expectedAmount: amountNumber,
+          donorNameHint: formData.supporterName || undefined,
+        })
+        if (result.success) {
+          setQRCodeData({ intentId: result.intentId!, url: result.donationUrl!, expiresAt: result.expiresAt! })
+          setShowQRModal(true)
+          setIsLoading(false)
+          return
+        } else {
+          setMessage({ type: 'error', text: result.error || 'Erreur création QR code' })
+          setIsLoading(false)
+          return
+        }
+      }
+
       const transactionData: SupportTransactionInput = {
         amount: amountNumber,
         calendar_accepted: calendarAccepted,
@@ -368,6 +391,16 @@ export function DonationModal({ trigger, tourneeId }: DonationModalProps) {
             </Button>
           </div>
         </form>
+        {showQRModal && qrCodeData && (
+          <QRCodeModal
+            isOpen={showQRModal}
+            onClose={() => { setShowQRModal(false); setQRCodeData(null) }}
+            intentId={qrCodeData.intentId}
+            donationUrl={qrCodeData.url}
+            expectedAmount={amountNumber}
+            expiresAt={qrCodeData.expiresAt}
+          />
+        )}
       </DialogContent>
     </Dialog>
   );
