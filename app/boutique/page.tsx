@@ -1,5 +1,4 @@
 import { createClient } from "@/lib/supabase/server";
-import { redirect } from "next/navigation";
 import { LandingHeaderWrapper } from "@/components/landing/landing-header-wrapper";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { ShopSection } from "@/components/landing/shop-section";
