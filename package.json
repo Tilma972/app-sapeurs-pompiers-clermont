@@ -5,6 +5,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
     "clean": "rmdir /s /q .next 2>nul || rm -rf .next"
   },
   "dependencies": {
