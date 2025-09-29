@@ -1,5 +1,4 @@
 import { createClient } from "@/lib/supabase/server";
-import { redirect } from "next/navigation";
 import { HeroSimple } from "@/components/landing/hero-simple";
 import { ActionsSection } from "@/components/landing/actions-section";
 import { ShopSection } from "@/components/landing/shop-section";
