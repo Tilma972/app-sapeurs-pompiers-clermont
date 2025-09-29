@@ -2,8 +2,11 @@ import { notFound } from 'next/navigation'
 import { getDonationIntent } from '@/app/actions/donation-intent'
 import { DonorForm } from '@/components/donor-form'
 
-export default async function DonationPage({ params }: { params: { intentId: string } }) {
-  const intent = await getDonationIntent(params.intentId)
+type PageProps = { params: Promise<{ intentId: string }> }
+
+export default async function DonationPage({ params }: PageProps) {
+  const { intentId } = await params
+  const intent = await getDonationIntent(intentId)
   if (!intent || intent.status !== 'waiting_donor') notFound()
 
   const sapeurPompierName = intent.tournees?.profiles?.full_name || 'Sapeur-Pompier'
