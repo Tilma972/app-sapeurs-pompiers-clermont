@@ -563,25 +563,29 @@ export async function getGlobalStats(): Promise<{
   try {
     const { data, error } = await supabase.rpc('get_global_tournee_stats');
 
-    if (error) {
-      console.error('Erreur lors de la récupération des statistiques globales:', {
-        message: error.message,
-        details: error.details,
-        hint: error.hint,
-        code: error.code
-      });
-      return null;
+    // Si l'appel RPC échoue (ou retourne une structure inattendue),
+    // on logge de manière concise et on renvoie des zéros pour éviter le bruit en console.
+    if (error || !data) {
+      const safeMsg = (typeof error === 'object' && error && 'message' in error)
+        ? String((error as { message?: unknown }).message)
+        : 'RPC get_global_tournee_stats a échoué';
+      console.warn('[getGlobalStats] Fallback zéro appliqué:', safeMsg);
+      return {
+        total_calendriers_distribues: 0,
+        total_montant_collecte: 0,
+        total_tournees_actives: 0,
+      };
     }
 
     // La fonction retourne un tableau avec une seule ligne
     const stats = data?.[0];
     
     if (!stats) {
-      console.warn('Aucune statistique globale trouvée');
+      console.warn('[getGlobalStats] Aucune statistique globale trouvée, fallback zéro.');
       return {
         total_calendriers_distribues: 0,
         total_montant_collecte: 0,
-        total_tournees_actives: 0
+        total_tournees_actives: 0,
       };
     }
 
@@ -591,7 +595,11 @@ export async function getGlobalStats(): Promise<{
       total_tournees_actives: Number(stats.total_tournees_actives) || 0
     };
   } catch (error) {
-    console.error('Erreur dans getGlobalStats:', error);
-    return null;
+    console.warn('[getGlobalStats] Exception capturée, fallback zéro:', (error as Error)?.message || error);
+    return {
+      total_calendriers_distribues: 0,
+      total_montant_collecte: 0,
+      total_tournees_actives: 0,
+    };
   }
 }

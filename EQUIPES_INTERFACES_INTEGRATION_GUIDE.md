@@ -360,3 +360,5 @@ const userEquipe = await getUserEquipeInfo(userId);
 
 **Prochaines étapes** : Déployer les migrations et intégrer les nouvelles fonctions dans les interfaces existantes.
 
+
+

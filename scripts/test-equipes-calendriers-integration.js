@@ -206,3 +206,5 @@ console.log('   - Tableau de bord en temps réel');
 console.log('\n✅ Intégration des équipes dans la page "Calendriers" terminée !');
 console.log('📅 L\'utilisateur peut maintenant visualiser les progressions des équipes dans la page appropriée.');
 
+
+

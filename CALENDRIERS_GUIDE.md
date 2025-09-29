@@ -141,3 +141,5 @@ Si vous voyez une erreur sur le composant Progress :
 2. S'assurer que les calculs de pourcentages sont corrects
 3. Vérifier les types TypeScript
 
+
+

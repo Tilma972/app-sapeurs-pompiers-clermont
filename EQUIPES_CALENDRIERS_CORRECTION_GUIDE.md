@@ -353,3 +353,5 @@ SELECT * FROM equipes_stats_view LIMIT 5;
 
 **Prochaines étapes** : Déployer les migrations et tester l'interface en conditions réelles.
 
+
+

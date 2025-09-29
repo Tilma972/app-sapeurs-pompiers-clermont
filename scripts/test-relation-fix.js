@@ -122,3 +122,5 @@ console.log('   SELECT id, team FROM profiles LIMIT 5;');
 console.log('   # Vérifier la relation');
 console.log('   SELECT ts.user_id, p.team FROM tournee_summary ts LEFT JOIN profiles p ON ts.user_id = p.id LIMIT 5;');
 
+
+

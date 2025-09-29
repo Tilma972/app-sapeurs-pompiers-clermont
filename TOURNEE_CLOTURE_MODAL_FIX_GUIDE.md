@@ -199,3 +199,5 @@ Le composant `TourneeClotureModal` est maintenant **100% compatible** avec la no
 - **Performance** : Types TypeScript stricts pour une meilleure performance
 - **Maintenabilité** : Code plus propre et mieux structuré
 
+
+

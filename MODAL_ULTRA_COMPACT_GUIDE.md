@@ -257,3 +257,5 @@ Le modal de clôture est maintenant **ultra-compact** et **parfaitement optimis�
 - **Accessibilité avancée** : Navigation vocale
 - **Tests automatisés** : Validation continue
 
+
+

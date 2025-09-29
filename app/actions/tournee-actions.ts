@@ -30,7 +30,7 @@ export async function startNewTournee(formData: FormData) {
     console.error('Erreur serveur:', error)
     return { 
       success: false, 
-      errors: [`Erreur serveur: ${error instanceof Error ? error.message : 'Erreur inconnue'}`] 
+      errors: ['Une erreur est survenue. Veuillez réessayer.'] 
     }
   }
 }

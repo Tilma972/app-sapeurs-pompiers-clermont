@@ -6,8 +6,9 @@ import { Badge } from "@/components/ui/badge";
 import { getActiveTourneeWithTransactions } from "@/lib/supabase/tournee";
 import { DonationModal } from "@/components/donation-modal";
 import { TourneeClotureModal } from "@/components/tournee-cloture-modal";
-import { 
-  Calendar, 
+import { ResendReceiptButton } from "@/components/resend-receipt-button";
+import {
+  Calendar,
   CheckCircle,
   Receipt,
   TrendingUp,
@@ -41,7 +42,7 @@ export default async function MaTourneePage() {
 
   // Récupération des données réelles de la tournée active
   const tourneeData = await getActiveTourneeWithTransactions();
-  
+
   if (!tourneeData) {
     // Rediriger vers la page calendriers si aucune tournée active
     redirect("/dashboard/calendriers");
@@ -61,6 +62,9 @@ export default async function MaTourneePage() {
   // Calculer les statistiques
   const calendarsDistributed = summary?.calendars_distributed || 0;
   const amountCollected = summary?.montant_total || 0;
+  const currency = new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR", maximumFractionDigits: 0 });
+  const currencyAvg = new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR", maximumFractionDigits: 1 });
+  const averagePerCalendar = calendarsDistributed > 0 ? amountCollected / calendarsDistributed : 0;
 
   return (
     <div className="space-y-6">
@@ -68,7 +72,13 @@ export default async function MaTourneePage() {
       <div className="bg-card rounded-lg p-6 border border-border">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Ma Tournée</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-2xl font-bold text-foreground">Ma Tournée</h1>
+              <Badge variant="outline" className="text-green-600 border-green-200 text-xs">
+                <TrendingUp className="h-3 w-3 mr-1" />
+                En cours
+              </Badge>
+            </div>
             <div className="flex items-center space-x-4 mt-2">
               <div className="flex items-center space-x-1 text-muted-foreground">
                 <MapPin className="h-4 w-4" />
@@ -86,8 +96,13 @@ export default async function MaTourneePage() {
               <div className="text-sm text-muted-foreground">Calendriers</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-primary">{amountCollected}€</div>
+              <div className="text-2xl font-bold text-primary">{currency.format(Math.max(0, Math.trunc(amountCollected || 0)))}</div>
               <div className="text-sm text-muted-foreground">Collecté</div>
+            </div>
+            <div className="text-right">
+              <div className="text-[11px] text-muted-foreground whitespace-nowrap">
+                ≈ {currencyAvg.format(Math.max(0, averagePerCalendar))} par calendrier
+              </div>
             </div>
           </div>
         </div>
@@ -165,39 +180,7 @@ export default async function MaTourneePage() {
           </Card>
         </div>
 
-        {/* Résumé de la tournée - Style compact conditionnel */}
-        {(calendarsDistributed > 0 || amountCollected > 0) && (
-          <Card className="hover:shadow-lg transition-all duration-200">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardDescription className="text-xs">Progression aujourd&apos;hui</CardDescription>
-                  <CardTitle className="text-lg font-semibold">Résumé</CardTitle>
-                </div>
-                <Badge variant="outline" className="text-orange-600 border-orange-200 text-xs">
-                  <CheckCircle className="h-3 w-3 mr-1" />
-                  En cours
-                </Badge>
-              </div>
-            </CardHeader>
-            <CardFooter className="pt-0">
-              <div className="grid grid-cols-2 gap-4 w-full">
-                <div className="text-center">
-                  <div className="text-xl font-bold text-foreground">
-                    {calendarsDistributed}
-                  </div>
-                  <div className="text-xs text-muted-foreground">Calendriers</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-xl font-bold text-primary">
-                    {amountCollected}€
-                  </div>
-                  <div className="text-xs text-muted-foreground">Collecté</div>
-                </div>
-              </div>
-            </CardFooter>
-          </Card>
-        )}
+        {/* Carte "Résumé" supprimée car redondante avec l'en-tête */}
 
         {/* Historique des transactions - Style compact conditionnel */}
         {transactions.length > 0 && (
@@ -234,10 +217,15 @@ export default async function MaTourneePage() {
                         </div>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <div className="text-sm font-bold text-foreground">{transaction.amount}€</div>
-                      <div className="text-xs text-muted-foreground">
-                        {transaction.calendar_accepted ? 'Soutien' : 'Fiscal'}
+                    <div className="flex items-center gap-2">
+                      {transaction.supporter_email ? (
+                        <ResendReceiptButton transactionId={transaction.id} />
+                      ) : null}
+                      <div className="text-right min-w-[90px]">
+                        <div className="text-sm font-bold text-foreground">{currency.format(Math.max(0, Math.trunc(transaction.amount || 0)))}</div>
+                        <div className="text-xs text-muted-foreground text-right">
+                          {transaction.calendar_accepted ? 'Soutien' : 'Fiscal'}
+                        </div>
                       </div>
                     </div>
                   </div>

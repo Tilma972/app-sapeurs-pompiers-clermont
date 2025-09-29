@@ -167,3 +167,5 @@ console.log('   5. Cliquer sur "Clôturer la tournée"');
 console.log('   6. Vérifier le toast de succès');
 console.log('   7. Confirmer la fermeture du modal');
 
+
+

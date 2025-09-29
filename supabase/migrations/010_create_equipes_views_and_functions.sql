@@ -265,3 +265,5 @@ COMMENT ON FUNCTION get_equipes_ranking() IS 'Récupère le classement des équi
 COMMENT ON FUNCTION get_equipe_membres(UUID) IS 'Récupère la liste des membres d''une équipe avec leurs statistiques';
 COMMENT ON FUNCTION get_equipes_summary_for_charts() IS 'Récupère le résumé des équipes pour les graphiques (compatible avec l''interface existante)';
 
+
+

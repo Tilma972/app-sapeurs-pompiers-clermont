@@ -273,3 +273,5 @@ L'expérience de **"Déclaration de fin de tournée"** est maintenant **simple, 
 - **Export des données** : PDF ou Excel des résultats
 - **Intégration calendrier** : Planification des tournées
 
+
+

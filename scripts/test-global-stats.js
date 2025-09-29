@@ -144,3 +144,5 @@ console.log('      - Vérifier la gestion d\'erreur');
 console.log('      - Confirmer l\'affichage des valeurs par défaut');
 console.log('      - Valider la stabilité de l\'interface');
 
+
+

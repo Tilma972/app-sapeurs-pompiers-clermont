@@ -10,7 +10,21 @@ const compat = new FlatCompat({
 });
 
 const eslintConfig = [
+  // Global ignores (Flat config replacement for .eslintignore)
+  {
+    ignores: [
+      'lib/database.types.ts',
+      'tsconfig.tsbuildinfo',
+    ],
+  },
   ...compat.extends("next/core-web-vitals", "next/typescript"),
+  {
+    files: ["components/ui/**/*.ts", "components/ui/**/*.tsx"],
+    rules: {
+      "@typescript-eslint/no-empty-object-type": "off",
+      "@typescript-eslint/no-explicit-any": "warn",
+    },
+  },
 ];
 
 export default eslintConfig;

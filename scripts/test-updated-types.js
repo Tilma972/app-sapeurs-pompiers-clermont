@@ -113,3 +113,5 @@ console.log('   npx tsc --noEmit');
 console.log('   # Regénérer les types si nécessaire');
 console.log('   npx supabase gen types typescript --project-id npyfregghvnmqxwgkfea > lib/database.types.ts');
 
+
+

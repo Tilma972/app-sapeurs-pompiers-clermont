@@ -240,3 +240,5 @@ console.log('   - Tableau de bord en temps réel');
 console.log('\n✅ Intégration complète des équipes dans l\'interface "Ma Tournée" terminée !');
 console.log('🏗️ L\'utilisateur peut maintenant visualiser les 5 équipes avec leurs progressions de manière compacte et lisible.');
 
+
+

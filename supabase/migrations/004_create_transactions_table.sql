@@ -175,3 +175,5 @@ COMMENT ON COLUMN public.transactions.notes IS 'Notes sur la transaction';
 COMMENT ON COLUMN public.transactions.created_at IS 'Date de création de la transaction';
 COMMENT ON COLUMN public.transactions.updated_at IS 'Date de dernière modification';
 
+
+
