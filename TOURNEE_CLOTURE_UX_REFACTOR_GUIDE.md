@@ -274,3 +274,4 @@ L'expérience de **"Déclaration de fin de tournée"** est maintenant **simple, 
 - **Intégration calendrier** : Planification des tournées
 
 
+

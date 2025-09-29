@@ -216,3 +216,4 @@ COMMENT ON TABLE public.support_transactions IS 'Transactions de soutien et dons
 COMMENT ON VIEW public.tournee_summary IS 'Vue agrégée des statistiques de tournée';
 
 
+

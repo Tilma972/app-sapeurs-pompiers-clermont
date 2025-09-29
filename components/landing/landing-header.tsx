@@ -19,8 +19,10 @@ const navigation = [
   { name: "Contact", href: "#contact" },
 ];
 
+type MinimalUser = { id: string } | null;
+
 interface LandingHeaderProps {
-  user: any;
+  user: MinimalUser;
 }
 
 export function LandingHeader({ user }: LandingHeaderProps) {

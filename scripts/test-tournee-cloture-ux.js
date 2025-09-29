@@ -168,3 +168,4 @@ console.log('   6. Vérifier le toast de succès');
 console.log('   7. Confirmer la fermeture du modal');
 
 
+

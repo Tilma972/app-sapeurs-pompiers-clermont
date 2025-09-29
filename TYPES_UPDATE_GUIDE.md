@@ -191,3 +191,4 @@ npm run dev
 Votre application utilise maintenant des types TypeScript parfaitement synchronisés avec votre schéma Supabase. Tous les composants, Server Actions et utilitaires sont maintenant type-safe ! 🎉
 
 
+

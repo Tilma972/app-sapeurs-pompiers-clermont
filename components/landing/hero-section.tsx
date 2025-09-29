@@ -86,7 +86,7 @@ export function HeroSection() {
             >
               <Button asChild size="lg" className="h-14 px-8 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300">
                 <Link href="/auth/sign-up">
-                  Rejoindre l'Amicale
+                  Rejoindre l&apos;Amicale
                 </Link>
               </Button>
               <Button asChild variant="outline" size="lg" className="h-14 px-8 text-lg font-semibold glass-button">

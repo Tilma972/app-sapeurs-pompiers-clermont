@@ -265,3 +265,4 @@ grep -r "variant=\"ghost\"\|h-5 w-5\|text-gray-900\|py-3" app/dashboard/ma-tourn
 **Testez maintenant** : Votre navigation devrait être fluide et cohérente avec des boutons de retour uniformes et une interface harmonisée !
 
 
+

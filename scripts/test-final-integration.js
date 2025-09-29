@@ -241,3 +241,4 @@ console.log('\n✅ Intégration complète des équipes dans l\'interface "Ma Tou
 console.log('🏗️ L\'utilisateur peut maintenant visualiser les 5 équipes avec leurs progressions de manière compacte et lisible.');
 
 
+

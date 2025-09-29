@@ -159,3 +159,4 @@ Un système qui respecte parfaitement la distinction juridique française entre 
 Le champ `calendar_accepted` est la clé de voûte : tout le reste en découle automatiquement grâce aux colonnes calculées de la BDD ! 🚀
 
 
+

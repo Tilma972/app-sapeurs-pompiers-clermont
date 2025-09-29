@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { PremiumIcon } from "@/components/landing/premium-icon";
-import { Mail, Phone, MapPin, ExternalLink, Users, GraduationCap, Building } from "lucide-react";
+import { Mail, Phone, MapPin, ExternalLink, Users, Building } from "lucide-react";
 
 const contactInfo = [
   {
@@ -232,3 +232,4 @@ export function ContactSection() {
     </section>
   );
 }
+

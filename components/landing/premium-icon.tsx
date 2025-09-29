@@ -40,20 +40,11 @@ export function PremiumIcon({
     glow: "glow-icon"
   };
 
-  const iconVariants = {
-    initial: { scale: 1, rotate: 0 },
-    hover: { 
-      scale: 1.1, 
-      rotate: animate ? 5 : 0,
-      transition: { duration: 0.2, ease: "easeOut" }
-    }
-  };
+  const whileHover = animate ? { scale: 1.05, rotate: 3 } : undefined;
 
   return (
     <motion.div
-      variants={iconVariants}
-      initial="initial"
-      whileHover="hover"
+      whileHover={whileHover}
       className={cn(
         "flex items-center justify-center rounded-2xl transition-all duration-300",
         sizeClasses[size],

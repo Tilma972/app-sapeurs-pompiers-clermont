@@ -1,7 +1,9 @@
 import { LandingHeader } from "./landing-header";
 
+type MinimalUser = { id: string } | null;
+
 interface LandingHeaderWrapperProps {
-  user: any;
+  user: MinimalUser;
 }
 
 export function LandingHeaderWrapper({ user }: LandingHeaderWrapperProps) {

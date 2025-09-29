@@ -156,3 +156,4 @@ console.log('   ✅ Message de succès utilise les données BDD');
 console.log('   ✅ Cohérence garantie par la BDD');
 
 
+

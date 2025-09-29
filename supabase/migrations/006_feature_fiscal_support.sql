@@ -224,3 +224,4 @@ COMMENT ON TABLE receipts IS 'Suivi des reçus fiscaux et de soutien';
 COMMENT ON VIEW tournee_summary IS 'Vue agrégée des statistiques de tournée avec distinction fiscal/soutien';
 
 
+

@@ -200,3 +200,4 @@ Le composant `TourneeClotureModal` est maintenant **100% compatible** avec la no
 - **Maintenabilité** : Code plus propre et mieux structuré
 
 
+

@@ -266,3 +266,4 @@ COMMENT ON FUNCTION get_equipe_membres(UUID) IS 'Récupère la liste des membres
 COMMENT ON FUNCTION get_equipes_summary_for_charts() IS 'Récupère le résumé des équipes pour les graphiques (compatible avec l''interface existante)';
 
 
+

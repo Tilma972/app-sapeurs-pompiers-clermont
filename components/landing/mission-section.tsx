@@ -87,7 +87,7 @@ export function MissionSection() {
             <span className="text-primary"> communauté</span>
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-            Chaque jour, nos sapeurs-pompiers s'engagent avec courage et professionnalisme 
+            Chaque jour, nos sapeurs-pompiers s&apos;engagent avec courage et professionnalisme 
             pour protéger et secourir nos concitoyens.
           </p>
         </motion.div>
@@ -151,7 +151,7 @@ export function MissionSection() {
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button asChild size="lg" className="group">
                   <Link href="/auth/sign-up">
-                    Rejoindre l'Amicale
+                    Rejoindre l&apos;Amicale
                     <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
                   </Link>
                 </Button>

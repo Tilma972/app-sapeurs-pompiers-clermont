@@ -39,3 +39,4 @@ CREATE INDEX IF NOT EXISTS idx_tournees_calendriers_distribues ON public.tournee
 CREATE INDEX IF NOT EXISTS idx_tournees_montant_collecte ON public.tournees(montant_collecte) WHERE montant_collecte IS NOT NULL;
 
 
+

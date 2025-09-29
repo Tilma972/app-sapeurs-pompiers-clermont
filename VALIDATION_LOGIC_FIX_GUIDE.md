@@ -198,3 +198,4 @@ La logique de validation est maintenant **parfaitement adaptée** aux cas d'usag
 - **Notifications** : Rappels de clôture
 
 
+

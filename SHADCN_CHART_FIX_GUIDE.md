@@ -366,3 +366,4 @@ npm run dev
 **🚀 Le graphique des équipes utilise maintenant l'approche shadcn/ui moderne et est parfaitement compatible avec Next.js 15 + React 19 !**
 
 
+

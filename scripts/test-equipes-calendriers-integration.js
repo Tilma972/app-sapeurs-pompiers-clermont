@@ -207,3 +207,4 @@ console.log('\n✅ Intégration des équipes dans la page "Calendriers" terminé
 console.log('📅 L\'utilisateur peut maintenant visualiser les progressions des équipes dans la page appropriée.');
 
 
+

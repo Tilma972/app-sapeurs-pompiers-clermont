@@ -232,3 +232,4 @@ console.log('\n✅ Layout moderne et responsive du dashboard terminé !');
 console.log('🏗️ Structure de type "dashboard" classique avec sidebar et menu mobile implémentée.');
 
 
+
