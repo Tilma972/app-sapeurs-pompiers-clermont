@@ -2,6 +2,10 @@ import { notFound } from 'next/navigation'
 import { getDonationIntent } from '@/app/actions/donation-intent'
 import { DonorForm } from '@/components/donor-form'
 
+export const dynamic = 'force-dynamic'
+export const dynamicParams = true
+export const revalidate = 0
+
 type PageProps = { params: Promise<{ intentId: string }> }
 
 export default async function DonationPage({ params }: PageProps) {
