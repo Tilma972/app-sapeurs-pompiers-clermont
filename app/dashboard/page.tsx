@@ -1,20 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import { Card, CardHeader, CardTitle, CardDescription, CardAction, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { getCurrentUserProfile } from "@/lib/supabase/profile";
 import { getGlobalStats } from "@/lib/supabase/tournee";
-import { 
-  Calendar, 
-  ShoppingBag, 
-  Camera, 
-  Gift, 
-  Wallet,
-  TrendingUp,
-  TrendingDown
-} from "lucide-react";
-import Link from "next/link";
-import { TourneeStatsCard } from "@/components/tournee-stats-card";
+import { FeatureCard, type Feature } from "@/components/feature-card";
 
 
 export default async function DashboardPage() {
@@ -31,58 +20,60 @@ export default async function DashboardPage() {
   const profile = await getCurrentUserProfile();
   const globalStats = await getGlobalStats();
 
-  // Structure de données pour les cartes du menu - Style moderne shadcn/ui
-  const menuItems = [
+  // Nouvelles feature cards modernes (gradients, badges, stats)
+  const features: Feature[] = [
+    {
+      title: "Tournées & Calendriers",
+      description: "Suivez la collecte et les distributions",
+      iconKey: "calendar",
+      href: "/dashboard/calendriers",
+      gradient: "from-sky-500 to-blue-600",
+      badges: [
+        `${(globalStats?.total_calendriers_distribues ?? 0).toLocaleString("fr-FR")} calendriers`,
+        new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR", maximumFractionDigits: 0 })
+          .format(globalStats?.total_montant_collecte ?? 0)
+      ],
+    },
     {
       title: "Petites Annonces",
-      description: "Annonces actives",
-      icon: ShoppingBag,
+      description: "Publiez et consultez entre membres",
+      iconKey: "shopping-bag",
       href: "/dashboard/annonces",
-      value: "12",
-      trend: "+3",
-      trendType: "positive",
-      footerText: "Nouvelles cette semaine"
+      gradient: "from-green-500 to-emerald-600",
+      badges: ["Mock: 12 annonces"],
     },
     {
       title: "Galerie SP",
-      description: "Photos partagées",
-      icon: Camera,
+      description: "Partagez les moments forts du centre",
+      iconKey: "camera",
       href: "/dashboard/galerie",
-      value: "156",
-      trend: "+7",
-      trendType: "positive",
-      footerText: "Dernière photo il y a 2h"
+      gradient: "from-amber-500 to-orange-600",
+      badges: ["Mock: 156 photos"],
     },
     {
-      title: "Annonces & Événements",
-      description: "Prêts en cours",
-      icon: Calendar,
+      title: "Événements",
+      description: "Annonces et vie associative",
+      iconKey: "calendar",
       href: "/dashboard/associative",
-      value: "5",
-      trend: "stable",
-      trendType: "neutral",
-      footerText: "Prochain événement dans 5j"
+      gradient: "from-rose-500 to-red-600",
+      badges: ["Mock: 5 à venir"],
     },
     {
-      title: "Mon Profil",
-      description: "Informations personnelles",
-      icon: Wallet,
-      href: "/dashboard/profil",
-      value: profile?.full_name ? "Complet" : "Incomplet",
-      trend: profile?.full_name ? "à jour" : "manquant",
-      trendType: profile?.full_name ? "positive" : "negative",
-      footerText: `Rôle: ${profile?.role || "membre"}`
+      title: "Mon Compte SP",
+      description: "Portefeuille et demandes de paiement",
+      iconKey: "wallet",
+      href: "/dashboard/compte",
+      gradient: "from-slate-500 to-gray-600",
+      badges: [profile?.full_name ? "Profil complet" : "Profil incomplet"],
     },
     {
       title: "Partenaires & Avantages",
-      description: "Offres disponibles",
-      icon: Gift,
+      description: "Catalogue d'offres locales",
+      iconKey: "gift",
       href: "/dashboard/partenaires",
-      value: "12",
-      trend: "+2",
-      trendType: "positive",
-      footerText: "8 partenaires locaux"
-    }
+      gradient: "from-purple-500 to-fuchsia-600",
+      badges: ["Mock: 8 offres"],
+    },
   ];
 
   return (
@@ -106,51 +97,12 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      {/* Grille des cartes de navigation - Style moderne shadcn/ui */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Carte Tournées & Calendriers dynamique */}
-          <Link href="/dashboard/calendriers" className="group">
-            <TourneeStatsCard globalStats={globalStats} />
-          </Link>
-          
-          {menuItems.map((item) => {
-            const TrendIcon = item.trendType === "positive" ? TrendingUp : 
-                             item.trendType === "negative" ? TrendingDown : null;
-            
-            return (
-              <Link key={item.title} href={item.href} className="group">
-                <Card className="hover:shadow-lg transition-all duration-200 cursor-pointer">
-                  <CardHeader>
-                    <CardDescription>{item.description}</CardDescription>
-                    <CardTitle className="text-2xl font-semibold tabular-nums">
-                      {item.value}
-                    </CardTitle>
-                    <CardAction>
-                      <Badge variant="outline" className={
-                        item.trendType === "positive" 
-                          ? "text-green-600 border-green-200" 
-                          : item.trendType === "negative"
-                          ? "text-red-600 border-red-200"
-                          : "text-muted-foreground"
-                      }>
-                        {TrendIcon && <TrendIcon className="h-3 w-3 mr-1" />}
-                        {item.trend}
-                      </Badge>
-                    </CardAction>
-                  </CardHeader>
-                  <CardFooter className="flex-col items-start gap-1.5 text-sm">
-                    <div className="line-clamp-1 flex gap-2 font-medium">
-                      {item.title}
-                    </div>
-                    <div className="text-muted-foreground">
-                      {item.footerText}
-                    </div>
-                  </CardFooter>
-                </Card>
-              </Link>
-            );
-          })}
-        </div>
+      {/* Grille des features modernes */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+        {features.map((f) => (
+          <FeatureCard key={f.title} feature={f} />
+        ))}
+      </div>
 
         {/* Section d'information en bas */}
         <div className="mt-12 text-center">
