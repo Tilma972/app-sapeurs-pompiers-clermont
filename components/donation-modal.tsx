@@ -75,26 +75,47 @@ export function DonationModal({ trigger, tourneeId }: DonationModalProps) {
       return;
     }
 
-    try {
-      // Carte -> créer l'intention + QR vers la page publique
-      if (formData.paymentMethod === 'carte') {
+    // ========================================
+    // FLUX SPÉCIFIQUE CARTE - HelloAsso
+    // ========================================
+    if (formData.paymentMethod === 'carte') {
+      try {
         const result = await createDonationIntent({
           tourneeId,
           expectedAmount: amountNumber,
           donorNameHint: formData.supporterName || undefined,
-        })
-        if (result.success) {
-          setQRCodeData({ intentId: result.intentId!, url: result.donationUrl!, expiresAt: result.expiresAt! })
-          setShowQRModal(true)
-          setIsLoading(false)
-          return
-        } else {
-          setMessage({ type: 'error', text: result.error || 'Erreur création QR code' })
-          setIsLoading(false)
-          return
-        }
-      }
+        });
 
+        if (result.success && result.intentId && result.donationUrl && result.expiresAt) {
+          // Afficher le QR code modal
+          setQRCodeData({
+            intentId: result.intentId,
+            url: result.donationUrl,
+            expiresAt: result.expiresAt
+          });
+          setShowQRModal(true);
+          setIsLoading(false);
+          
+          // ✅ CRITIQUE : On s'arrête ICI pour le paiement carte
+          // Le paiement sera enregistré PLUS TARD via le webhook HelloAsso
+          return;
+        } else {
+          setMessage({ type: 'error', text: result.error || 'Erreur création intention de paiement' });
+          setIsLoading(false);
+          return;
+        }
+      } catch (error) {
+        console.error('Erreur création intention HelloAsso:', error);
+        setMessage({ type: 'error', text: 'Erreur lors de la création du paiement' });
+        setIsLoading(false);
+        return;
+      }
+    }
+
+    // ========================================
+    // FLUX STANDARD - Espèces / Chèque
+    // ========================================
+    try {
       const transactionData: SupportTransactionInput = {
         amount: amountNumber,
         calendar_accepted: calendarAccepted,
@@ -114,8 +135,6 @@ export function DonationModal({ trigger, tourneeId }: DonationModalProps) {
         return;
       }
 
-      const calculated = calculateTransactionFields(transactionData);
-
       const fd = new FormData();
       fd.append("amount", String(transactionData.amount));
       fd.append("calendar_accepted", String(transactionData.calendar_accepted));
@@ -128,11 +147,13 @@ export function DonationModal({ trigger, tourneeId }: DonationModalProps) {
       fd.append("consent_email", String(formData.consentEmail));
 
       const result = await submitSupportTransaction(fd);
+      
       if (result.success) {
+        const calculated = calculateTransactionFields(transactionData);
         const description = getTransactionTypeDescription(calculated.transaction_type, transactionData.amount);
         setMessage({ type: "success", text: `${description} - Enregistré avec succès !` });
 
-        // Reset
+        // Reset formulaire
         setFormData({
           amount: "",
           paymentMethod: "especes",
