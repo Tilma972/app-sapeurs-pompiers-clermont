@@ -557,49 +557,37 @@ export async function getGlobalStats(): Promise<{
   total_calendriers_distribues: number;
   total_montant_collecte: number;
   total_tournees_actives: number;
-} | null> {
+}> {
   const supabase = await createClient();
 
   try {
-    const { data, error } = await supabase.rpc('get_global_tournee_stats');
+    // Requête directe sur support_transactions pour les vraies données
+    const { data: transactions } = await supabase
+      .from('support_transactions')
+      .select('amount, calendar_accepted')
+      .eq('payment_status', 'completed');
 
-    // Si l'appel RPC échoue (ou retourne une structure inattendue),
-    // on logge de manière concise et on renvoie des zéros pour éviter le bruit en console.
-    if (error || !data) {
-      const safeMsg = (typeof error === 'object' && error && 'message' in error)
-        ? String((error as { message?: unknown }).message)
-        : 'RPC get_global_tournee_stats a échoué';
-      console.warn('[getGlobalStats] Fallback zéro appliqué:', safeMsg);
-      return {
-        total_calendriers_distribues: 0,
-        total_montant_collecte: 0,
-        total_tournees_actives: 0,
-      };
-    }
+    const calendriers = transactions?.filter(t => t.calendar_accepted).length || 0;
+    const montant = transactions?.reduce((sum, t) => sum + (t.amount || 0), 0) || 0;
 
-    // La fonction retourne un tableau avec une seule ligne
-    const stats = data?.[0];
-    
-    if (!stats) {
-      console.warn('[getGlobalStats] Aucune statistique globale trouvée, fallback zéro.');
-      return {
-        total_calendriers_distribues: 0,
-        total_montant_collecte: 0,
-        total_tournees_actives: 0,
-      };
-    }
+    // Compter les tournées actives
+    const { count: tournees_actives } = await supabase
+      .from('tournees')
+      .select('*', { count: 'exact', head: true })
+      .eq('statut', 'active');
 
     return {
-      total_calendriers_distribues: Number(stats.total_calendriers_distribues) || 0,
-      total_montant_collecte: Number(stats.total_montant_collecte) || 0,
-      total_tournees_actives: Number(stats.total_tournees_actives) || 0
+      total_calendriers_distribues: calendriers,
+      total_montant_collecte: montant,
+      total_tournees_actives: tournees_actives || 0
     };
+
   } catch (error) {
-    console.warn('[getGlobalStats] Exception capturée, fallback zéro:', (error as Error)?.message || error);
+    console.warn('[getGlobalStats] Erreur:', error);
     return {
       total_calendriers_distribues: 0,
       total_montant_collecte: 0,
-      total_tournees_actives: 0,
+      total_tournees_actives: 0
     };
   }
 }

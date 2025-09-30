@@ -126,7 +126,7 @@ export function TourneeClotureModal({ trigger, tourneeData, tourneeSummary }: To
         <form onSubmit={handleSubmit} className="space-y-3">
           {/* Message d'aide minimal */}
           <div className="text-xs text-muted-foreground">
-            Saisissez vos montants en espèces et en chèques. Les cartes (Stripe) s&apos;ajoutent automatiquement.
+            Saisissez vos montants en espèces et en chèques. Les paiements en ligne (HelloAsso) s&apos;ajoutent automatiquement.
           </div>
 
           {/* Principale: Montants espèces + chèques, puis calendriers */}

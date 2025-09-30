@@ -33,7 +33,7 @@ export function PremiumIcon({
   className,
   animate = true
 }: PremiumIconProps) {
-  const variants = {
+  const variantClasses = {
     glass: "glass-icon",
     gradient: "gradient-icon", 
     minimal: "minimal-icon",
@@ -48,7 +48,7 @@ export function PremiumIcon({
       className={cn(
         "flex items-center justify-center rounded-2xl transition-all duration-300",
         sizeClasses[size],
-        variants[variant],
+        variantClasses[variant],
         className
       )}
     >
