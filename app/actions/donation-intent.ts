@@ -55,16 +55,33 @@ export async function createDonationIntent(data: { tourneeId: string; expectedAm
 }
 
 export async function getDonationIntent(intentId: string) {
-  const supabase = await createSupabaseServerClient()
-  const { data: intent } = await supabase
+  // Utiliser un client public/anon pour les pages publiques (pas de cookies)
+  const { createClient: createPublicClient } = await import('@supabase/supabase-js')
+  const supabase = createPublicClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_OR_ANON_KEY!,
+  )
+
+  const { data: intent, error } = await supabase
     .from('donation_intents')
-    .select(`*, tournees:tournee_id ( zone, user_id, profiles:user_id ( full_name ) )`)
+    .select(`
+      *,
+      tournees:tournee_id (
+        zone,
+        user_id,
+        profiles:user_id ( full_name )
+      )
+    `)
     .eq('id', intentId)
     .single()
 
+  if (error) {
+    console.error('Erreur getDonationIntent (public):', error.message)
+    return null
+  }
   if (!intent) return null
   if (new Date(intent.expires_at) < new Date()) {
-    await supabase.from('donation_intents').update({ status: 'expired' }).eq('id', intentId)
+    // Mettre à jour le statut peut nécessiter un client authentifié; on n'échoue pas la page publique.
     return null
   }
   return intent
