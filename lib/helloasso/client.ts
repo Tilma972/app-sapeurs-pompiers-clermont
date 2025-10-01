@@ -31,7 +31,8 @@ class HelloAssoClient {
   private organizationSlug: string
 
   constructor() {
-    this.baseUrl = process.env.HELLOASSO_BASE_URL || 'https://api.helloasso.com/v5'
+    // Base URL doit être l'hôte racine (sans /v5). Les endpoints ajouteront /v5 lorsque nécessaire.
+    this.baseUrl = process.env.HELLOASSO_BASE_URL || 'https://api.helloasso.com'
     this.clientId = process.env.HELLOASSO_CLIENT_ID as string
     this.clientSecret = process.env.HELLOASSO_CLIENT_SECRET as string
     this.organizationSlug = process.env.HELLOASSO_ORGANIZATION_SLUG as string
@@ -39,22 +40,28 @@ class HelloAssoClient {
 
   async getAccessToken(): Promise<string> {
   const tokenUrl = `${this.baseUrl}/oauth2/token`
+  const oauthScope = process.env.HELLOASSO_SCOPE // Optionnel: ex. "api" ou "all" selon configuration HelloAsso
   
-  // Ajoute ce log
   log.info('Tentative auth HelloAsso', { 
     tokenUrl, 
+    baseUrl: this.baseUrl,
+    isSandbox: this.baseUrl.includes('sandbox'),
     hasClientId: !!this.clientId,
-    hasClientSecret: !!this.clientSecret 
+    hasClientSecret: !!this.clientSecret,
+    hasScope: Boolean(oauthScope),
   })
+
+  const params = new URLSearchParams({
+    grant_type: 'client_credentials',
+    client_id: this.clientId,
+    client_secret: this.clientSecret,
+  })
+  if (oauthScope) params.set('scope', oauthScope)
 
   const response = await fetch(tokenUrl, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      grant_type: 'client_credentials',
-      client_id: this.clientId,
-      client_secret: this.clientSecret,
-    }),
+    body: params,
   })
   
   if (!response.ok) {
@@ -77,8 +84,17 @@ class HelloAssoClient {
       ...request,
       initialAmount: request.initialAmount ?? request.totalAmount,
     }
+    const endpoint = `${this.baseUrl}/v5/organizations/${this.organizationSlug}/checkout-intents`
+    log.info('Création checkout intent HelloAsso', {
+      endpoint,
+      organizationSlug: this.organizationSlug,
+      hasToken: Boolean(token),
+      totalAmount: payload.totalAmount,
+      initialAmount: payload.initialAmount,
+      containsDonation: payload.containsDonation,
+    })
     const response = await fetch(
-      `${this.baseUrl}/v5/organizations/${this.organizationSlug}/checkout-intents`,
+      endpoint,
       {
         method: 'POST',
         headers: {
@@ -90,7 +106,13 @@ class HelloAssoClient {
     )
     if (!response.ok) {
       const errorText = await response.text()
-      log.error('Échec création checkout intent', { status: response.status, error: errorText })
+      log.error('Échec création checkout intent', {
+        status: response.status,
+        statusText: response.statusText,
+        endpoint,
+        organizationSlug: this.organizationSlug,
+        error: errorText,
+      })
       throw new Error('Failed to create checkout intent')
     }
     const data = await response.json()
