@@ -57,59 +57,41 @@ export async function createDonationIntent(data: { tourneeId: string; expectedAm
 export async function getDonationIntent(intentId: string) {
   console.log('🔵 [getDonationIntent] START - intentId:', intentId)
 
-  // Utiliser un client public/anon pour les pages publiques (pas de cookies)
   const { createClient: createPublicClient } = await import('@supabase/supabase-js')
-  console.log('🔵 [getDonationIntent] Creating public Supabase client')
   const supabase = createPublicClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_OR_ANON_KEY!,
   )
 
+  // Query 1: Récupérer l'intent avec tournee info basique
   const { data: intent, error } = await supabase
     .from('donation_intents')
-    .select(`
-      *,
-      tournees!tournee_id (
-        zone,
-        user_id,
-        profiles!user_id (
-          full_name
-        )
-      )
-    `)
+    .select('*, tournees(zone, user_id)')
     .eq('id', intentId)
     .single()
 
-  console.log('🔵 [getDonationIntent] Query result:', {
-    hasData: Boolean(intent),
-    hasError: Boolean(error),
-    errorMessage: error?.message,
-    intentStatus: intent?.status,
-    expiresAt: intent?.expires_at,
-  })
+  console.log('🔵 [getDonationIntent] Intent query:', { hasData: !!intent, hasError: !!error })
 
-  if (error) {
-    console.error('❌ [getDonationIntent] Supabase error:', error)
+  if (error || !intent) {
+    console.error('❌ [getDonationIntent] Error:', error)
     return null
   }
 
-  if (!intent) {
-    console.warn('⚠️ [getDonationIntent] No intent found')
-    return null
+  // Query 2: Récupérer le nom du pompier séparément
+  if (intent.tournees?.user_id) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('full_name')
+      .eq('id', intent.tournees.user_id)
+      .single()
+    
+    if (profile) {
+      intent.tournees.profiles = profile
+    }
   }
 
   const isExpired = intent.expires_at ? new Date(intent.expires_at) < new Date() : false
-  console.log('🔵 [getDonationIntent] Expiration check:', {
-    expiresAt: intent.expires_at,
-    now: new Date().toISOString(),
-    isExpired,
-  })
 
-  // Note: On ne met PAS à jour le statut ici (client public). La page gère l'UX "expiré".
-  if (isExpired && intent.status !== 'expired') {
-    console.log('⏱️ [getDonationIntent] Intent expired (status differs), leaving as-is for public view')
-  }
-
-  console.log('✅ [getDonationIntent] Returning intent')
+  console.log('✅ [getDonationIntent] Success:', { status: intent.status, isExpired })
   return intent
 }
