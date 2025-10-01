@@ -69,10 +69,12 @@ export async function getDonationIntent(intentId: string) {
     .from('donation_intents')
     .select(`
       *,
-      tournees:tournee_id (
+      tournees!tournee_id (
         zone,
         user_id,
-        profiles:user_id ( full_name )
+        profiles!user_id (
+          full_name
+        )
       )
     `)
     .eq('id', intentId)
