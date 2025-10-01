@@ -5,18 +5,9 @@ export const revalidate = 0
 
 type SearchParams = Record<string, string | string[] | undefined>
 
-function isPromise<T>(val: unknown): val is Promise<T> {
-  return typeof (val as { then?: unknown })?.then === 'function'
-}
-
-export default async function SuccessPage({
-  searchParams,
-}: {
-  searchParams: SearchParams | Promise<SearchParams>
-}) {
-  const params: SearchParams = isPromise<SearchParams>(searchParams)
-    ? await searchParams
-    : (searchParams ?? {})
+export default async function SuccessPage({ searchParams }: { searchParams?: Promise<SearchParams> }) {
+  // Next's generated types may declare searchParams as a Promise; awaiting is safe even if it's a plain object.
+  const params: SearchParams = (await searchParams) ?? {}
 
   const rawIntent = params.intent
   const intentId = Array.isArray(rawIntent) ? rawIntent[0] : rawIntent
