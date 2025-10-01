@@ -23,7 +23,7 @@ export default async function SuccessPage({ searchParams }: Props) {
       .from('donation_intents')
       .select('*')
       .eq('id', intentId)
-      .eq('status', 'waiting_donor')
+      .in('status', ['waiting_donor', 'completed'])
       .single()
 
     if (intentError || !intent) {
@@ -38,7 +38,13 @@ export default async function SuccessPage({ searchParams }: Props) {
       )
     }
 
-    // 2) Marquer l'intention comme complétée (protection contre les courses)
+    // 2) Si déjà complétée et transaction déjà liée, sauter la création
+    if (intent.status === 'completed' && intent.support_transaction_id) {
+      console.log(`[success] Intention déjà complétée avec transaction ${intent.support_transaction_id}`)
+      return renderSuccess()
+    }
+
+    // 2bis) Marquer l'intention comme complétée (protection contre les courses)
     const { error: updateError } = await supabase
       .from('donation_intents')
       .update({ status: 'completed', completed_at: new Date().toISOString() })
@@ -85,6 +91,10 @@ export default async function SuccessPage({ searchParams }: Props) {
   }
 
   // 4) Toujours afficher la confirmation (même si la DB a échoué)
+  return renderSuccess()
+}
+
+function renderSuccess() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center p-4">
       <div className="max-w-md w-full bg-white rounded-lg shadow-xl p-8 text-center">
