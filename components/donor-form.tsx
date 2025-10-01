@@ -10,7 +10,7 @@ import { createHelloAssoCheckout } from '@/app/actions/helloasso-checkout'
 
 interface DonorFormProps {
   intentId: string
-  expectedAmount: number
+  expectedAmount?: number
   donorNameHint?: string | null
 }
 
@@ -19,7 +19,7 @@ const quickAmounts = [10, 20, 50, 100]
 export function DonorForm({ intentId, expectedAmount, donorNameHint }: DonorFormProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [formData, setFormData] = useState({
-    amount: expectedAmount.toString(),
+    amount: (expectedAmount ?? 0) > 0 ? String(expectedAmount) : '',
     firstName: '',
     lastName: donorNameHint ? donorNameHint.split(' ')[0] || '' : '',
     email: '',

@@ -82,7 +82,7 @@ export function DonationModal({ trigger, tourneeId }: DonationModalProps) {
       try {
         const result = await createDonationIntent({
           tourneeId,
-          expectedAmount: amountNumber,
+          // Ne plus forcer de montant ici: intention ouverte
           donorNameHint: formData.supporterName || undefined,
         });
 
