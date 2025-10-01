@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
       log.warn('Aucune signature trouvée sur le webhook HelloAsso')
     }
 
-    const event = JSON.parse(body) as HelloAssoWebhookEvent | any
+  const event = JSON.parse(body) as HelloAssoWebhookEvent
     log.info('Webhook HelloAsso reçu', { eventType: event?.eventType })
 
     // Traitement métier minimal : conserver l'existant pour Order/Authorized
