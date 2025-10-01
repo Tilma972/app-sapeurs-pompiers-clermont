@@ -3,12 +3,23 @@ import { redirect } from 'next/navigation'
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
-type Props = {
-  searchParams: { intent?: string }
+type SearchParams = Record<string, string | string[] | undefined>
+
+function isPromise<T>(val: unknown): val is Promise<T> {
+  return typeof (val as { then?: unknown })?.then === 'function'
 }
 
-export default async function SuccessPage({ searchParams }: Props) {
-  const intentId = searchParams?.intent
+export default async function SuccessPage({
+  searchParams,
+}: {
+  searchParams: SearchParams | Promise<SearchParams>
+}) {
+  const params: SearchParams = isPromise<SearchParams>(searchParams)
+    ? await searchParams
+    : (searchParams ?? {})
+
+  const rawIntent = params.intent
+  const intentId = Array.isArray(rawIntent) ? rawIntent[0] : rawIntent
 
   if (!intentId) {
     redirect('/')
