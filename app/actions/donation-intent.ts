@@ -55,8 +55,11 @@ export async function createDonationIntent(data: { tourneeId: string; expectedAm
 }
 
 export async function getDonationIntent(intentId: string) {
+  console.log('🔵 [getDonationIntent] START - intentId:', intentId)
+
   // Utiliser un client public/anon pour les pages publiques (pas de cookies)
   const { createClient: createPublicClient } = await import('@supabase/supabase-js')
+  console.log('🔵 [getDonationIntent] Creating public Supabase client')
   const supabase = createPublicClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_OR_ANON_KEY!,
@@ -75,14 +78,36 @@ export async function getDonationIntent(intentId: string) {
     .eq('id', intentId)
     .single()
 
+  console.log('🔵 [getDonationIntent] Query result:', {
+    hasData: Boolean(intent),
+    hasError: Boolean(error),
+    errorMessage: error?.message,
+    intentStatus: intent?.status,
+    expiresAt: intent?.expires_at,
+  })
+
   if (error) {
-    console.error('Erreur getDonationIntent (public):', error.message)
+    console.error('❌ [getDonationIntent] Supabase error:', error)
     return null
   }
-  if (!intent) return null
-  if (new Date(intent.expires_at) < new Date()) {
-    // Mettre à jour le statut peut nécessiter un client authentifié; on n'échoue pas la page publique.
+
+  if (!intent) {
+    console.warn('⚠️ [getDonationIntent] No intent found')
     return null
   }
+
+  const isExpired = intent.expires_at ? new Date(intent.expires_at) < new Date() : false
+  console.log('🔵 [getDonationIntent] Expiration check:', {
+    expiresAt: intent.expires_at,
+    now: new Date().toISOString(),
+    isExpired,
+  })
+
+  // Note: On ne met PAS à jour le statut ici (client public). La page gère l'UX "expiré".
+  if (isExpired && intent.status !== 'expired') {
+    console.log('⏱️ [getDonationIntent] Intent expired (status differs), leaving as-is for public view')
+  }
+
+  console.log('✅ [getDonationIntent] Returning intent')
   return intent
 }

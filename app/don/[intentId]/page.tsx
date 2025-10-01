@@ -9,37 +9,46 @@ export const revalidate = 0
 type PageProps = { params: { intentId: string } }
 
 export default async function DonationPage({ params }: PageProps) {
-  const intent = await getDonationIntent(params.intentId)
+  console.log('🔵 [PAGE] Component rendering START')
+  try {
+    const intentId = params.intentId
+    console.log('🔵 [PAGE] intentId:', intentId)
 
-  // Cas 1: Inexistant -> 404
-  if (!intent) {
-    notFound()
-  }
+    const intent = await getDonationIntent(intentId)
+    console.log('🔵 [PAGE] getDonationIntent returned:', intent ? 'DATA' : 'NULL')
 
-  // Cas 2: Expiré -> message dédié
-  const isExpired = intent.status === 'expired' || (intent.expires_at && new Date(intent.expires_at) < new Date())
-  if (isExpired) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-700 via-gray-900 to-gray-700 p-4 flex items-center justify-center">
-        <div className="max-w-md w-full mx-auto bg-white rounded-lg shadow-xl p-8 text-center">
-          <h1 className="text-2xl font-bold text-gray-800 mb-4">Lien de don expiré</h1>
-          <p className="text-gray-600">
-            Ce lien de don n&apos;est plus valide. Pour des raisons de sécurité, chaque lien a une durée de vie limitée.
-          </p>
-          <p className="text-gray-600 mt-2">
-            Veuillez demander au sapeur-pompier de vous générer un nouveau QR code.
-          </p>
+    // Cas 1: Inexistant -> 404
+    if (!intent) {
+      console.warn('⚠️ [PAGE] No intent, calling notFound()')
+      notFound()
+    }
+
+    // Cas 2: Expiré -> message dédié
+    const isExpired = intent.status === 'expired' || (intent.expires_at && new Date(intent.expires_at) < new Date())
+    console.log('🔵 [PAGE] Expired check:', { status: intent.status, expiresAt: intent.expires_at, isExpired })
+    if (isExpired) {
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-gray-700 via-gray-900 to-gray-700 p-4 flex items-center justify-center">
+          <div className="max-w-md w-full mx-auto bg-white rounded-lg shadow-xl p-8 text-center">
+            <h1 className="text-2xl font-bold text-gray-800 mb-4">Lien de don expiré</h1>
+            <p className="text-gray-600">
+              Ce lien de don n&apos;est plus valide. Pour des raisons de sécurité, chaque lien a une durée de vie limitée.
+            </p>
+            <p className="text-gray-600 mt-2">
+              Veuillez demander au sapeur-pompier de vous générer un nouveau QR code.
+            </p>
+          </div>
         </div>
-      </div>
-    )
-  }
+      )
+    }
 
-  // Cas 3: Autre statut inattendu -> 404
-  if (intent.status !== 'waiting_donor') {
-    notFound()
-  }
+    // Cas 3: Autre statut inattendu -> 404
+    if (intent.status !== 'waiting_donor') {
+      console.warn('⚠️ [PAGE] Invalid status:', intent.status)
+      notFound()
+    }
 
-  const sapeurPompierName = intent.tournees?.profiles?.full_name || 'Sapeur-Pompier'
+    const sapeurPompierName = intent.tournees?.profiles?.full_name || 'Sapeur-Pompier'
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-900 via-red-800 to-blue-900 p-4">
@@ -67,4 +76,13 @@ export default async function DonationPage({ params }: PageProps) {
       </div>
     </div>
   )
+  } catch (error) {
+    console.error('🔥 [PAGE] CRITICAL ERROR:', error)
+    return (
+      <div style={{ padding: '20px', background: '#fff3f3', color: '#ff0000' }}>
+        <h1>500 - Erreur serveur</h1>
+        <pre>{error instanceof Error ? error.stack : JSON.stringify(error)}</pre>
+      </div>
+    )
+  }
 }
