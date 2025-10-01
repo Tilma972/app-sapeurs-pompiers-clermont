@@ -73,7 +73,7 @@ class HelloAssoClient {
   async createCheckoutIntent(request: CreateCheckoutRequest): Promise<HelloAssoCheckoutIntent> {
     const token = await this.getAccessToken()
     const response = await fetch(
-      `${this.baseUrl}/organizations/${this.organizationSlug}/checkout-intents`,
+      `${this.baseUrl}/v5/organizations/${this.organizationSlug}/checkout-intents`,
       {
         method: 'POST',
         headers: {
