@@ -72,6 +72,11 @@ class HelloAssoClient {
 
   async createCheckoutIntent(request: CreateCheckoutRequest): Promise<HelloAssoCheckoutIntent> {
     const token = await this.getAccessToken()
+    // HelloAsso requiert initialAmount: s'il est absent, on le renseigne avec totalAmount
+    const payload: CreateCheckoutRequest = {
+      ...request,
+      initialAmount: request.initialAmount ?? request.totalAmount,
+    }
     const response = await fetch(
       `${this.baseUrl}/v5/organizations/${this.organizationSlug}/checkout-intents`,
       {
@@ -80,7 +85,7 @@ class HelloAssoClient {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(request),
+        body: JSON.stringify(payload),
       }
     )
     if (!response.ok) {

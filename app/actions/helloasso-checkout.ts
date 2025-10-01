@@ -37,6 +37,7 @@ export async function createHelloAssoCheckout(data: {
 
     const checkoutIntent = await helloAssoClient.createCheckoutIntent({
       totalAmount: Math.round(data.amount * 100),
+      initialAmount: Math.round(data.amount * 100),
       itemName: `Don Sapeurs-Pompiers Clermont-l'Hérault`,
       backUrl: `${process.env.HELLOASSO_CANCEL_URL}?intent=${data.intentId}`,
       errorUrl: `${process.env.HELLOASSO_CANCEL_URL}?intent=${data.intentId}`,
