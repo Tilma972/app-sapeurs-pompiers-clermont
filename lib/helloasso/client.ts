@@ -38,22 +38,37 @@ class HelloAssoClient {
   }
 
   async getAccessToken(): Promise<string> {
-    const response = await fetch(`${this.baseUrl}/oauth2/token`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({
-        grant_type: 'client_credentials',
-        client_id: this.clientId,
-        client_secret: this.clientSecret,
-      }),
+  const tokenUrl = `${this.baseUrl}/oauth2/token`
+  
+  // Ajoute ce log
+  log.info('Tentative auth HelloAsso', { 
+    tokenUrl, 
+    hasClientId: !!this.clientId,
+    hasClientSecret: !!this.clientSecret 
+  })
+
+  const response = await fetch(tokenUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      grant_type: 'client_credentials',
+      client_id: this.clientId,
+      client_secret: this.clientSecret,
+    }),
+  })
+  
+  if (!response.ok) {
+    const errorBody = await response.text()
+    log.error('Échec authentification HelloAsso', { 
+      status: response.status,
+      errorBody  // Ajoute le corps de l'erreur
     })
-    if (!response.ok) {
-      log.error('Échec authentification HelloAsso', { status: response.status })
-      throw new Error('HelloAsso authentication failed')
-    }
-    const data = await response.json()
-    return data.access_token
+    throw new Error('HelloAsso authentication failed')
   }
+  
+  const data = await response.json()
+  return data.access_token
+}
 
   async createCheckoutIntent(request: CreateCheckoutRequest): Promise<HelloAssoCheckoutIntent> {
     const token = await this.getAccessToken()
