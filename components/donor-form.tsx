@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Euro, User, Mail } from 'lucide-react'
-import { createHelloAssoCheckout } from '@/app/actions/helloasso-checkout'
+import { finalizeDonationIntent, FinalizeDonationResult } from '@/app/actions/donation-intent'
 
 interface DonorFormProps {
   intentId: string
@@ -18,6 +18,7 @@ const quickAmounts = [10, 20, 50, 100]
 
 export function DonorForm({ intentId, expectedAmount, donorNameHint }: DonorFormProps) {
   const [isLoading, setIsLoading] = useState(false)
+  type FinalizeResult = FinalizeDonationResult
   const [formData, setFormData] = useState({
     amount: (expectedAmount ?? 0) > 0 ? String(expectedAmount) : '',
     firstName: '',
@@ -34,16 +35,17 @@ export function DonorForm({ intentId, expectedAmount, donorNameHint }: DonorForm
     e.preventDefault()
     setIsLoading(true)
     try {
-      const result = await createHelloAssoCheckout({
+      const result: FinalizeResult = await finalizeDonationIntent({
         intentId,
         amount: parseFloat(formData.amount),
         donor: { firstName: formData.firstName, lastName: formData.lastName, email: formData.email },
         fiscalReceipt: formData.fiscalReceipt,
       })
-      if (result.success && result.checkoutUrl) {
+      if (result.success) {
         window.location.href = result.checkoutUrl
       } else {
-        alert(result.error || 'Erreur lors de la création du paiement')
+        const msg = result.error || 'Erreur lors de la création du paiement'
+        alert(msg)
         setIsLoading(false)
       }
     } catch (error) {

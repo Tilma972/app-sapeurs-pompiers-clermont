@@ -95,3 +95,73 @@ export async function getDonationIntent(intentId: string) {
   console.log('✅ [getDonationIntent] Success:', { status: intent.status, isExpired })
   return intent
 }
+
+export type FinalizeDonationResult = { success: true; checkoutUrl: string } | { success: false; error?: string }
+
+export async function finalizeDonationIntent(params: {
+  intentId: string
+  amount: number
+  donor?: { firstName?: string; lastName?: string; email?: string }
+  fiscalReceipt?: boolean
+}): Promise<FinalizeDonationResult> {
+  const log = createLogger('actions/finalize-donation-intent')
+  const supabase = await createSupabaseServerClient()
+
+  const { intentId, amount, donor, fiscalReceipt } = params
+  if (!intentId || !amount || amount <= 0) {
+  return { success: false, error: 'Paramètres invalides' }
+  }
+
+  // 1) Vérifier l'intention
+  const { data: intent, error: intentError } = await supabase
+    .from('donation_intents')
+    .select('*')
+    .eq('id', intentId)
+    .single()
+
+  if (intentError || !intent) {
+    log.error('Intention introuvable', { intentId, intentError })
+  return { success: false, error: 'Intention introuvable' }
+  }
+
+  if (intent.status !== 'waiting_donor' && intent.status !== 'completed') {
+  return { success: false, error: 'Statut invalide pour finalisation' }
+  }
+
+  // 2) Mettre à jour l'intention avec le montant et les infos donateur
+  const { error: updateError } = await supabase
+    .from('donation_intents')
+    .update({
+      expected_amount: amount,
+      final_amount: amount,
+      donor_first_name: donor?.firstName || intent.donor_first_name || null,
+      donor_last_name: donor?.lastName || intent.donor_last_name || null,
+      donor_email: donor?.email || intent.donor_email || null,
+      fiscal_receipt: fiscalReceipt ?? intent.fiscal_receipt ?? false,
+    })
+    .eq('id', intentId)
+
+  if (updateError) {
+    log.error('Erreur update intention', updateError)
+  return { success: false, error: 'Erreur lors de la mise à jour' }
+  }
+
+  // 3) Créer le checkout HelloAsso
+  const { createHelloAssoCheckout } = await import('@/app/actions/helloasso-checkout')
+  const result = await createHelloAssoCheckout({
+    intentId,
+    amount,
+    donor: {
+      firstName: donor?.firstName || intent.donor_first_name || '',
+      lastName: donor?.lastName || intent.donor_last_name || '',
+      email: donor?.email || intent.donor_email || '',
+    },
+    fiscalReceipt: fiscalReceipt ?? intent.fiscal_receipt ?? false,
+  })
+
+  if (!result.success || !result.checkoutUrl) {
+    return { success: false, error: result.error || 'Erreur HelloAsso' }
+  }
+
+  return { success: true, checkoutUrl: result.checkoutUrl }
+}
