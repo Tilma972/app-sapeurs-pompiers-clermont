@@ -6,9 +6,9 @@ export const dynamic = 'force-dynamic'
 export const dynamicParams = true
 export const revalidate = 0
 
-type PageProps = { params: { intentId: string } }
+type Props = { params: { intentId: string } }
 
-export default async function DonationPage({ params }: PageProps) {
+export default async function DonationPage({ params }: Props) {
   console.log('🔵 [PAGE] Component rendering START')
   try {
     const intentId = params.intentId
