@@ -82,9 +82,9 @@ export function DonationModal({ trigger, tourneeId }: DonationModalProps) {
       try {
         const result = await createDonationIntent({
           tourneeId,
-          // Pour HelloAsso, on envoie désormais un montant attendu afin d'éviter la contrainte NOT NULL côté DB
-          expectedAmount: amountNumber,
+          // Intention ouverte: le donateur renseignera le montant en toute intimité sur la page publique
           donorNameHint: formData.supporterName || undefined,
+          donorEmailHint: formData.supporterEmail || undefined,
         });
 
         if (result.success && result.intentId && result.donationUrl && result.expiresAt) {

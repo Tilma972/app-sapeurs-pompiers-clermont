@@ -12,18 +12,19 @@ interface DonorFormProps {
   intentId: string
   expectedAmount?: number
   donorNameHint?: string | null
+  donorEmailHint?: string | null
 }
 
 const quickAmounts = [10, 20, 50, 100]
 
-export function DonorForm({ intentId, expectedAmount, donorNameHint }: DonorFormProps) {
+export function DonorForm({ intentId, expectedAmount, donorNameHint, donorEmailHint }: DonorFormProps) {
   const [isLoading, setIsLoading] = useState(false)
   type FinalizeResult = FinalizeDonationResult
   const [formData, setFormData] = useState({
     amount: (expectedAmount ?? 0) > 0 ? String(expectedAmount) : '',
     firstName: '',
     lastName: donorNameHint ? donorNameHint.split(' ')[0] || '' : '',
-    email: '',
+  email: donorEmailHint || '',
     fiscalReceipt: false,
   })
 

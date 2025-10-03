@@ -7,7 +7,7 @@ async function createSupabaseServerClient() {
   return await createClient()
 }
 
-export async function createDonationIntent(data: { tourneeId: string; expectedAmount?: number; donorNameHint?: string }) {
+export async function createDonationIntent(data: { tourneeId: string; expectedAmount?: number; donorNameHint?: string; donorEmailHint?: string }) {
   const log = createLogger('actions/donation-intent')
   const supabase = await createSupabaseServerClient()
 
@@ -35,6 +35,7 @@ export async function createDonationIntent(data: { tourneeId: string; expectedAm
         sapeur_pompier_id: user.id,
         expected_amount: data.expectedAmount ?? null,
         donor_name_hint: data.donorNameHint || null,
+        donor_email: data.donorEmailHint || null,
         status: 'waiting_donor',
         expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
       })

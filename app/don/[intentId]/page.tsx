@@ -67,7 +67,12 @@ export default async function DonationPage({ params }: Props) {
             </div>
           </div>
 
-          <DonorForm intentId={intent.id} expectedAmount={intent.expected_amount} donorNameHint={intent.donor_name_hint} />
+          <DonorForm
+            intentId={intent.id}
+            expectedAmount={intent.expected_amount}
+            donorNameHint={intent.donor_name_hint}
+            donorEmailHint={intent.donor_email}
+          />
 
           <div className="text-center text-xs text-gray-500 border-t pt-4">
             <p>Paiement sécurisé via HelloAsso</p>
