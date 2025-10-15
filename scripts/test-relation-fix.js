@@ -124,3 +124,4 @@ console.log('   SELECT ts.user_id, p.team FROM tournee_summary ts LEFT JOIN prof
 
 
 
+

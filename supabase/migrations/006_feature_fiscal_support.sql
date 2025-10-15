@@ -225,3 +225,4 @@ COMMENT ON VIEW tournee_summary IS 'Vue agrégée des statistiques de tournée a
 
 
 
+

@@ -267,3 +267,4 @@ COMMENT ON FUNCTION get_equipes_summary_for_charts() IS 'Récupère le résumé 
 
 
 
+

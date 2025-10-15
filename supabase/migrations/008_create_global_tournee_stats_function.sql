@@ -40,3 +40,4 @@ CREATE INDEX IF NOT EXISTS idx_tournees_montant_collecte ON public.tournees(mont
 
 
 
+
