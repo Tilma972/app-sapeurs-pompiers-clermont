@@ -6,8 +6,13 @@ import { createLogger } from '@/lib/log'
 const log = createLogger('webhook/helloasso')
 
 export async function POST(req: NextRequest) {
+  const start = Date.now()
+  const admin = createAdminClient()
+  let webhookLogId: string | null = null
+  let rawBody = ''
+
   try {
-    const body = await req.text()
+    rawBody = await req.text()
     const sigHa = req.headers.get('x-ha-signature')
     const sigHelloAsso = req.headers.get('HelloAsso-Signature')
     const sigXHelloAsso = req.headers.get('x-helloasso-signature')
@@ -23,18 +28,54 @@ export async function POST(req: NextRequest) {
       log.warn('Aucune signature trouvée sur le webhook HelloAsso')
     }
 
-  const event = JSON.parse(body) as HelloAssoWebhookEvent
-    log.info('Webhook HelloAsso reçu', { eventType: event?.eventType })
+    // Créer un log initial
+    const headersObj: Record<string, string> = {}
+    req.headers.forEach((value, key) => { headersObj[key] = value })
+    const parsed = JSON.parse(rawBody) as HelloAssoWebhookEvent
+    log.info('Webhook HelloAsso reçu', { eventType: parsed?.eventType })
 
-    // Traitement métier minimal : conserver l'existant pour Order/Authorized
-    if (event?.eventType === 'Order' && event?.data?.order?.state === 'Authorized') {
-      await handleOrderAuthorized(event)
+    const { data: logRow } = await admin
+      .from('webhook_logs')
+      .insert({
+        source: 'helloasso',
+        event_type: parsed?.eventType ?? 'unknown',
+        payload: parsed as unknown as object,
+        headers: headersObj,
+        status: 'received',
+      })
+      .select('id')
+      .single()
+    webhookLogId = logRow?.id ?? null
+
+    // Traitement métier
+    if (parsed?.eventType === 'Order' && parsed?.data?.order?.state === 'Authorized') {
+      await handleOrderAuthorized(parsed)
     }
-    // Note: on pourrait ajouter un traitement "Payment" ici si nécessaire
+
+    // Marquer comme traité
+    if (webhookLogId) {
+      await admin
+        .from('webhook_logs')
+        .update({ status: 'processed', processing_duration_ms: Date.now() - start })
+        .eq('id', webhookLogId)
+    }
 
     return NextResponse.json({ received: true })
   } catch (error) {
-    log.error('Erreur traitement webhook', { message: (error as Error)?.message })
+    const message = (error as Error)?.message ?? 'Unknown error'
+    log.error('Erreur traitement webhook', { message })
+    if (webhookLogId) {
+      await admin
+        .from('webhook_logs')
+        .update({ status: 'error', error_message: message, processing_duration_ms: Date.now() - start })
+        .eq('id', webhookLogId)
+    } else if (rawBody) {
+      try {
+        await admin.from('webhook_logs').insert({ source: 'helloasso', payload: JSON.parse(rawBody), status: 'error', error_message: message })
+      } catch (e) {
+        log.error("Impossible de persister le log d'erreur", { message: (e as Error)?.message })
+      }
+    }
     return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
   }
 }
@@ -89,10 +130,10 @@ async function handleOrderAuthorized(event: HelloAssoWebhookEvent) {
 
   if (transactionError) {
     log.error('Erreur création support_transaction', transactionError)
-    return
+    throw transactionError
   }
 
-  await admin
+  const { error: intentUpdateError } = await admin
     .from('donation_intents')
     .update({
       status: 'completed',
@@ -103,6 +144,10 @@ async function handleOrderAuthorized(event: HelloAssoWebhookEvent) {
       donor_email: donorEmail,
     })
     .eq('id', intentId)
+  if (intentUpdateError) {
+    log.error('Erreur update intent', intentUpdateError)
+    throw intentUpdateError
+  }
 }
 
 export const dynamic = 'force-dynamic'
