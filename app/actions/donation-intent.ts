@@ -33,8 +33,8 @@ export async function createDonationIntent(data: { tourneeId: string; expectedAm
       .insert({
         tournee_id: data.tourneeId,
         sapeur_pompier_id: user.id,
-  // Temp fallback: use 0 to satisfy NOT NULL until migration is applied
-  expected_amount: data.expectedAmount ?? 0,
+  // DB now allows NULL for open intents
+  expected_amount: data.expectedAmount ?? null,
         donor_name_hint: data.donorNameHint || null,
         donor_email: data.donorEmailHint || null,
         status: 'waiting_donor',

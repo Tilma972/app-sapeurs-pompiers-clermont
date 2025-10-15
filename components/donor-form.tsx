@@ -10,7 +10,7 @@ import { finalizeDonationIntent, FinalizeDonationResult } from '@/app/actions/do
 
 interface DonorFormProps {
   intentId: string
-  expectedAmount?: number
+  expectedAmount?: number | null
   donorNameHint?: string | null
   donorEmailHint?: string | null
 }
@@ -21,7 +21,7 @@ export function DonorForm({ intentId, expectedAmount, donorNameHint, donorEmailH
   const [isLoading, setIsLoading] = useState(false)
   type FinalizeResult = FinalizeDonationResult
   const [formData, setFormData] = useState({
-    amount: (expectedAmount ?? 0) > 0 ? String(expectedAmount) : '',
+    amount: expectedAmount && expectedAmount > 0 ? String(expectedAmount) : '',
     firstName: '',
     lastName: donorNameHint ? donorNameHint.split(' ')[0] || '' : '',
   email: donorEmailHint || '',
