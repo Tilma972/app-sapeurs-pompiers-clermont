@@ -43,6 +43,7 @@ export function DonationModal({ trigger, tourneeId }: DonationModalProps) {
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [showQRModal, setShowQRModal] = useState(false)
   const [qrCodeData, setQRCodeData] = useState<{ intentId: string; url: string; expiresAt: string } | null>(null)
+  const [isGeneratingQR, setIsGeneratingQR] = useState(false)
 
   // État principal : soutien (avec calendrier) vs fiscal
   const [calendarAccepted, setCalendarAccepted] = useState(true);
@@ -64,6 +65,34 @@ export function DonationModal({ trigger, tourneeId }: DonationModalProps) {
     [amountNumber, isFiscal]
   );
 
+  const handleGenerateQRForCard = async () => {
+    setIsGeneratingQR(true)
+    setMessage(null)
+    if (!tourneeId) {
+      setMessage({ type: "error", text: "Aucune tournée active trouvée" })
+      setIsGeneratingQR(false)
+      return
+    }
+    try {
+      const result = await createDonationIntent({
+        tourneeId,
+        donorNameHint: formData.supporterName || undefined,
+        donorEmailHint: formData.supporterEmail || undefined,
+      })
+      if (result.success && result.intentId && result.donationUrl && result.expiresAt) {
+        setQRCodeData({ intentId: result.intentId, url: result.donationUrl, expiresAt: result.expiresAt })
+        setShowQRModal(true)
+      } else {
+        setMessage({ type: 'error', text: result.error || 'Erreur création QR code' })
+      }
+    } catch (error) {
+      console.error('Erreur génération QR:', error)
+      setMessage({ type: 'error', text: 'Erreur lors de la génération' })
+    } finally {
+      setIsGeneratingQR(false)
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -76,41 +105,12 @@ export function DonationModal({ trigger, tourneeId }: DonationModalProps) {
     }
 
     // ========================================
-    // FLUX SPÉCIFIQUE CARTE - HelloAsso
+    // FLUX SPÉCIFIQUE CARTE - HelloAsso (intimité) : génération directe de QR
     // ========================================
     if (formData.paymentMethod === 'carte') {
-      try {
-        const result = await createDonationIntent({
-          tourneeId,
-          // Intention ouverte: le donateur renseignera le montant en toute intimité sur la page publique
-          donorNameHint: formData.supporterName || undefined,
-          donorEmailHint: formData.supporterEmail || undefined,
-        });
-
-        if (result.success && result.intentId && result.donationUrl && result.expiresAt) {
-          // Afficher le QR code modal
-          setQRCodeData({
-            intentId: result.intentId,
-            url: result.donationUrl,
-            expiresAt: result.expiresAt
-          });
-          setShowQRModal(true);
-          setIsLoading(false);
-          
-          // ✅ CRITIQUE : On s'arrête ICI pour le paiement carte
-          // Le paiement sera enregistré PLUS TARD via le webhook HelloAsso
-          return;
-        } else {
-          setMessage({ type: 'error', text: result.error || 'Erreur création intention de paiement' });
-          setIsLoading(false);
-          return;
-        }
-      } catch (error) {
-        console.error('Erreur création intention HelloAsso:', error);
-        setMessage({ type: 'error', text: 'Erreur lors de la création du paiement' });
-        setIsLoading(false);
-        return;
-      }
+      await handleGenerateQRForCard()
+      setIsLoading(false)
+      return
     }
 
     // ========================================
@@ -216,7 +216,8 @@ export function DonationModal({ trigger, tourneeId }: DonationModalProps) {
             </Alert>
           )}
 
-          {/* Étape 1: Montant + Type */}
+          {/* Étape 1: Montant + Type (cachée si carte) */}
+          {formData.paymentMethod !== 'carte' && (
           <div className="space-y-2">
             <Label className="text-sm font-medium">Montant et type</Label>
             <div className="grid grid-cols-4 gap-2">
@@ -243,7 +244,7 @@ export function DonationModal({ trigger, tourneeId }: DonationModalProps) {
                 className="pl-10 h-10"
                 min="0"
                 step="0.50"
-                required
+                required={formData.paymentMethod !== 'carte'}
                 disabled={isLoading}
               />
             </div>
@@ -277,6 +278,7 @@ export function DonationModal({ trigger, tourneeId }: DonationModalProps) {
               </div>
             )}
           </div>
+          )}
 
           {/* Étape 2: Paiement */}
           <div className="space-y-1.5">
@@ -394,32 +396,47 @@ export function DonationModal({ trigger, tourneeId }: DonationModalProps) {
             <Button type="button" variant="outline" onClick={() => setIsOpen(false)} disabled={isLoading}>
               Annuler
             </Button>
-            <Button
-              type="submit"
-              disabled={isLoading || !formData.amount || parseFloat(formData.amount) <= 0}
-              className={`${calendarAccepted ? "bg-emerald-600 hover:bg-emerald-700" : "bg-sky-600 hover:bg-sky-700"}`}
-            >
-              {isLoading ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                  Enregistrement...
-                </>
-              ) : (
-                <>
-                  <Check className="h-4 w-4 mr-2" />
-                  Enregistrer le don
-                </>
-              )}
-            </Button>
+            {formData.paymentMethod === 'carte' ? (
+              <Button type="button" onClick={handleGenerateQRForCard} disabled={isGeneratingQR}>
+                {isGeneratingQR ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                    Génération du QR Code...
+                  </>
+                ) : (
+                  <>
+                    <CreditCard className="h-4 w-4 mr-2" />
+                    Générer le QR Code
+                  </>
+                )}
+              </Button>
+            ) : (
+              <Button
+                type="submit"
+                disabled={isLoading || !formData.amount || parseFloat(formData.amount) <= 0}
+                className={`${calendarAccepted ? "bg-emerald-600 hover:bg-emerald-700" : "bg-sky-600 hover:bg-sky-700"}`}
+              >
+                {isLoading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                    Enregistrement...
+                  </>
+                ) : (
+                  <>
+                    <Check className="h-4 w-4 mr-2" />
+                    Enregistrer le don
+                  </>
+                )}
+              </Button>
+            )}
           </div>
         </form>
         {showQRModal && qrCodeData && (
           <QRCodeModal
             isOpen={showQRModal}
-            onClose={() => { setShowQRModal(false); setQRCodeData(null) }}
+            onClose={() => { setShowQRModal(false); setQRCodeData(null); setIsOpen(false) }}
             intentId={qrCodeData.intentId}
             donationUrl={qrCodeData.url}
-            expectedAmount={amountNumber}
             expiresAt={qrCodeData.expiresAt}
           />
         )}

@@ -58,15 +58,27 @@ async function handleOrderAuthorized(event: HelloAssoWebhookEvent) {
     return
   }
 
+  // Récupérer infos réelles depuis l'événement HelloAsso
+  const finalAmount = (event.data.order?.amount?.total ?? 0) / 100
+  const donorFirstName = event.data.order?.payer?.firstName || intent.donor_first_name || null
+  const donorLastName = event.data.order?.payer?.lastName || intent.donor_last_name || null
+  const donorEmail = event.data.order?.payer?.email || intent.donor_email || null
+
+  // Protection doublon
+  if (intent.status === 'completed' && intent.support_transaction_id) {
+    log.warn('Intent déjà traitée', { intentId })
+    return
+  }
+
   const { data: transaction, error: transactionError } = await admin
     .from('support_transactions')
     .insert({
       user_id: intent.sapeur_pompier_id,
       tournee_id: intent.tournee_id,
-      amount: intent.final_amount,
+      amount: finalAmount || intent.final_amount,
       calendar_accepted: !intent.fiscal_receipt,
-      supporter_name: `${intent.donor_first_name || ''} ${intent.donor_last_name || ''}`.trim() || null,
-      supporter_email: intent.donor_email,
+      supporter_name: `${donorFirstName || ''} ${donorLastName || ''}`.trim() || null,
+      supporter_email: donorEmail,
       payment_method: 'carte',
       payment_status: 'completed',
       notes: `Paiement HelloAsso - Commande ${event.data.order.id}`,
@@ -82,7 +94,14 @@ async function handleOrderAuthorized(event: HelloAssoWebhookEvent) {
 
   await admin
     .from('donation_intents')
-    .update({ status: 'completed', support_transaction_id: transaction.id })
+    .update({
+      status: 'completed',
+      support_transaction_id: transaction.id,
+      final_amount: finalAmount || intent.final_amount,
+      donor_first_name: donorFirstName,
+      donor_last_name: donorLastName,
+      donor_email: donorEmail,
+    })
     .eq('id', intentId)
 }
 
