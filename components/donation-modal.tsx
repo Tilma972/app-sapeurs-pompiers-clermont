@@ -74,11 +74,7 @@ export function DonationModal({ trigger, tourneeId }: DonationModalProps) {
       return
     }
     try {
-      const result = await createDonationIntent({
-        tourneeId,
-        donorNameHint: formData.supporterName || undefined,
-        donorEmailHint: formData.supporterEmail || undefined,
-      })
+      const result = await createDonationIntent({ tourneeId })
       if (result.success && result.intentId && result.donationUrl && result.expiresAt) {
         setQRCodeData({ intentId: result.intentId, url: result.donationUrl, expiresAt: result.expiresAt })
         setShowQRModal(true)
@@ -312,7 +308,8 @@ export function DonationModal({ trigger, tourneeId }: DonationModalProps) {
             </div>
           </div>
 
-          {/* Étape 3: Détails conditionnels */}
+          {/* Étape 3: Détails conditionnels (cachés si carte) */}
+          {formData.paymentMethod !== 'carte' && (
           <div className="space-y-2">
             <Label className="text-sm font-medium">
               Détails {!calendarAccepted && <span className="text-red-500">(email requis pour don fiscal)</span>}
@@ -382,6 +379,7 @@ export function DonationModal({ trigger, tourneeId }: DonationModalProps) {
               </div>
             </div>
           </div>
+          )}
 
           {/* Résumé compact inline */}
           {formData.amount && (
