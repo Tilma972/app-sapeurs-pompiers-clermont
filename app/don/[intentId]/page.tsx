@@ -40,11 +40,12 @@ export default async function DonationRedirectPage({ params }: Props) {
   }
 
   // 4) Créer un checkout HelloAsso (montant minimal 1€ techniquement requis)
-  try {
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL as string
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL as string
   const donationName = "Don Sapeurs-Pompiers Clermont-l\'Hérault"
 
-    const checkout = await helloAssoClient.createCheckoutIntent({
+  let checkout: { id: string; url: string }
+  try {
+    checkout = await helloAssoClient.createCheckoutIntent({
       totalAmount: 100,
       initialAmount: 100,
       itemName: donationName,
@@ -59,17 +60,8 @@ export default async function DonationRedirectPage({ params }: Props) {
         email: intent.donor_email || '',
       },
     })
-
-    // 5) Stocker l'URL de checkout pour éviter recréation
-    const admin = createAdminClient()
-    await admin
-      .from('donation_intents')
-      .update({ helloasso_checkout_intent_id: checkout.id, helloasso_checkout_url: checkout.url })
-      .eq('id', intentId)
-
-    redirect(checkout.url)
   } catch (error) {
-    console.error('Erreur création checkout HelloAsso:', error)
+    console.error('Erreur HelloAsso:', error)
     return (
       <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-50 p-4 flex items-center justify-center">
         <div className="max-w-md w-full bg-white rounded-lg shadow-xl p-8 text-center">
@@ -78,10 +70,25 @@ export default async function DonationRedirectPage({ params }: Props) {
           </div>
           <h1 className="text-2xl font-bold text-gray-800 mb-4">Service temporairement indisponible</h1>
           <p className="text-gray-600 mb-4">Un problème technique est survenu. Veuillez réessayer dans quelques instants.</p>
-          <p className="text-sm text-gray-500">Code d&apos;erreur : {intentId}</p>
-          <button onClick={() => location.reload()} className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Réessayer</button>
+          <p className="text-sm text-gray-500 mb-4">Code d&apos;erreur : {intentId}</p>
+          <a
+            href={`/don/${intentId}`}
+            className="inline-block mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            Réessayer
+          </a>
         </div>
       </div>
     )
   }
+
+  // 5) Stocker l'URL de checkout pour éviter recréation
+  const admin = createAdminClient()
+  await admin
+    .from('donation_intents')
+    .update({ helloasso_checkout_intent_id: checkout.id, helloasso_checkout_url: checkout.url })
+    .eq('id', intentId)
+
+  // 6) Redirection — ne pas encapsuler dans un try/catch
+  redirect(checkout.url)
 }
