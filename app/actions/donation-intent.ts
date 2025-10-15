@@ -1,6 +1,7 @@
 'use server'
 
 import { createLogger } from '@/lib/log'
+import type { DonationIntent } from '@/lib/types/donation-intent'
 
 async function createSupabaseServerClient() {
   const { createClient } = await import('@/lib/supabase/server')
@@ -56,7 +57,13 @@ export async function createDonationIntent(data: { tourneeId: string; expectedAm
   }
 }
 
-export async function getDonationIntent(intentId: string) {
+type JoinedTournee = {
+  zone?: string | null
+  user_id?: string | null
+  profiles?: { full_name?: string | null } | null
+}
+
+export async function getDonationIntent(intentId: string): Promise<(DonationIntent & { tournees?: JoinedTournee }) | null> {
   console.log('🔵 [getDonationIntent] START - intentId:', intentId)
 
   const { createClient: createPublicClient } = await import('@supabase/supabase-js')
@@ -95,7 +102,7 @@ export async function getDonationIntent(intentId: string) {
   const isExpired = intent.expires_at ? new Date(intent.expires_at) < new Date() : false
 
   console.log('✅ [getDonationIntent] Success:', { status: intent.status, isExpired })
-  return intent
+  return intent as DonationIntent & { tournees?: JoinedTournee }
 }
 
 export type FinalizeDonationResult = { success: true; checkoutUrl: string } | { success: false; error?: string }
