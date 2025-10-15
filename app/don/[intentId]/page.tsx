@@ -36,6 +36,7 @@ export default async function DonationRedirectPage({ params }: Props) {
   // 3) Si on a déjà une URL checkout stockée, rediriger directement
   const checkoutUrl = (intent as { helloasso_checkout_url?: string | null }).helloasso_checkout_url
   if (checkoutUrl) {
+    console.log(`[don/${intentId}] Reusing stored HelloAsso checkout URL → redirect`)
     redirect(checkoutUrl)
   }
 
@@ -45,6 +46,7 @@ export default async function DonationRedirectPage({ params }: Props) {
 
   let checkout: { id: string; url: string }
   try {
+    console.log(`[don/${intentId}] Creating new HelloAsso checkout…`)
     checkout = await helloAssoClient.createCheckoutIntent({
       totalAmount: 100,
       initialAmount: 100,
@@ -60,8 +62,9 @@ export default async function DonationRedirectPage({ params }: Props) {
         email: intent.donor_email || '',
       },
     })
+    console.log(`[don/${intentId}] HelloAsso checkout created`, { id: checkout.id })
   } catch (error) {
-    console.error('Erreur HelloAsso:', error)
+    console.error(`[don/${intentId}] HelloAsso checkout creation failed`, error)
     return (
       <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-50 p-4 flex items-center justify-center">
         <div className="max-w-md w-full bg-white rounded-lg shadow-xl p-8 text-center">
@@ -88,6 +91,7 @@ export default async function DonationRedirectPage({ params }: Props) {
     .from('donation_intents')
     .update({ helloasso_checkout_intent_id: checkout.id, helloasso_checkout_url: checkout.url })
     .eq('id', intentId)
+  console.log(`[don/${intentId}] Stored checkout URL and id in DB → redirecting`)
 
   // 6) Redirection — ne pas encapsuler dans un try/catch
   redirect(checkout.url)
