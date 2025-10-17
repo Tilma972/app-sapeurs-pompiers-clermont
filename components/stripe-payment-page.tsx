@@ -47,7 +47,7 @@ function PaymentForm({ onSuccess, intentId }: { onSuccess: () => void; intentId?
             billingDetails: {
               name: 'auto',
               email: 'auto',
-              phone: 'never',
+              phone: 'auto',
               address: 'never',
             },
           },
