@@ -18,7 +18,8 @@ import {
   Calendar,
   Euro,
   CreditCard,
-  FileText
+  FileText,
+  AlertTriangle
 } from "lucide-react";
 import { cloturerTournee } from "@/app/actions/donation-actions";
 import { TourneeSummary, SupportTransaction } from "@/lib/types/support-transactions";
@@ -38,6 +39,7 @@ interface TourneeClotureModalProps {
 export function TourneeClotureModal({ trigger, tourneeData, tourneeSummary }: TourneeClotureModalProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [confirmZeroOpen, setConfirmZeroOpen] = useState(false);
   
   const [formData, setFormData] = useState({
     montantEspeces: '',
@@ -60,15 +62,24 @@ export function TourneeClotureModal({ trigger, tourneeData, tourneeSummary }: To
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
+    // Confirmation légère si aucun calendrier distribué saisi (cas rare)
+    const isCalendriersZero = (formData.calendriersDistribues?.trim() === '' || Number(formData.calendriersDistribues) === 0)
+    if (isCalendriersZero) {
+      setConfirmZeroOpen(true);
+      return;
+    }
+    await proceedSubmit();
+  };
 
+  const proceedSubmit = async () => {
+    setIsLoading(true);
     try {
       // Préparation des données pour la Server Action
       const formDataToSubmit = new FormData();
-    formDataToSubmit.append('tournee_id', tourneeData.tournee.id);
-    // Par défaut 0 si vide
-    formDataToSubmit.append('calendriers_finaux', (formData.calendriersDistribues || '0'));
-    formDataToSubmit.append('montant_final', totalFinal.toString());
+      formDataToSubmit.append('tournee_id', tourneeData.tournee.id);
+      // Par défaut 0 si vide
+      formDataToSubmit.append('calendriers_finaux', (formData.calendriersDistribues || '0'));
+      formDataToSubmit.append('montant_final', totalFinal.toString());
 
       // Appel de la Server Action
       const result = await cloturerTournee(formDataToSubmit);
@@ -250,6 +261,41 @@ export function TourneeClotureModal({ trigger, tourneeData, tourneeSummary }: To
           </Button>
         </DialogFooter>
       </DialogContent>
+      {/* Confirmation Dialog: 0 calendriers */}
+      <Dialog open={confirmZeroOpen} onOpenChange={setConfirmZeroOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center space-x-2">
+              <AlertTriangle className="h-5 w-5 text-yellow-600" />
+              <span>Clôturer sans calendriers ?</span>
+            </DialogTitle>
+            <DialogDescription>
+              Aucun calendrier distribué n&apos;est renseigné. C&apos;est inhabituel. Confirmez si c&apos;est bien votre intention.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setConfirmZeroOpen(false)}
+              disabled={isLoading}
+            >
+              Annuler
+            </Button>
+            <Button
+              type="button"
+              className="bg-orange-600 hover:bg-orange-700"
+              onClick={async () => {
+                setConfirmZeroOpen(false);
+                await proceedSubmit();
+              }}
+              disabled={isLoading}
+            >
+              Confirmer la clôture
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 }
