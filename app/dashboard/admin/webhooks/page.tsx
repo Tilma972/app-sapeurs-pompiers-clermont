@@ -43,37 +43,42 @@ export default async function WebhookLogsPage() {
       <h1 className="text-2xl font-bold mb-6">Logs Webhooks HelloAsso</h1>
       <div className="space-y-4">
         {logs?.map((log: WebhookLog) => (
-          <details key={log.id} className="bg-white rounded-lg shadow p-4">
+          <details key={log.id} className="bg-card text-card-foreground rounded-lg shadow p-4 border border-border">
             <summary className="cursor-pointer font-semibold flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <span className={`px-2 py-1 rounded text-xs ${
-                  log.status === 'processed' ? 'bg-green-100 text-green-800' :
-                  log.status === 'error' ? 'bg-red-100 text-red-800' :
-                  'bg-gray-100 text-gray-800'
-                }`}>
+                <span
+                  className={
+                    `px-2 py-1 rounded text-xs font-medium ` +
+                    (log.status === 'processed'
+                      ? 'bg-green-600/15 text-green-700 dark:bg-green-900/40 dark:text-green-300'
+                      : log.status === 'error'
+                        ? 'bg-red-600/15 text-red-700 dark:bg-red-900/40 dark:text-red-300'
+                        : 'bg-slate-600/15 text-slate-700 dark:bg-slate-900/40 dark:text-slate-300')
+                  }
+                >
                   {log.status}
                 </span>
-                <span className="text-sm text-gray-600">{log.event_type || 'Unknown'}</span>
-                <span className="text-xs text-gray-400">{new Date(log.created_at).toLocaleString('fr-FR')}</span>
+                <span className="text-sm text-foreground/80">{log.event_type || 'Unknown'}</span>
+                <span className="text-xs text-foreground/60">{new Date(log.created_at).toLocaleString('fr-FR')}</span>
               </div>
               {log.processing_duration_ms && (
-                <span className="text-xs text-gray-500">{log.processing_duration_ms}ms</span>
+                <span className="text-xs text-foreground/70">{log.processing_duration_ms}ms</span>
               )}
             </summary>
             <div className="mt-4 space-y-2">
               {log.error_message && (
-                <div className="bg-red-50 p-3 rounded">
-                  <p className="text-sm font-semibold text-red-800">Erreur :</p>
-                  <p className="text-sm text-red-600">{log.error_message}</p>
+                <div className="p-3 rounded bg-red-600/10 text-red-800 dark:bg-red-900/30 dark:text-red-200">
+                  <p className="text-sm font-semibold">Erreur :</p>
+                  <p className="text-sm">{log.error_message}</p>
                 </div>
               )}
               <div>
                 <p className="text-sm font-semibold mb-1">Headers :</p>
-                <pre className="bg-gray-50 p-2 rounded text-xs overflow-x-auto">{JSON.stringify(log.headers, null, 2)}</pre>
+                <pre className="p-3 rounded text-xs overflow-x-auto bg-muted text-foreground shadow-inner border border-border">{JSON.stringify(log.headers, null, 2)}</pre>
               </div>
               <div>
                 <p className="text-sm font-semibold mb-1">Payload :</p>
-                <pre className="bg-gray-50 p-2 rounded text-xs overflow-x-auto max-h-96">{JSON.stringify(log.payload, null, 2)}</pre>
+                <pre className="p-3 rounded text-xs overflow-x-auto max-h-96 bg-muted text-foreground shadow-inner border border-border">{JSON.stringify(log.payload, null, 2)}</pre>
               </div>
             </div>
           </details>
