@@ -22,6 +22,8 @@ import {
 } from "@/lib/types/support-transactions";
 import { submitSupportTransaction } from "@/app/actions/donation-actions";
 import { QRCodeModal } from '@/components/qr-code-modal'
+import { StripePaymentModal } from '@/components/stripe-payment-modal'
+import { createStripePaymentIntent } from '@/app/actions/stripe-payment'
 import { createDonationIntent } from '@/app/actions/donation-intent'
 
 interface DonationModalProps {
@@ -44,6 +46,8 @@ export function DonationModal({ trigger, tourneeId }: DonationModalProps) {
   const [showQRModal, setShowQRModal] = useState(false)
   const [qrCodeData, setQRCodeData] = useState<{ intentId: string; url: string; expiresAt: string } | null>(null)
   const [isGeneratingQR, setIsGeneratingQR] = useState(false)
+  const [showStripeModal, setShowStripeModal] = useState(false)
+  const [stripeClientSecret, setStripeClientSecret] = useState<string | null>(null)
 
   // État principal : soutien (avec calendrier) vs fiscal
   const [calendarAccepted, setCalendarAccepted] = useState(true);
@@ -108,11 +112,38 @@ export function DonationModal({ trigger, tourneeId }: DonationModalProps) {
     }
 
     // ========================================
-    // FLUX SPÉCIFIQUE CARTE - HelloAsso (intimité) : génération directe de QR
+    // FLUX SPÉCIFIQUE CARTE - HelloAsso : génération QR (montant requis)
     // ========================================
     if (formData.paymentMethod === 'carte') {
       await handleGenerateQRForCard()
       setIsLoading(false)
+      return
+    }
+
+    // ========================================
+    // FLUX ALTERNATIF: Stripe (si on branche un id différent)
+    // ========================================
+    if (formData.paymentMethod === 'carte_stripe') {
+      const parsed = parseFloat(formData.amount || '0')
+      if (!Number.isFinite(parsed) || parsed <= 0) {
+        setMessage({ type: 'error', text: 'Veuillez saisir un montant valide' })
+        setIsLoading(false)
+        return
+      }
+      try {
+        const res = await createStripePaymentIntent({ tourneeId: tourneeId!, amount: parsed })
+        if (res.success && res.clientSecret) {
+          setStripeClientSecret(res.clientSecret)
+          setShowStripeModal(true)
+        } else {
+          setMessage({ type: 'error', text: res.error || 'Erreur Stripe' })
+        }
+      } catch (err) {
+        console.error('Erreur Stripe:', err)
+        setMessage({ type: 'error', text: 'Erreur côté Stripe' })
+      } finally {
+        setIsLoading(false)
+      }
       return
     }
 
@@ -441,6 +472,14 @@ export function DonationModal({ trigger, tourneeId }: DonationModalProps) {
             intentId={qrCodeData.intentId}
             donationUrl={qrCodeData.url}
             expiresAt={qrCodeData.expiresAt}
+          />
+        )}
+        {showStripeModal && stripeClientSecret && (
+          <StripePaymentModal
+            isOpen={showStripeModal}
+            onClose={() => setShowStripeModal(false)}
+            clientSecret={stripeClientSecret}
+            amount={amountNumber}
           />
         )}
       </DialogContent>
