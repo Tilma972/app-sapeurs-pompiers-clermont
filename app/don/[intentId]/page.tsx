@@ -40,16 +40,21 @@ export default async function DonationRedirectPage({ params }: Props) {
     redirect(checkoutUrl)
   }
 
-  // 4) Créer un checkout HelloAsso (montant minimal 1€ techniquement requis)
+  // 4) Créer un checkout HelloAsso
+  //    - Si l'intention contient un expected_amount, on l'utilise
+  //    - Sinon, on retombe sur 1€ (100 centimes) comme filet de sécurité
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL as string
   const donationName = "Don Sapeurs-Pompiers Clermont-l\'Hérault"
 
   let checkout: { id: string; url: string }
   try {
     console.log(`[don/${intentId}] Creating new HelloAsso checkout…`)
+    const amountCents = intent.expected_amount != null && !Number.isNaN(Number(intent.expected_amount))
+      ? Math.max(1, Math.round(Number(intent.expected_amount) * 100))
+      : 100
     checkout = await helloAssoClient.createCheckoutIntent({
-      totalAmount: 100,
-      initialAmount: 100,
+      totalAmount: amountCents,
+      initialAmount: amountCents,
       itemName: donationName,
       containsDonation: true,
       backUrl: `${siteUrl}/don/cancel?intent=${intentId}`,
