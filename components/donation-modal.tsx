@@ -73,8 +73,15 @@ export function DonationModal({ trigger, tourneeId }: DonationModalProps) {
       setIsGeneratingQR(false)
       return
     }
+    // Exiger un montant pour le flux carte afin d'ouvrir HelloAsso avec le bon montant
+    const parsedAmount = parseFloat(formData.amount || '0')
+    if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
+      setMessage({ type: 'error', text: 'Veuillez saisir un montant avant de générer le QR code' })
+      setIsGeneratingQR(false)
+      return
+    }
     try {
-      const result = await createDonationIntent({ tourneeId })
+      const result = await createDonationIntent({ tourneeId, expectedAmount: parsedAmount })
       if (result.success && result.intentId && result.donationUrl && result.expiresAt) {
         setQRCodeData({ intentId: result.intentId, url: result.donationUrl, expiresAt: result.expiresAt })
         setShowQRModal(true)
@@ -212,8 +219,7 @@ export function DonationModal({ trigger, tourneeId }: DonationModalProps) {
             </Alert>
           )}
 
-          {/* Étape 1: Montant + Type (cachée si carte) */}
-          {formData.paymentMethod !== 'carte' && (
+          {/* Étape 1: Montant + Type */}
           <div className="space-y-2">
             <Label className="text-sm font-medium">Montant et type</Label>
             <div className="grid grid-cols-4 gap-2">
@@ -274,7 +280,6 @@ export function DonationModal({ trigger, tourneeId }: DonationModalProps) {
               </div>
             )}
           </div>
-          )}
 
           {/* Étape 2: Paiement */}
           <div className="space-y-1.5">
