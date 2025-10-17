@@ -54,7 +54,8 @@ export async function POST(req: NextRequest) {
         }>
       }
     }
-    const intentId = paymentIntent.metadata?.intentId as string | undefined
+  const metadata = paymentIntent.metadata as { intentId?: string; donor_name?: string; donor_email?: string } | undefined
+  const intentId = metadata?.intentId as string | undefined
 
     log.info('Payment succeeded', { intentId, amount: paymentIntent.amount })
 
@@ -76,9 +77,11 @@ export async function POST(req: NextRequest) {
 
     const finalAmount = paymentIntent.amount / 100
 
-    // Récupérer les infos de facturation (priorité au Charge -> billing_details, fallback PaymentMethod)
-    let billingName: string | undefined
-    let billingEmail: string | undefined
+  // Récupérer le nom/email (priorité aux metadata fournies par le formulaire, puis billing_details)
+  const donorName: string | undefined = metadata?.donor_name || undefined
+  const donorEmail: string | undefined = metadata?.donor_email || undefined
+  let billingName: string | undefined
+  let billingEmail: string | undefined
 
     const charge = paymentIntent.charges?.data?.[0]
     const chargeDetails = charge?.billing_details as { name?: string | null; email?: string | null } | undefined
@@ -114,11 +117,15 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // Choisir la meilleure source de nom/email
+    const effectiveName = donorName ?? billingName
+    const effectiveEmail = donorEmail ?? billingEmail
+
     // Parse prénom/nom à partir du nom complet
     let donorFirstName: string | null = null
     let donorLastName: string | null = null
-    if (billingName) {
-      const parts = billingName.trim().split(/\s+/)
+    if (effectiveName) {
+      const parts = effectiveName.trim().split(/\s+/)
       if (parts.length === 1) {
         donorFirstName = parts[0]
       } else if (parts.length >= 2) {
@@ -137,8 +144,8 @@ export async function POST(req: NextRequest) {
         payment_method: 'carte',
         payment_status: 'completed',
         notes: `Stripe - ${paymentIntent.id}`,
-        supporter_name: billingName,
-        supporter_email: billingEmail,
+        supporter_name: effectiveName,
+        supporter_email: effectiveEmail,
       })
       .select()
       .single()
@@ -151,7 +158,7 @@ export async function POST(req: NextRequest) {
         support_transaction_id: transaction?.id,
         donor_first_name: donorFirstName,
         donor_last_name: donorLastName,
-        donor_email: billingEmail ?? null,
+        donor_email: effectiveEmail ?? null,
       })
       .eq('id', intentId)
 
@@ -167,8 +174,8 @@ export async function POST(req: NextRequest) {
       payment_intent?: string | null
     }
 
-    const stripe = getStripe()
-    type PartialPI = { id: string; amount: number; metadata?: { intentId?: string } }
+  const stripe = getStripe()
+  type PartialPI = { id: string; amount: number; metadata?: { intentId?: string; donor_name?: string; donor_email?: string } }
     let pi: PartialPI | null = null
 
     try {
@@ -177,7 +184,7 @@ export async function POST(req: NextRequest) {
         const partial: PartialPI = {
           id: (fullPi as { id: string }).id,
           amount: (fullPi as { amount: number }).amount,
-          metadata: (fullPi as { metadata?: { intentId?: string } }).metadata,
+          metadata: (fullPi as { metadata?: { intentId?: string; donor_name?: string; donor_email?: string } }).metadata,
         }
         pi = partial
       }
@@ -208,14 +215,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ received: true })
     }
 
-    const finalAmount = charge.amount / 100
-    const billingName = charge.billing_details?.name ?? undefined
-    const billingEmail = charge.billing_details?.email ?? undefined
+  const finalAmount = charge.amount / 100
+  const metaName = pi?.metadata?.donor_name ?? undefined
+  const metaEmail = pi?.metadata?.donor_email ?? undefined
+  const billingName2 = charge.billing_details?.name ?? undefined
+  const billingEmail2 = charge.billing_details?.email ?? undefined
+  const effectiveName2 = metaName ?? billingName2
+  const effectiveEmail2 = metaEmail ?? billingEmail2
 
     let donorFirstName: string | null = null
     let donorLastName: string | null = null
-    if (billingName) {
-      const parts = billingName.trim().split(/\s+/)
+    if (effectiveName2) {
+      const parts = effectiveName2.trim().split(/\s+/)
       if (parts.length === 1) donorFirstName = parts[0]
       else if (parts.length >= 2) {
         donorFirstName = parts[0]
@@ -233,8 +244,8 @@ export async function POST(req: NextRequest) {
         payment_method: 'carte',
         payment_status: 'completed',
         notes: `Stripe Charge - ${charge.id}`,
-        supporter_name: billingName,
-        supporter_email: billingEmail,
+        supporter_name: effectiveName2,
+        supporter_email: effectiveEmail2,
       })
       .select()
       .single()
@@ -247,7 +258,7 @@ export async function POST(req: NextRequest) {
         support_transaction_id: transaction?.id,
         donor_first_name: donorFirstName,
         donor_last_name: donorLastName,
-        donor_email: billingEmail ?? null,
+        donor_email: effectiveEmail2 ?? null,
       })
       .eq('id', intentId)
 

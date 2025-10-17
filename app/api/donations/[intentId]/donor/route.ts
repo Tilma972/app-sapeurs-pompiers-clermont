@@ -74,7 +74,6 @@ export async function POST(req: Request) {
           : {}),
       })
       .eq('id', intentId)
-      .eq('status', 'waiting_donor')
 
     if (updateError) {
       log.error('Erreur MAJ donation_intents', { intentId, updateError })
