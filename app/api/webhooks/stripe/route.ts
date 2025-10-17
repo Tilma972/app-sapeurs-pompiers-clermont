@@ -47,6 +47,11 @@ export async function POST(req: NextRequest) {
       amount: number
       payment_method?: string
       metadata?: { intentId?: string }
+      charges?: {
+        data?: Array<{
+          billing_details?: { name?: string | null; email?: string | null }
+        }>
+      }
     }
     const intentId = paymentIntent.metadata?.intentId as string | undefined
 
@@ -70,19 +75,42 @@ export async function POST(req: NextRequest) {
 
     const finalAmount = paymentIntent.amount / 100
 
-    // Récupérer les infos de facturation depuis le PaymentMethod
+    // Récupérer les infos de facturation (priorité au Charge -> billing_details, fallback PaymentMethod)
     let billingName: string | undefined
     let billingEmail: string | undefined
-    try {
-      const stripe = getStripe()
-      if (paymentIntent.payment_method) {
-        const pm = await stripe.paymentMethods.retrieve(paymentIntent.payment_method)
-        const details = (pm as { billing_details?: { name?: string; email?: string } })?.billing_details
-        billingName = details?.name || undefined
-        billingEmail = details?.email || undefined
+
+    const charge = paymentIntent.charges?.data?.[0]
+    const chargeDetails = charge?.billing_details as { name?: string | null; email?: string | null } | undefined
+    if (chargeDetails) {
+      billingName = chargeDetails.name ?? undefined
+      billingEmail = chargeDetails.email ?? undefined
+    }
+
+    if (!billingName && !billingEmail) {
+      try {
+        const stripe = getStripe()
+        if (paymentIntent.payment_method) {
+          const pm = await stripe.paymentMethods.retrieve(paymentIntent.payment_method)
+          const details = (pm as { billing_details?: { name?: string | null; email?: string | null } })?.billing_details
+          billingName = details?.name ?? undefined
+          billingEmail = details?.email ?? undefined
+        }
+      } catch (err) {
+        log.warn('Impossible de récupérer les billing_details via PaymentMethod', { message: (err as Error)?.message })
       }
-    } catch (err) {
-      log.warn('Impossible de récupérer les billing_details', { message: (err as Error)?.message })
+    }
+
+    // Parse prénom/nom à partir du nom complet
+    let donorFirstName: string | null = null
+    let donorLastName: string | null = null
+    if (billingName) {
+      const parts = billingName.trim().split(/\s+/)
+      if (parts.length === 1) {
+        donorFirstName = parts[0]
+      } else if (parts.length >= 2) {
+        donorFirstName = parts[0]
+        donorLastName = parts.slice(1).join(' ')
+      }
     }
 
     const { data: transaction } = await admin
@@ -107,8 +135,8 @@ export async function POST(req: NextRequest) {
         status: 'completed',
         final_amount: finalAmount,
         support_transaction_id: transaction?.id,
-        donor_first_name: billingName ? billingName.split(' ').slice(0, -1).join(' ') || billingName : null,
-        donor_last_name: billingName ? billingName.split(' ').slice(-1).join(' ') || null : null,
+        donor_first_name: donorFirstName,
+        donor_last_name: donorLastName,
         donor_email: billingEmail ?? null,
       })
       .eq('id', intentId)
