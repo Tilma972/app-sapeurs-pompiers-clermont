@@ -48,6 +48,7 @@ export function DonationModal({ trigger, tourneeId }: DonationModalProps) {
   const [isGeneratingQR, setIsGeneratingQR] = useState(false)
   const [showStripeModal, setShowStripeModal] = useState(false)
   const [stripeClientSecret, setStripeClientSecret] = useState<string | null>(null)
+  const [stripeIntentId, setStripeIntentId] = useState<string | null>(null)
 
   // État principal : soutien (avec calendrier) vs fiscal
   const [calendarAccepted, setCalendarAccepted] = useState(true);
@@ -125,6 +126,8 @@ export function DonationModal({ trigger, tourneeId }: DonationModalProps) {
         const res = await createStripePaymentIntent({ tourneeId: tourneeId!, amount: parsed })
         if (res.success && res.clientSecret) {
           setStripeClientSecret(res.clientSecret)
+          const intentId = (res as { intentId?: string }).intentId
+          if (intentId) setStripeIntentId(intentId)
           setShowStripeModal(true)
         } else {
           setMessage({ type: 'error', text: res.error || 'Erreur Stripe' })
@@ -494,6 +497,7 @@ export function DonationModal({ trigger, tourneeId }: DonationModalProps) {
             onClose={() => setShowStripeModal(false)}
             clientSecret={stripeClientSecret}
             amount={amountNumber}
+            intentId={stripeIntentId ?? undefined}
           />
         )}
       </DialogContent>
