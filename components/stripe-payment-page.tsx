@@ -36,7 +36,19 @@ function PaymentForm({ onSuccess }: { onSuccess: () => void }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <PaymentElement options={{ layout: 'tabs' }} />
+      <PaymentElement
+        options={{
+          layout: 'tabs',
+          fields: {
+            billingDetails: {
+              name: 'auto',
+              email: 'auto',
+              phone: 'never',
+              address: 'never',
+            },
+          },
+        }}
+      />
 
       {error && (
         <div className="text-sm text-red-600 bg-red-50 p-4 rounded-lg border border-red-200">⚠️ {error}</div>
