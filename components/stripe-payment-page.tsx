@@ -6,7 +6,7 @@ import { stripePromise } from '@/lib/stripe/client-side'
 import { Button } from '@/components/ui/button'
 import { CheckCircle, Loader2 } from 'lucide-react'
 
-function PaymentForm({ onSuccess }: { onSuccess: () => void }) {
+function PaymentForm({ onSuccess, intentId }: { onSuccess: () => void; intentId?: string }) {
   const stripe = useStripe()
   const elements = useElements()
   const [isLoading, setIsLoading] = useState(false)
@@ -19,10 +19,14 @@ function PaymentForm({ onSuccess }: { onSuccess: () => void }) {
     setIsLoading(true)
     setError(undefined)
 
+    const returnUrl = intentId
+      ? `${window.location.origin}/don/success?intent=${intentId}`
+      : `${window.location.origin}/don/success`
+
     const { error: submitError } = await stripe.confirmPayment({
       elements,
       confirmParams: {
-        return_url: `${window.location.origin}/don/success`,
+        return_url: returnUrl,
       },
     })
 
@@ -76,7 +80,7 @@ function PaymentForm({ onSuccess }: { onSuccess: () => void }) {
   )
 }
 
-export function StripePaymentPage({ clientSecret }: { clientSecret: string }) {
+export function StripePaymentPage({ clientSecret, intentId }: { clientSecret: string; intentId?: string }) {
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
@@ -113,7 +117,7 @@ export function StripePaymentPage({ clientSecret }: { clientSecret: string }) {
             loader: 'auto',
           }}
         >
-          <PaymentForm onSuccess={() => { /* Redirect handled by Stripe */ }} />
+          <PaymentForm onSuccess={() => { /* Redirect handled by Stripe */ }} intentId={intentId} />
         </Elements>
 
         <div className="mt-6 pt-6 border-t text-center">
