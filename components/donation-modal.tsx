@@ -100,36 +100,27 @@ export function DonationModal({ trigger, tourneeId }: DonationModalProps) {
     }
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setMessage(null);
-
+  // Décide automatiquement du bon flux carte:
+  // - Soutien (pas fiscal) => Stripe
+  // - Don fiscal => HelloAsso
+  const handleCardPayment = async () => {
+    setIsLoading(true)
+    setMessage(null)
     if (!tourneeId) {
-      setMessage({ type: "error", text: "Aucune tournée active trouvée" });
-      setIsLoading(false);
-      return;
+      setMessage({ type: 'error', text: 'Aucune tournée active trouvée' })
+      setIsLoading(false)
+      return
     }
-
-    // ========================================
-    // FLUX SPÉCIFIQUE CARTE - HelloAsso : génération QR (montant requis)
-    // ========================================
-    if (formData.paymentMethod === 'carte') {
-      await handleGenerateQRForCard()
+    const parsed = parseFloat(formData.amount || '0')
+    if (!Number.isFinite(parsed) || parsed <= 0) {
+      setMessage({ type: 'error', text: 'Veuillez saisir un montant valide' })
       setIsLoading(false)
       return
     }
 
-    // ========================================
-    // FLUX ALTERNATIF: Stripe (si on branche un id différent)
-    // ========================================
-    if (formData.paymentMethod === 'carte_stripe') {
-      const parsed = parseFloat(formData.amount || '0')
-      if (!Number.isFinite(parsed) || parsed <= 0) {
-        setMessage({ type: 'error', text: 'Veuillez saisir un montant valide' })
-        setIsLoading(false)
-        return
-      }
+    // Choix implicite en fonction du reçu fiscal
+    if (calendarAccepted) {
+      // Stripe
       try {
         const res = await createStripePaymentIntent({ tourneeId: tourneeId!, amount: parsed })
         if (res.success && res.clientSecret) {
@@ -144,6 +135,29 @@ export function DonationModal({ trigger, tourneeId }: DonationModalProps) {
       } finally {
         setIsLoading(false)
       }
+    } else {
+      // HelloAsso (reçu fiscal)
+      await handleGenerateQRForCard()
+      setIsLoading(false)
+    }
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setMessage(null);
+
+    if (!tourneeId) {
+      setMessage({ type: "error", text: "Aucune tournée active trouvée" });
+      setIsLoading(false);
+      return;
+    }
+
+    // ========================================
+    // FLUX CARTE unique (décision implicite)
+    // ========================================
+    if (formData.paymentMethod === 'carte') {
+      await handleCardPayment()
       return
     }
 
@@ -277,7 +291,7 @@ export function DonationModal({ trigger, tourneeId }: DonationModalProps) {
                 className="pl-10 h-10"
                 min="0"
                 step="0.50"
-                required={formData.paymentMethod !== 'carte'}
+                required
                 disabled={isLoading}
               />
             </div>
@@ -431,11 +445,11 @@ export function DonationModal({ trigger, tourneeId }: DonationModalProps) {
               Annuler
             </Button>
             {formData.paymentMethod === 'carte' ? (
-              <Button type="button" onClick={handleGenerateQRForCard} disabled={isGeneratingQR}>
+              <Button type="button" onClick={handleCardPayment} disabled={isGeneratingQR || isLoading}>
                 {isGeneratingQR ? (
                   <>
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                    Génération du QR Code...
+                    Préparation du paiement...
                   </>
                 ) : (
                   <>
