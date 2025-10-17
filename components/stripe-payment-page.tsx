@@ -23,18 +23,30 @@ function PaymentForm({ onSuccess, intentId }: { onSuccess: () => void; intentId?
       ? `${window.location.origin}/don/success?intent=${intentId}`
       : `${window.location.origin}/don/success`
 
-    const { error: submitError } = await stripe.confirmPayment({
-      elements,
-      confirmParams: {
-        return_url: returnUrl,
-      },
-    })
+    try {
+      const result = await stripe.confirmPayment({
+        elements,
+        confirmParams: {
+          return_url: returnUrl,
+          // Provide country explicitly since address collection is disabled in the Payment Element
+          payment_method_data: {
+            billing_details: {
+              address: { country: 'FR' },
+            },
+          },
+        },
+      })
 
-    if (submitError) {
-      setError(submitError.message)
+      if (result.error) {
+        setError(result.error.message)
+      } else {
+        onSuccess()
+      }
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Une erreur est survenue lors de la confirmation du paiement.'
+      setError(message)
+    } finally {
       setIsLoading(false)
-    } else {
-      onSuccess()
     }
   }
 
