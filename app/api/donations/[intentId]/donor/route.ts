@@ -5,9 +5,13 @@ import { createLogger } from '@/lib/log'
 
 const log = createLogger('api/donations/[intentId]/donor')
 
-export async function POST(req: Request, { params }: { params: { intentId: string } }) {
+export async function POST(req: Request) {
   try {
-    const intentId = params.intentId
+    const url = new URL(req.url)
+    const parts = url.pathname.split('/').filter(Boolean)
+    // Expecting path like: /api/donations/{intentId}/donor
+    const donationsIdx = parts.findIndex((p) => p === 'donations')
+    const intentId = donationsIdx >= 0 ? parts[donationsIdx + 1] : undefined
     const body = await req.json().catch(() => ({}))
     const { firstName, lastName, email, finalAmount } = body as {
       firstName?: string
