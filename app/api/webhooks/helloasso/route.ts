@@ -38,13 +38,20 @@ export async function POST(req: NextRequest) {
 
     webhookLogId = webhookLog?.id || null
 
-    // ✅ CORRECTION : Traiter Order avec paiements Authorized
-    if (event?.eventType === 'Order' || event?.eventType === 'Payment') {
+    // Traiter Order ou Payment lorsqu'un paiement est Authorized
+    if (event?.eventType === 'Order') {
       const authorized = event.data?.payments?.some((p) => p?.state === 'Authorized')
       if (authorized) {
-        await handleOrderAuthorized(event)
+        await handleDonation(event, 'Order')
       } else {
-        log.info(`${event.eventType} reçu sans paiement Authorized`)
+        log.info('Order reçu sans paiement Authorized')
+      }
+    } else if (event?.eventType === 'Payment') {
+      const state = event.data?.state
+      if (state === 'Authorized') {
+        await handleDonation(event, 'Payment')
+      } else {
+        log.info('Payment reçu sans état Authorized', { state })
       }
     }
 
@@ -80,11 +87,11 @@ export async function POST(req: NextRequest) {
   }
 }
 
-async function handleOrderAuthorized(event: HelloAssoWebhookEvent) {
+async function handleDonation(event: HelloAssoWebhookEvent, source: 'Order' | 'Payment') {
   const admin = createAdminClient()
   
   // ✅ CORRECTION : metadata au niveau racine
-  const intentId = event.metadata?.intentId
+  const intentId = event.metadata?.intentId || event.data?.metadata?.intentId
   
   if (!intentId) {
     log.warn('IntentId manquant dans metadata')
@@ -92,11 +99,27 @@ async function handleOrderAuthorized(event: HelloAssoWebhookEvent) {
   }
 
   const payment = event.data?.payments?.[0]
+  let amountCents: number | undefined
+  let paymentId: string | undefined
+  let paymentState: string | undefined
+
+  if (source === 'Payment') {
+    paymentState = event.data?.state
+    paymentId = event.data?.id
+    const raw = event.data?.amount
+    amountCents = typeof raw === 'string' ? parseFloat(raw) : raw
+  } else {
+    paymentId = payment?.id
+    paymentState = payment?.state
+    const raw = payment?.amount
+    amountCents = typeof raw === 'string' ? parseFloat(raw) : raw
+  }
+
   log.info('Traitement Order/Payment', { 
     intentId,
-    orderId: event.data?.id,
-    paymentId: payment?.id,
-    paymentState: payment?.state,
+    paymentId,
+    paymentState,
+    source,
   })
 
   const { data: intent } = await admin
@@ -116,8 +139,7 @@ async function handleOrderAuthorized(event: HelloAssoWebhookEvent) {
     return
   }
 
-  // ✅ CORRECTION : Montant directement dans data.amount.total
-  const amountCents = typeof payment?.amount === 'string' ? parseFloat(payment.amount) : payment?.amount
+  // Montant réel (en centimes) converti en euros
   const finalAmount = ((amountCents != null ? amountCents : 0) as number) / 100
   
   // ✅ CORRECTION : Infos donateur directement dans data.payer
@@ -139,7 +161,7 @@ async function handleOrderAuthorized(event: HelloAssoWebhookEvent) {
       supporter_email: donorEmail,
       payment_method: 'carte',
       payment_status: 'completed',
-  notes: `HelloAsso - Order ${event.data?.id ?? ''} | Payment ${payment?.id ?? ''}`,
+  notes: `HelloAsso - ${source} ${event.data?.id ?? ''} | Payment ${paymentId ?? ''}`,
       consent_email: true,
     })
     .select()

@@ -24,6 +24,10 @@ export interface HelloAssoWebhookEvent {
   metadata?: Record<string, string>
   data: {
     id?: string
+    // Possible overall state for Payment events
+    state?: string
+    // Total amount for Payment events (in cents)
+    amount?: number | string
     // Payments list with state and amount in cents
     payments?: Array<{
       id?: string
