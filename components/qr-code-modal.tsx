@@ -1,6 +1,7 @@
+// components/qr-code-modal.tsx
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import QRCode from 'react-qr-code'
@@ -20,7 +21,9 @@ export function QRCodeModal({ isOpen, onClose, intentId, donationUrl, expiresAt 
   const [status, setStatus] = useState<'waiting' | 'completed' | 'expired'>('waiting')
   const [timeLeft, setTimeLeft] = useState<number>(0)
   const [donationAmount, setDonationAmount] = useState<number | null>(null)
+  const toastedRef = useRef(false)
 
+  // Timer expiration
   useEffect(() => {
     const interval = setInterval(() => {
       const now = new Date().getTime()
@@ -36,31 +39,76 @@ export function QRCodeModal({ isOpen, onClose, intentId, donationUrl, expiresAt 
     return () => clearInterval(interval)
   }, [expiresAt])
 
+  // Realtime subscription avec logs
   useEffect(() => {
-    if (!isOpen) return
+    if (!isOpen) {
+      console.log('🔴 [QRCodeModal] Modal fermé, pas de subscription')
+      return
+    }
+    
+    console.log('🔵 [QRCodeModal] Setup realtime for intentId:', intentId)
+    
     const supabase = createClient()
     const channel = supabase
-      .channel('donation_intents')
+      .channel(`donation_intent_${intentId}`)
       .on(
         'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'donation_intents', filter: `id=eq.${intentId}` },
+        { 
+          event: 'UPDATE', 
+          schema: 'public', 
+          table: 'donation_intents', 
+          filter: `id=eq.${intentId}` 
+        },
         (payload) => {
-          const updated = (payload as unknown as { new?: { status?: string; final_amount?: number } })?.new
+          console.log('🟢 [QRCodeModal] Realtime UPDATE reçu:', payload)
+          
+          const updated = payload.new as { 
+            status?: string
+            final_amount?: number | string
+            donor_first_name?: string
+          }
+          
+          console.log('🟢 [QRCodeModal] Données parsed:', updated)
+          
           if (updated?.status === 'completed') {
+            console.log('✅ [QRCodeModal] Status = completed')
             setStatus('completed')
-            if (typeof updated.final_amount === 'number') {
-              setDonationAmount(updated.final_amount)
-              const generous = updated.final_amount >= 20
-              toast.success(generous ? `Don généreux reçu : ${updated.final_amount}€` : `Don reçu : ${updated.final_amount}€`, {
-                icon: generous ? '🎉' : '✅',
-                duration: 5000,
-              })
+            
+            // Convertir numeric/decimal (souvent string) en number
+            const parsedAmount = typeof updated.final_amount === 'number'
+              ? updated.final_amount
+              : typeof updated.final_amount === 'string'
+                ? parseFloat(updated.final_amount)
+                : null
+
+            if (parsedAmount != null && !Number.isNaN(parsedAmount)) {
+              console.log('💰 [QRCodeModal] Montant reçu:', parsedAmount)
+              setDonationAmount(parsedAmount)
+
+              if (!toastedRef.current) {
+                const generous = parsedAmount >= 20
+                console.log('🎉 [QRCodeModal] Lancement toast:', { generous, amount: parsedAmount })
+                toast.success(
+                  generous ? `Don généreux reçu : ${parsedAmount}€` : `Don reçu : ${parsedAmount}€`,
+                  { icon: generous ? '🎉' : '✅', duration: 5000 }
+                )
+                toastedRef.current = true
+              }
+            } else {
+              console.warn('⚠️ [QRCodeModal] final_amount absent ou invalide:', updated.final_amount)
             }
           }
         }
       )
-      .subscribe()
+      .subscribe((status, err) => {
+        console.log('🔵 [QRCodeModal] Channel status:', status)
+        if (err) {
+          console.error('❌ [QRCodeModal] Channel error:', err)
+        }
+      })
+    
     return () => {
+      console.log('🔴 [QRCodeModal] Cleanup realtime channel')
       supabase.removeChannel(channel)
     }
   }, [isOpen, intentId])
@@ -79,7 +127,7 @@ export function QRCodeModal({ isOpen, onClose, intentId, donationUrl, expiresAt 
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
+    <Dialog open={isOpen} onOpenChange={(open) => { if (!open) handleClose() }}>
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle className="text-center">
@@ -92,7 +140,9 @@ export function QRCodeModal({ isOpen, onClose, intentId, donationUrl, expiresAt 
         <div className="space-y-4">
           {status === 'waiting' && (
             <div className="text-center">
-              <p className="text-sm text-muted-foreground mb-4">Le donateur scanne ce QR code et choisit son montant</p>
+              <p className="text-sm text-muted-foreground mb-4">
+                Le donateur scanne ce QR code et paie sur HelloAsso
+              </p>
               <div className="bg-white p-4 rounded-lg border-2 border-gray-200 inline-block">
                 <QRCode value={donationUrl} size={200} level="M" />
               </div>
@@ -101,7 +151,6 @@ export function QRCodeModal({ isOpen, onClose, intentId, donationUrl, expiresAt 
                   <Clock className="h-4 w-4" />
                   <span className="font-medium">Expire dans : {formatTime(timeLeft)}</span>
                 </div>
-                <p className="text-xs text-blue-600 mt-2">Le donateur choisira le montant en toute intimité</p>
               </div>
             </div>
           )}
@@ -112,11 +161,15 @@ export function QRCodeModal({ isOpen, onClose, intentId, donationUrl, expiresAt 
                 <Check className="h-8 w-8 text-green-600" />
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-green-800">{donationAmount && donationAmount >= 20 ? '🎉 Don généreux reçu !' : 'Paiement reçu !'}</h3>
+                <h3 className="text-lg font-semibold text-green-800">
+                  {donationAmount && donationAmount >= 20 ? '🎉 Don généreux reçu !' : 'Paiement reçu !'}
+                </h3>
                 {donationAmount && (
-                  <p className="text-2xl font-bold text-green-600 mt-2">{donationAmount.toFixed(2)}€</p>
+                  <p className="text-2xl font-bold text-green-600 mt-2">
+                    {donationAmount.toFixed(2)}€
+                  </p>
                 )}
-                <p className="text-sm text-gray-600 mt-1">Le don a été confirmé par HelloAsso</p>
+                <p className="text-sm text-gray-600 mt-1">Le don a été confirmé</p>
               </div>
             </div>
           )}
