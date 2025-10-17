@@ -15,6 +15,8 @@ const eslintConfig = [
     ignores: [
       'lib/database.types.ts',
       'tsconfig.tsbuildinfo',
+      'node_modules',
+      '.next',
     ],
   },
   ...compat.extends("next/core-web-vitals", "next/typescript"),
