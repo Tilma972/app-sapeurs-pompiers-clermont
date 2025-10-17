@@ -60,7 +60,7 @@ function PaymentForm({ onSuccess, intentId }: { onSuccess: () => void; intentId?
               name: 'auto',
               email: 'auto',
               phone: 'auto',
-              address: 'never',
+              address: 'auto',
             },
           },
         }}
