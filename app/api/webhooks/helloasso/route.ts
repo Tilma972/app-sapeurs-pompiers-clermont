@@ -47,8 +47,8 @@ export async function POST(req: NextRequest) {
       .single()
     webhookLogId = logRow?.id ?? null
 
-    // Traitement métier
-    if (parsed?.eventType === 'Order' && parsed?.data?.order?.state === 'Authorized') {
+    // Traitement métier: Order et Payment peuvent signaler un paiement autorisé
+    if (parsed?.eventType === 'Order' || parsed?.eventType === 'Payment') {
       await handleOrderAuthorized(parsed)
     }
 
@@ -82,7 +82,7 @@ export async function POST(req: NextRequest) {
 
 async function handleOrderAuthorized(event: HelloAssoWebhookEvent) {
   const admin = createAdminClient()
-  const intentId = event.data.metadata?.intentId
+  const intentId = event.metadata?.intentId || event.data.metadata?.intentId
   if (!intentId) {
     log.warn('IntentId manquant dans les métadonnées')
     return
@@ -99,11 +99,18 @@ async function handleOrderAuthorized(event: HelloAssoWebhookEvent) {
     return
   }
 
-  // Récupérer infos réelles depuis l'événement HelloAsso
-  const finalAmount = (event.data.order?.amount?.total ?? 0) / 100
-  const donorFirstName = event.data.order?.payer?.firstName || intent.donor_first_name || null
-  const donorLastName = event.data.order?.payer?.lastName || intent.donor_last_name || null
-  const donorEmail = event.data.order?.payer?.email || intent.donor_email || null
+  // Vérifier l'état du payment au bon niveau
+  const payment = event.data.payments?.[0]
+  if (!payment || payment.state !== 'Authorized') {
+    log.info('Payment pas encore autorisé', { intentId, paymentState: payment?.state })
+    return
+  }
+
+  // Montant réel: payment.amount est en centimes
+  const finalAmount = (payment.amount ?? 0) / 100
+  const donorFirstName = event.data.payer?.firstName || intent.donor_first_name || null
+  const donorLastName = event.data.payer?.lastName || intent.donor_last_name || null
+  const donorEmail = event.data.payer?.email || intent.donor_email || null
 
   // Protection doublon
   if (intent.status === 'completed' && intent.support_transaction_id) {
@@ -122,7 +129,7 @@ async function handleOrderAuthorized(event: HelloAssoWebhookEvent) {
       supporter_email: donorEmail,
       payment_method: 'carte',
       payment_status: 'completed',
-      notes: `Paiement HelloAsso - Commande ${event.data.order.id}`,
+  notes: `Paiement HelloAsso - Order ${event.data.id ?? ''} | Payment ${payment.id ?? ''}`,
       consent_email: true,
     })
     .select()

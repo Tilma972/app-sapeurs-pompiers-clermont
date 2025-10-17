@@ -20,14 +20,31 @@ export function verifyHelloAssoSignature(payload: string, signature: string | nu
 
 export interface HelloAssoWebhookEvent {
   eventType: 'Order' | 'Payment'
+  status?: 'received' | 'processed' | string
+  metadata?: Record<string, string>
   data: {
-    order: {
-      id: string
-      date: string
-      amount: { total: number }
-      state: 'Authorized' | 'Processed'
-      payer: { firstName: string; lastName: string; email: string }
+    id?: string
+    // Payments list with state and amount in cents
+    payments?: Array<{
+      id?: string
+      state?: string
+      amount?: number
+    }>
+    // Items list may have states like "Processed"
+    items?: Array<{
+      state?: string
+    }>
+    // Payer information at data level
+    payer?: { firstName?: string; lastName?: string; email?: string }
+    // Optional legacy order shape (not used for state now)
+    order?: {
+      id?: string
+      date?: string
+      amount?: { total?: number }
+      state?: string
+      payer?: { firstName?: string; lastName?: string; email?: string }
     }
-    metadata: Record<string, string>
+    // Metadata sometimes nested here
+    metadata?: Record<string, string>
   }
 }
