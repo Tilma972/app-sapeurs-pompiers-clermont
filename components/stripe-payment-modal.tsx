@@ -2,62 +2,9 @@
 
 import { useEffect, useState } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Elements, PaymentElement, useElements, useStripe } from '@stripe/react-stripe-js'
-import { stripePromise } from '@/lib/stripe/client-side'
 import { Button } from '@/components/ui/button'
 import QRCode from 'react-qr-code'
-
-function StripePaymentForm({ amount, onSuccess }: { amount: number; onSuccess: () => void }) {
-  const stripe = useStripe()
-  const elements = useElements()
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | undefined>()
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!stripe || !elements) return
-
-    setIsLoading(true)
-    setError(undefined)
-
-    const { error: submitError } = await stripe.confirmPayment({
-      elements,
-      confirmParams: {
-        return_url: `${window.location.origin}/don/success`,
-      },
-    })
-
-    if (submitError) {
-      setError(submitError.message)
-      setIsLoading(false)
-    } else {
-      onSuccess()
-    }
-  }
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="bg-blue-50 p-3 rounded-lg">
-        <p className="text-sm font-medium text-blue-900">Montant : {amount.toFixed(2)}€</p>
-        <p className="text-xs text-blue-700 mt-1">
-          Frais : {(amount * 0.014 + 0.25).toFixed(2)}€ • Reçu : {(amount - amount * 0.014 - 0.25).toFixed(2)}€
-        </p>
-      </div>
-
-      <PaymentElement />
-
-      {error && <div className="text-sm text-red-600 bg-red-50 p-3 rounded">{error}</div>}
-
-      <Button type="submit" disabled={!stripe || isLoading} className="w-full">
-        {isLoading ? 'Traitement...' : `Payer ${amount}€`}
-      </Button>
-
-      <p className="text-xs text-center text-gray-500">
-        Paiement sécurisé par Stripe • Apple Pay et Google Pay disponibles
-      </p>
-    </form>
-  )
-}
+import { ExternalLink, Smartphone } from 'lucide-react'
 
 export function StripePaymentModal({
   isOpen,
@@ -70,7 +17,7 @@ export function StripePaymentModal({
   clientSecret: string
   amount: number
 }) {
-  const [paymentUrl, setPaymentUrl] = useState<string | undefined>()
+  const [paymentUrl, setPaymentUrl] = useState<string>()
 
   useEffect(() => {
     setPaymentUrl(`${window.location.origin}/pay/${clientSecret}`)
@@ -80,35 +27,61 @@ export function StripePaymentModal({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Paiement par carte</DialogTitle>
+          <DialogTitle className="text-center">QR Code de paiement</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="space-y-6">
+          {/* Montant en évidence */}
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-xl text-center">
+            <p className="text-sm text-gray-600 mb-1">Montant du don</p>
+            <p className="text-4xl font-bold text-blue-900">{amount.toFixed(2)}€</p>
+            <p className="text-xs text-gray-500 mt-2">
+              Reçu par l&apos;association : {(amount - amount * 0.014 - 0.25).toFixed(2)}€
+            </p>
+          </div>
+
+          {/* QR Code */}
           {paymentUrl && (
-            <div className="bg-white p-4 rounded-lg border-2 border-gray-200">
-              <p className="text-sm text-gray-600 mb-3 text-center">Scanner pour payer sur mobile</p>
-              <QRCode value={paymentUrl} size={200} className="mx-auto" />
+            <div className="bg-white p-6 rounded-xl border-2 border-gray-200 shadow-sm">
+              <div className="flex items-center justify-center gap-2 mb-4">
+                <Smartphone className="h-5 w-5 text-blue-600" />
+                <p className="font-medium text-gray-700">Présentez ce QR au donateur</p>
+              </div>
+              <QRCode value={paymentUrl} size={240} className="mx-auto" level="M" />
             </div>
           )}
 
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-white px-2 text-gray-500">Ou payer directement</span>
-            </div>
+          {/* Instructions */}
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+            <p className="text-sm text-amber-900">
+              <span className="font-semibold">📱 Instructions :</span>
+              <br />
+              Le donateur scanne ce QR code avec son téléphone pour payer en toute autonomie.
+            </p>
           </div>
 
-          <Elements stripe={stripePromise} options={{ clientSecret, appearance: { theme: 'stripe' } }}>
-            <StripePaymentForm
-              amount={amount}
-              onSuccess={() => {
-                onClose()
-                window.location.reload()
-              }}
-            />
-          </Elements>
+          {/* Lien de secours (optionnel) */}
+          {paymentUrl && (
+            <details className="text-center">
+              <summary className="text-xs text-gray-500 cursor-pointer hover:text-gray-700">
+                Lien de paiement (si scan impossible)
+              </summary>
+              <a
+                href={paymentUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-2 inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800"
+              >
+                <ExternalLink className="h-3 w-3" />
+                Ouvrir dans un nouvel onglet
+              </a>
+            </details>
+          )}
+
+          {/* Bouton fermer */}
+          <Button onClick={onClose} variant="outline" className="w-full">
+            Fermer
+          </Button>
         </div>
       </DialogContent>
     </Dialog>
