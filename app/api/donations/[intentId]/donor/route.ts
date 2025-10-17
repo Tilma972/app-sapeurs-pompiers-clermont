@@ -1,11 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getStripe } from '@/lib/stripe/client'
 import { createLogger } from '@/lib/log'
 
 const log = createLogger('api/donations/[intentId]/donor')
 
-export async function POST(req: NextRequest, { params }: { params: { intentId: string } }) {
+export async function POST(req: Request, { params }: { params: { intentId: string } }) {
   try {
     const intentId = params.intentId
     const body = await req.json().catch(() => ({}))
