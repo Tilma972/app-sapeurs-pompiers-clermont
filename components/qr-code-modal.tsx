@@ -65,7 +65,9 @@ export function QRCodeModal({ isOpen, onClose, intentId, donationUrl, expiresAt 
           const updated = payload.new as { 
             status?: string
             final_amount?: number | string
-            donor_first_name?: string
+            donor_first_name?: string | null
+            donor_last_name?: string | null
+            donor_name_hint?: string | null
           }
           
           console.log('🟢 [QRCodeModal] Données parsed:', updated)
@@ -87,10 +89,14 @@ export function QRCodeModal({ isOpen, onClose, intentId, donationUrl, expiresAt 
 
               if (!toastedRef.current) {
                 const generous = parsedAmount >= 20
-                console.log('🎉 [QRCodeModal] Lancement toast:', { generous, amount: parsedAmount })
+                // Construire le nom du donateur
+                const donorName = updated.donor_first_name
+                  ? `${updated.donor_first_name} ${updated.donor_last_name || ''}`.trim()
+                  : updated.donor_name_hint || 'Un donateur'
+                console.log('🎉 [QRCodeModal] Lancement toast:', { generous, amount: parsedAmount, donorName })
                 toast.success(
-                  generous ? `Don généreux reçu : ${parsedAmount}€` : `Don reçu : ${parsedAmount}€`,
-                  { icon: generous ? '🎉' : '✅', duration: 5000 }
+                  generous ? `🎉 Don généreux de ${donorName} : ${parsedAmount}€` : `✅ Don de ${donorName} : ${parsedAmount}€`,
+                  { icon: generous ? '🎉' : '✅', duration: 7000 }
                 )
                 toastedRef.current = true
               }
