@@ -19,8 +19,9 @@ create index if not exists idx_webhook_logs_event_type on public.webhook_logs(ev
 -- RLS
 alter table public.webhook_logs enable row level security;
 
--- Allow admins and treasurers to view logs
-create policy if not exists "Admins can view webhook logs" on public.webhook_logs
+-- Allow admins and treasurers to view logs (DROP + CREATE for idempotency)
+drop policy if exists "Admins can view webhook logs" on public.webhook_logs;
+create policy "Admins can view webhook logs" on public.webhook_logs
   for select using (
     exists (
       select 1 from public.profiles
