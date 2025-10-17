@@ -268,8 +268,12 @@ export async function cloturerTournee(formData: FormData) {
   }
 
   const tourneeId = formData.get('tournee_id') as string
-  const calendriersFinaux = parseInt(formData.get('calendriers_finaux') as string)
-  const montantFinal = parseFloat(formData.get('montant_final') as string)
+  const calendriersFinauxRaw = (formData.get('calendriers_finaux') as string) ?? ''
+  const montantFinalRaw = (formData.get('montant_final') as string) ?? ''
+  const parsedCalendriers = parseInt(calendriersFinauxRaw, 10)
+  const parsedMontant = parseFloat(montantFinalRaw)
+  const calendriersFinaux = Number.isFinite(parsedCalendriers) ? parsedCalendriers : 0
+  const montantFinal = Number.isFinite(parsedMontant) ? parsedMontant : 0
 
   try {
     // Utilisation de la fonction SQL existante

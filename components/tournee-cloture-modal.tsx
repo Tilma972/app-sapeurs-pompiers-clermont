@@ -55,10 +55,8 @@ export function TourneeClotureModal({ trigger, tourneeData, tourneeSummary }: To
   // const calendriersDistribues = parseFloat(formData.calendriersDistribues) || 0;
   // const moyenneParCalendrier = calendriersDistribues > 0 ? totalFinal / calendriersDistribues : 0;
 
-  // Validation : au moins un des deux (espèces ou chèques) > 0
-  const hasEspeces = formData.montantEspeces.trim() !== '' && montantEspeces > 0;
-  const hasCheques = formData.montantCheques.trim() !== '' && montantCheques > 0;
-  const isFormValid = hasEspeces || hasCheques;
+  // Validation assouplie : autoriser 0 espèces et 0 chèques (tournée 100% carte)
+  const isFormValid = true;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -67,9 +65,10 @@ export function TourneeClotureModal({ trigger, tourneeData, tourneeSummary }: To
     try {
       // Préparation des données pour la Server Action
       const formDataToSubmit = new FormData();
-      formDataToSubmit.append('tournee_id', tourneeData.tournee.id);
-  formDataToSubmit.append('calendriers_finaux', formData.calendriersDistribues);
-  formDataToSubmit.append('montant_final', totalFinal.toString());
+    formDataToSubmit.append('tournee_id', tourneeData.tournee.id);
+    // Par défaut 0 si vide
+    formDataToSubmit.append('calendriers_finaux', (formData.calendriersDistribues || '0'));
+    formDataToSubmit.append('montant_final', totalFinal.toString());
 
       // Appel de la Server Action
       const result = await cloturerTournee(formDataToSubmit);
