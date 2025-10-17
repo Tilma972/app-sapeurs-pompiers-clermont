@@ -1,6 +1,6 @@
 'use server'
 
-import { stripe } from '@/lib/stripe/client'
+import { getStripe } from '@/lib/stripe/client'
 import { createLogger } from '@/lib/log'
 
 async function createSupabaseServerClient() {
@@ -39,6 +39,7 @@ export async function createStripePaymentIntent(data: {
       return { success: false, error: 'Erreur création intention' }
     }
 
+    const stripe = getStripe()
     const paymentIntent = await stripe.paymentIntents.create({
       amount: Math.round(data.amount * 100),
       currency: 'eur',
