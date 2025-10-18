@@ -57,6 +57,18 @@ export function DonationModal({ trigger, tourneeId }: DonationModalProps) {
   const [showFinalizationModal, setShowFinalizationModal] = useState(false)
   const [pendingTransactionId, setPendingTransactionId] = useState<string | null>(null)
 
+  const isServerActionNotFound = (err: unknown) => {
+    let msg = ''
+    if (typeof err === 'object' && err !== null && 'message' in err && typeof (err as { message?: unknown }).message === 'string') {
+      msg = (err as { message: string }).message
+    } else if (typeof err === 'string') {
+      msg = err
+    } else {
+      msg = String(err ?? '')
+    }
+    return msg.includes('Failed to find Server Action')
+  }
+
   // État principal : soutien (avec calendrier) vs fiscal
   const [calendarAccepted, setCalendarAccepted] = useState(true);
 
@@ -112,7 +124,17 @@ export function DonationModal({ trigger, tourneeId }: DonationModalProps) {
       }
     } catch (err) {
       console.error('Erreur création paiement carte:', err)
-      setMessage({ type: 'error', text: 'Erreur création paiement carte' })
+      if (isServerActionNotFound(err)) {
+        setMessage({ type: 'error', text: 'Une mise à jour de l’application vient d’être déployée. Rafraîchissement en cours…' })
+        // Forcer un rechargement pour resynchroniser les Server Actions
+        setTimeout(() => {
+          try {
+            window.location.reload()
+          } catch {}
+        }, 800)
+      } else {
+        setMessage({ type: 'error', text: 'Erreur création paiement carte' })
+      }
     } finally {
       setIsLoading(false)
     }
@@ -175,7 +197,21 @@ export function DonationModal({ trigger, tourneeId }: DonationModalProps) {
       fd.append("tournee_id", tourneeId);
       fd.append("consent_email", String(formData.consentEmail));
 
-      const result = await submitSupportTransaction(fd);
+      let result: Awaited<ReturnType<typeof submitSupportTransaction>>
+      try {
+        result = await submitSupportTransaction(fd)
+      } catch (err) {
+        console.error('Erreur action enregistrement:', err)
+        if (isServerActionNotFound(err)) {
+          setMessage({ type: 'error', text: 'Une mise à jour de l’application vient d’être déployée. Rafraîchissement en cours…' })
+          setIsLoading(false)
+          setTimeout(() => {
+            try { window.location.reload() } catch {}
+          }, 800)
+          return
+        }
+        throw err
+      }
       // Si finalisation différée, ouvrir le modal d'options (QR / email)
       if (!calendarAccepted && fiscalEligible && result.transaction?.id) {
         setPendingTransactionId(result.transaction.id);
