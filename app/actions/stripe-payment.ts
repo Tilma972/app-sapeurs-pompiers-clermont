@@ -43,7 +43,7 @@ export async function createStripePaymentIntent(data: {
     const paymentIntent = await stripe.paymentIntents.create({
       amount: Math.round(data.amount * 100),
       currency: 'eur',
-      automatic_payment_methods: { enabled: true },
+      payment_method_types: ['card'],
       metadata: {
         intentId: intent.id,
         tourneeId: data.tourneeId,
