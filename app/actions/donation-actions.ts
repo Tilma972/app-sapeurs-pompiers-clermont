@@ -36,6 +36,9 @@ export async function submitSupportTransaction(formData: FormData) {
   const notes = formData.get('notes') as string || undefined
   const tournee_id = formData.get('tournee_id') as string
   const consent_email = formData.get('consent_email') === 'true'
+  const payment_status_raw = (formData.get('payment_status') as string | undefined)?.toLowerCase()
+  const allowedStatuses = new Set(['completed', 'pending_donor_info'])
+  const requested_status = payment_status_raw && allowedStatuses.has(payment_status_raw) ? payment_status_raw : 'completed'
 
   // Validation des données essentielles (amount déjà validé ci-dessus)
   if (amount <= 0) {
@@ -59,8 +62,8 @@ export async function submitSupportTransaction(formData: FormData) {
     }
   }
 
-  // Validation email pour les dons fiscaux
-  if (!calendar_accepted && (!supporter_email || !supporter_email.trim())) {
+  // Validation email pour les dons fiscaux, sauf si on passe en finalisation différée
+  if (requested_status !== 'pending_donor_info' && !calendar_accepted && (!supporter_email || !supporter_email.trim())) {
     return { 
       success: false, 
       errors: ['Email obligatoire pour un don fiscal'] 
@@ -117,7 +120,7 @@ export async function submitSupportTransaction(formData: FormData) {
       consent_email: consent_email,
       payment_method: payment_method,
       notes: notes || null,
-      payment_status: 'completed', // Par défaut, paiement terminé
+  payment_status: requested_status as unknown as Database['public']['Enums']['payment_status_enum'] | string,
       receipt_generated: false,
       receipt_sent: false,
       created_offline: false
