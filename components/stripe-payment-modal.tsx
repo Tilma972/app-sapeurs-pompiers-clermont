@@ -33,7 +33,16 @@ export function StripePaymentModal({
 
   // Realtime listener on donation_intents updates
   useEffect(() => {
-    if (!isOpen || !intentId) return
+    console.log('🧪 [DEBUG][StripePaymentModal] Modal State:', { isOpen, intentId })
+    if (!isOpen) {
+      console.log('❌ [DEBUG][StripePaymentModal] Modal fermé - Realtime NON activé')
+      return
+    }
+    if (!intentId) {
+      console.log("❌ [DEBUG][StripePaymentModal] intentId manquant - Realtime NON activé")
+      return
+    }
+    console.log('✅ [DEBUG][StripePaymentModal] Conditions OK - Activation Realtime...')
     const supabase = createClient()
     const channel = supabase
       .channel(`donation_intent_stripe_${intentId}`)
@@ -83,8 +92,19 @@ export function StripePaymentModal({
                 )
                 toastedRef.current = true
                 setTimeout(() => {
-                  window.location.reload()
-                }, 3000)
+                  try {
+                    onClose()
+                    if (intentId) {
+                      window.dispatchEvent(
+                        new CustomEvent('donation-completed', {
+                          detail: { intentId, amount: parsedAmount, donorName },
+                        })
+                      )
+                    }
+                  } catch (e) {
+                    console.warn('[StripePaymentModal] onClose/dispatch failed', e)
+                  }
+                }, 2000)
               }
             }
           }
@@ -95,7 +115,7 @@ export function StripePaymentModal({
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [isOpen, intentId])
+  }, [isOpen, intentId, onClose])
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
