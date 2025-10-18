@@ -24,8 +24,9 @@ import {
 import { submitSupportTransaction } from "@/app/actions/donation-actions";
 import { QRCodeModal } from '@/components/qr-code-modal'
 import { StripePaymentModal } from '@/components/stripe-payment-modal'
-import { createStripePaymentIntent } from '@/app/actions/stripe-payment'
-import { createDonationIntent } from '@/app/actions/donation-intent'
+// Unified card payment action
+import { createCardPaymentIntent } from '@/app/actions/card-payments'
+// import { createDonationIntent } from '@/app/actions/donation-intent'
 import { FISCAL_CONFIG, isFiscalEligible, calculateTaxDeduction } from '@/lib/config/fiscal'
 
 interface DonationModalProps {
@@ -48,7 +49,7 @@ export function DonationModal({ trigger, tourneeId }: DonationModalProps) {
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [showQRModal, setShowQRModal] = useState(false)
   const [qrCodeData, setQRCodeData] = useState<{ intentId: string; url: string; expiresAt: string } | null>(null)
-  const [isGeneratingQR, setIsGeneratingQR] = useState(false)
+  // const [isGeneratingQR, setIsGeneratingQR] = useState(false)
   const [showStripeModal, setShowStripeModal] = useState(false)
   const [stripeClientSecret, setStripeClientSecret] = useState<string | null>(null)
   const [stripeIntentId, setStripeIntentId] = useState<string | null>(null)
@@ -71,36 +72,7 @@ export function DonationModal({ trigger, tourneeId }: DonationModalProps) {
   const fiscalEligible = useMemo(() => isFiscalEligible(amountNumber, calendarGiven), [amountNumber, calendarGiven])
   const deduction = useMemo(() => calculateTaxDeduction(amountNumber, fiscalEligible), [amountNumber, fiscalEligible])
 
-  const handleGenerateQRForCard = async () => {
-    setIsGeneratingQR(true)
-    setMessage(null)
-    if (!tourneeId) {
-      setMessage({ type: "error", text: "Aucune tournée active trouvée" })
-      setIsGeneratingQR(false)
-      return
-    }
-    // Exiger un montant pour le flux carte afin d'ouvrir HelloAsso avec le bon montant
-    const parsedAmount = parseFloat(formData.amount || '0')
-    if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
-      setMessage({ type: 'error', text: 'Veuillez saisir un montant avant de générer le QR code' })
-      setIsGeneratingQR(false)
-      return
-    }
-    try {
-      const result = await createDonationIntent({ tourneeId, expectedAmount: parsedAmount })
-      if (result.success && result.intentId && result.donationUrl && result.expiresAt) {
-        setQRCodeData({ intentId: result.intentId, url: result.donationUrl, expiresAt: result.expiresAt })
-        setShowQRModal(true)
-      } else {
-        setMessage({ type: 'error', text: result.error || 'Erreur création QR code' })
-      }
-    } catch (error) {
-      console.error('Erreur génération QR:', error)
-      setMessage({ type: 'error', text: 'Erreur lors de la génération' })
-    } finally {
-      setIsGeneratingQR(false)
-    }
-  }
+  // QR HelloAsso direct n'est plus nécessaire ici: géré via l'action unifiée (fallback)
 
   // Décide automatiquement du bon flux carte:
   // - Soutien (pas fiscal) => Stripe
@@ -121,27 +93,24 @@ export function DonationModal({ trigger, tourneeId }: DonationModalProps) {
     }
 
     // Choix implicite en fonction du reçu fiscal
-    if (calendarAccepted) {
-      // Stripe
-      try {
-        const res = await createStripePaymentIntent({ tourneeId: tourneeId!, amount: parsed })
-        if (res.success && res.clientSecret) {
-          setStripeClientSecret(res.clientSecret)
-          const intentId = (res as { intentId?: string }).intentId
-          if (intentId) setStripeIntentId(intentId)
-          setShowStripeModal(true)
-        } else {
-          setMessage({ type: 'error', text: res.error || 'Erreur Stripe' })
-        }
-      } catch (err) {
-        console.error('Erreur Stripe:', err)
-        setMessage({ type: 'error', text: 'Erreur côté Stripe' })
-      } finally {
-        setIsLoading(false)
+    try {
+      const res = await createCardPaymentIntent({ tourneeId: tourneeId!, amount: parsed, calendarGiven: calendarAccepted })
+      if (!res.success) {
+        setMessage({ type: 'error', text: res.error || 'Erreur création paiement' })
+      } else if (res.provider === 'stripe' && res.clientSecret) {
+        setStripeClientSecret(res.clientSecret)
+        setStripeIntentId(res.intentId!)
+        setShowStripeModal(true)
+      } else if (res.provider === 'helloasso' && res.donationUrl && res.intentId && res.expiresAt) {
+        setQRCodeData({ intentId: res.intentId, url: res.donationUrl, expiresAt: res.expiresAt })
+        setShowQRModal(true)
+      } else {
+        setMessage({ type: 'error', text: 'Flux de paiement inconnu' })
       }
-    } else {
-      // HelloAsso (reçu fiscal)
-      await handleGenerateQRForCard()
+    } catch (err) {
+      console.error('Erreur création paiement carte:', err)
+      setMessage({ type: 'error', text: 'Erreur création paiement carte' })
+    } finally {
       setIsLoading(false)
     }
   }
@@ -479,8 +448,8 @@ export function DonationModal({ trigger, tourneeId }: DonationModalProps) {
               Annuler
             </Button>
             {formData.paymentMethod === 'carte' ? (
-              <Button type="button" onClick={handleCardPayment} disabled={isGeneratingQR || isLoading}>
-                {isGeneratingQR ? (
+              <Button type="button" onClick={handleCardPayment} disabled={isLoading}>
+                {isLoading ? (
                   <>
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
                     Préparation du paiement...
