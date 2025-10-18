@@ -205,7 +205,7 @@ export function DonationModal({ trigger, tourneeId }: DonationModalProps) {
       if (result.success) {
         const calculated = calculateTransactionFields(transactionData);
         const description = getTransactionTypeDescription(calculated.transaction_type, transactionData.amount);
-        setMessage({ type: "success", text: `${description} - Enregistré avec succès !` });
+        setMessage({ type: "success", text: `${description} - Enregistré avec succès !${formData.supporterEmail ? ` · reçu envoyé à ${formData.supporterEmail}` : ''}` });
 
         // Reset formulaire
         setFormData({
@@ -427,6 +427,11 @@ export function DonationModal({ trigger, tourneeId }: DonationModalProps) {
                   Email requis pour délivrer le reçu fiscal (déduction 66%).
                 </p>
               </div>
+            )}
+            {calendarAccepted && (
+              <p className="text-xs text-muted-foreground">
+                L&rsquo;email est facultatif pour un don de soutien. Si renseigné, un reçu sera envoyé automatiquement.
+              </p>
             )}
             <div className="space-y-1.5">
               <Label htmlFor="notes" className="text-sm">
