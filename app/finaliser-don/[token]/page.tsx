@@ -1,13 +1,14 @@
 import { createClient } from '@/lib/supabase/server'
 import { DonorCompletionForm } from '@/components/donor-completion-form'
 
-export default async function CompleteDonationPage({ params }: { params: { token: string } }) {
+export default async function CompleteDonationPage({ params }: { params: Promise<{ token: string }> }) {
+  const { token } = await params
   const supabase = await createClient()
 
   const { data: tokenData } = await supabase
     .from('donor_completion_tokens')
     .select(`*, transaction:support_transactions(*)`)
-    .eq('token', params.token)
+  .eq('token', token)
     .single()
 
   if (!tokenData) {
@@ -49,7 +50,7 @@ export default async function CompleteDonationPage({ params }: { params: { token
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 p-4">
       <div className="max-w-md mx-auto pt-8">
-        <DonorCompletionForm token={params.token} transaction={tokenData.transaction} />
+        <DonorCompletionForm token={token} transaction={tokenData.transaction} />
       </div>
     </div>
   )
