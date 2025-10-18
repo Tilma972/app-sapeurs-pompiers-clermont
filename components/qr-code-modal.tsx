@@ -99,6 +99,19 @@ export function QRCodeModal({ isOpen, onClose, intentId, donationUrl, expiresAt 
                   { icon: generous ? '🎉' : '✅', duration: 7000 }
                 )
                 toastedRef.current = true
+                // Soft-close + notify parent after a short delay
+                setTimeout(() => {
+                  try {
+                    onClose()
+                    window.dispatchEvent(
+                      new CustomEvent('donation-completed', {
+                        detail: { intentId, amount: parsedAmount, donorName },
+                      })
+                    )
+                  } catch (e) {
+                    console.warn('[QRCodeModal] onClose/dispatch failed', e)
+                  }
+                }, 2000)
               }
             } else {
               console.warn('⚠️ [QRCodeModal] final_amount absent ou invalide:', updated.final_amount)
@@ -117,7 +130,7 @@ export function QRCodeModal({ isOpen, onClose, intentId, donationUrl, expiresAt 
       console.log('🔴 [QRCodeModal] Cleanup realtime channel')
       supabase.removeChannel(channel)
     }
-  }, [isOpen, intentId])
+  }, [isOpen, intentId, onClose])
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60)
