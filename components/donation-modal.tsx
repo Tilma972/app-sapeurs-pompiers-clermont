@@ -28,6 +28,7 @@ import { StripePaymentModal } from '@/components/stripe-payment-modal'
 import { createCardPaymentIntent } from '@/app/actions/card-payments'
 // import { createDonationIntent } from '@/app/actions/donation-intent'
 import { FISCAL_CONFIG, isFiscalEligible, calculateTaxDeduction } from '@/lib/config/fiscal'
+import { FinalizationOptionsModal } from '@/components/finalization-options-modal'
 
 interface DonationModalProps {
   trigger: React.ReactNode;
@@ -53,6 +54,8 @@ export function DonationModal({ trigger, tourneeId }: DonationModalProps) {
   const [showStripeModal, setShowStripeModal] = useState(false)
   const [stripeClientSecret, setStripeClientSecret] = useState<string | null>(null)
   const [stripeIntentId, setStripeIntentId] = useState<string | null>(null)
+  const [showFinalizationModal, setShowFinalizationModal] = useState(false)
+  const [pendingTransactionId, setPendingTransactionId] = useState<string | null>(null)
 
   // État principal : soutien (avec calendrier) vs fiscal
   const [calendarAccepted, setCalendarAccepted] = useState(true);
@@ -160,15 +163,26 @@ export function DonationModal({ trigger, tourneeId }: DonationModalProps) {
       const fd = new FormData();
       fd.append("amount", String(transactionData.amount));
       fd.append("calendar_accepted", String(transactionData.calendar_accepted));
-      fd.append("supporter_name", formData.supporterName);
-      fd.append("supporter_email", formData.supporterEmail);
-      fd.append("supporter_phone", formData.supporterPhone);
+      if (formData.supporterName) fd.append("supporter_name", formData.supporterName);
+      if (formData.supporterEmail) fd.append("supporter_email", formData.supporterEmail);
+      if (formData.supporterPhone) fd.append("supporter_phone", formData.supporterPhone);
       fd.append("payment_method", formData.paymentMethod);
-      fd.append("notes", formData.notes);
+      if (formData.notes) fd.append("notes", formData.notes);
+      // Paiements espèces/chèque ET don fiscal (sans calendrier) éligible => finalisation différée par le donateur
+      if (!calendarAccepted && fiscalEligible) {
+        fd.append('payment_status', 'pending_donor_info');
+      }
       fd.append("tournee_id", tourneeId);
       fd.append("consent_email", String(formData.consentEmail));
 
       const result = await submitSupportTransaction(fd);
+      // Si finalisation différée, ouvrir le modal d'options (QR / email)
+      if (!calendarAccepted && fiscalEligible && result.transaction?.id) {
+        setPendingTransactionId(result.transaction.id);
+        setShowFinalizationModal(true);
+        setIsLoading(false);
+        return;
+      }
       
       if (result.success) {
         const calculated = calculateTransactionFields(transactionData);
@@ -360,7 +374,9 @@ export function DonationModal({ trigger, tourneeId }: DonationModalProps) {
           {formData.paymentMethod !== 'carte' && (
           <div className="space-y-2">
             <Label className="text-sm font-medium">
-              Détails {!calendarAccepted && <span className="text-red-500">(email requis pour don fiscal)</span>}
+              Détails {!calendarAccepted && !fiscalEligible && (
+                <span className="text-red-500">(email requis pour don fiscal)</span>
+              )}
             </Label>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
               <div className="space-y-1.5">
@@ -383,7 +399,14 @@ export function DonationModal({ trigger, tourneeId }: DonationModalProps) {
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="supporterEmail" className="text-sm">
-                  Email {!calendarAccepted && <span className="text-red-500">*</span>}
+                  {(() => {
+                    const requireEmailNow = !calendarAccepted && !fiscalEligible
+                    return (
+                      <>
+                        Email {requireEmailNow && <span className="text-red-500">*</span>}
+                      </>
+                    )
+                  })()}
                 </Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -394,17 +417,24 @@ export function DonationModal({ trigger, tourneeId }: DonationModalProps) {
                     value={formData.supporterEmail}
                     onChange={handleInputChange}
                     placeholder="email@exemple.com"
-                    required={!calendarAccepted}
-                    className={`pl-10 h-10 ${!calendarAccepted ? "border-red-200 bg-red-50" : ""}`}
+                    required={!calendarAccepted && !fiscalEligible}
+                    className={`pl-10 h-10 ${(!calendarAccepted && !fiscalEligible) ? "border-red-200 bg-red-50" : ""}`}
                     disabled={isLoading}
                   />
                 </div>
               </div>
             </div>
-            {!calendarAccepted && (
+            {!calendarAccepted && !fiscalEligible && (
               <div className="p-2 bg-amber-50 border border-amber-200 rounded-md">
                 <p className="text-xs text-amber-800">
                   Email requis pour délivrer le reçu fiscal (déduction 66%).
+                </p>
+              </div>
+            )}
+            {!calendarAccepted && fiscalEligible && (
+              <div className="p-2 bg-green-50 border border-green-200 rounded-md">
+                <p className="text-xs text-green-800">
+                  Pas besoin de saisir l&rsquo;email ici : le donateur le renseignera en scannant le QR et recevra ensuite son reçu fiscal.
                 </p>
               </div>
             )}
@@ -498,6 +528,15 @@ export function DonationModal({ trigger, tourneeId }: DonationModalProps) {
             clientSecret={stripeClientSecret}
             amount={amountNumber}
             intentId={stripeIntentId ?? undefined}
+          />
+        )}
+        {showFinalizationModal && pendingTransactionId && (
+          <FinalizationOptionsModal
+            isOpen={showFinalizationModal}
+            onClose={() => setShowFinalizationModal(false)}
+            transactionId={pendingTransactionId}
+            amount={amountNumber}
+            taxDeduction={deduction}
           />
         )}
       </DialogContent>
