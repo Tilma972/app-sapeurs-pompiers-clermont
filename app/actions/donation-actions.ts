@@ -120,7 +120,8 @@ export async function submitSupportTransaction(formData: FormData) {
       consent_email: consent_email,
       payment_method: payment_method,
       notes: notes || null,
-  payment_status: requested_status as unknown as Database['public']['Enums']['payment_status_enum'] | string,
+      // payment_status is a VARCHAR in DB; we validate allowed values above
+      payment_status: requested_status,
       receipt_generated: false,
       receipt_sent: false,
       created_offline: false
