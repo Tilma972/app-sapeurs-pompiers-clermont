@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -40,6 +41,7 @@ const paymentMethods = [
 const quickAmounts = [5, 10, 15, 20];
 
 export function DonationModal({ trigger, tourneeId }: DonationModalProps) {
+  const router = useRouter()
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
@@ -245,6 +247,19 @@ export function DonationModal({ trigger, tourneeId }: DonationModalProps) {
   const handleQuickAmount = (amount: number) => {
     setFormData((prev) => ({ ...prev, amount: amount.toString() }));
   };
+
+  // Unified notification listener: refresh data when a donation completes
+  useEffect(() => {
+    const handler = () => {
+      try {
+        router.refresh()
+      } catch {
+        // no-op
+      }
+    }
+    window.addEventListener('donation-completed', handler as EventListener)
+    return () => window.removeEventListener('donation-completed', handler as EventListener)
+  }, [router])
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
