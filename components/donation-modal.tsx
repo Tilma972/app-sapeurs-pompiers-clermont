@@ -26,6 +26,7 @@ import { QRCodeModal } from '@/components/qr-code-modal'
 import { StripePaymentModal } from '@/components/stripe-payment-modal'
 import { createStripePaymentIntent } from '@/app/actions/stripe-payment'
 import { createDonationIntent } from '@/app/actions/donation-intent'
+import { FISCAL_CONFIG, isFiscalEligible, calculateTaxDeduction } from '@/lib/config/fiscal'
 
 interface DonationModalProps {
   trigger: React.ReactNode;
@@ -66,11 +67,9 @@ export function DonationModal({ trigger, tourneeId }: DonationModalProps) {
   });
 
   const amountNumber = useMemo(() => parseFloat(formData.amount || "0") || 0, [formData.amount]);
-  const isFiscal = !calendarAccepted;
-  const deduction = useMemo(
-    () => (isFiscal ? Math.round(amountNumber * 0.66 * 100) / 100 : 0),
-    [amountNumber, isFiscal]
-  );
+  const calendarGiven = calendarAccepted // calendrier remis = soutien
+  const fiscalEligible = useMemo(() => isFiscalEligible(amountNumber, calendarGiven), [amountNumber, calendarGiven])
+  const deduction = useMemo(() => calculateTaxDeduction(amountNumber, fiscalEligible), [amountNumber, fiscalEligible])
 
   const handleGenerateQRForCard = async () => {
     setIsGeneratingQR(true)
@@ -333,16 +332,28 @@ export function DonationModal({ trigger, tourneeId }: DonationModalProps) {
             </div>
             {formData.amount && (
               <div className="text-xs text-muted-foreground">
-                {calendarAccepted ? (
-                  <span>{formData.amount}€ • Soutien (pas de déduction)</span>
+                <span>{formData.amount}€ • Calendrier {calendarAccepted ? 'remis' : 'non remis'}</span>
+                <span className="mx-1">•</span>
+                {fiscalEligible ? (
+                  <span>Éligible reçu fiscal (déduction {deduction}€)</span>
                 ) : (
-                  <span>
-                    {formData.amount}€ • Fiscal (déduction {deduction}€)
-                  </span>
+                  <span>Non éligible reçu fiscal{calendarAccepted ? ` (don < ${FISCAL_CONFIG.MIN_DONATION_FOR_FISCAL}€ avec calendrier)` : ''}</span>
                 )}
               </div>
             )}
           </div>
+
+          {/* Étape 2: Paiement */}
+          {/* Indicateur d'éligibilité fiscale */}
+          {formData.amount && (
+            <div className={`text-xs rounded-md px-3 py-2 ${fiscalEligible ? 'bg-green-50 text-green-800 border border-green-200' : 'bg-amber-50 text-amber-800 border border-amber-200'}`}>
+              {fiscalEligible ? (
+                <span>Éligible au reçu fiscal · Déduction estimée {deduction}€ (66%)</span>
+              ) : (
+                <span>Non éligible: valeur du calendrier (≈{FISCAL_CONFIG.CALENDAR_VALUE}€) dépasse 25% du don</span>
+              )}
+            </div>
+          )}
 
           {/* Étape 2: Paiement */}
           <div className="space-y-1.5">
