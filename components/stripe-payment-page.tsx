@@ -63,6 +63,8 @@ function PaymentForm({ onSuccess, intentId }: { onSuccess: () => void; intentId?
               address: 'auto',
             },
           },
+          // Card-only server config; Apple Pay / Google Pay stay available via Payment Request if enabled on the account/device
+          paymentMethodOrder: ['card'],
         }}
       />
 
