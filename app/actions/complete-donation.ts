@@ -3,10 +3,11 @@
 import { createLogger } from '@/lib/log'
 import { sendEmail } from '@/lib/email/resend-client'
 import { buildSubject, buildHtml, buildText } from '@/lib/email/receipt-templates'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 async function createSupabaseServerClient() {
-  const { createClient } = await import('@/lib/supabase/server')
-  return await createClient()
+  // Use admin client to bypass RLS for anonymous donor completion flow
+  return createAdminClient()
 }
 
 const log = createLogger('actions/complete-donation')
@@ -66,14 +67,18 @@ export async function completeDonation(data: {
       const currentYear = new Date().getFullYear()
       const sequenceNumber = parseInt(receiptNumber.split('-').pop() || '1')
 
-      await supabase.from('receipts').insert({
-        transaction_id: transaction.id,
-        receipt_number: receiptNumber,
-        fiscal_year: currentYear,
-        sequence_number: sequenceNumber,
-        receipt_type: 'fiscal',
-        status: 'pending',
-      })
+      const { data: insertedReceipt } = await supabase
+        .from('receipts')
+        .insert({
+          transaction_id: transaction.id,
+          receipt_number: receiptNumber,
+          fiscal_year: currentYear,
+          sequence_number: sequenceNumber,
+          receipt_type: 'fiscal',
+          status: 'pending',
+        })
+        .select('public_access_token')
+        .single()
 
       await supabase
         .from('support_transactions')
@@ -85,6 +90,7 @@ export async function completeDonation(data: {
         supporterName: fullName,
         amount: transaction.amount,
         receiptNumber: receiptNumber,
+        publicAccessToken: insertedReceipt?.public_access_token ?? null,
         transactionType: 'fiscal' as const,
       }
       const subject = buildSubject(params)

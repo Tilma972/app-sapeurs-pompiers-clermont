@@ -1,14 +1,14 @@
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { DonorCompletionForm } from '@/components/donor-completion-form'
 
 export default async function CompleteDonationPage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params
-  const supabase = await createClient()
+  const admin = createAdminClient()
 
-  const { data: tokenData } = await supabase
+  const { data: tokenData } = await admin
     .from('donor_completion_tokens')
     .select(`*, transaction:support_transactions(*)`)
-  .eq('token', token)
+    .eq('token', token)
     .single()
 
   if (!tokenData) {

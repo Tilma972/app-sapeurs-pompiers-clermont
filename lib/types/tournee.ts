@@ -5,9 +5,9 @@ export type TourneeRow = Database['public']['Tables']['tournees']['Row']
 export type TourneeInsert = Database['public']['Tables']['tournees']['Insert']
 export type TourneeUpdate = Database['public']['Tables']['tournees']['Update']
 
-export type TransactionRow = Database['public']['Tables']['transactions']['Row']
-export type TransactionInsert = Database['public']['Tables']['transactions']['Insert']
-export type TransactionUpdate = Database['public']['Tables']['transactions']['Update']
+export type TransactionRow = Database['public']['Tables']['support_transactions']['Row']
+export type TransactionInsert = Database['public']['Tables']['support_transactions']['Insert']
+export type TransactionUpdate = Database['public']['Tables']['support_transactions']['Update']
 
 // Alias pour compatibilité
 export type Tournee = TourneeRow

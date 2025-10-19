@@ -26,8 +26,19 @@ export function DonorCompletionForm({ token, transaction }: DonorCompletionFormP
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
+    // Validations côté client
     if (!formData.firstName || !formData.lastName || !formData.email || !formData.postalCode || !formData.city) {
       toast.error('Veuillez remplir tous les champs requis')
+      return
+    }
+    const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)
+    if (!emailOk) {
+      toast.error("Email invalide. Exemple: jean.dupont@email.com")
+      return
+    }
+    const postalOk = /^\d{5}$/.test(formData.postalCode.trim())
+    if (!postalOk) {
+      toast.error("Code postal invalide (format attendu: 5 chiffres)")
       return
     }
 
@@ -96,11 +107,11 @@ export function DonorCompletionForm({ token, transaction }: DonorCompletionFormP
             <Input id="city" required value={formData.city} onChange={(e) => setFormData({ ...formData, city: e.target.value })} placeholder="Paris" />
           </div>
         </div>
-        <Button type="submit" className="w-full" disabled={isSubmitting}>
+        <Button type="submit" className="w-full" disabled={isSubmitting} aria-busy={isSubmitting} aria-live="polite">
           {isSubmitting ? (<><Loader2 className="mr-2 h-4 w-4 animate-spin" />Envoi en cours...</>) : 'Recevoir mon reçu fiscal'}
         </Button>
       </form>
-      <p className="text-xs text-gray-500 text-center mt-6">En finalisant, vous confirmez l’exactitude de vos informations</p>
+      <p className="text-xs text-gray-500 text-center mt-6">En finalisant, vous confirmez l’exactitude de vos informations. Besoin d’aide ? Contactez l’association si nécessaire.</p>
     </div>
   )
 }

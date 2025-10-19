@@ -2,6 +2,7 @@ export type ReceiptEmailParams = {
   supporterName?: string | null;
   amount: number;
   receiptNumber?: string | null;
+  publicAccessToken?: string | null;
   transactionType: 'fiscal' | 'soutien';
 };
 
@@ -31,7 +32,7 @@ export function buildHtml(params: ReceiptEmailParams) {
   const deduction = Math.round(params.amount * 0.66)
   const deductionFmt = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(deduction)
   const receiptUrl = params.receiptNumber
-    ? `${process.env.NEXT_PUBLIC_SITE_URL}/recu/${params.receiptNumber}`
+    ? `${process.env.NEXT_PUBLIC_SITE_URL}/recu/${params.receiptNumber}${params.publicAccessToken ? `?t=${params.publicAccessToken}` : ''}`
     : null
 
   return `
@@ -73,7 +74,11 @@ export function buildHtml(params: ReceiptEmailParams) {
               Conservez ce reçu pour votre déclaration d'impôts
             </p>
           </div>
-        ` : ''}
+        ` : `
+          <div style="background: #fff7ed; border: 1px solid #fed7aa; color: #9a3412; padding: 12px 16px; border-radius: 6px;">
+            Votre reçu sera disponible sous peu. Si vous ne le recevez pas d'ici 24h, répondez à cet email.
+          </div>
+        `}
 
         <!-- Info pratique -->
         <div style="background: #f9fafb; padding: 16px; margin: 30px 0; border-radius: 4px; border: 1px solid #e5e7eb;">

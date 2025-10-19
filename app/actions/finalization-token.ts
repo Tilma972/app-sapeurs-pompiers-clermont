@@ -25,6 +25,34 @@ export async function createFinalizationToken(params: { transactionId: string; e
       return { success: false, error: 'Transaction introuvable' }
     }
 
+    // Reuse existing, non-expired token if any
+    const { data: existing } = await supabase
+      .from('donor_completion_tokens')
+      .select('*')
+      .eq('transaction_id', params.transactionId)
+      .eq('completed', false)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+
+    if (existing && new Date(existing.expires_at) > new Date()) {
+      const url = `${process.env.NEXT_PUBLIC_SITE_URL}/finaliser-don/${existing.token}`
+      if (params.email) {
+        const subject = `Finalisez votre don de ${txn.amount}€ pour recevoir votre reçu fiscal`
+        const html = `
+        <p>Bonjour,</p>
+        <p>Merci pour votre don de <strong>${txn.amount}€</strong>.</p>
+        <p>Pour recevoir votre reçu fiscal, merci de compléter vos informations en cliquant sur le bouton ci-dessous&nbsp;:</p>
+        <p><a href="${url}">Finaliser mon don</a></p>
+        <p>Ce lien est valable 48 heures.</p>
+      `
+        const text = `Merci pour votre don de ${txn.amount}€\nFinalisez vos informations ici: ${url}\nLien valable 48h.`
+        await sendEmail({ to: params.email, subject, html, text })
+        return { success: true, url, emailed: true }
+      }
+      return { success: true, url }
+    }
+
     // Create token
     const token = crypto.randomUUID()
     const expiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000)
