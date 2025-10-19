@@ -1,9 +1,9 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 
-export default async function ReceiptPage({ searchParams, params }: { params: { receiptNumber: string }, searchParams: { t?: string } }) {
+export default async function ReceiptPage({ searchParams, params }: { params: Promise<{ receiptNumber: string }>, searchParams?: { t?: string } }) {
   const admin = createAdminClient()
+  const { receiptNumber } = await params
   const token = searchParams?.t
-  const receiptNumber = params.receiptNumber
 
   // Validate token and load receipt + transaction summary
   const { data: receipt } = await admin
