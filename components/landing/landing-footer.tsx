@@ -144,10 +144,10 @@ export function LandingFooter() {
               <div>
                 <p className="text-sm text-muted-foreground">Email</p>
                 <a
-                  href="mailto:contact@pompiers34800.com"
+                  href="mailto:contact@amicale-sp-clermont.fr"
                   className="text-muted-foreground hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 rounded"
                 >
-                  contact@pompiers34800.com
+                  contact@amicale-sp-clermont.fr
                 </a>
               </div>
             </div>

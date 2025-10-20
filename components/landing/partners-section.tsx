@@ -1,12 +1,12 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Badge } from "@/components/ui/badge";
-import { PremiumIcon } from "./premium-icon";
+// import { Badge } from "@/components/ui/badge";
+// import { PremiumIcon } from "./premium-icon";
 import { Handshake } from "lucide-react";
 import Image from "next/image";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
+// import { Button } from "@/components/ui/button";
+// import Link from "next/link";
 import { PrimaryCta } from "@/components/landing/primary-cta";
 
 // Données des partenaires - Entreprises locales
@@ -124,7 +124,7 @@ export function PartnersSection() {
               x: {
                 repeat: Infinity,
                 repeatType: "loop",
-                duration: 20,
+                duration: 24,
                 ease: "linear"
               }
             }}
