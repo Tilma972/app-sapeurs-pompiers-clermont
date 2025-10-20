@@ -3,7 +3,8 @@ import { redirect } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { RetributionPreferencesCard } from "@/components/retribution-preferences-card";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 export default async function MonComptePage() {
   const supabase = await createClient();
@@ -26,7 +27,6 @@ export default async function MonComptePage() {
   type EqSettings = { pourcentage_minimum_pot?: number; pourcentage_recommande_pot?: number };
   const eqRaw = (profile as unknown as { equipes?: EqSettings | EqSettings[] })?.equipes;
   const eqObj: EqSettings | undefined = Array.isArray(eqRaw) ? eqRaw[0] : eqRaw;
-  const minimumEquipe = eqObj?.pourcentage_minimum_pot ?? 0;
   const recommandationEquipe = eqObj?.pourcentage_recommande_pot ?? 30;
 
   // Derniers mouvements
@@ -99,12 +99,20 @@ export default async function MonComptePage() {
         </Card>
       )}
 
-      {/* Préférences de rétribution */}
-      <RetributionPreferencesCard
-        currentPreference={compte?.pourcentage_pot_equipe_defaut ?? null}
-        minimumEquipe={minimumEquipe}
-        recommandationEquipe={recommandationEquipe}
-      />
+      {/* Lien vers Paramètres */}
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-sm text-muted-foreground mb-1">Paramètres</div>
+              <div className="text-base">Gérer ma préférence de répartition</div>
+            </div>
+            <Link href="/dashboard/parametres">
+              <Button variant="secondary">Ouvrir</Button>
+            </Link>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
