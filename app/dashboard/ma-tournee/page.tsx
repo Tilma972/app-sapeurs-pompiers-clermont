@@ -7,6 +7,7 @@ import { getActiveTourneeWithTransactions } from "@/lib/supabase/tournee";
 import { DonationModal } from "@/components/donation-modal";
 import { TourneeClotureModal } from "@/components/tournee-cloture-modal";
 import { ResendReceiptButton } from "@/components/resend-receipt-button";
+import { RoleBadge } from "@/components/role-badge";
 import {
   Calendar,
   CheckCircle,
@@ -66,6 +67,17 @@ export default async function MaTourneePage() {
   const currencyAvg = new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR", maximumFractionDigits: 1 });
   const averagePerCalendar = calendarsDistributed > 0 ? amountCollected / calendarsDistributed : 0;
 
+  // Pré-check rétribution activée
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('team_id, equipes(enable_retribution)')
+    .eq('id', user.id)
+    .single();
+  type EqFlag = { enable_retribution?: boolean };
+  const eqJoin = (profile as unknown as { equipes?: EqFlag | EqFlag[] })?.equipes;
+  const eqFlag: EqFlag | undefined = Array.isArray(eqJoin) ? eqJoin[0] : eqJoin;
+  const retributionEnabled = !!eqFlag?.enable_retribution;
+
   return (
     <div className="space-y-6">
       {/* En-tête de la tournée - Style moderne shadcn/ui */}
@@ -79,6 +91,7 @@ export default async function MaTourneePage() {
                 En cours
               </Badge>
             </div>
+            <div className="mt-2"><RoleBadge /></div>
             <div className="flex items-center space-x-4 mt-2">
               <div className="flex items-center space-x-1 text-muted-foreground">
                 <MapPin className="h-4 w-4" />
@@ -161,20 +174,26 @@ export default async function MaTourneePage() {
                 <div className="text-xs text-muted-foreground mb-2">
                   Terminer la collecte
                 </div>
-                <TourneeClotureModal 
-                  trigger={
-                    <Button className="w-full h-8 text-sm bg-orange-600 hover:bg-orange-700">
-                      <CheckCircle className="h-3 w-3 mr-1" />
-                      Clôturer ma tournée
-                    </Button>
-                  }
-                  tourneeData={{
-                    tournee,
-                    transactions,
-                    summary
-                  }}
-                  tourneeSummary={summary}
-                />
+                {retributionEnabled ? (
+                  <TourneeClotureModal 
+                    trigger={
+                      <Button className="w-full h-8 text-sm bg-orange-600 hover:bg-orange-700">
+                        <CheckCircle className="h-3 w-3 mr-1" />
+                        Clôturer ma tournée
+                      </Button>
+                    }
+                    tourneeData={{
+                      tournee,
+                      transactions,
+                      summary
+                    }}
+                    tourneeSummary={summary}
+                  />
+                ) : (
+                  <Button className="w-full h-8 text-sm" variant="outline" disabled title="Activez la rétribution dans Gestion Équipe">
+                    Rétribution désactivée pour votre équipe
+                  </Button>
+                )}
               </div>
             </CardFooter>
           </Card>
