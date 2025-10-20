@@ -26,7 +26,31 @@ export async function cloturerTourneeAvecRetribution(data: {
       return { ok: false, error: 'Cette tournée est déjà clôturée' as const }
     }
 
-    if (!tournee.equipes?.enable_retribution) {
+    // S'assurer que l'équipe est connue et que la rétribution est activée
+    let enableRetrib = tournee.equipes?.enable_retribution as boolean | undefined
+    let equipeId: string | null = (tournee as { equipe_id?: string | null }).equipe_id ?? null
+
+    if (enableRetrib === undefined || !equipeId) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('team_id, equipes(enable_retribution)')
+        .eq('id', (tournee as { user_id: string }).user_id)
+        .single()
+
+      type ProfileJoin = { team_id?: string | null; equipes?: { enable_retribution?: boolean } | null }
+      const p = (profile ?? {}) as ProfileJoin
+      enableRetrib = p.equipes?.enable_retribution ?? enableRetrib
+      equipeId = p.team_id ?? equipeId
+
+      // Si la tournée n'a pas d'équipe, la renseigner pour que la RPC fonctionne (join obligatoire)
+      if (!('equipe_id' in tournee) || !(tournee as { equipe_id?: string | null }).equipe_id) {
+        if (equipeId) {
+          await supabase.from('tournees').update({ equipe_id: equipeId, updated_at: new Date().toISOString() }).eq('id', data.tourneeId)
+        }
+      }
+    }
+
+    if (!enableRetrib) {
       return { ok: false, error: 'La rétribution n\'est pas activée pour votre équipe' as const }
     }
 
