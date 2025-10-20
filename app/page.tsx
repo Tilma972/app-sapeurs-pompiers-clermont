@@ -24,8 +24,8 @@ export default async function Home() {
       {/* Header avec navigation */}
       <LandingHeaderWrapper user={user} />
       
-      {/* Hero Simple avec Ken Burns */}
-      <HeroSimple />
+  {/* Hero Simple avec Ken Burns */}
+  <HeroSimple loggedIn={!!user} />
       
           {/* Contenu principal */}
           <main className="relative">

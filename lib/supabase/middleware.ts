@@ -51,12 +51,12 @@ export async function updateSession(request: NextRequest) {
   const isPrivateRoute = request.nextUrl.pathname.startsWith("/dashboard") ||
                         request.nextUrl.pathname.startsWith("/protected");
 
-  // Pour tester la landing page, commentons temporairement la redirection automatique
-  // if (user && request.nextUrl.pathname === "/") {
-  //   const url = request.nextUrl.clone();
-  //   url.pathname = "/dashboard";
-  //   return NextResponse.redirect(url);
-  // }
+  // Redirection automatique pour un utilisateur connecté qui visite la racine
+  if (user && request.nextUrl.pathname === "/") {
+    const url = request.nextUrl.clone();
+    url.pathname = "/dashboard";
+    return NextResponse.redirect(url);
+  }
 
   // Protection des routes privées
   if (isPrivateRoute && !user) {

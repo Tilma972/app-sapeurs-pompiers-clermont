@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { ArrowRight, Heart } from "lucide-react";
+import { ArrowRight, Heart, Shield } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
@@ -39,7 +39,7 @@ const heroSlides = [
   }
 ];
 
-export function HeroSimple() {
+export function HeroSimple({ loggedIn = false }: { loggedIn?: boolean }) {
   const [currentSlide, setCurrentSlide] = useState(0);
 
   // Autoplay simple
@@ -111,33 +111,60 @@ export function HeroSimple() {
                   {heroSlides[currentSlide].subtitle}
                 </motion.p>
 
-                {/* CTA Buttons */}
+                {/* CTA Buttons conditionnels */}
                     <motion.div
                       initial={{ opacity: 0, y: 40 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.8, delay: 0.7 }}
                       className="flex flex-col sm:flex-row gap-4 justify-center"
                     >
-                      <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        className="px-8 py-3 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors glass-button"
-                      >
-                        <Link href={heroSlides[currentSlide].cta.primary.href} className="flex items-center">
-                          {heroSlides[currentSlide].cta.primary.text}
-                          <ArrowRight className="ml-2 h-4 w-4" />
-                        </Link>
-                      </motion.button>
-                      <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        className="px-8 py-3 border border-primary text-primary rounded-lg font-medium hover:bg-primary/10 transition-colors glass-button"
-                      >
-                        <Link href={heroSlides[currentSlide].cta.secondary.href} className="flex items-center">
-                          <Heart className="mr-2 h-4 w-4" />
-                          {heroSlides[currentSlide].cta.secondary.text}
-                        </Link>
-                      </motion.button>
+                      {loggedIn ? (
+                        <>
+                          <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            className="px-8 py-3 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors glass-button"
+                          >
+                            <Link href="/dashboard" className="flex items-center">
+                              <Shield className="mr-2 h-4 w-4" />
+                              Accéder au tableau de bord
+                            </Link>
+                          </motion.button>
+                          <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            className="px-8 py-3 border border-primary text-primary rounded-lg font-medium hover:bg-primary/10 transition-colors glass-button"
+                          >
+                            <Link href={heroSlides[currentSlide].cta.primary.href} className="flex items-center">
+                              {heroSlides[currentSlide].cta.primary.text}
+                              <ArrowRight className="ml-2 h-4 w-4" />
+                            </Link>
+                          </motion.button>
+                        </>
+                      ) : (
+                        <>
+                          <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            className="px-8 py-3 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors glass-button"
+                          >
+                            <Link href="/auth/login" className="flex items-center">
+                              Connexion membre
+                              <ArrowRight className="ml-2 h-4 w-4" />
+                            </Link>
+                          </motion.button>
+                          <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            className="px-8 py-3 border border-primary text-primary rounded-lg font-medium hover:bg-primary/10 transition-colors glass-button"
+                          >
+                            <Link href={heroSlides[currentSlide].cta.primary.href} className="flex items-center">
+                              <Heart className="mr-2 h-4 w-4" />
+                              {heroSlides[currentSlide].cta.primary.text}
+                            </Link>
+                          </motion.button>
+                        </>
+                      )}
                     </motion.div>
               </motion.div>
             </div>
