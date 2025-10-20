@@ -4,7 +4,7 @@ import { motion, MotionConfig, useReducedMotion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { ExternalLink } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Flame, Users, Timer, TrendingUp, MapPinned, type LucideIcon } from "lucide-react";
+import { Flame, Users, Timer, MapPinned, type LucideIcon } from "lucide-react";
 import { AnimatedCounter } from "@/components/landing/animated-counter";
 
 // Types stricts avec LucideIcon
@@ -64,13 +64,13 @@ const metadata: StatsMetadata = {
 };
 
 // Fonction utilitaire pour formatter les nombres en français
-const formatNumber = (value: number | string): string => {
-  if (typeof value === "string") return value;
-  return new Intl.NumberFormat("fr-FR", {
-    maximumFractionDigits: 0,
-    useGrouping: true,
-  }).format(value);
-};
+// const formatNumber = (value: number | string): string => {
+//   if (typeof value === "string") return value;
+//   return new Intl.NumberFormat("fr-FR", {
+//     maximumFractionDigits: 0,
+//     useGrouping: true,
+//   }).format(value);
+// };
 
 // Formatter la date de mise à jour
 const formatUpdateDate = (isoDate: string): string => {

@@ -11,11 +11,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { useRouter } from "next/navigation";
 import { PrimaryCta } from "@/components/landing/primary-cta";
 
 export default function DevenirPartenairePage() {
-  const router = useRouter();
   return (
     <main className="py-12">
       {/* Bouton retour */}
@@ -222,7 +220,7 @@ export default function DevenirPartenairePage() {
                 </Button>
               </div>
               <p className="md:col-span-2 mt-3 text-xs text-muted-foreground">
-                En envoyant ce formulaire, vous acceptez que vos données soient utilisées pour vous recontacter. Aucune donnée n'est stockée sur notre site.
+                En envoyant ce formulaire, vous acceptez que vos données soient utilisées pour vous recontacter. Aucune donnée n&apos;est stockée sur notre site.
               </p>
             </form>
           </Card>
