@@ -18,16 +18,16 @@ export async function cloturerTourneeAvecRetribution(data: {
 
     if (tourneeErr) {
       console.error('Erreur chargement tournée:', tourneeErr)
-      throw new Error('Tournée introuvable')
+      return { ok: false, error: 'Tournée introuvable' as const }
     }
-    if (!tournee) throw new Error('Tournée introuvable')
+    if (!tournee) return { ok: false, error: 'Tournée introuvable' as const }
 
     if (tournee.statut && tournee.statut !== 'active') {
-      throw new Error('Cette tournée est déjà clôturée')
+      return { ok: false, error: 'Cette tournée est déjà clôturée' as const }
     }
 
     if (!tournee.equipes?.enable_retribution) {
-      throw new Error('La rétribution n\'est pas activée pour votre équipe')
+      return { ok: false, error: 'La rétribution n\'est pas activée pour votre équipe' as const }
     }
 
     const { data: result, error } = await supabase.rpc('cloturer_tournee_avec_retribution', {
@@ -38,15 +38,16 @@ export async function cloturerTourneeAvecRetribution(data: {
 
     if (error) {
       console.error('Erreur RPC:', error)
-      throw new Error(error.message || 'Erreur lors de la clôture')
+      return { ok: false, error: (error.message || 'Erreur lors de la clôture') as string }
     }
 
     revalidatePath('/dashboard/ma-tournee')
     revalidatePath('/dashboard/mon-compte')
-    return result
+    return { ok: true as const, result }
   } catch (err) {
     console.error('Erreur clôture:', err)
-    throw err
+    const msg = (err as Error)?.message || 'Erreur lors de la clôture'
+    return { ok: false, error: msg }
   }
 }
 
