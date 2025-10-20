@@ -14,6 +14,7 @@ import {
   Wallet,
   Users,
   Settings,
+  Sliders,
 } from "lucide-react";
 import { LogoutButton } from "@/components/logout-button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -27,6 +28,7 @@ const navigation = [
   { name: "Événements", href: "/dashboard/associative", icon: Calendar },
   { name: "Mon Compte", href: "/dashboard/mon-compte", icon: Wallet },
   { name: "Pot d'Équipe", href: "/dashboard/pot-equipe", icon: Users },
+  { name: "Paramètres", href: "/dashboard/parametres", icon: Sliders },
   { name: "Gestion Équipe", href: "/dashboard/admin/equipes", icon: Settings },
   { name: "Partenaires & Avantages", href: "/dashboard/partenaires", icon: Gift },
   { name: "Mon Profil", href: "/dashboard/profil", icon: User },
