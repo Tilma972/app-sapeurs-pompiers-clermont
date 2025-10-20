@@ -2,10 +2,9 @@
 
 import { motion, MotionConfig, useReducedMotion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Building2, ExternalLink } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Flame, Users, Timer, TrendingUp, type LucideIcon } from "lucide-react";
+import { Flame, Users, Timer, TrendingUp, MapPinned, type LucideIcon } from "lucide-react";
 import { AnimatedCounter } from "@/components/landing/animated-counter";
 
 // Types stricts avec LucideIcon
@@ -50,12 +49,12 @@ const operationalStats: OperationalStat[] = [
     ariaLabel: "89 feux maîtrisés dont 23 feux de forêt"
   },
   {
-    icon: TrendingUp,
-    label: "Temps moyen",
-    value: "8 min",
-    subtitle: "Délai d\'intervention",
+    icon: MapPinned,
+    label: "Communes servies",
+    value: 21,
+    subtitle: "Secteur opérationnel",
     colorToken: "text-primary",
-    ariaLabel: "Temps moyen d\'intervention de 8 minutes"
+    ariaLabel: "21 communes desservies par le centre de secours"
   }
 ];
 
@@ -102,7 +101,7 @@ export function OperationsStatsSection() {
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-6 mb-8" role="list" aria-label="Statistiques opérationnelles">
             {operationalStats.map((stat, index) => {
               const Icon = stat.icon;
-              const formattedValue = formatNumber(stat.value);
+              // const formattedValue = formatNumber(stat.value);
               return (
                 <motion.div
                   key={`stat-${index}`}
@@ -125,7 +124,17 @@ export function OperationsStatsSection() {
                       <CardDescription className="text-base lg:text-lg font-medium">{stat.label}</CardDescription>
                     </CardHeader>
                     <CardContent>
-                      <p className="text-sm text-muted-foreground">{stat.subtitle}</p>
+                      {stat.label === "Communes servies" ? (
+                        <a
+                          href="#carte-secteur"
+                          className="text-sm text-primary hover:underline inline-flex items-center gap-1"
+                        >
+                          {stat.subtitle}
+                          <ExternalLink className="h-3.5 w-3.5" />
+                        </a>
+                      ) : (
+                        <p className="text-sm text-muted-foreground">{stat.subtitle}</p>
+                      )}
                     </CardContent>
                   </Card>
                 </motion.div>

@@ -7,23 +7,23 @@ import { Calendar, Users, Shield } from "lucide-react";
 const newsItems = [
   {
     type: "amicale",
-    title: "Assemblée générale 2024",
-    date: "15 Mars 2024",
+    title: "Assemblée générale 2025",
+    date: "14 Novemvre 2025",
     description: "Rendez-vous annuel pour faire le bilan de nos actions et définir les orientations futures.",
     icon: Users,
     color: "icon-users"
   },
   {
     type: "local",
-    title: "Journée prévention incendie",
-    date: "22 Mars 2024",
+    title: "Journée Téléthon",
+    date: "5-6 Décembre 2025",
     description: "Participation à la journée de sensibilisation organisée par la mairie de Clermont l'Hérault.",
     icon: Shield,
     color: "icon-shield"
   },
   {
     type: "amicale",
-    title: "Collecte calendriers 2024",
+    title: "Tournée calendriers 2026",
     date: "En cours",
     description: "Vente de calendriers au profit de l'amicale. Contactez-nous pour en obtenir un.",
     icon: Calendar,
@@ -71,15 +71,15 @@ export function NewsSection() {
           </p>
         </div>
 
-        <div className="grid gap-4 max-w-3xl mx-auto">
-          {newsItems.slice(0, 2).map((item, index) => (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-6xl mx-auto">
+          {newsItems.slice(0, 3).map((item, index) => (
             <motion.article
               key={index}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: index * 0.05 }}
               viewport={{ once: true }}
-              className="glass-card p-4 rounded-lg"
+              className="glass-card p-4 rounded-lg h-full"
             >
               <div className="flex items-start gap-3 mb-2">
                 <div className="flex-shrink-0">

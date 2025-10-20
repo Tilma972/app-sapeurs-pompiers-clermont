@@ -3,7 +3,6 @@
 import { motion } from "framer-motion";
 import { PremiumIcon } from "@/components/landing/premium-icon";
 import { Star, Heart } from "lucide-react";
-import { Card } from "@/components/ui/card";
 import { UnifiedCard } from "@/components/landing/unified-card";
 
 const testimonials = [

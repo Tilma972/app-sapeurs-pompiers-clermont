@@ -3,10 +3,7 @@
 import { motion } from "framer-motion";
 import { PremiumIcon } from "@/components/landing/premium-icon";
 import { ShoppingCart } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { UnifiedCard } from "@/components/landing/unified-card";
 
@@ -43,7 +40,6 @@ const products = [
 // Helpers retirés pour version compacte
 
 export function ShopSection() {
-  const featuredProduct = products[0];
   return (
     <section id="boutique" className="py-12">
       <div className="container max-w-6xl mx-auto px-4">
