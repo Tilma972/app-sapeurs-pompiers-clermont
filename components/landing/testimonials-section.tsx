@@ -27,12 +27,19 @@ const testimonials = [
     message: "L'organisation des événements associatifs crée une vraie cohésion dans notre communauté. Bravo pour cette initiative !",
     rating: 5,
     type: "citoyen"
+  },
+  {
+    name: "Famille R.",
+    location: "Région",
+    message: "L'amicale a été d'un soutien précieux pendant les moments difficiles. Nous ne les remercions jamais assez.",
+    rating: 5,
+    type: "famille"
   }
 ];
 
 export function TestimonialsSection() {
   return (
-    <section id="temoignages" className="py-8">
+    <section id="temoignages" className="py-12">
       <div className="container mx-auto px-4">
         <div className="text-center mb-6">
           <div className="flex justify-center mb-2">
@@ -73,6 +80,5 @@ export function TestimonialsSection() {
     </section>
   );
 }
-
 
 

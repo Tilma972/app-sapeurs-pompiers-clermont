@@ -33,7 +33,7 @@ const actions = [
 
 export function ActionsSection() {
   return (
-    <section id="actions" className="py-8 bg-gradient-to-br from-amber-50 via-orange-50 to-red-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+    <section id="actions" className="py-12 bg-gradient-to-br from-slate-50 via-amber-50 to-slate-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
       <div className="container mx-auto px-4">
         <motion.div
           initial={{ opacity: 0, y: 40 }}
@@ -81,6 +81,5 @@ export function ActionsSection() {
     </section>
   );
 }
-
 
 
