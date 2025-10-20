@@ -4,6 +4,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { RetributionPreferencesCard } from "@/components/retribution-preferences-card";
 
 export default async function MonComptePage() {
   const supabase = await createClient();
@@ -13,9 +14,21 @@ export default async function MonComptePage() {
   // Soldes personnels
   const { data: compte } = await supabase
     .from('comptes_sp')
-    .select('solde_disponible, solde_utilise, solde_bloque, total_retributions, total_contributions_equipe')
+    .select('solde_disponible, solde_utilise, solde_bloque, total_retributions, total_contributions_equipe, pourcentage_pot_equipe_defaut')
     .eq('user_id', user.id)
     .single();
+
+  // Paramètres d'équipe (min/reco)
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('team_id, equipes(pourcentage_minimum_pot, pourcentage_recommande_pot)')
+    .eq('id', user.id)
+    .single();
+  type EqSettings = { pourcentage_minimum_pot?: number; pourcentage_recommande_pot?: number };
+  const eqRaw = (profile as unknown as { equipes?: EqSettings | EqSettings[] })?.equipes;
+  const eqObj: EqSettings | undefined = Array.isArray(eqRaw) ? eqRaw[0] : eqRaw;
+  const minimumEquipe = eqObj?.pourcentage_minimum_pot ?? 0;
+  const recommandationEquipe = eqObj?.pourcentage_recommande_pot ?? 30;
 
   // Derniers mouvements
   const { data: mouvements, error: mouvementsError } = await supabase
@@ -118,6 +131,13 @@ export default async function MonComptePage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Préférences de rétribution */}
+      <RetributionPreferencesCard
+        currentPreference={compte?.pourcentage_pot_equipe_defaut ?? null}
+        minimumEquipe={minimumEquipe}
+        recommandationEquipe={recommandationEquipe}
+      />
     </div>
   );
 }
