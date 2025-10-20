@@ -2,8 +2,8 @@ import { createClient } from "@/lib/supabase/server";
 import { HeroSimple } from "@/components/landing/hero-simple";
 import { ActionsSection } from "@/components/landing/actions-section";
 import { ShopSection } from "@/components/landing/shop-section";
-import { TestimonialsSection } from "@/components/landing/testimonials-section";
 import { PreventionSection } from "@/components/landing/prevention-section";
+import { TestimonialsSection } from "@/components/landing/testimonials-section";
 import { NewsSection } from "@/components/landing/news-section";
 import { ContactSection } from "@/components/landing/contact-section";
 import { LandingFooter } from "@/components/landing/landing-footer";
@@ -30,25 +30,25 @@ export default async function Home() {
       
           {/* Contenu principal */}
           <main className="relative">
-            {/* Section Actions de l'amicale */}
-            <ActionsSection />
+              {/* Statistiques opérationnelles sous le hero */}
+              <OperationsStatsSection />
 
-            {/* Section Statistiques Opérationnelles */}
-            <OperationsStatsSection />
+              {/* Actions (ultra-compactes) */}
+              <ActionsSection />
             
             {/* Section Boutique */}
             <ShopSection />
             
-            {/* Section Témoignages */}
-            <TestimonialsSection />
-            
-            {/* Section Prévention */}
+            {/* Prévention: numéros d'urgence */}
             <PreventionSection />
+
+            {/* Témoignages: carrousel */}
+            <TestimonialsSection />
             
             {/* Section Actualités */}
             <NewsSection />
             
-            {/* Section Contact */}
+            {/* Contact minimal */}
             <ContactSection />
           </main>
       

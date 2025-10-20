@@ -1,8 +1,7 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
 import { ThemeSwitcher } from "@/components/theme-switcher";
-import { Mail, Phone, MapPin, Facebook, Twitter, Instagram } from "lucide-react";
+import { Mail, Phone, MapPin } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
@@ -28,17 +27,12 @@ const footerLinks = {
   ]
 };
 
-const socialLinks = [
-  { name: "Facebook", icon: Facebook, href: "#" },
-  { name: "Twitter", icon: Twitter, href: "#" },
-  { name: "Instagram", icon: Instagram, href: "#" }
-];
 
 export function LandingFooter() {
   return (
-    <footer className="bg-gradient-to-t from-slate-900 via-slate-800 to-slate-900 text-white">
-      <div className="container mx-auto px-4 py-16">
-        <div className="grid lg:grid-cols-4 gap-8">
+    <footer className="bg-slate-900 text-white">
+      <div className="container mx-auto px-4 py-10">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
           {/* Logo & Description */}
           <motion.div
             initial={{ opacity: 0, y: 40 }}
@@ -69,25 +63,7 @@ export function LandingFooter() {
               Une communauté de sapeurs-pompiers dédiée à la protection 
               et au service de notre territoire avec courage et professionnalisme.
             </p>
-            <div className="flex items-center gap-4">
-              <ThemeSwitcher />
-              <div className="flex gap-3">
-                {socialLinks.map((social) => (
-                  <Button
-                    key={social.name}
-                    variant="ghost"
-                    size="sm"
-                    asChild
-                    className="text-slate-400 hover:text-white hover:bg-slate-700"
-                  >
-                    <Link href={social.href}>
-                      <social.icon className="h-4 w-4" />
-                      <span className="sr-only">{social.name}</span>
-                    </Link>
-                  </Button>
-                ))}
-              </div>
-            </div>
+            <ThemeSwitcher />
           </motion.div>
 
           {/* Footer Links */}
@@ -120,11 +96,11 @@ export function LandingFooter() {
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.4 }}
+          transition={{ duration: 0.8, delay: 0.2 }}
           viewport={{ once: true }}
-          className="border-t border-slate-700 mt-12 pt-8"
+          className="border-t border-slate-700 mt-8 pt-6"
         >
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-primary/20 rounded-lg flex items-center justify-center">
                 <MapPin className="h-5 w-5 text-primary" />
@@ -161,7 +137,7 @@ export function LandingFooter() {
           whileInView={{ opacity: 1 }}
           transition={{ duration: 0.8, delay: 0.6 }}
           viewport={{ once: true }}
-          className="border-t border-slate-700 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center gap-4"
+          className="border-t border-slate-700 mt-6 pt-6 flex flex-col md:flex-row justify-between items-center gap-4"
         >
           <p className="text-slate-400 text-sm">
             © {new Date().getFullYear()} Amicale des Sapeurs-Pompiers de Clermont l&apos;Hérault. 

@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { PremiumIcon } from "@/components/landing/premium-icon";
-import { Calendar, Users, Shield, ExternalLink } from "lucide-react";
+import { Calendar, Users, Shield } from "lucide-react";
 
 const newsItems = [
   {
@@ -28,14 +28,6 @@ const newsItems = [
     description: "Vente de calendriers au profit de l'amicale. Contactez-nous pour en obtenir un.",
     icon: Calendar,
     color: "icon-target"
-  },
-  {
-    type: "prevention",
-    title: "Formation gestes qui sauvent",
-    date: "5 Avril 2024",
-    description: "Session de sensibilisation aux premiers secours ouverte à tous les citoyens.",
-    icon: Shield,
-    color: "icon-shield"
   }
 ];
 
@@ -67,114 +59,43 @@ const getTypeLabel = (type: string) => {
 
 export function NewsSection() {
   return (
-    <section id="actualites" className="py-20 bg-gradient-to-br from-slate-100 via-amber-50 to-slate-50 dark:from-slate-800 dark:via-slate-900 dark:to-slate-800">
+    <section id="actualites" className="py-12">
       <div className="container mx-auto px-4">
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          viewport={{ once: true }}
-          className="text-center mb-16"
-        >
-          <div className="flex justify-center mb-6">
-            <PremiumIcon
-              icon={Calendar}
-              variant="gradient"
-              size="lg"
-              className="icon-target"
-            />
+        <div className="text-center mb-6">
+          <div className="flex justify-center mb-2">
+            <PremiumIcon icon={Calendar} variant="gradient" size="md" className="icon-target" />
           </div>
-          <h2 className="text-4xl lg:text-5xl font-bold text-foreground mb-6">
-            Actualités
-          </h2>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-            Suivez nos actions, événements locaux et initiatives de prévention
-          </p>
-        </motion.div>
+          <h2 className="text-2xl font-bold">Actualités</h2>
+        </div>
 
-        <div className="grid md:grid-cols-2 gap-8 max-w-6xl mx-auto">
-          {newsItems.map((item, index) => (
+        <div className="grid gap-4 max-w-3xl mx-auto">
+          {newsItems.slice(0, 2).map((item, index) => (
             <motion.article
               key={index}
-              initial={{ opacity: 0, y: 40 }}
+              initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: index * 0.1 }}
+              transition={{ duration: 0.5, delay: index * 0.05 }}
               viewport={{ once: true }}
-              className="glass-card p-8 group hover:scale-105 transition-all duration-300"
+              className="glass-card p-4"
             >
-              <div className="flex items-start gap-4 mb-4">
+              <div className="flex items-start gap-3 mb-2">
                 <div className="flex-shrink-0">
-                  <PremiumIcon
-                    icon={item.icon}
-                    variant="glass"
-                    size="md"
-                    className={item.color}
-                  />
+                  <PremiumIcon icon={item.icon} variant="glass" size="sm" className={item.color} />
                 </div>
                 <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${getTypeColor(item.type)}`}>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${getTypeColor(item.type)}`}>
                       {getTypeLabel(item.type)}
                     </span>
-                    <time className="text-sm text-muted-foreground">
-                      {item.date}
-                    </time>
+                    <time className="text-xs text-muted-foreground">{item.date}</time>
                   </div>
-                  <h3 className="text-xl font-semibold text-foreground mb-3 group-hover:text-primary transition-colors">
-                    {item.title}
-                  </h3>
+                  <h3 className="text-base font-semibold text-foreground mb-1">{item.title}</h3>
                 </div>
               </div>
-              
-              <p className="text-muted-foreground leading-relaxed mb-6">
-                {item.description}
-              </p>
-
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="inline-flex items-center gap-2 text-primary hover:text-primary/80 transition-colors font-medium"
-              >
-                Lire la suite
-                <ExternalLink className="h-4 w-4" />
-              </motion.button>
+              <p className="text-sm text-muted-foreground">{item.description}</p>
             </motion.article>
           ))}
         </div>
-
-        {/* Call to action */}
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.4 }}
-          viewport={{ once: true }}
-          className="text-center mt-16"
-        >
-          <div className="glass-card p-8 max-w-2xl mx-auto">
-            <h3 className="text-2xl font-semibold text-foreground mb-4">
-              Restez informé
-            </h3>
-            <p className="text-muted-foreground mb-6">
-              Suivez nos actualités et ne manquez aucun événement important
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="px-8 py-3 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors"
-              >
-                S&apos;abonner aux actualités
-              </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="px-8 py-3 border border-primary text-primary rounded-lg font-medium hover:bg-primary/10 transition-colors"
-              >
-                Voir toutes les actualités
-              </motion.button>
-            </div>
-          </div>
-        </motion.div>
       </div>
     </section>
   );
