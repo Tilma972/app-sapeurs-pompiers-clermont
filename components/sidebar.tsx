@@ -23,7 +23,7 @@ const navigation = [
   { name: "Petites Annonces", href: "/dashboard/annonces", icon: ShoppingBag },
   { name: "Galerie SP", href: "/dashboard/galerie", icon: Camera },
   { name: "Événements", href: "/dashboard/associative", icon: Calendar },
-  { name: "Mon Compte", href: "/dashboard/compte", icon: Wallet },
+  { name: "Mon Compte", href: "/dashboard/mon-compte", icon: Wallet },
   { name: "Partenaires & Avantages", href: "/dashboard/partenaires", icon: Gift },
   { name: "Mon Profil", href: "/dashboard/profil", icon: User },
 ];
