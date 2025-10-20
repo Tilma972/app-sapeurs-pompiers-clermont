@@ -18,16 +18,29 @@ export default async function MonComptePage() {
     .eq('user_id', user.id)
     .single();
 
-  // Paramètres d'équipe (min/reco)
+  // Paramètres d'équipe (min/reco + infos utiles)
   const { data: profile } = await supabase
     .from('profiles')
-    .select('team_id, equipes(pourcentage_minimum_pot, pourcentage_recommande_pot)')
+    .select('team_id, equipes(id, nom, mode_transparence, pourcentage_minimum_pot, pourcentage_recommande_pot)')
     .eq('id', user.id)
     .single();
   type EqSettings = { pourcentage_minimum_pot?: number; pourcentage_recommande_pot?: number };
-  const eqRaw = (profile as unknown as { equipes?: EqSettings | EqSettings[] })?.equipes;
-  const eqObj: EqSettings | undefined = Array.isArray(eqRaw) ? eqRaw[0] : eqRaw;
+  const eqRaw = (profile as unknown as { equipes?: (EqSettings & { id?: string; nom?: string; mode_transparence?: string }) | (EqSettings & { id?: string; nom?: string; mode_transparence?: string })[] })?.equipes;
+  const eqObj: (EqSettings & { id?: string; nom?: string; mode_transparence?: string }) | undefined = Array.isArray(eqRaw) ? eqRaw[0] : eqRaw;
   const recommandationEquipe = eqObj?.pourcentage_recommande_pot ?? 30;
+
+  // Pot d'équipe (si équipe présente)
+  type ProfileWithTeam = { team_id?: string | null };
+  const prof = profile as unknown as ProfileWithTeam;
+  let potEquipe: { solde_disponible: number } | null = null;
+  if (prof?.team_id) {
+    const { data: pot } = await supabase
+      .from('pots_equipe')
+      .select('solde_disponible')
+      .eq('equipe_id', prof.team_id)
+      .single();
+    potEquipe = pot || null;
+  }
 
   // Derniers mouvements
   const { data: mouvements } = await supabase
@@ -79,6 +92,25 @@ export default async function MonComptePage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Pot d'équipe (collapsible) */}
+      {potEquipe && (
+        <details className="rounded-lg border border-border bg-card">
+          <summary className="cursor-pointer px-6 py-4 flex items-center justify-between">
+            <div>
+              <div className="text-sm text-muted-foreground">👥 Pot d&apos;équipe</div>
+              <div className="text-2xl font-bold">{fmt.format(Number(potEquipe.solde_disponible || 0))}</div>
+            </div>
+            <div className="text-xs text-muted-foreground">Transparence: {eqObj?.mode_transparence || '—'}</div>
+          </summary>
+          <div className="p-4 border-t border-border">
+            <div className="text-sm text-muted-foreground">Détails des contributions disponibles selon le mode de transparence de l&apos;équipe.</div>
+            <div className="mt-3">
+              <Link href="/dashboard/pot-equipe" className="text-sm text-primary underline">Voir le pot d&apos;équipe</Link>
+            </div>
+          </div>
+        </details>
+      )}
 
       {(mouvements && mouvements.length > 0) && (
         <Card>

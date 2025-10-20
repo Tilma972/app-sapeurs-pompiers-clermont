@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { RetributionPreferencesCard } from "@/components/retribution-preferences-card";
+import { EquipeSettingsForm } from "@/components/admin/equipe-settings-form";
 
 export default async function ParametresPage() {
   const supabase = await createClient();
@@ -28,6 +29,29 @@ export default async function ParametresPage() {
   const eqObj: EqSettings | undefined = Array.isArray(eqRaw) ? eqRaw[0] : eqRaw;
   const minimumEquipe = eqObj?.pourcentage_minimum_pot ?? 0;
   const recommandationEquipe = eqObj?.pourcentage_recommande_pot ?? 30;
+
+  // Charger les réglages complets d'équipe si nécessaire
+  let equipeDetails: {
+    id: string;
+    nom: string;
+    enable_retribution: boolean;
+    pourcentage_minimum_pot: number;
+    pourcentage_recommande_pot: number;
+    mode_transparence: 'prive' | 'equipe' | 'anonyme';
+  } | null = null;
+
+  type ProfileWithTeam = { team_id?: string | null };
+  const prof = profile as unknown as ProfileWithTeam;
+  if (prof?.team_id) {
+    const { data: equipe } = await supabase
+      .from('equipes')
+      .select('id, nom, enable_retribution, pourcentage_minimum_pot, pourcentage_recommande_pot, mode_transparence')
+      .eq('id', prof.team_id)
+      .single();
+    equipeDetails = equipe || null;
+  }
+
+  const isChefOrAdmin = profile?.role === 'admin' || profile?.role === 'chef';
 
   return (
     <div className="space-y-6">
@@ -56,13 +80,15 @@ export default async function ParametresPage() {
         </CardContent>
       </Card>
 
-      {/* Section: Équipe (chef/admin) - Placeholder
-          On y mettra plus tard les réglages d'équipe accessibles selon le rôle. */}
-      {(profile?.role === 'admin') && (
+      {/* Section: Gestion d'équipe (chef/admin) */}
+      {isChefOrAdmin && equipeDetails && (
         <Card>
           <CardContent className="pt-6">
-            <div className="mb-2 text-sm text-muted-foreground">Visibilité admin</div>
-            <div className="text-muted-foreground text-sm">D&apos;autres paramètres d&apos;équipe seront disponibles ici.</div>
+            <div className="mb-4">
+              <div className="text-sm text-muted-foreground">Équipe</div>
+              <h2 className="text-lg font-semibold">Gestion d&apos;équipe</h2>
+            </div>
+            <EquipeSettingsForm equipe={equipeDetails} />
           </CardContent>
         </Card>
       )}

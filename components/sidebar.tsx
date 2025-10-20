@@ -13,7 +13,6 @@ import {
   Gift,
   Wallet,
   Users,
-  Settings,
   Sliders,
 } from "lucide-react";
 import { LogoutButton } from "@/components/logout-button";
@@ -27,9 +26,7 @@ const navigation = [
   { name: "Galerie SP", href: "/dashboard/galerie", icon: Camera },
   { name: "Événements", href: "/dashboard/associative", icon: Calendar },
   { name: "Mon Compte", href: "/dashboard/mon-compte", icon: Wallet },
-  { name: "Pot d'Équipe", href: "/dashboard/pot-equipe", icon: Users },
   { name: "Paramètres", href: "/dashboard/parametres", icon: Sliders },
-  { name: "Gestion Équipe", href: "/dashboard/admin/equipes", icon: Settings },
   { name: "Partenaires & Avantages", href: "/dashboard/partenaires", icon: Gift },
   { name: "Mon Profil", href: "/dashboard/profil", icon: User },
 ];
