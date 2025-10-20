@@ -10,56 +10,55 @@ import Link from "next/link";
 
 export function ContactSection() {
   return (
-    <section className="py-12 px-4">
-      <div className="container max-w-4xl mx-auto">
-        <div className="text-center mb-6">
+    <section className="py-16 px-4">
+      <div className="container max-w-5xl mx-auto">
+        <div className="text-center mb-8">
           <div className="flex justify-center mb-2">
             <PremiumIcon icon={Mail} variant="gradient" size="md" />
           </div>
-          <h2 className="text-2xl font-bold">Contact</h2>
+          <h2 className="text-3xl font-bold">Contact</h2>
         </div>
 
-        <div className="grid grid-cols-1 gap-4">
-          <Card className="p-4 flex items-center gap-3">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          <Card className="p-6 hover:shadow-lg transition-shadow flex items-start gap-4">
             <Mail className="h-5 w-5 text-primary" />
             <div>
               <p className="text-xs text-muted-foreground">Email</p>
               <a href="mailto:contact@amicale-sp-clermont.fr" className="font-medium text-primary hover:underline">
                 contact@amicale-sp-clermont.fr
               </a>
+              <p className="text-xs text-muted-foreground mt-1">Réponse sous 48h</p>
             </div>
           </Card>
 
-          <Card className="p-4 flex items-center gap-3">
+          <Card className="p-6 hover:shadow-lg transition-shadow flex items-start gap-4">
             <Phone className="h-5 w-5 text-primary" />
             <div>
               <p className="text-xs text-muted-foreground">Téléphone</p>
               <a href="tel:+33467XXXXXX" className="font-medium text-primary">
                 +33 4 67 XX XX XX
               </a>
+              <p className="text-xs text-muted-foreground mt-1">Mer. 18h-20h • Permanence</p>
             </div>
           </Card>
         </div>
 
-        <div className="text-center mt-6">
-          <Button asChild>
+        <div className="text-center">
+          <Button size="lg" asChild>
             <Link href="/contact">Envoyer un message</Link>
           </Button>
         </div>
 
-        <Card className="mt-6 p-4 border-l-4 border-l-primary">
-          <p className="text-sm text-muted-foreground mb-2">
-            Pour toute urgence ou information officielle
-          </p>
-          <a
-            href="https://www.sdis34.fr"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-sm font-medium text-primary hover:underline inline-flex items-center gap-1"
-          >
-            Site officiel SDIS 34
-            <ExternalLink className="h-3 w-3" />
-          </a>
+        <Card className="mt-8 border-l-4 border-l-primary">
+          <div className="p-4 flex items-center justify-between">
+            <p className="text-sm text-muted-foreground">Pour toute urgence ou information officielle</p>
+            <Button variant="outline" size="sm" asChild>
+              <a href="https://www.sdis34.fr" target="_blank" rel="noopener noreferrer">
+                SDIS 34
+                <ExternalLink className="ml-2 h-3 w-3" />
+              </a>
+            </Button>
+          </div>
         </Card>
       </div>
     </section>

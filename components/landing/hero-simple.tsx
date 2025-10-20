@@ -56,7 +56,7 @@ export function HeroSimple({ loggedIn = false }: { loggedIn?: boolean }) {
   };
 
   return (
-    <section className="relative h-screen overflow-hidden">
+    <section className="relative h-screen w-full overflow-hidden">
       <AnimatePresence mode="wait">
         <motion.div
           key={currentSlide}
@@ -66,37 +66,39 @@ export function HeroSimple({ loggedIn = false }: { loggedIn?: boolean }) {
           transition={{ duration: 1 }}
           className="absolute inset-0"
         >
-          {/* Image avec effet Ken Burns */}
+          {/* Image de fond */}
           <div className="absolute inset-0">
             <Image
               src={heroSlides[currentSlide].image}
               alt={heroSlides[currentSlide].title}
               fill
-              className="kenburns-image object-cover"
+              className="object-cover"
               priority={currentSlide === 0}
               sizes="100vw"
               quality={90}
             />
           </div>
 
-          {/* Overlay sombre */}
-          <div className="absolute inset-0 bg-gradient-to-br from-black/50 via-black/30 to-black/70" />
+          {/* Overlay gradient directionnel plus léger */}
+          <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-transparent" />
 
-          {/* Contenu */}
-          <div className="relative z-10 h-full flex items-center justify-center">
-            <div className="text-center max-w-4xl px-4">
+          {/* Contenu aligné à gauche sur desktop */}
+          <div className="relative z-10 h-full">
+            <div className="container mx-auto h-full px-4 md:px-8 lg:px-12">
+              <div className="flex h-full items-center md:justify-start justify-center">
+                <div className="max-w-3xl text-white text-center md:text-left">
               <motion.div
                 initial={{ opacity: 0, y: 60 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: 0.3 }}
-                className="space-y-8"
+                className="space-y-6"
               >
-                {/* Titre principal simple */}
+                {/* Titre principal */}
                     <motion.h1
                       initial={{ opacity: 0, y: 40 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.8, delay: 0.5 }}
-                      className="text-6xl lg:text-8xl xl:text-9xl font-bold text-white leading-tight mb-6"
+                      className="text-5xl md:text-6xl lg:text-7xl font-bold leading-tight mb-4"
                     >
                       {heroSlides[currentSlide].title}
                     </motion.h1>
@@ -106,7 +108,7 @@ export function HeroSimple({ loggedIn = false }: { loggedIn?: boolean }) {
                   initial={{ opacity: 0, y: 40 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.8, delay: 0.6 }}
-                  className="text-2xl lg:text-3xl xl:text-4xl text-white/90 max-w-4xl mx-auto leading-relaxed mb-8"
+                  className="text-xl md:text-2xl text-white/90 max-w-2xl md:mx-0 mx-auto leading-relaxed mb-6"
                 >
                   {heroSlides[currentSlide].subtitle}
                 </motion.p>
@@ -116,14 +118,14 @@ export function HeroSimple({ loggedIn = false }: { loggedIn?: boolean }) {
                       initial={{ opacity: 0, y: 40 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.8, delay: 0.7 }}
-                      className="flex flex-col sm:flex-row gap-4 justify-center"
+                      className="flex flex-col sm:flex-row gap-4 md:justify-start justify-center"
                     >
                       {loggedIn ? (
                         <>
                           <motion.button
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
-                            className="px-8 py-3 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors glass-button"
+                            className="px-8 py-6 text-lg h-auto bg-primary text-primary-foreground rounded-lg font-semibold hover:bg-primary/90 transition-colors"
                           >
                             <Link href="/dashboard" className="flex items-center">
                               <Shield className="mr-2 h-4 w-4" />
@@ -133,7 +135,7 @@ export function HeroSimple({ loggedIn = false }: { loggedIn?: boolean }) {
                           <motion.button
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
-                            className="px-8 py-3 border border-primary text-primary rounded-lg font-medium hover:bg-primary/10 transition-colors glass-button"
+                            className="px-8 py-6 text-lg h-auto border border-white/30 text-white rounded-lg font-semibold hover:bg-white/20 bg-white/10 backdrop-blur-sm transition-colors"
                           >
                             <Link href={heroSlides[currentSlide].cta.primary.href} className="flex items-center">
                               {heroSlides[currentSlide].cta.primary.text}
@@ -146,7 +148,7 @@ export function HeroSimple({ loggedIn = false }: { loggedIn?: boolean }) {
                           <motion.button
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
-                            className="px-8 py-3 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors glass-button"
+                            className="px-8 py-6 text-lg h-auto bg-primary text-primary-foreground rounded-lg font-semibold hover:bg-primary/90 transition-colors"
                           >
                             <Link href="/auth/login" className="flex items-center">
                               Connexion membre
@@ -156,7 +158,7 @@ export function HeroSimple({ loggedIn = false }: { loggedIn?: boolean }) {
                           <motion.button
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
-                            className="px-8 py-3 border border-primary text-primary rounded-lg font-medium hover:bg-primary/10 transition-colors glass-button"
+                            className="px-8 py-6 text-lg h-auto border border-white/30 text-white rounded-lg font-semibold hover:bg-white/20 bg-white/10 backdrop-blur-sm transition-colors"
                           >
                             <Link href={heroSlides[currentSlide].cta.primary.href} className="flex items-center">
                               <Heart className="mr-2 h-4 w-4" />
@@ -167,13 +169,15 @@ export function HeroSimple({ loggedIn = false }: { loggedIn?: boolean }) {
                       )}
                     </motion.div>
               </motion.div>
+                </div>
+              </div>
             </div>
           </div>
         </motion.div>
       </AnimatePresence>
 
-      {/* Navigation dots */}
-      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-20 flex gap-3">
+      {/* Navigation dots - mobile centered */}
+      <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 z-20 flex gap-3 md:hidden">
         {heroSlides.map((_, index) => (
           <button
             key={index}
@@ -184,6 +188,20 @@ export function HeroSimple({ loggedIn = false }: { loggedIn?: boolean }) {
             }`}
             onClick={() => goToSlide(index)}
             aria-label={`Aller au slide ${index + 1}`}
+          />
+        ))}
+      </div>
+
+      {/* Navigation dots - desktop right vertical */}
+      <div className="absolute bottom-8 right-8 hidden md:flex flex-col gap-3 z-20">
+        {heroSlides.map((_, index) => (
+          <button
+            key={index}
+            className={`w-2 h-2 rounded-full transition-all ${
+              index === currentSlide ? 'bg-white h-8' : 'bg-white/40 hover:bg-white/60'
+            }`}
+            onClick={() => goToSlide(index)}
+            aria-label={`Slide ${index + 1}`}
           />
         ))}
       </div>

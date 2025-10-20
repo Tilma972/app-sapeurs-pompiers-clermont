@@ -1,7 +1,9 @@
 "use client";
 
 import { motion, MotionConfig, useReducedMotion } from "framer-motion";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Building2, ExternalLink } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Flame, Users, Timer, TrendingUp, type LucideIcon } from "lucide-react";
 
@@ -93,7 +95,7 @@ export function OperationsStatsSection() {
           </div>
 
           {/* Stats Grid */}
-          <div className="grid grid-cols-2 gap-3 mb-6" role="list" aria-label="Statistiques opérationnelles">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-6 mb-8" role="list" aria-label="Statistiques opérationnelles">
             {operationalStats.map((stat, index) => {
               const Icon = stat.icon;
               const formattedValue = formatNumber(stat.value);
@@ -106,22 +108,45 @@ export function OperationsStatsSection() {
                   transition={{ delay: shouldReduceMotion ? 0 : index * 0.1, duration: shouldReduceMotion ? 0 : 0.4 }}
                   role="listitem"
                 >
-                  <Card className="h-full p-4 hover:shadow-md transition-shadow">
-                    <Icon className={`h-6 w-6 mb-2 ${stat.colorToken}`} aria-hidden="true" />
-                    <p className="text-2xl font-bold" aria-label={stat.ariaLabel}>{formattedValue}</p>
-                    <p className="text-xs font-medium">{stat.label}</p>
-                    <p className="text-[10px] text-muted-foreground mt-1">{stat.subtitle}</p>
+                  <Card className="group h-full hover:shadow-xl hover:scale-[1.02] transition-all duration-300">
+                    <CardHeader className="pb-3">
+                      <Icon className={`h-10 w-10 lg:h-12 lg:w-12 ${stat.colorToken} group-hover:scale-110 transition-transform`} aria-hidden="true" />
+                      <CardTitle className="text-4xl lg:text-5xl font-bold mt-3" aria-label={stat.ariaLabel}>{formattedValue}</CardTitle>
+                      <CardDescription className="text-base lg:text-lg font-medium">{stat.label}</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-muted-foreground">{stat.subtitle}</p>
+                    </CardContent>
                   </Card>
                 </motion.div>
               );
             })}
           </div>
 
-          {/* Disclaimer compact */}
-          <p className="text-xs text-muted-foreground text-center">
-            Données indicatives • Dernière maj {formatUpdateDate(metadata.lastUpdated)} •
-            <a href="https://www.sdis34.fr" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline ml-1">SDIS 34</a>
-          </p>
+          {/* Disclaimer horizontal compact desktop */}
+          <Card className="border-l-4 border-l-primary">
+            <CardContent className="p-4 lg:p-6">
+              <div className="flex flex-col lg:flex-row items-start lg:items-center gap-4 lg:gap-6">
+                <div className="hidden lg:flex w-16 h-16 bg-muted rounded-lg items-center justify-center flex-shrink-0">
+                  <Building2 className="h-8 w-8 text-muted-foreground" />
+                </div>
+                <div className="flex-1 space-y-2">
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    Ces statistiques sont communiquées à titre informatif. Pour les données officielles, consultez le site du SDIS 34.
+                  </p>
+                  <p className="text-xs text-muted-foreground/70">
+                    Mise à jour : {formatUpdateDate(metadata.lastUpdated)}
+                  </p>
+                </div>
+                <Button variant="outline" size="sm" asChild className="flex-shrink-0">
+                  <a href="https://www.sdis34.fr" target="_blank" rel="noopener noreferrer">
+                    SDIS 34
+                    <ExternalLink className="ml-2 h-3 w-3" />
+                  </a>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </section>
     </MotionConfig>

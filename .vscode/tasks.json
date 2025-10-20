@@ -129,6 +129,12 @@
 			"type": "shell",
 			"command": "npm run typecheck && npm run lint",
 			"group": "build"
+		},
+		{
+			"label": "Lint & Typecheck",
+			"type": "shell",
+			"command": "npm run typecheck && npm run lint",
+			"group": "build"
 		}
 	]
 }
