@@ -98,11 +98,24 @@ export function TourneeClotureModal({ trigger, tourneeData, tourneeSummary }: To
   const versPot = Math.max(0, Math.round(montantPompier * (pctPot / 100) * 100) / 100);
   const versPerso = Math.max(0, Math.round((montantPompier - versPot) * 100) / 100);
 
-  // Validation: rétribution activée + pourcentage >= min si réglé
-  const isFormValid = (equipeSettings?.enable_retribution ?? false) && pctPot >= minPot;
+  // Validation helpers
+  const retributionEnabled = !!(equipeSettings?.enable_retribution);
+  const respectsMinPot = pctPot >= minPot;
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent | React.MouseEvent) => {
     e.preventDefault();
+    if (!equipeSettings) {
+      toast.error("Chargement des règles d'équipe en cours, réessayez dans un instant.");
+      return;
+    }
+    if (!retributionEnabled) {
+      toast.error("La rétribution n'est pas activée pour votre équipe.");
+      return;
+    }
+    if (!respectsMinPot) {
+      toast.error(`Le pourcentage doit être au minimum de ${minPot}% (règle de l'équipe)`);
+      return;
+    }
     const isCalendriersZero =
       formData.calendriersDistribues?.trim() === "" || Number(formData.calendriersDistribues) === 0;
     if (isCalendriersZero) {
@@ -305,8 +318,8 @@ export function TourneeClotureModal({ trigger, tourneeData, tourneeSummary }: To
             Annuler
           </Button>
           <Button
-            type="submit"
-            disabled={isLoading || !isFormValid}
+            type="button"
+            disabled={isLoading}
             className="bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800"
             onClick={handleSubmit}
           >
@@ -322,6 +335,14 @@ export function TourneeClotureModal({ trigger, tourneeData, tourneeSummary }: To
               </>
             )}
           </Button>
+          {!retributionEnabled && (
+            <p className="text-xs text-muted-foreground">
+              La rétribution n&apos;est pas activée pour votre équipe. Contactez un administrateur.
+            </p>
+          )}
+          {retributionEnabled && !respectsMinPot && (
+            <p className="text-xs text-muted-foreground">Pourcentage au pot insuffisant (min {minPot}%).</p>
+          )}
         </DialogFooter>
       </DialogContent>
       <Dialog open={confirmZeroOpen} onOpenChange={setConfirmZeroOpen}>
