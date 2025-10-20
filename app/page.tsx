@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { HeroSimple } from "@/components/landing/hero-simple";
-import { ActionsSection } from "@/components/landing/actions-section";
+import { ImpactActionsSection } from "@/components/landing/impact-actions-section";
 import { ShopSection } from "@/components/landing/shop-section";
 import { PreventionSection } from "@/components/landing/prevention-section";
 import { TestimonialsSection } from "@/components/landing/testimonials-section";
@@ -8,7 +8,6 @@ import { NewsSection } from "@/components/landing/news-section";
 import { ContactSection } from "@/components/landing/contact-section";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { LandingHeaderWrapper } from "@/components/landing/landing-header-wrapper";
-import { OperationsStatsSection } from "@/components/landing/operations-stats-section";
 
 export default async function Home() {
   // Vérification intelligente de l'authentification
@@ -28,13 +27,10 @@ export default async function Home() {
   {/* Hero Simple avec Ken Burns */}
   <HeroSimple loggedIn={!!user} />
       
-          {/* Contenu principal */}
+          {/* Contenu principal - Architecture optimisée */}
           <main className="relative">
-              {/* Statistiques opérationnelles sous le hero */}
-              <OperationsStatsSection />
-
-              {/* Actions (ultra-compactes) */}
-              <ActionsSection />
+              {/* Impact + Actions fusionnés */}
+              <ImpactActionsSection />
             
             {/* Section Boutique */}
             <ShopSection />
@@ -42,10 +38,10 @@ export default async function Home() {
             {/* Prévention: numéros d'urgence */}
             <PreventionSection />
 
-            {/* Témoignages: carrousel */}
+            {/* Témoignages: 3 max */}
             <TestimonialsSection />
             
-            {/* Section Actualités */}
+            {/* Section Actualités: 2 max */}
             <NewsSection />
             
             {/* Contact minimal */}

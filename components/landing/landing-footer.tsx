@@ -30,7 +30,7 @@ const footerLinks = {
 
 export function LandingFooter() {
   return (
-    <footer className="bg-slate-900 text-white">
+    <footer className="bg-gradient-to-br from-slate-800 via-red-900 to-slate-800 text-white">
       <div className="container mx-auto px-4 py-10">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
           {/* Logo & Description */}

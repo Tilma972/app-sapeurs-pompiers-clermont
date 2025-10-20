@@ -218,3 +218,5 @@ COMMENT ON VIEW public.tournee_summary IS 'Vue agrégée des statistiques de tou
 
 
 
+
+

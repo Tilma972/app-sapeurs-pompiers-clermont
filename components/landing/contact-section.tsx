@@ -10,7 +10,7 @@ import Link from "next/link";
 
 export function ContactSection() {
   return (
-    <section className="py-16 px-4">
+    <section className="py-8 px-4">
       <div className="container max-w-5xl mx-auto">
         <div className="text-center mb-8">
           <div className="flex justify-center mb-2">
@@ -64,5 +64,6 @@ export function ContactSection() {
     </section>
   );
 }
+
 
 

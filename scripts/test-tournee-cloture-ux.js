@@ -170,3 +170,5 @@ console.log('   7. Confirmer la fermeture du modal');
 
 
 
+
+

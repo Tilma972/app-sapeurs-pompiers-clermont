@@ -43,7 +43,7 @@ const products = [
 export function ShopSection() {
   const featuredProduct = products[0];
   return (
-    <section id="boutique" className="py-12">
+    <section id="boutique" className="py-8">
       <div className="container max-w-4xl mx-auto px-4">
         <div className="text-center mb-6">
           <div className="flex justify-center mb-2">
@@ -78,5 +78,6 @@ export function ShopSection() {
     </section>
   );
 }
+
 
 

@@ -178,3 +178,5 @@ COMMENT ON COLUMN public.transactions.updated_at IS 'Date de dernière modificat
 
 
 
+
+

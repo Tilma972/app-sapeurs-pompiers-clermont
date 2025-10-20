@@ -167,3 +167,5 @@ console.log('   ✅ Utilisation optimale des composants shadcn/ui');
 
 
 
+
+

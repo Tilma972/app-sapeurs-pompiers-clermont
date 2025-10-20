@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { ArrowRight, Heart, Shield } from "lucide-react";
+import { Heart, Shield } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
@@ -79,8 +79,8 @@ export function HeroSimple({ loggedIn = false }: { loggedIn?: boolean }) {
             />
           </div>
 
-          {/* Overlay gradient directionnel plus léger */}
-          <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-transparent" />
+          {/* Overlay gradient chaleureux pour association solidaire */}
+          <div className="absolute inset-0 bg-gradient-to-r from-red-900/60 via-orange-800/40 to-transparent" />
 
           {/* Contenu aligné à gauche sur desktop */}
           <div className="relative z-10 h-full">
@@ -125,21 +125,11 @@ export function HeroSimple({ loggedIn = false }: { loggedIn?: boolean }) {
                           <motion.button
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
-                            className="px-8 py-6 text-lg h-auto bg-primary text-primary-foreground rounded-lg font-semibold hover:bg-primary/90 transition-colors"
+                            className="px-10 py-6 text-xl h-auto bg-primary text-white rounded-lg font-bold hover:bg-primary/90 transition-colors shadow-lg"
                           >
                             <Link href="/dashboard" className="flex items-center">
-                              <Shield className="mr-2 h-4 w-4" />
-                              Accéder au tableau de bord
-                            </Link>
-                          </motion.button>
-                          <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            className="px-8 py-6 text-lg h-auto border border-white/30 text-white rounded-lg font-semibold hover:bg-white/20 bg-white/10 backdrop-blur-sm transition-colors"
-                          >
-                            <Link href={heroSlides[currentSlide].cta.primary.href} className="flex items-center">
-                              {heroSlides[currentSlide].cta.primary.text}
-                              <ArrowRight className="ml-2 h-4 w-4" />
+                              <Shield className="mr-2 h-5 w-5" />
+                              Espace membre
                             </Link>
                           </motion.button>
                         </>
@@ -148,21 +138,11 @@ export function HeroSimple({ loggedIn = false }: { loggedIn?: boolean }) {
                           <motion.button
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
-                            className="px-8 py-6 text-lg h-auto bg-primary text-primary-foreground rounded-lg font-semibold hover:bg-primary/90 transition-colors"
+                            className="px-10 py-6 text-xl h-auto bg-primary text-white rounded-lg font-bold hover:bg-primary/90 transition-colors shadow-lg"
                           >
                             <Link href="/auth/login" className="flex items-center">
-                              Connexion membre
-                              <ArrowRight className="ml-2 h-4 w-4" />
-                            </Link>
-                          </motion.button>
-                          <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            className="px-8 py-6 text-lg h-auto border border-white/30 text-white rounded-lg font-semibold hover:bg-white/20 bg-white/10 backdrop-blur-sm transition-colors"
-                          >
-                            <Link href={heroSlides[currentSlide].cta.primary.href} className="flex items-center">
-                              <Heart className="mr-2 h-4 w-4" />
-                              {heroSlides[currentSlide].cta.primary.text}
+                              <Heart className="mr-2 h-5 w-5" />
+                              Soutenir l&apos;amicale
                             </Link>
                           </motion.button>
                         </>

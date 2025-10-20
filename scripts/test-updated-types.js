@@ -116,3 +116,5 @@ console.log('   npx supabase gen types typescript --project-id npyfregghvnmqxwgk
 
 
 
+
+

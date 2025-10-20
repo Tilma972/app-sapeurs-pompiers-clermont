@@ -92,3 +92,5 @@ console.log('🏗️ Structure responsive avec accessibilité complète impléme
 
 
 
+
+

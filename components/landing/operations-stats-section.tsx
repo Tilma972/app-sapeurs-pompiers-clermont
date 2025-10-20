@@ -86,7 +86,7 @@ export function OperationsStatsSection() {
 
   return (
     <MotionConfig reducedMotion={shouldReduceMotion ? "always" : "never"}>
-      <section id="stats" className="py-12 px-4 bg-muted/30" aria-labelledby="stats-heading">
+      <section id="stats" className="py-8 px-4 bg-muted/30" aria-labelledby="stats-heading">
         <div className="container mx-auto max-w-6xl">
           {/* Header */}
           <div className="text-center mb-6">
