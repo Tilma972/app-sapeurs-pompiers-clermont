@@ -79,7 +79,7 @@ export function LandingHeader({ user }: LandingHeaderProps) {
           {/* Actions */}
           <div className="flex items-center gap-3">
             <ThemeSwitcher />
-            <Button asChild size="sm" className="hidden md:inline-flex">
+            <Button asChild size="sm" className="hidden md:inline-flex text-sm md:text-base px-4 md:px-5 py-2 md:py-3">
               <Link href="/partenaires/devenir">Devenir partenaire</Link>
             </Button>
             {user ? (

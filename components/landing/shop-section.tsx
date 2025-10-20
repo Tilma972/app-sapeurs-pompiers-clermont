@@ -77,7 +77,7 @@ export function ShopSection() {
             >
               <div className="flex items-center justify-between mt-3">
                 <span className="text-xl font-bold text-primary">{product.price}</span>
-                <Button size="sm" className="bg-primary hover:bg-primary/90">
+                <Button size="lg" className="bg-primary hover:bg-primary/90 text-base px-6 py-5">
                   Commander
                 </Button>
               </div>
