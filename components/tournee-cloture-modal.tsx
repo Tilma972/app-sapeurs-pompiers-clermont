@@ -1,12 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import {
   Dialog,
   DialogContent,
@@ -21,7 +19,6 @@ import { cloturerTourneeAvecRetribution } from "@/app/actions/retribution";
 import { TourneeSummary, SupportTransaction } from "@/lib/types/support-transactions";
 import { Tournee } from "@/lib/types/tournee";
 import toast from "react-hot-toast";
-import { createClient } from "@/lib/supabase/client";
 
 interface TourneeClotureModalProps {
   trigger: React.ReactNode;
@@ -38,7 +35,6 @@ export function TourneeClotureModal({ trigger, tourneeData, tourneeSummary }: To
   const [isLoading, setIsLoading] = useState(false);
   const [confirmZeroOpen, setConfirmZeroOpen] = useState(false);
   const router = useRouter();
-  const supabase = useMemo(() => createClient(), []);
 
   const [formData, setFormData] = useState({
     montantEspeces: "",
@@ -47,45 +43,7 @@ export function TourneeClotureModal({ trigger, tourneeData, tourneeSummary }: To
     notes: "",
   });
 
-  // Réglages d'équipe (rétribution)
-  const [equipeSettings, setEquipeSettings] = useState<
-    | {
-        enable_retribution: boolean;
-        pourcentage_minimum_pot: number;
-        pourcentage_recommande_pot?: number | null;
-      }
-    | null
-  >(null);
-  const [pctPot, setPctPot] = useState<number>(30);
-
-  useEffect(() => {
-    async function fetchEquipe() {
-      const equipeId = (tourneeData.tournee as { equipe_id?: string } | null)?.equipe_id;
-      if (!equipeId) return;
-      const { data, error } = await supabase
-        .from("equipes")
-        .select("enable_retribution, pourcentage_minimum_pot, pourcentage_recommande_pot")
-        .eq("id", equipeId)
-        .single();
-      if (error) {
-        console.error("Erreur chargement équipe:", error);
-        toast.error("Erreur lors du chargement des règles d'équipe");
-        return;
-      }
-      setEquipeSettings(data as {
-        enable_retribution: boolean;
-        pourcentage_minimum_pot: number;
-        pourcentage_recommande_pot?: number | null;
-      } | null);
-      const min = (data?.pourcentage_minimum_pot ?? 0) as number;
-      const reco = (data?.pourcentage_recommande_pot ?? null) as number | null;
-      setPctPot(Math.max(min, reco ?? 30));
-    }
-    if (isOpen) {
-      fetchEquipe();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen]);
+  // Répartition de la part pompier désormais gérée automatiquement côté serveur
 
   // Calculs
   const montantCartes = tourneeSummary?.cartes_total || 0;
@@ -94,28 +52,9 @@ export function TourneeClotureModal({ trigger, tourneeData, tourneeSummary }: To
   const totalFinal = montantEspeces + montantCheques + montantCartes;
   const montantAmicale = Math.max(0, Math.round(totalFinal * 70) / 100);
   const montantPompier = Math.max(0, Math.round(totalFinal * 30) / 100);
-  const minPot = Math.max(0, equipeSettings?.pourcentage_minimum_pot ?? 0);
-  const versPot = Math.max(0, Math.round(montantPompier * (pctPot / 100) * 100) / 100);
-  const versPerso = Math.max(0, Math.round((montantPompier - versPot) * 100) / 100);
-
-  // Validation helpers
-  const retributionEnabled = !!(equipeSettings?.enable_retribution);
-  const respectsMinPot = pctPot >= minPot;
 
   const handleSubmit = async (e: React.FormEvent | React.MouseEvent) => {
     e.preventDefault();
-    if (!equipeSettings) {
-      toast.error("Chargement des règles d'équipe en cours, réessayez dans un instant.");
-      return;
-    }
-    if (!retributionEnabled) {
-      toast.error("La rétribution n'est pas activée pour votre équipe.");
-      return;
-    }
-    if (!respectsMinPot) {
-      toast.error(`Le pourcentage doit être au minimum de ${minPot}% (règle de l'équipe)`);
-      return;
-    }
     const isCalendriersZero =
       formData.calendriersDistribues?.trim() === "" || Number(formData.calendriersDistribues) === 0;
     if (isCalendriersZero) {
@@ -133,10 +72,9 @@ export function TourneeClotureModal({ trigger, tourneeData, tourneeSummary }: To
         tourneeId: tourneeData.tournee.id,
         calendriersVendus,
         montantTotal: totalFinal,
-        pourcentagePot: pctPot,
       });
       setIsOpen(false);
-      toast.success(`Tournée clôturée. ${versPerso.toFixed(2)}€ versés sur votre compte.`, { duration: 4000 });
+      toast.success(`Tournée clôturée. Répartition effectuée selon vos préférences.`, { duration: 4000 });
       router.push("/dashboard/mon-compte");
     } catch (error) {
       console.error("Erreur:", error);
@@ -264,34 +202,9 @@ export function TourneeClotureModal({ trigger, tourneeData, tourneeSummary }: To
                   <span className="font-medium">{montantPompier.toFixed(2)}€</span>
                 </div>
               </div>
-              <div>
-                <div className="flex items-center justify-between">
-                  <Label className="text-sm">Part au pot d&apos;équipe</Label>
-                  <Badge variant="secondary">{pctPot}%</Badge>
-                </div>
-                <input
-                  type="range"
-                  min={minPot}
-                  max={100}
-                  step={5}
-                  value={pctPot}
-                  onChange={(e) => setPctPot(Number(e.target.value))}
-                  className="w-full"
-                />
-                {minPot > 0 && (
-                  <p className="text-xs text-muted-foreground mt-1">Minimum requis par l&apos;équipe : {minPot}%</p>
-                )}
-              </div>
-              <div className="bg-accent p-3 rounded-md">
-                <div className="flex justify-between text-sm">
-                  <span>🤝 Pot d&apos;équipe</span>
-                  <span className="font-semibold">{versPot.toFixed(2)}€</span>
-                </div>
-                <Separator className="my-2" />
-                <div className="flex justify-between text-sm">
-                  <span>💵 Mon compte</span>
-                  <span className="font-semibold">{versPerso.toFixed(2)}€</span>
-                </div>
+              <div className="bg-accent/40 p-3 rounded-md text-xs text-muted-foreground">
+                La part pompier (30%) sera répartie automatiquement entre votre compte et le pot d&apos;équipe
+                selon vos préférences (voir Mon Compte) et le minimum imposé par l&apos;équipe.
               </div>
             </div>
           )}
@@ -335,14 +248,6 @@ export function TourneeClotureModal({ trigger, tourneeData, tourneeSummary }: To
               </>
             )}
           </Button>
-          {!retributionEnabled && (
-            <p className="text-xs text-muted-foreground">
-              La rétribution n&apos;est pas activée pour votre équipe. Contactez un administrateur.
-            </p>
-          )}
-          {retributionEnabled && !respectsMinPot && (
-            <p className="text-xs text-muted-foreground">Pourcentage au pot insuffisant (min {minPot}%).</p>
-          )}
         </DialogFooter>
       </DialogContent>
       <Dialog open={confirmZeroOpen} onOpenChange={setConfirmZeroOpen}>
