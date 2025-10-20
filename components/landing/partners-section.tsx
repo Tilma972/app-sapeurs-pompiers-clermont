@@ -161,10 +161,10 @@ export function PartnersSection() {
             Merci à tous nos partenaires pour leur soutien et leur confiance
           </p>
           <div className="mt-4 flex items-center justify-center gap-3">
-            <Button size="lg" asChild>
+            <Button size="lg" className="text-base px-6 py-5" asChild>
               <Link href="/partenaires/devenir">Devenir partenaire</Link>
             </Button>
-            <Button size="lg" variant="outline" asChild>
+            <Button size="lg" variant="outline" className="text-base px-6 py-5" asChild>
               <a href="mailto:contact@amicale-sp-clermont.fr">Nous écrire</a>
             </Button>
           </div>

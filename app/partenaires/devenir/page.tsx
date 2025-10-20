@@ -19,8 +19,10 @@ export default function DevenirPartenairePage() {
     <main className="py-12">
       {/* Bouton retour */}
       <div className="container max-w-6xl mx-auto px-4 mb-3">
-        <Button variant="ghost" size="sm" onClick={() => router.back()} className="gap-2">
-          <ArrowLeft className="h-4 w-4" /> Retour
+        <Button variant="ghost" size="sm" asChild className="gap-2">
+          <Link href="/">
+            <ArrowLeft className="h-4 w-4" /> Retour à l&apos;accueil
+          </Link>
         </Button>
       </div>
       {/* Hero */}
