@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export default async function MonComptePage() {
   const supabase = await createClient();
@@ -17,7 +18,7 @@ export default async function MonComptePage() {
     .single();
 
   // Derniers mouvements
-  const { data: mouvements } = await supabase
+  const { data: mouvements, error: mouvementsError } = await supabase
     .from('mouvements_retribution')
     .select('created_at, montant_total_collecte, montant_amicale, montant_pompier_total, pourcentage_pot_equipe, montant_pot_equipe, montant_compte_perso')
     .eq('user_id', user.id)
@@ -25,6 +26,7 @@ export default async function MonComptePage() {
     .limit(10);
 
   const fmt = new Intl.NumberFormat("fr-FR", { style: 'currency', currency: 'EUR' });
+  const fmtDate = new Intl.DateTimeFormat("fr-FR", { day: '2-digit', month: 'long', year: 'numeric' });
 
   return (
     <div className="space-y-6">
@@ -37,6 +39,16 @@ export default async function MonComptePage() {
           <Badge variant="outline">Bêta</Badge>
         </div>
       </div>
+
+      {/* Si l'utilisateur n'a pas encore de compte (pas de clôture) */}
+      {!compte && (
+        <Alert variant="warning">
+          <AlertTitle>Pas encore de compte</AlertTitle>
+          <AlertDescription>
+            Vous n&apos;avez pas encore de solde personnel. Effectuez une première clôture de tournée pour initialiser votre compte.
+          </AlertDescription>
+        </Alert>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <Card>
@@ -75,14 +87,14 @@ export default async function MonComptePage() {
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {(mouvements || []).length === 0 && (
-              <div className="text-sm text-muted-foreground">Aucun mouvement pour le moment.</div>
+            {(mouvementsError || (mouvements || []).length === 0) && (
+              <div className="text-sm text-muted-foreground">Aucune clôture effectuée pour le moment.</div>
             )}
             {(mouvements || []).map((m, idx) => (
               <div key={idx} className="p-3 rounded border border-border">
                 <div className="flex items-center justify-between text-sm">
                   <div className="text-muted-foreground">
-                    {new Date(m.created_at as string).toLocaleString('fr-FR')}
+                    {fmtDate.format(new Date(m.created_at as string))}
                   </div>
                   <div className="font-medium">{fmt.format(Number(m.montant_pompier_total || 0))} pompier</div>
                 </div>
