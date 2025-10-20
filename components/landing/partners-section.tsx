@@ -7,15 +7,37 @@ import { Handshake } from "lucide-react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { PrimaryCta } from "@/components/landing/primary-cta";
 
 // Données des partenaires - Entreprises locales
 const partners = [
+  {
+    id: 0,
+    name: "EMPORUS",
+    logo: "https://npyfregghvnmqxwgkfea.supabase.co/storage/v1/object/public/landing_page/logos_partenaires/emporus_6cm_4cm.png",
+    description: "Partenaire local",
+    website: "https://www.emporus.fr/"
+  },
   {
     id: 1,
     name: "Hyper U Clermont",
     logo: "/logos/hyper-u.png",
     description: "Supermarché local",
     website: "#"
+  },
+  {
+    id: 9,
+    name: "Irripiscine",
+    logo: "https://npyfregghvnmqxwgkfea.supabase.co/storage/v1/object/public/landing_page/logos_partenaires/Logo_Irripiscine.png",
+    description: "Magasin Clermont-l'Hérault",
+    website: "https://www.irripiscine.fr/magasins/clermont-l-herault"
+  },
+  {
+    id: 10,
+    name: "Pape Matteo",
+    logo: "https://npyfregghvnmqxwgkfea.supabase.co/storage/v1/object/public/landing_page/logos_partenaires/PapeMateo_Noir.jpg",
+    description: "Pizzeria & Restaurant",
+    website: "https://papematteo.com/"
   },
   {
     id: 2,
@@ -111,19 +133,38 @@ export function PartnersSection() {
             {partners.map((partner) => (
               <motion.div
                 key={partner.id}
-                className="flex-shrink-0 w-32 h-20 flex items-center justify-center bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow"
+                className="flex-shrink-0 w-32 h-20 flex items-center justify-center rounded-lg transition-transform"
                 whileHover={{ scale: 1.05 }}
               >
-                <div className="text-center">
-                  <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-2">
-                    <span className="text-primary font-bold text-lg">
-                      {partner.name.charAt(0)}
-                    </span>
+                {partner.logo && partner.logo !== "" ? (
+                  <a
+                    href={partner.website !== "#" ? partner.website : undefined}
+                    target={partner.website !== "#" ? "_blank" : undefined}
+                    rel={partner.website !== "#" ? "noopener noreferrer" : undefined}
+                    className="w-full h-full flex items-center justify-center p-2"
+                  >
+                    <div className="relative w-32 h-16">
+                      <Image
+                        src={partner.logo}
+                        alt={`Logo ${partner.name}`}
+                        fill
+                        sizes="128px"
+                        className="object-contain drop-shadow-md"
+                      />
+                    </div>
+                  </a>
+                ) : (
+                  <div className="text-center">
+                    <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-2">
+                      <span className="text-primary font-bold text-lg">
+                        {partner.name.charAt(0)}
+                      </span>
+                    </div>
+                    <p className="text-xs font-medium text-gray-700 text-center">
+                      {partner.name}
+                    </p>
                   </div>
-                  <p className="text-xs font-medium text-gray-700 text-center">
-                    {partner.name}
-                  </p>
-                </div>
+                )}
               </motion.div>
             ))}
             
@@ -131,19 +172,38 @@ export function PartnersSection() {
             {partners.map((partner) => (
               <motion.div
                 key={`duplicate-${partner.id}`}
-                className="flex-shrink-0 w-32 h-20 flex items-center justify-center bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow"
+                className="flex-shrink-0 w-32 h-20 flex items-center justify-center rounded-lg transition-transform"
                 whileHover={{ scale: 1.05 }}
               >
-                <div className="text-center">
-                  <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-2">
-                    <span className="text-primary font-bold text-lg">
-                      {partner.name.charAt(0)}
-                    </span>
+                {partner.logo && partner.logo !== "" ? (
+                  <a
+                    href={partner.website !== "#" ? partner.website : undefined}
+                    target={partner.website !== "#" ? "_blank" : undefined}
+                    rel={partner.website !== "#" ? "noopener noreferrer" : undefined}
+                    className="w-full h-full flex items-center justify-center p-2"
+                  >
+                    <div className="relative w-32 h-16">
+                      <Image
+                        src={partner.logo}
+                        alt={`Logo ${partner.name}`}
+                        fill
+                        sizes="128px"
+                        className="object-contain drop-shadow-md"
+                      />
+                    </div>
+                  </a>
+                ) : (
+                  <div className="text-center">
+                    <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-2">
+                      <span className="text-primary font-bold text-lg">
+                        {partner.name.charAt(0)}
+                      </span>
+                    </div>
+                    <p className="text-xs font-medium text-gray-700 text-center">
+                      {partner.name}
+                    </p>
                   </div>
-                  <p className="text-xs font-medium text-gray-700 text-center">
-                    {partner.name}
-                  </p>
-                </div>
+                )}
               </motion.div>
             ))}
           </motion.div>
@@ -161,12 +221,8 @@ export function PartnersSection() {
             Merci à tous nos partenaires pour leur soutien et leur confiance
           </p>
           <div className="mt-4 flex items-center justify-center gap-3">
-            <Button size="lg" className="text-base px-6 py-5" asChild>
-              <Link href="/partenaires/devenir">Devenir partenaire</Link>
-            </Button>
-            <Button size="lg" variant="outline" className="text-base px-6 py-5" asChild>
-              <a href="mailto:contact@amicale-sp-clermont.fr">Nous écrire</a>
-            </Button>
+            <PrimaryCta href="/partenaires/devenir">Devenir partenaire</PrimaryCta>
+            <PrimaryCta href="mailto:contact@amicale-sp-clermont.fr" variant="outline">Nous écrire</PrimaryCta>
           </div>
         </motion.div>
       </div>

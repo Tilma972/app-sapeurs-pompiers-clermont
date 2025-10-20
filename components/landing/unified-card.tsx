@@ -41,10 +41,10 @@ export function UnifiedCard({
   const variantClasses = {
     stats: "h-full hover:scale-[1.02]",
     action: "h-full hover:scale-[1.02] text-center",
-    product: "overflow-hidden",
-    testimonial: "min-w-[85%] md:min-w-[40%] snap-center",
-    news: "hover:shadow-md",
-    contact: "hover:shadow-lg",
+    product: "overflow-hidden hover:scale-[1.02]",
+    testimonial: "min-w-[85%] md:min-w-[40%] snap-center hover:scale-[1.02]",
+    news: "hover:shadow-md hover:scale-[1.02]",
+    contact: "hover:shadow-lg hover:scale-[1.02]",
     emergency: "text-center hover:scale-[1.02]"
   };
 
@@ -52,6 +52,7 @@ export function UnifiedCard({
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
+      whileHover={{ scale: 1.02 }}
       transition={{ duration: 0.6 }}
       viewport={{ once: true }}
     >

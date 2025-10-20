@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useRouter } from "next/navigation";
+import { PrimaryCta } from "@/components/landing/primary-cta";
 
 export default function DevenirPartenairePage() {
   const router = useRouter();
@@ -52,16 +53,8 @@ export default function DevenirPartenairePage() {
             Renforcez votre présence locale tout en soutenant nos actions solidaires.
           </p>
           <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
-            <Button asChild>
-              <Link href="#devis">
-                <Mail className="mr-2 h-5 w-5" /> Demander un devis
-              </Link>
-            </Button>
-            <Button variant="outline" asChild>
-              <a href="tel:+33467449970">
-                <Phone className="mr-2 h-5 w-5" /> 04 67 44 99 70
-              </a>
-            </Button>
+            <PrimaryCta href="#devis"><span className="inline-flex items-center"><Mail className="mr-2 h-5 w-5" /> Demander un devis</span></PrimaryCta>
+            <PrimaryCta href="tel:+33467449970" variant="outline"><span className="inline-flex items-center"><Phone className="mr-2 h-5 w-5" /> 04 67 44 99 70</span></PrimaryCta>
           </div>
         </motion.div>
       </section>
@@ -153,13 +146,17 @@ export default function DevenirPartenairePage() {
                   (form.querySelectorAll('input[name="formats"]:checked') as unknown as HTMLInputElement[]) || []
                 ).map((el) => el.value).join(', ');
 
+                const selectedMonths = Array.from(
+                  (form.querySelectorAll('input[name="months"]:checked') as unknown as HTMLInputElement[]) || []
+                ).map((el) => el.value).join(', ');
+
                 const payload = {
                   company: data.get("company"),
                   contact: data.get("contact"),
                   email: data.get("email"),
                   phone: data.get("phone"),
                   formats: selectedFormats,
-                  months: data.get("months"),
+                  months: selectedMonths,
                   message: data.get("message"),
                 } as Record<string, FormDataEntryValue | null>;
                 const subject = encodeURIComponent("Demande devis partenariat");
@@ -202,8 +199,15 @@ export default function DevenirPartenairePage() {
                 </div>
               </div>
               <div className="md:col-span-2">
-                <Label htmlFor="months">Mois de parution envisagés</Label>
-                <Input id="months" name="months" placeholder="Ex: Fév, Mar, Avr" />
+                <Label>Mois de parution envisagés</Label>
+                <div className="mt-2 grid grid-cols-4 gap-2 text-sm">
+                  {["JAN","FEV","MAR","AVR","MAI","JUN","JUL","AOU","SEP","OCT","NOV","DEC"].map((m) => (
+                    <label key={m} className="flex items-center gap-2">
+                      <Checkbox id={`m-${m}`} name="months" value={m} />
+                      <span>{m}</span>
+                    </label>
+                  ))}
+                </div>
               </div>
               <div className="md:col-span-2">
                 <Label htmlFor="message">Message</Label>

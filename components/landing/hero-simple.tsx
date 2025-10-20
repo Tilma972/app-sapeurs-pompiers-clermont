@@ -3,8 +3,8 @@
 import { useState, useEffect } from "react";
 import { Heart, Shield } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
+import { PrimaryCta } from "@/components/landing/primary-cta";
 
 const heroSlides = [
   {
@@ -122,29 +122,19 @@ export function HeroSimple({ loggedIn = false }: { loggedIn?: boolean }) {
                     >
                       {loggedIn ? (
                         <>
-                          <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            className="px-10 py-6 text-xl h-auto bg-primary text-white rounded-lg font-bold hover:bg-primary/90 transition-colors shadow-lg"
-                          >
-                            <Link href="/dashboard" className="flex items-center">
-                              <Shield className="mr-2 h-5 w-5" />
-                              Espace membre
-                            </Link>
-                          </motion.button>
+                          <PrimaryCta href="/dashboard">
+                            <span className="inline-flex items-center">
+                              <Shield className="mr-2 h-5 w-5" /> Espace membre
+                            </span>
+                          </PrimaryCta>
                         </>
                       ) : (
                         <>
-                          <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            className="px-10 py-6 text-xl h-auto bg-primary text-white rounded-lg font-bold hover:bg-primary/90 transition-colors shadow-lg"
-                          >
-                            <Link href="/auth/login" className="flex items-center">
-                              <Heart className="mr-2 h-5 w-5" />
-                              Soutenir l&apos;amicale
-                            </Link>
-                          </motion.button>
+                          <PrimaryCta href="/auth/login">
+                            <span className="inline-flex items-center">
+                              <Heart className="mr-2 h-5 w-5" /> Soutenir l&apos;amicale
+                            </span>
+                          </PrimaryCta>
                         </>
                       )}
                     </motion.div>

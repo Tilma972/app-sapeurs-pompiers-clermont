@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { PrimaryCta } from "@/components/landing/primary-cta";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import { LogoutButton } from "@/components/logout-button";
 import { Menu, LogIn, Shield } from "lucide-react";
@@ -79,9 +80,9 @@ export function LandingHeader({ user }: LandingHeaderProps) {
           {/* Actions */}
           <div className="flex items-center gap-3">
             <ThemeSwitcher />
-            <Button asChild size="sm" className="hidden md:inline-flex text-sm md:text-base px-4 md:px-5 py-2 md:py-3">
-              <Link href="/partenaires/devenir">Devenir partenaire</Link>
-            </Button>
+            <div className="hidden md:block">
+              <PrimaryCta href="/partenaires/devenir">Devenir partenaire</PrimaryCta>
+            </div>
             {user ? (
               <div className="flex items-center gap-2">
                 <span className="text-sm text-muted-foreground hidden sm:block">
