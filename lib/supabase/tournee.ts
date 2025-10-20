@@ -240,6 +240,13 @@ export async function createNewActiveTournee(zone: string = 'Zone par défaut'):
   }
 
   try {
+    // Récupérer l'équipe de l'utilisateur
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('team_id')
+      .eq('id', user.id)
+      .single();
+
     // Vérifier s'il y a déjà une tournée active
     const { data: existingTournee } = await supabase
       .from('tournees')
@@ -261,6 +268,7 @@ export async function createNewActiveTournee(zone: string = 'Zone par défaut'):
         date_debut: new Date().toISOString(),
         statut: 'active',
         zone: zone,
+        equipe_id: profile?.team_id ?? null,
         calendriers_alloues: 50, // Valeur par défaut
         notes: 'Tournée créée automatiquement'
       })
