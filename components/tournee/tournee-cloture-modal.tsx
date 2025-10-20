@@ -32,11 +32,15 @@ export function TourneeClotureModal({ tourneeId, onClose }: ModalClotureProps) {
     if (!isValid) return
     setIsSubmitting(true)
     try {
-      await cloturerTourneeAvecRetribution({
+      const res = await cloturerTourneeAvecRetribution({
         tourneeId,
         calendriersVendus: calendriers,
         montantTotal: total,
       })
+      if (!res?.ok) {
+        toast.error(res?.error || 'Erreur lors de la clôture', { duration: 4000 })
+        return
+      }
       toast.success(`🎉 Tournée clôturée ! Répartition effectuée selon vos préférences.`, { duration: 5000 })
       onClose()
       router.push('/dashboard/mon-compte')
