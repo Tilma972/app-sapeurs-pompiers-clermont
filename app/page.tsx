@@ -8,6 +8,7 @@ import { NewsSection } from "@/components/landing/news-section";
 import { ContactSection } from "@/components/landing/contact-section";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { LandingHeaderWrapper } from "@/components/landing/landing-header-wrapper";
+import { OperationsStatsSection } from "@/components/landing/operations-stats-section";
 
 export default async function Home() {
   // Vérification intelligente de l'authentification
@@ -31,6 +32,9 @@ export default async function Home() {
           <main className="relative">
             {/* Section Actions de l'amicale */}
             <ActionsSection />
+
+            {/* Section Statistiques Opérationnelles */}
+            <OperationsStatsSection />
             
             {/* Section Boutique */}
             <ShopSection />
