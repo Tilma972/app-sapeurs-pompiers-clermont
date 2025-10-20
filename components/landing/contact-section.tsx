@@ -64,8 +64,8 @@ export function ContactSection() {
                   <Phone className="h-6 w-6 text-primary" />
                 </div>
                 <h3 className="font-semibold text-lg mb-2">Téléphone</h3>
-                <a href="tel:+33467XXXXXX" className="text-primary hover:underline font-medium">
-                  +33 4 67 XX XX XX
+                <a href="tel:+33467449970" className="text-primary hover:underline font-medium">
+                  04 67 44 99 70
                 </a>
                 <div className="flex items-center justify-center mt-2 text-sm text-muted-foreground">
                   <Clock className="h-4 w-4 mr-1" />

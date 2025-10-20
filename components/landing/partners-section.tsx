@@ -5,6 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { PremiumIcon } from "./premium-icon";
 import { Handshake } from "lucide-react";
 import Image from "next/image";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 // Données des partenaires - Entreprises locales
 const partners = [
@@ -147,7 +149,7 @@ export function PartnersSection() {
           </motion.div>
         </div>
 
-        {/* Message de remerciement */}
+        {/* Appel à devenir partenaire + Message de remerciement */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -158,6 +160,14 @@ export function PartnersSection() {
           <p className="text-base" style={{ color: '#453E38' }}>
             Merci à tous nos partenaires pour leur soutien et leur confiance
           </p>
+          <div className="mt-4 flex items-center justify-center gap-3">
+            <Button size="lg" asChild>
+              <Link href="/partenaires/devenir">Devenir partenaire</Link>
+            </Button>
+            <Button size="lg" variant="outline" asChild>
+              <a href="mailto:contact@amicale-sp-clermont.fr">Nous écrire</a>
+            </Button>
+          </div>
         </motion.div>
       </div>
     </section>
