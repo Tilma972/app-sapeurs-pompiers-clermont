@@ -6,28 +6,15 @@ import toast from 'react-hot-toast'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Badge } from '@/components/ui/badge'
-import { Separator } from '@/components/ui/separator'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { cloturerTourneeAvecRetribution } from '@/app/actions/retribution'
 
 interface ModalClotureProps {
   tourneeId: string
-  equipe: {
-    pourcentage_minimum_pot: number
-    pourcentage_recommande_pot?: number
-  }
   onClose: () => void
 }
 
-export function TourneeClotureModal({ tourneeId, equipe, onClose }: ModalClotureProps) {
+export function TourneeClotureModal({ tourneeId, onClose }: ModalClotureProps) {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -35,17 +22,10 @@ export function TourneeClotureModal({ tourneeId, equipe, onClose }: ModalCloture
   const [especes, setEspeces] = useState(0)
   const [cheques, setCheques] = useState(0)
 
-  const minPot = equipe.pourcentage_minimum_pot || 0
-  const recommandePot = equipe.pourcentage_recommande_pot ?? Math.max(30, minPot)
-  const [pctPot, setPctPot] = useState(recommandePot)
-
   const total = Math.max(0, (especes || 0) + (cheques || 0))
   const montantAmicale = total * 0.7
   const montantPompier = total * 0.3
-  const versPot = montantPompier * (pctPot / 100)
-  const versPerso = montantPompier - versPot
-
-  const isValid = total > 0 && calendriers > 0 && pctPot >= minPot
+  const isValid = total > 0 && calendriers > 0
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -56,9 +36,8 @@ export function TourneeClotureModal({ tourneeId, equipe, onClose }: ModalCloture
         tourneeId,
         calendriersVendus: calendriers,
         montantTotal: total,
-        pourcentagePot: pctPot,
       })
-      toast.success(`🎉 Tournée clôturée ! ${versPerso.toFixed(2)}€ ajoutés à votre compte`, { duration: 5000 })
+      toast.success(`🎉 Tournée clôturée ! Répartition effectuée selon vos préférences.`, { duration: 5000 })
       onClose()
       router.push('/dashboard/mon-compte')
     } catch (err) {
@@ -101,7 +80,7 @@ export function TourneeClotureModal({ tourneeId, equipe, onClose }: ModalCloture
                 <span>Total collecté</span>
                 <span>{total.toFixed(2)}€</span>
               </div>
-              <Separator />
+              <div className="h-px bg-border my-2" />
               <div className="flex justify-between text-sm">
                 <span>→ Amicale (70%)</span>
                 <span>{montantAmicale.toFixed(2)}€</span>
@@ -114,38 +93,13 @@ export function TourneeClotureModal({ tourneeId, equipe, onClose }: ModalCloture
           )}
 
           {total > 0 && (
-            <div className="space-y-4">
+            <div className="space-y-3">
               <div>
                 <Label>Répartition de vos {montantPompier.toFixed(2)}€</Label>
-                <p className="text-sm text-muted-foreground">Choisissez le pourcentage à mettre dans le pot d&apos;équipe</p>
-              </div>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm">Vers pot d&apos;équipe</span>
-                  <Badge variant="secondary">{pctPot}%</Badge>
-                </div>
-                <input
-                  type="range"
-                  min={minPot}
-                  max={100}
-                  step={5}
-                  value={pctPot}
-                  onChange={(e) => setPctPot(Number(e.target.value))}
-                  className="w-full"
-                />
-                {minPot > 0 && (
-                  <p className="text-xs text-muted-foreground">⚠️ Minimum requis par l&apos;équipe : {minPot}%</p>
-                )}
-              </div>
-              <div className="bg-accent p-4 rounded-lg space-y-2">
-                <div className="flex justify-between items-center">
-                  <span>🤝 Pot d&apos;équipe</span>
-                  <span className="font-semibold text-lg">{versPot.toFixed(2)}€</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span>💵 Mon compte</span>
-                  <span className="font-semibold text-lg">{versPerso.toFixed(2)}€</span>
-                </div>
+                <p className="text-sm text-muted-foreground">
+                  La part pompier (30%) sera répartie automatiquement entre votre compte et le pot d&apos;équipe
+                  selon vos préférences et le minimum imposé par l&apos;équipe.
+                </p>
               </div>
             </div>
           )}
