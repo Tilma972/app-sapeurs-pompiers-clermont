@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Building2, ExternalLink } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Flame, Users, Timer, TrendingUp, type LucideIcon } from "lucide-react";
+import { AnimatedCounter } from "@/components/landing/animated-counter";
 
 // Types stricts avec LucideIcon
 interface OperationalStat {
@@ -86,12 +87,15 @@ export function OperationsStatsSection() {
 
   return (
     <MotionConfig reducedMotion={shouldReduceMotion ? "always" : "never"}>
-      <section id="stats" className="py-8 px-4 bg-muted/30" aria-labelledby="stats-heading">
+      <section id="stats" className="py-12 px-4 bg-slate-800/30" aria-labelledby="stats-heading">
         <div className="container mx-auto max-w-6xl">
-          {/* Header */}
-          <div className="text-center mb-6">
-            <Badge variant="outline" className="mb-2">Activité opérationnelle</Badge>
-            <h2 id="stats-heading" className="text-2xl md:text-3xl font-bold">Centre de Secours Clermont-l&#39;Hérault</h2>
+          {/* Header harmonisé */}
+          <div className="text-center mb-8">
+            <Badge variant="outline" className="mb-4">Activité opérationnelle</Badge>
+            <h2 id="stats-heading" className="text-3xl md:text-4xl font-bold mb-4">Centre de Secours Clermont-l&#39;Hérault</h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Nos chiffres d&apos;impact en temps réel
+            </p>
           </div>
 
           {/* Stats Grid */}
@@ -111,7 +115,13 @@ export function OperationsStatsSection() {
                   <Card className="group h-full hover:shadow-xl hover:scale-[1.02] transition-all duration-300">
                     <CardHeader className="pb-3">
                       <Icon className={`h-10 w-10 lg:h-12 lg:w-12 ${stat.colorToken} group-hover:scale-110 transition-transform`} aria-hidden="true" />
-                      <CardTitle className="text-4xl lg:text-5xl font-bold mt-3" aria-label={stat.ariaLabel}>{formattedValue}</CardTitle>
+                      <CardTitle className="text-4xl lg:text-5xl font-bold mt-3" aria-label={stat.ariaLabel}>
+                        <AnimatedCounter 
+                          value={typeof stat.value === 'number' ? stat.value : 0} 
+                          duration={2}
+                          className="text-primary"
+                        />
+                      </CardTitle>
                       <CardDescription className="text-base lg:text-lg font-medium">{stat.label}</CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -123,30 +133,19 @@ export function OperationsStatsSection() {
             })}
           </div>
 
-          {/* Disclaimer horizontal compact desktop */}
-          <Card className="border-l-4 border-l-primary">
-            <CardContent className="p-4 lg:p-6">
-              <div className="flex flex-col lg:flex-row items-start lg:items-center gap-4 lg:gap-6">
-                <div className="hidden lg:flex w-16 h-16 bg-muted rounded-lg items-center justify-center flex-shrink-0">
-                  <Building2 className="h-8 w-8 text-muted-foreground" />
-                </div>
-                <div className="flex-1 space-y-2">
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    Ces statistiques sont communiquées à titre informatif. Pour les données officielles, consultez le site du SDIS 34.
-                  </p>
-                  <p className="text-xs text-muted-foreground/70">
-                    Mise à jour : {formatUpdateDate(metadata.lastUpdated)}
-                  </p>
-                </div>
-                <Button variant="outline" size="sm" asChild className="flex-shrink-0">
-                  <a href="https://www.sdis34.fr" target="_blank" rel="noopener noreferrer">
-                    SDIS 34
-                    <ExternalLink className="ml-2 h-3 w-3" />
-                  </a>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+          {/* Disclaimer simplifié avec astérisque */}
+          <div className="text-center text-xs text-muted-foreground mt-8">
+            <p>
+              * Ces statistiques sont communiquées à titre informatif. 
+              Pour les données officielles, consultez le site du 
+              <a href="https://www.sdis34.fr" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline ml-1">
+                SDIS 34
+              </a>
+            </p>
+            <p className="mt-1">
+              Mise à jour : {formatUpdateDate(metadata.lastUpdated)}
+            </p>
+          </div>
         </div>
       </section>
     </MotionConfig>

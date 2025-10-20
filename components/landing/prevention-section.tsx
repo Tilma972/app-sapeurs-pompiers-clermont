@@ -20,7 +20,10 @@ export function PreventionSection() {
           <div className="flex justify-center mb-2">
             <PremiumIcon icon={Shield} variant="gradient" size="md" className="icon-shield" />
           </div>
-          <h2 className="text-2xl font-bold">Numéros d&apos;urgence</h2>
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">Numéros d&apos;urgence</h2>
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            En cas d&apos;urgence, composez le bon numéro
+          </p>
         </div>
 
         {/* Numéros d'urgence */}
@@ -39,7 +42,7 @@ export function PreventionSection() {
                 whileInView={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.6, delay: index * 0.1 }}
                 viewport={{ once: true }}
-                className="glass-card p-4 text-center"
+                className="glass-card p-4 text-center rounded-lg"
               >
                 <div className="mb-4 flex justify-center">
                   <PremiumIcon
@@ -49,7 +52,7 @@ export function PreventionSection() {
                     className="icon-heart"
                   />
                 </div>
-                <div className="text-2xl font-bold text-primary mb-1">
+                <div className="text-4xl font-bold text-primary mb-1">
                   {emergency.number}
                 </div>
                 <h4 className="text-sm font-semibold text-foreground mb-1">
@@ -62,10 +65,6 @@ export function PreventionSection() {
             ))}
           </div>
         </motion.div>
-        {/* Avertissement */}
-        <p className="text-xs text-muted-foreground text-center mt-4 max-w-2xl mx-auto">
-          L&apos;amicale est une association de soutien. En cas d&apos;urgence, appelez le 18, 15 ou 112.
-        </p>
       </div>
     </section>
   );

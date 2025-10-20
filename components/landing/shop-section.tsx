@@ -1,5 +1,6 @@
 "use client";
 
+import { motion } from "framer-motion";
 import { PremiumIcon } from "@/components/landing/premium-icon";
 import { ShoppingCart } from "lucide-react";
 import Image from "next/image";
@@ -7,6 +8,7 @@ import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { UnifiedCard } from "@/components/landing/unified-card";
 
 const products = [
   {
@@ -44,32 +46,46 @@ export function ShopSection() {
   const featuredProduct = products[0];
   return (
     <section id="boutique" className="py-12">
-      <div className="container max-w-4xl mx-auto px-4">
-        <div className="text-center mb-6">
+      <div className="container max-w-6xl mx-auto px-4">
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          viewport={{ once: true }}
+          className="text-center mb-8"
+        >
           <div className="flex justify-center mb-2">
             <PremiumIcon icon={ShoppingCart} variant="gradient" size="md" />
           </div>
-          <h2 className="text-2xl font-bold">Boutique</h2>
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">Boutique</h2>
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            Produits officiels au profit de l&apos;amicale
+          </p>
+        </motion.div>
+
+        {/* Grille de produits cohérente avec les autres sections */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          {products.slice(0, 3).map((product, index) => (
+            <UnifiedCard
+              key={product.id}
+              variant="product"
+              title={product.name}
+              description={product.description}
+              image={product.image}
+              badge={product.featured ? "En vedette" : undefined}
+              className="h-full"
+            >
+              <div className="flex items-center justify-between mt-3">
+                <span className="text-xl font-bold text-primary">{product.price}</span>
+                <Button size="sm" className="bg-primary hover:bg-primary/90">
+                  Commander
+                </Button>
+              </div>
+            </UnifiedCard>
+          ))}
         </div>
 
-        <Card className="overflow-hidden">
-          <div className="flex gap-4 p-4">
-            <div className="relative w-28 h-28 flex-shrink-0">
-              <Image src={featuredProduct.image} alt={featuredProduct.name} fill className="rounded-lg object-cover" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <Badge className="mb-1 w-fit">En vedette</Badge>
-              <h3 className="font-bold mb-1 truncate">{featuredProduct.name}</h3>
-              <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{featuredProduct.description}</p>
-              <div className="flex items-center justify-between">
-                <span className="text-xl font-bold text-primary">{featuredProduct.price}</span>
-                <Button size="sm">Commander</Button>
-              </div>
-            </div>
-          </div>
-        </Card>
-
-        <div className="text-center mt-4">
+        <div className="text-center">
           <Button variant="outline" asChild>
             <Link href="/boutique">Voir tous les produits</Link>
           </Button>

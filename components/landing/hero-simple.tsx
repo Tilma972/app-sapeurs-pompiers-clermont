@@ -72,7 +72,7 @@ export function HeroSimple({ loggedIn = false }: { loggedIn?: boolean }) {
               src={heroSlides[currentSlide].image}
               alt={heroSlides[currentSlide].title}
               fill
-              className="object-cover"
+              className="object-cover animate-ken-burns"
               priority={currentSlide === 0}
               sizes="100vw"
               quality={90}

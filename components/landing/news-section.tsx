@@ -65,7 +65,10 @@ export function NewsSection() {
           <div className="flex justify-center mb-2">
             <PremiumIcon icon={Calendar} variant="gradient" size="md" className="icon-target" />
           </div>
-          <h2 className="text-2xl font-bold">Actualités</h2>
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">Actualités</h2>
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            Nos dernières nouvelles et événements
+          </p>
         </div>
 
         <div className="grid gap-4 max-w-3xl mx-auto">
@@ -76,7 +79,7 @@ export function NewsSection() {
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: index * 0.05 }}
               viewport={{ once: true }}
-              className="glass-card p-4"
+              className="glass-card p-4 rounded-lg"
             >
               <div className="flex items-start gap-3 mb-2">
                 <div className="flex-shrink-0">
