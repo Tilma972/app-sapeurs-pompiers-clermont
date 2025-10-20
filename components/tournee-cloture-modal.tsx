@@ -68,11 +68,15 @@ export function TourneeClotureModal({ trigger, tourneeData, tourneeSummary }: To
     setIsLoading(true);
     try {
       const calendriersVendus = Number(formData.calendriersDistribues || "0") || 0;
-      await cloturerTourneeAvecRetribution({
+      const res = await cloturerTourneeAvecRetribution({
         tourneeId: tourneeData.tournee.id,
         calendriersVendus,
         montantTotal: totalFinal,
       });
+      if (!res?.ok) {
+        toast.error(res?.error || "Erreur lors de la clôture de la tournée");
+        return;
+      }
       setIsOpen(false);
       toast.success(`Tournée clôturée. Répartition effectuée selon vos préférences.`, { duration: 4000 });
       router.push("/dashboard/mon-compte");
