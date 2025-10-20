@@ -1,30 +1,27 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogDescription, 
-  DialogHeader, 
-  DialogTitle, 
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
   DialogTrigger,
-  DialogFooter
+  DialogFooter,
 } from "@/components/ui/dialog";
-import { 
-  CheckCircle,
-  Calendar,
-  Euro,
-  CreditCard,
-  FileText,
-  AlertTriangle
-} from "lucide-react";
-import { cloturerTournee } from "@/app/actions/donation-actions";
+import { CheckCircle, Calendar, Euro, CreditCard, FileText, AlertTriangle } from "lucide-react";
+import { cloturerTourneeAvecRetribution } from "@/app/actions/retribution";
 import { TourneeSummary, SupportTransaction } from "@/lib/types/support-transactions";
 import { Tournee } from "@/lib/types/tournee";
 import toast from "react-hot-toast";
+import { createClient } from "@/lib/supabase/client";
 
 interface TourneeClotureModalProps {
   trigger: React.ReactNode;
@@ -40,30 +37,74 @@ export function TourneeClotureModal({ trigger, tourneeData, tourneeSummary }: To
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [confirmZeroOpen, setConfirmZeroOpen] = useState(false);
-  
+  const router = useRouter();
+  const supabase = useMemo(() => createClient(), []);
+
   const [formData, setFormData] = useState({
-    montantEspeces: '',
-    montantCheques: '',
-    calendriersDistribues: '',
-    notes: ''
+    montantEspeces: "",
+    montantCheques: "",
+    calendriersDistribues: "",
+    notes: "",
   });
 
-  // Calculs simples
+  // Réglages d'équipe (rétribution)
+  const [equipeSettings, setEquipeSettings] = useState<
+    | {
+        enable_retribution: boolean;
+        pourcentage_minimum_pot: number;
+        pourcentage_recommande_pot?: number | null;
+      }
+    | null
+  >(null);
+  const [pctPot, setPctPot] = useState<number>(30);
+
+  useEffect(() => {
+    async function fetchEquipe() {
+      const equipeId = (tourneeData.tournee as { equipe_id?: string } | null)?.equipe_id;
+      if (!equipeId) return;
+      const { data, error } = await supabase
+        .from("equipes")
+        .select("enable_retribution, pourcentage_minimum_pot, pourcentage_recommande_pot")
+        .eq("id", equipeId)
+        .single();
+      if (error) {
+        console.error("Erreur chargement équipe:", error);
+        toast.error("Erreur lors du chargement des règles d'équipe");
+        return;
+      }
+      setEquipeSettings(data as {
+        enable_retribution: boolean;
+        pourcentage_minimum_pot: number;
+        pourcentage_recommande_pot?: number | null;
+      } | null);
+      const min = (data?.pourcentage_minimum_pot ?? 0) as number;
+      const reco = (data?.pourcentage_recommande_pot ?? null) as number | null;
+      setPctPot(Math.max(min, reco ?? 30));
+    }
+    if (isOpen) {
+      fetchEquipe();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
+
+  // Calculs
   const montantCartes = tourneeSummary?.cartes_total || 0;
   const montantEspeces = parseFloat(formData.montantEspeces) || 0;
   const montantCheques = parseFloat(formData.montantCheques) || 0;
   const totalFinal = montantEspeces + montantCheques + montantCartes;
-  // Optionally compute moyenne by calendar if needed later
-  // const calendriersDistribues = parseFloat(formData.calendriersDistribues) || 0;
-  // const moyenneParCalendrier = calendriersDistribues > 0 ? totalFinal / calendriersDistribues : 0;
+  const montantAmicale = Math.max(0, Math.round(totalFinal * 70) / 100);
+  const montantPompier = Math.max(0, Math.round(totalFinal * 30) / 100);
+  const minPot = Math.max(0, equipeSettings?.pourcentage_minimum_pot ?? 0);
+  const versPot = Math.max(0, Math.round(montantPompier * (pctPot / 100) * 100) / 100);
+  const versPerso = Math.max(0, Math.round((montantPompier - versPot) * 100) / 100);
 
-  // Validation assouplie : autoriser 0 espèces et 0 chèques (tournée 100% carte)
-  const isFormValid = true;
+  // Validation: rétribution activée + pourcentage >= min si réglé
+  const isFormValid = (equipeSettings?.enable_retribution ?? false) && pctPot >= minPot;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Confirmation légère si aucun calendrier distribué saisi (cas rare)
-    const isCalendriersZero = (formData.calendriersDistribues?.trim() === '' || Number(formData.calendriersDistribues) === 0)
+    const isCalendriersZero =
+      formData.calendriersDistribues?.trim() === "" || Number(formData.calendriersDistribues) === 0;
     if (isCalendriersZero) {
       setConfirmZeroOpen(true);
       return;
@@ -74,36 +115,20 @@ export function TourneeClotureModal({ trigger, tourneeData, tourneeSummary }: To
   const proceedSubmit = async () => {
     setIsLoading(true);
     try {
-      // Préparation des données pour la Server Action
-      const formDataToSubmit = new FormData();
-      formDataToSubmit.append('tournee_id', tourneeData.tournee.id);
-      // Par défaut 0 si vide
-      formDataToSubmit.append('calendriers_finaux', (formData.calendriersDistribues || '0'));
-      formDataToSubmit.append('montant_final', totalFinal.toString());
-
-      // Appel de la Server Action
-      const result = await cloturerTournee(formDataToSubmit);
-      
-      if (result.success) {
-        // Fermer le modal
-        setIsOpen(false);
-        
-        // Afficher le toast de succès avec gamification
-        toast.success("Tournée clôturée avec succès. Excellent travail ! 💪", {
-          duration: 4000,
-          style: {
-            background: '#10b981',
-            color: 'white',
-            fontWeight: 'bold',
-          },
-        });
-      } else {
-        toast.error(result.errors?.join(', ') || 'Erreur lors de la clôture de la tournée');
-      }
-      
+      const calendriersVendus = Number(formData.calendriersDistribues || "0") || 0;
+      await cloturerTourneeAvecRetribution({
+        tourneeId: tourneeData.tournee.id,
+        calendriersVendus,
+        montantTotal: totalFinal,
+        pourcentagePot: pctPot,
+      });
+      setIsOpen(false);
+      toast.success(`Tournée clôturée. ${versPerso.toFixed(2)}€ versés sur votre compte.`, { duration: 4000 });
+      router.push("/dashboard/mon-compte");
     } catch (error) {
-      console.error('Erreur:', error);
-      toast.error('Erreur lors de la clôture de la tournée');
+      console.error("Erreur:", error);
+      const message = (error as Error)?.message || "Erreur lors de la clôture de la tournée";
+      toast.error(message);
     } finally {
       setIsLoading(false);
     }
@@ -111,38 +136,34 @@ export function TourneeClotureModal({ trigger, tourneeData, tourneeSummary }: To
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        {trigger}
-      </DialogTrigger>
-  <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto bg-card">
+      <DialogTrigger asChild>{trigger}</DialogTrigger>
+      <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto bg-card">
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-2">
             <CheckCircle className="h-5 w-5 text-orange-600" />
             <span>Déclaration de fin de tournée</span>
           </DialogTitle>
-          <DialogDescription>
-            Finalisez votre tournée en déclarant vos résultats
-          </DialogDescription>
+          <DialogDescription>Finalisez votre tournée en déclarant vos résultats</DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-3">
-          {/* Message d'aide minimal */}
           <div className="text-xs text-muted-foreground">
             Saisissez vos montants en espèces et en chèques. Les paiements en ligne (HelloAsso) s&apos;ajoutent automatiquement.
           </div>
 
-          {/* Principale: Montants espèces + chèques, puis calendriers */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
             <div className="space-y-1.5">
-              <Label htmlFor="montantEspeces" className="text-sm font-medium">Montant en espèces</Label>
+              <Label htmlFor="montantEspeces" className="text-sm font-medium">
+                Montant en espèces
+              </Label>
               <div className="relative">
                 <Euro className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <Input
@@ -161,7 +182,9 @@ export function TourneeClotureModal({ trigger, tourneeData, tourneeSummary }: To
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="montantCheques" className="text-sm font-medium">Montant en chèques</Label>
+              <Label htmlFor="montantCheques" className="text-sm font-medium">
+                Montant en chèques
+              </Label>
               <div className="relative">
                 <FileText className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <Input
@@ -180,7 +203,9 @@ export function TourneeClotureModal({ trigger, tourneeData, tourneeSummary }: To
             </div>
 
             <div className="space-y-1.5 md:col-span-2">
-              <Label htmlFor="calendriersDistribues" className="text-sm font-medium">Calendriers distribués (optionnel)</Label>
+              <Label htmlFor="calendriersDistribues" className="text-sm font-medium">
+                Calendriers distribués (optionnel)
+              </Label>
               <div className="relative">
                 <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <Input
@@ -198,7 +223,6 @@ export function TourneeClotureModal({ trigger, tourneeData, tourneeSummary }: To
             </div>
           </div>
 
-          {/* Récapitulatif compact */}
           <div className="grid grid-cols-2 gap-2">
             <div className="space-y-1">
               <Label className="text-xs text-muted-foreground">Cartes (auto)</Label>
@@ -215,9 +239,54 @@ export function TourneeClotureModal({ trigger, tourneeData, tourneeSummary }: To
             </div>
           </div>
 
-          {/* Notes */}
+          {totalFinal > 0 && (
+            <div className="space-y-3">
+              <div className="bg-muted p-3 rounded-md space-y-1">
+                <div className="flex justify-between text-sm">
+                  <span>→ Amicale (70%)</span>
+                  <span className="font-medium">{montantAmicale.toFixed(2)}€</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span>→ Pompier (30%)</span>
+                  <span className="font-medium">{montantPompier.toFixed(2)}€</span>
+                </div>
+              </div>
+              <div>
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm">Part au pot d&apos;équipe</Label>
+                  <Badge variant="secondary">{pctPot}%</Badge>
+                </div>
+                <input
+                  type="range"
+                  min={minPot}
+                  max={100}
+                  step={5}
+                  value={pctPot}
+                  onChange={(e) => setPctPot(Number(e.target.value))}
+                  className="w-full"
+                />
+                {minPot > 0 && (
+                  <p className="text-xs text-muted-foreground mt-1">Minimum requis par l&apos;équipe : {minPot}%</p>
+                )}
+              </div>
+              <div className="bg-accent p-3 rounded-md">
+                <div className="flex justify-between text-sm">
+                  <span>🤝 Pot d&apos;équipe</span>
+                  <span className="font-semibold">{versPot.toFixed(2)}€</span>
+                </div>
+                <Separator className="my-2" />
+                <div className="flex justify-between text-sm">
+                  <span>💵 Mon compte</span>
+                  <span className="font-semibold">{versPerso.toFixed(2)}€</span>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="space-y-1.5">
-            <Label htmlFor="notes" className="text-sm font-medium">Notes (optionnel)</Label>
+            <Label htmlFor="notes" className="text-sm font-medium">
+              Notes (optionnel)
+            </Label>
             <textarea
               id="notes"
               name="notes"
@@ -231,14 +300,8 @@ export function TourneeClotureModal({ trigger, tourneeData, tourneeSummary }: To
           </div>
         </form>
 
-        {/* Boutons d'action dans le footer */}
         <DialogFooter className="pt-2 border-t border-border/50">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => setIsOpen(false)}
-            disabled={isLoading}
-          >
+          <Button type="button" variant="outline" onClick={() => setIsOpen(false)} disabled={isLoading}>
             Annuler
           </Button>
           <Button
@@ -261,7 +324,6 @@ export function TourneeClotureModal({ trigger, tourneeData, tourneeSummary }: To
           </Button>
         </DialogFooter>
       </DialogContent>
-      {/* Confirmation Dialog: 0 calendriers */}
       <Dialog open={confirmZeroOpen} onOpenChange={setConfirmZeroOpen}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
@@ -274,12 +336,7 @@ export function TourneeClotureModal({ trigger, tourneeData, tourneeSummary }: To
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setConfirmZeroOpen(false)}
-              disabled={isLoading}
-            >
+            <Button type="button" variant="outline" onClick={() => setConfirmZeroOpen(false)} disabled={isLoading}>
               Annuler
             </Button>
             <Button
@@ -299,3 +356,4 @@ export function TourneeClotureModal({ trigger, tourneeData, tourneeSummary }: To
     </Dialog>
   );
 }
+
