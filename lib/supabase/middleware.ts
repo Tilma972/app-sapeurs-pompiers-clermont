@@ -53,9 +53,12 @@ export async function updateSession(request: NextRequest) {
 
   // Redirection automatique pour un utilisateur connecté qui visite la racine
   if (user && request.nextUrl.pathname === "/") {
-    const url = request.nextUrl.clone();
-    url.pathname = "/dashboard";
-    return NextResponse.redirect(url);
+    const view = request.nextUrl.searchParams.get("view");
+    if (view !== "landing") {
+      const url = request.nextUrl.clone();
+      url.pathname = "/dashboard";
+      return NextResponse.redirect(url);
+    }
   }
 
   // Protection des routes privées
