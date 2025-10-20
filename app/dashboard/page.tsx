@@ -62,7 +62,7 @@ export default async function DashboardPage() {
       title: "Mon Compte SP",
       description: "Portefeuille et demandes de paiement",
       iconKey: "wallet",
-      href: "/dashboard/compte",
+      href: "/dashboard/mon-compte",
       gradient: "from-slate-500 to-gray-600",
       badges: [profile?.full_name ? "Profil complet" : "Profil incomplet"],
     },
