@@ -12,7 +12,6 @@ import {
   Camera,
   Gift,
   Wallet,
-  Users,
   Sliders,
 } from "lucide-react";
 import { LogoutButton } from "@/components/logout-button";

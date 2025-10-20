@@ -103,11 +103,8 @@ export default async function MonComptePage() {
             </div>
             <div className="text-xs text-muted-foreground">Transparence: {eqObj?.mode_transparence || '—'}</div>
           </summary>
-          <div className="p-4 border-t border-border">
-            <div className="text-sm text-muted-foreground">Détails des contributions disponibles selon le mode de transparence de l&apos;équipe.</div>
-            <div className="mt-3">
-              <Link href="/dashboard/pot-equipe" className="text-sm text-primary underline">Voir le pot d&apos;équipe</Link>
-            </div>
+          <div className="p-4 border-t border-border text-sm text-muted-foreground">
+            Détails des contributions disponibles selon le mode de transparence de l&apos;équipe.
           </div>
         </details>
       )}
