@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import toast from "react-hot-toast";
 import { updateRetributionPreference } from "@/app/actions/retribution";
+import { Check, Settings } from "lucide-react";
 
 interface RetributionPreferencesCardProps {
   currentPreference: number | null;
@@ -19,13 +20,14 @@ export function RetributionPreferencesCard({
   minimumEquipe,
   recommandationEquipe,
 }: RetributionPreferencesCardProps) {
-  const [preference, setPreference] = useState<number>(
-    currentPreference ?? recommandationEquipe
-  );
+  const initial = currentPreference ?? recommandationEquipe;
+  const [preference, setPreference] = useState<number>(initial);
   const [isLoading, setIsLoading] = useState(false);
+  const [baseline, setBaseline] = useState<number>(initial);
 
   const versPot = preference;
   const versPerso = 100 - preference;
+  const isDirty = preference !== baseline;
 
   const handleSave = async () => {
     if (preference < minimumEquipe) {
@@ -36,6 +38,7 @@ export function RetributionPreferencesCard({
     setIsLoading(true);
     try {
       await updateRetributionPreference(preference);
+      setBaseline(preference);
       toast.success("Préférence enregistrée !");
     } catch (error) {
       console.error(error);
@@ -48,7 +51,7 @@ export function RetributionPreferencesCard({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>⚙️ Modifier ma répartition</CardTitle>
+        <CardTitle className="flex items-center gap-2"><Settings className="h-4 w-4" /> Modifier ma répartition</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
           <div className="space-y-2">
@@ -84,10 +87,10 @@ export function RetributionPreferencesCard({
       <CardFooter>
         <Button
           onClick={handleSave}
-          disabled={isLoading || preference < minimumEquipe}
+          disabled={isLoading || preference < minimumEquipe || !isDirty}
           className="w-full"
         >
-          {isLoading ? "Enregistrement..." : "Enregistrer"}
+          {isLoading ? "Enregistrement..." : (!isDirty ? (<span className="inline-flex items-center gap-2"><Check className="h-4 w-4" /> A jour</span>) : "Enregistrer")}
         </Button>
       </CardFooter>
     </Card>
