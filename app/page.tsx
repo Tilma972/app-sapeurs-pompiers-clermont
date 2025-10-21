@@ -10,6 +10,7 @@ import { PartnersSection } from "@/components/landing/partners-section";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { LandingHeaderWrapper } from "@/components/landing/landing-header-wrapper";
 import { OperationsStatsSection } from "@/components/landing/operations-stats-section";
+import { SectorMapSection } from "@/components/landing/sector-map-section";
 
 export default async function Home() {
   // Vérification intelligente de l'authentification
@@ -33,6 +34,9 @@ export default async function Home() {
           <main className="relative">
               {/* Statistiques opérationnelles sous le hero */}
               <OperationsStatsSection />
+
+             {/* Carte secteur opérationnel */}
+             <SectorMapSection />
 
               {/* Actions (ultra-compactes) */}
               <ActionsSection />
