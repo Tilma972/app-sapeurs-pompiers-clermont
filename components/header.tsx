@@ -1,7 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Menu } from "lucide-react";
+import { Menu, ExternalLink } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 import { Sidebar } from "@/components/sidebar";
 
@@ -46,7 +47,12 @@ export function Header({ title, onMenuClick }: HeaderProps) {
 
         {/* Actions de l'en-tête (optionnel) */}
         <div className="flex items-center space-x-2">
-          {/* Ici on peut ajouter des boutons d'action, notifications, etc. */}
+          <Button asChild variant="outline" size="sm">
+            <Link href="/?view=landing" aria-label="Visiter la page publique">
+              <ExternalLink className="mr-2 h-4 w-4" />
+              Page publique
+            </Link>
+          </Button>
         </div>
       </div>
     </header>
