@@ -1,8 +1,9 @@
 "use client";
 
 import { motion } from "framer-motion";
-import Image from "next/image";
 import { MapPinned } from "lucide-react";
+import dynamic from "next/dynamic";
+const SectorMap = dynamic(() => import("./sector-map"), { ssr: false });
 
 export function SectorMapSection() {
   return (
@@ -33,20 +34,13 @@ export function SectorMapSection() {
           viewport={{ once: true }}
           className="glass-card rounded-lg overflow-hidden"
         >
-          {/* Placeholder visuel: remplacez l'URL par votre carte quand prête */}
-          <div className="relative w-full h-[300px] md:h-[420px]">
-            <Image
-              src="https://npyfregghvnmqxwgkfea.supabase.co/storage/v1/object/public/landing_page/placeholders/carte_secteur_placeholder.webp"
-              alt="Carte du secteur opérationnel"
-              fill
-              sizes="(max-width: 768px) 100vw, 900px"
-              className="object-cover"
-            />
+          <div className="relative w-full">
+            <SectorMap />
           </div>
         </motion.div>
 
         <p className="mt-3 text-xs text-muted-foreground text-center">
-          Carte indicative — version interactive à venir.
+          Carte indicative — version interactive.
         </p>
       </div>
     </section>
