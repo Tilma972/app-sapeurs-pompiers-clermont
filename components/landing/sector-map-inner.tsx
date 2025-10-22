@@ -39,8 +39,12 @@ export default function SectorMapInner() {
       if (geoRef.current) {
         try {
           const bounds = geoRef.current.getBounds();
-          // Préfère fitBounds avec padding et maxZoom pour un cadrage homogène
-          map.fitBounds(bounds, { padding: [8, 8], maxZoom: 16, animate: false });
+            // Invalide la taille après rendu (Framer Motion/containers peuvent fausser le calcul)
+            // puis cadre avec padding serré et un maxZoom plus élevé
+            requestAnimationFrame(() => {
+              map.invalidateSize();
+              map.fitBounds(bounds, { padding: [4, 4], maxZoom: 16, animate: false });
+            });
         } catch {}
       }
       // eslint-disable-next-line react-hooks/exhaustive-deps
