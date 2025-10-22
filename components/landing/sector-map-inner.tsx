@@ -10,23 +10,28 @@ import type { GeoJSON as LGeoJSON, PathOptions, Layer, Path, StyleFunction, LatL
 import type { Feature, FeatureCollection, Geometry } from "geojson";
 
 const GEOJSON_URL =
-  "https://npyfregghvnmqxwgkfea.supabase.co/storage/v1/object/public/21_communes/communes_secteur.json";
+  "https://npyfregghvnmqxwgkfea.supabase.co/storage/v1/object/public/21_communes/communes_secteur.json?v=20251022";
 
 export default function SectorMapInner() {
   const [data, setData] = useState<FeatureCollection<Geometry, Record<string, unknown>> | null>(null);
   const geoRef = useRef<LGeoJSON | null>(null);
   
-  // Palette de 21 couleurs distinctes
-  const communeColors = useMemo(
-    () => [
-      "#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd",
-      "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf",
-      "#aec7e8", "#ffbb78", "#98df8a", "#ff9896", "#c5b0d5",
-      "#c49c94", "#f7b6d2", "#c7c7c7", "#dbdb8d", "#9edae5",
-      "#393b79",
-    ],
-    []
-  );
+  // Palette daltonisme-safe (Okabe–Ito) étendue en boucle jusqu'à 21 éléments
+  const communeColors = useMemo(() => {
+    const base = [
+      "#E69F00", // orange
+      "#56B4E9", // sky blue
+      "#009E73", // bluish green
+      "#F0E442", // yellow
+      "#0072B2", // blue
+      "#D55E00", // vermillion
+      "#CC79A7", // reddish purple
+      "#000000", // black
+    ];
+    const out: string[] = [];
+    for (let i = 0; i < 21; i++) out.push(base[i % base.length]);
+    return out;
+  }, []);
   
   function FitBoundsOnData({ dep }: { dep: unknown }) {
     const map = useMap();
@@ -34,11 +39,8 @@ export default function SectorMapInner() {
       if (geoRef.current) {
         try {
           const bounds = geoRef.current.getBounds();
-          // Calcule un zoom un cran plus proche que le fitBounds par défaut
-          const baseZoom = map.getBoundsZoom(bounds);
-          const closerZoom = Math.min(14, baseZoom + 1);
-          const center = bounds.getCenter();
-          map.setView(center, closerZoom, { animate: false });
+          // Préfère fitBounds avec padding et maxZoom pour un cadrage homogène
+          map.fitBounds(bounds, { padding: [16, 16], maxZoom: 13, animate: false });
         } catch {}
       }
       // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -47,11 +49,10 @@ export default function SectorMapInner() {
   }
 
   useEffect(() => {
-    let cancelled = false;
-    fetch(GEOJSON_URL)
+    const controller = new AbortController();
+    fetch(GEOJSON_URL, { signal: controller.signal, cache: "force-cache" })
       .then((r) => r.json())
       .then((json: FeatureCollection<Geometry, Record<string, unknown>>) => {
-        if (cancelled) return;
         // Ajoute un index de couleur pour chaque feature
         if (Array.isArray(json.features)) {
           json.features.forEach((f, idx) => {
@@ -66,17 +67,10 @@ export default function SectorMapInner() {
       .catch(() => {
         // Silencieux: on garde la section sans carte en cas d'erreur réseau
       });
-    return () => {
-      cancelled = true;
-    };
+    return () => controller.abort();
   }, []);
 
-  const defaultPathStyle: PathOptions = {
-    color: "#d11",
-    weight: 1.2,
-    fillColor: "#f66",
-    fillOpacity: 0.25,
-  };
+  // Styles par défaut gérés via la fonction style et resetStyle; pas de constante locale nécessaire.
 
   // Style par feature en fonction de l'index (couleur différente par commune)
   const style = useMemo<StyleFunction>(
@@ -84,10 +78,11 @@ export default function SectorMapInner() {
       const idx = (feature?.properties as Record<string, unknown> | undefined)?.colorIndex as number | undefined;
       const color = communeColors[(idx ?? 0) % communeColors.length];
       const s: PathOptions = {
-        color,
-        weight: 1.5,
+        color: "#333", // contour sombre pour le contraste
+        weight: 2,
         fillColor: color,
         fillOpacity: 0.3,
+        className: "cursor-pointer",
       };
       return s;
     },
@@ -114,6 +109,7 @@ export default function SectorMapInner() {
   }
 
   type TooltipCapable = { bindTooltip?: (content: string, options?: unknown) => void };
+  type PopupCapable = { bindPopup?: (content: string | HTMLElement, options?: unknown) => void; openPopup?: () => void };
 
   const onEachFeature = (
     feature: Feature<Geometry, Record<string, unknown>>,
@@ -121,17 +117,18 @@ export default function SectorMapInner() {
   ) => {
     // Tooltip avec le nom de commune (collant au curseur)
     const name = getCommuneName(feature);
-    const tl = layer as unknown as TooltipCapable;
+  const tl = layer as unknown as TooltipCapable;
     tl.bindTooltip?.(name, { sticky: true, direction: "top" });
+  // Popup pour mobile: lisibilité supérieure
+  (layer as unknown as PopupCapable).bindPopup?.(name);
 
     // Highlight au survol
     layer.on("mouseover", (e) => {
       const target = e.target as Path;
       target.setStyle({ weight: 2, fillOpacity: 0.35 });
     });
-    layer.on("mouseout", (e) => {
-      const target = e.target as Path;
-      target.setStyle(defaultPathStyle);
+    layer.on("mouseout", () => {
+      if (geoRef.current) geoRef.current.resetStyle(layer as Layer);
     });
 
     // Interaction tactile/clic: sélection + recentrage
@@ -147,7 +144,11 @@ export default function SectorMapInner() {
 
       // Centre/zoom sur la commune sélectionnée
       const bounds = target.getBounds?.();
-      if (bounds && target._map?.fitBounds) target._map.fitBounds(bounds, { padding: [30, 30] });
+      if (bounds && target._map?.fitBounds)
+        target._map.fitBounds(bounds, { padding: [32, 32], maxZoom: 14 });
+
+  // Ouvre le popup (utile sur mobile)
+  (layer as unknown as PopupCapable).openPopup?.();
     });
   };
 
@@ -160,11 +161,16 @@ export default function SectorMapInner() {
       <MapContainer
         center={[43.63, 3.43]}
         zoom={10}
+        minZoom={8}
+        maxZoom={16}
         scrollWheelZoom={false}
         style={{ height: "100%", width: "100%" }}
       >
         <FitBoundsOnData dep={data} />
-        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+        <TileLayer
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        />
         {data && (
           <GeoJSON
             data={data}
@@ -176,6 +182,7 @@ export default function SectorMapInner() {
           />
         )}
       </MapContainer>
+      <p className="sr-only">Pincer pour zoomer, double‑tapez pour centrer, touchez une commune pour voir son nom.</p>
     </div>
   );
 }
