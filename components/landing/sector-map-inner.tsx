@@ -40,7 +40,7 @@ export default function SectorMapInner() {
         try {
           const bounds = geoRef.current.getBounds();
           // Préfère fitBounds avec padding et maxZoom pour un cadrage homogène
-          map.fitBounds(bounds, { padding: [16, 16], maxZoom: 13, animate: false });
+          map.fitBounds(bounds, { padding: [8, 8], maxZoom: 14, animate: false });
         } catch {}
       }
       // eslint-disable-next-line react-hooks/exhaustive-deps
