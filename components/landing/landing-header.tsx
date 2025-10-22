@@ -1,7 +1,6 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { PrimaryCta } from "@/components/landing/primary-cta";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import { LogoutButton } from "@/components/logout-button";
 import { Menu, LogIn, Shield } from "lucide-react";
@@ -80,9 +79,6 @@ export function LandingHeader({ user }: LandingHeaderProps) {
           {/* Actions */}
           <div className="flex items-center gap-3">
             <ThemeSwitcher />
-            <div className="hidden md:block">
-              <PrimaryCta href="/partenaires/devenir">Devenir partenaire</PrimaryCta>
-            </div>
             {user ? (
               <div className="flex items-center gap-2">
                 <span className="text-sm text-muted-foreground hidden sm:block">
@@ -157,13 +153,6 @@ export function LandingHeader({ user }: LandingHeaderProps) {
                     Se connecter
                   </Link>
                 )}
-              <Link
-                href="/partenaires/devenir"
-                className="block text-sm font-medium text-foreground hover:text-primary transition-colors"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Devenir partenaire
-              </Link>
               </nav>
             </motion.div>
           )}
