@@ -35,7 +35,7 @@ const operationalStats: OperationalStat[] = [
   {
     icon: Users,
     label: "Sapeurs-pompiers",
-    value: 45,
+    value: 98,
     subtitle: "Centre de secours",
     colorToken: "text-accent", // Couleur d'accent du thème
     ariaLabel: "98 sapeurs-pompiers actifs au Centre de secours de Clermont-l\'Hérault"
@@ -43,7 +43,7 @@ const operationalStats: OperationalStat[] = [
   {
     icon: Flame,
     label: "Feux maîtrisés",
-    value: 89,
+    value: 23,
     subtitle: "Dont 23 feux de forêt",
     colorToken: "text-orange-600 dark:text-orange-400",
     ariaLabel: "89 feux maîtrisés dont 23 feux de forêt"
