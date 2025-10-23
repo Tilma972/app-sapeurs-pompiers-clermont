@@ -12,6 +12,10 @@ import type { Feature, FeatureCollection, Geometry } from "geojson";
 const GEOJSON_URL =
   "https://npyfregghvnmqxwgkfea.supabase.co/storage/v1/object/public/21_communes/communes_secteur.json?v=20251022";
 
+// Réglages faciles à ajuster pour l'init
+const MAX_INITIAL_ZOOM = 16;
+const INITIAL_ZOOM_BUMP = 0.5; // Était 1; mettez 0.25/0.75/1 selon le ressenti
+
 export default function SectorMapInner() {
   const [data, setData] = useState<FeatureCollection<Geometry, Record<string, unknown>> | null>(null);
   const geoRef = useRef<LGeoJSON | null>(null);
@@ -42,10 +46,10 @@ export default function SectorMapInner() {
         const bounds = geo.getBounds();
         requestAnimationFrame(() => {
           map.invalidateSize();
-          // 1) calcul du zoom qui tient dans l'écran
+          // 1) Zoom qui tient dans l'écran
           const base = map.getBoundsZoom(bounds, true);
-          // 2) autoriser un cran de plus pour mieux voir les communes
-          const target = Math.min(16, base + 1);
+          // 2) Un petit cran en plus pour la lisibilité
+          const target = Math.min(MAX_INITIAL_ZOOM, base + INITIAL_ZOOM_BUMP);
           map.setView(bounds.getCenter(), target, { animate: false });
         });
       } catch {}
