@@ -13,7 +13,7 @@ const GEOJSON_URL =
   "https://npyfregghvnmqxwgkfea.supabase.co/storage/v1/object/public/21_communes/communes_secteur.json?v=20251022";
 
 // Réglages faciles à ajuster pour l'init
-const MAX_INITIAL_ZOOM = 16;
+const MAX_INITIAL_ZOOM = 14;
 const INITIAL_ZOOM_BUMP = 0.5; // Était 1; mettez 0.25/0.75/1 selon le ressenti
 
 export default function SectorMapInner() {
