@@ -36,19 +36,20 @@ export default function SectorMapInner() {
   function FitBoundsOnData({ dep }: { dep: unknown }) {
     const map = useMap();
     useEffect(() => {
-      if (geoRef.current) {
-        try {
-          const bounds = geoRef.current.getBounds();
-            // Invalide la taille après rendu (Framer Motion/containers peuvent fausser le calcul)
-            // puis cadre avec padding serré et un maxZoom plus élevé
-            requestAnimationFrame(() => {
-              map.invalidateSize();
-              map.fitBounds(bounds, { padding: [4, 4], maxZoom: 16, animate: false });
-            });
-        } catch {}
-      }
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [dep]);
+      const geo = geoRef.current;
+      if (!geo) return;
+      try {
+        const bounds = geo.getBounds();
+        requestAnimationFrame(() => {
+          map.invalidateSize();
+          // 1) calcul du zoom qui tient dans l'écran
+          const base = map.getBoundsZoom(bounds, true);
+          // 2) autoriser un cran de plus pour mieux voir les communes
+          const target = Math.min(16, base + 1);
+          map.setView(bounds.getCenter(), target, { animate: false });
+        });
+      } catch {}
+    }, [dep, map]);
     return null;
   }
 
@@ -167,6 +168,8 @@ export default function SectorMapInner() {
         zoom={10}
         minZoom={8}
         maxZoom={16}
+        zoomSnap={0.25}
+        zoomDelta={0.5}
         scrollWheelZoom={false}
         style={{ height: "100%", width: "100%" }}
       >
