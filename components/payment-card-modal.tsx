@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
@@ -8,6 +8,8 @@ import { Label } from "@/components/ui/label"
 import QRCode from 'react-qr-code'
 import { createPaymentIntent } from "@/app/actions/create-payment-intent"
 import { Checkbox } from "@/components/ui/checkbox"
+import { createClient } from "@/lib/supabase/client"
+import { toast } from "react-hot-toast"
 
 export function PaymentCardModal({ tourneeId }: { tourneeId: string }) {
   const [open, setOpen] = useState(false)
@@ -15,6 +17,7 @@ export function PaymentCardModal({ tourneeId }: { tourneeId: string }) {
   const [calendarGiven, setCalendarGiven] = useState<boolean>(true)
   const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [piId, setPiId] = useState<string | null>(null)
 
   const onGenerate = async () => {
     setError(null)
@@ -23,7 +26,33 @@ export function PaymentCardModal({ tourneeId }: { tourneeId: string }) {
     if ((res as { error?: string }).error) setError((res as { error?: string }).error!)
     const url = (res as { url?: string }).url
     if (url) setCheckoutUrl(url)
+    const cs = (res as { clientSecret?: string }).clientSecret
+    if (cs && cs.includes('_secret_')) {
+      setPiId(cs.split('_secret_')[0])
+    }
   }
+
+  // Subscribe to realtime insertion of the transaction for this PaymentIntent
+  useEffect(() => {
+    if (!open || !piId) return
+    const supabase = createClient()
+    const channel = supabase
+      .channel(`st-${piId}`)
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'support_transactions',
+        filter: `stripe_session_id=eq.${piId}`,
+      }, () => {
+        toast.success('Paiement confirmé ✓')
+        setOpen(false)
+      })
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [open, piId])
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
