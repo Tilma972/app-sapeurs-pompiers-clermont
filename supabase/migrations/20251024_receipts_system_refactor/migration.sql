@@ -129,28 +129,36 @@ $$;
 -- Ensure no UPDATE policy exists (immutability via lack of policy). Allow SELECT/INSERT for owners.
 DO $$
 BEGIN
-  -- View own receipts
-  CREATE POLICY IF NOT EXISTS "Users can view own receipts (v2)" ON public.receipts
-  FOR SELECT USING (
-    EXISTS (
-      SELECT 1 FROM public.support_transactions st 
-      WHERE st.id = receipts.transaction_id AND st.user_id = auth.uid()
-    )
-  );
-EXCEPTION WHEN duplicate_object THEN NULL;
+  -- View own receipts (check existence via pg_policies since CREATE POLICY doesn't support IF NOT EXISTS)
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies 
+    WHERE schemaname = 'public' AND tablename = 'receipts' AND policyname = 'Users can view own receipts (v2)'
+  ) THEN
+    CREATE POLICY "Users can view own receipts (v2)" ON public.receipts
+    FOR SELECT USING (
+      EXISTS (
+        SELECT 1 FROM public.support_transactions st 
+        WHERE st.id = receipts.transaction_id AND st.user_id = auth.uid()
+      )
+    );
+  END IF;
 END $$;
 
 DO $$
 BEGIN
-  -- Insert own receipts
-  CREATE POLICY IF NOT EXISTS "Users can insert own receipts (v2)" ON public.receipts
-  FOR INSERT WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM public.support_transactions st 
-      WHERE st.id = receipts.transaction_id AND st.user_id = auth.uid()
-    )
-  );
-EXCEPTION WHEN duplicate_object THEN NULL;
+  -- Insert own receipts (check existence via pg_policies)
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies 
+    WHERE schemaname = 'public' AND tablename = 'receipts' AND policyname = 'Users can insert own receipts (v2)'
+  ) THEN
+    CREATE POLICY "Users can insert own receipts (v2)" ON public.receipts
+    FOR INSERT WITH CHECK (
+      EXISTS (
+        SELECT 1 FROM public.support_transactions st 
+        WHERE st.id = receipts.transaction_id AND st.user_id = auth.uid()
+      )
+    );
+  END IF;
 END $$;
 
 -- Destructive changes deferred to cutover window (documented for later):

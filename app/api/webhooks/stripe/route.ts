@@ -210,64 +210,9 @@ export async function POST(req: NextRequest) {
     log.info('✅ Don Stripe (PI) traité', { payment_intent_id: paymentIntent.id, amount })
   }
 
-  // Alternative/fallback: traiter charge.succeeded si payment_intent.succeeded n'est pas passé
+  // Simplification: ignorer charge.succeeded pour éviter les doublons. On traite tout via payment_intent.succeeded.
   if (e.type === 'charge.succeeded') {
-    const charge = e.data.object as {
-      id: string
-      amount: number
-      billing_details?: { name?: string | null; email?: string | null }
-      payment_intent?: string | null
-    }
-
-    const stripe = getStripe()
-    if (!charge.payment_intent) {
-      log.warn('charge.succeeded sans payment_intent')
-      return NextResponse.json({ received: true })
-    }
-
-    // Récupérer le PI pour accéder aux metadata
-    let pi: { id: string; amount: number; metadata?: { [k: string]: string } } | null = null
-    try {
-      const fullPi = await stripe.paymentIntents.retrieve(charge.payment_intent)
-      pi = {
-        id: (fullPi as { id: string }).id,
-        amount: (fullPi as { amount: number }).amount,
-        metadata: (fullPi as { metadata?: { [k: string]: string } }).metadata,
-      }
-    } catch (err) {
-      log.warn('Impossible de récupérer PaymentIntent depuis charge', { message: (err as Error)?.message })
-      return NextResponse.json({ received: true })
-    }
-
-    // Idempotency: ne rien faire si déjà créé par payment_intent.succeeded
-    const { data: existing } = await admin
-      .from('support_transactions')
-      .select('id')
-      .eq('stripe_session_id', pi.id)
-      .maybeSingle()
-    if (existing) return NextResponse.json({ received: true })
-
-    const meta = (pi.metadata || {}) as { tournee_id?: string; calendar_given?: string; user_id?: string; donor_name?: string; donor_email?: string }
-    const amount = charge.amount / 100
-    const effectiveName = meta.donor_name ?? (charge.billing_details?.name ?? undefined)
-    const effectiveEmail = meta.donor_email ?? (charge.billing_details?.email ?? undefined)
-
-    await admin
-      .from('support_transactions')
-      .insert({
-        user_id: meta.user_id ?? null,
-        tournee_id: meta.tournee_id ?? null,
-        amount,
-        calendar_accepted: meta.calendar_given === 'true',
-        payment_method: 'carte',
-        payment_status: 'completed',
-        notes: `Stripe Charge - ${charge.id}`,
-        supporter_name: effectiveName,
-        supporter_email: effectiveEmail,
-        stripe_session_id: pi.id,
-      })
-
-    log.info('✅ Don Stripe traité (charge fallback)', { payment_intent_id: pi.id, amount })
+    log.info('charge.succeeded ignoré (traité via payment_intent.succeeded)')
   }
 
   return NextResponse.json({ received: true })

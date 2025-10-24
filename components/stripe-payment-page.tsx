@@ -11,6 +11,8 @@ function PaymentForm({ onSuccess, intentId }: { onSuccess: () => void; intentId?
   const elements = useElements()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | undefined>()
+  const [donorName, setDonorName] = useState('')
+  const [donorEmail, setDonorEmail] = useState('')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -31,6 +33,8 @@ function PaymentForm({ onSuccess, intentId }: { onSuccess: () => void; intentId?
           // Provide country explicitly since address collection is disabled in the Payment Element
           payment_method_data: {
             billing_details: {
+              name: donorName || undefined,
+              email: donorEmail || undefined,
               address: { country: 'FR' },
             },
           },
@@ -52,6 +56,30 @@ function PaymentForm({ onSuccess, intentId }: { onSuccess: () => void; intentId?
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Nom complet</label>
+          <input
+            type="text"
+            value={donorName}
+            onChange={(e) => setDonorName(e.target.value)}
+            className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required
+            placeholder="Jean Dupont"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+          <input
+            type="email"
+            value={donorEmail}
+            onChange={(e) => setDonorEmail(e.target.value)}
+            className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required
+            placeholder="jean.dupont@example.com"
+          />
+        </div>
+      </div>
       <PaymentElement
         options={{
           layout: 'tabs',
