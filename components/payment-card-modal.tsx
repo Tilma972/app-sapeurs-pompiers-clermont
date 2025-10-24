@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import QRCode from 'react-qr-code'
-import { createCheckoutSession } from "@/app/actions/create-checkout-session"
+import { createPaymentIntent } from "@/app/actions/create-payment-intent"
 import { Checkbox } from "@/components/ui/checkbox"
 
 export function PaymentCardModal({ tourneeId }: { tourneeId: string }) {
@@ -19,7 +19,7 @@ export function PaymentCardModal({ tourneeId }: { tourneeId: string }) {
   const onGenerate = async () => {
     setError(null)
     const amt = parseFloat(amount)
-    const res = await createCheckoutSession({ amount: isFinite(amt) ? amt : 0, calendarGiven, tourneeId })
+    const res = await createPaymentIntent({ amount: isFinite(amt) ? amt : 0, calendarGiven, tourneeId })
     if ((res as { error?: string }).error) setError((res as { error?: string }).error!)
     const url = (res as { url?: string }).url
     if (url) setCheckoutUrl(url)
