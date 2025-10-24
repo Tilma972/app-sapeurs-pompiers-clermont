@@ -45,8 +45,14 @@ END $$;
 -- 2) Add idempotency guard on receipts by transaction
 DO $$
 BEGIN
-  ALTER TABLE public.receipts ADD CONSTRAINT receipts_transaction_unique UNIQUE (transaction_id);
-EXCEPTION WHEN duplicate_object THEN NULL;
+  -- Add UNIQUE(transaction_id) only if the constraint doesn't already exist
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conname = 'receipts_transaction_unique'
+      AND conrelid = 'public.receipts'::regclass
+  ) THEN
+    ALTER TABLE public.receipts ADD CONSTRAINT receipts_transaction_unique UNIQUE (transaction_id);
+  END IF;
 END $$;
 
 -- 3) Simplified receipt number generator using COUNT per year
