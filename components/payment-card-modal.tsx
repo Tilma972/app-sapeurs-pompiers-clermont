@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { QRCodeSVG } from "qrcode.react"
+import QRCode from 'react-qr-code'
 import { createCheckoutSession } from "@/app/actions/create-checkout-session"
 import { Checkbox } from "@/components/ui/checkbox"
 
@@ -54,7 +54,7 @@ export function PaymentCardModal({ tourneeId }: { tourneeId: string }) {
             </div>
           ) : (
             <div className="flex flex-col items-center gap-2">
-              <QRCodeSVG value={checkoutUrl} size={200} />
+              <QRCode value={checkoutUrl} size={256} level="M" />
               <a className="text-sm text-primary underline" href={checkoutUrl} target="_blank" rel="noreferrer">Ouvrir dans le navigateur</a>
             </div>
           )}
