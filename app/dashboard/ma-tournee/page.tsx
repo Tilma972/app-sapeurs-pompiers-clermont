@@ -4,12 +4,14 @@ import { Card, CardHeader, CardTitle, CardDescription, CardFooter } from "@/comp
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { getActiveTourneeWithTransactions } from "@/lib/supabase/tournee";
-import { DonationModal } from "@/components/donation-modal";
+// import { DonationModal } from "@/components/donation-modal";
+import { PaymentCardModal } from "@/components/payment-card-modal";
+import { ReceiptGenerationModal } from "@/components/receipt-generation-modal";
 import { TourneeClotureModal } from "@/components/tournee-cloture-modal";
 import { ResendReceiptButton } from "@/components/resend-receipt-button";
 import { RoleBadge } from "@/components/role-badge";
 import {
-  Calendar,
+  // Calendar,
   CheckCircle,
   Receipt,
   TrendingUp,
@@ -142,15 +144,10 @@ export default async function MaTourneePage() {
                 <div className="text-xs text-muted-foreground mb-2">
                   Don simple ou avec reçu fiscal
                 </div>
-                <DonationModal 
-                  trigger={
-                    <Button className="w-full h-8 text-sm">
-                      <Calendar className="h-3 w-3 mr-1" />
-                      Enregistrer un don
-                    </Button>
-                  }
-                  tourneeId={tournee.id}
-                />
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <PaymentCardModal tourneeId={tournee.id} />
+                  <ReceiptGenerationModal tourneeId={tournee.id} />
+                </div>
               </div>
             </CardFooter>
           </Card>

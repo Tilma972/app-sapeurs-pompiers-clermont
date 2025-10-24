@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { generateReceiptAction } from "@/app/actions/generate-receipt"
+import toast from "react-hot-toast"
 
 export function ReceiptGenerationModal({ tourneeId }: { tourneeId: string }) {
   const [open, setOpen] = useState(false)
@@ -25,6 +26,14 @@ export function ReceiptGenerationModal({ tourneeId }: { tourneeId: string }) {
   const onSubmit = () => {
     const amt = parseFloat(amount)
     setMessage("")
+    if (!isFinite(amt) || amt <= 0) {
+      setMessage("Montant invalide")
+      return
+    }
+    if (amt < 6) {
+      setMessage("Montant minimum 6€")
+      return
+    }
     startTransition(async () => {
       const res = await generateReceiptAction({
         tourneeId,
@@ -39,7 +48,12 @@ export function ReceiptGenerationModal({ tourneeId }: { tourneeId: string }) {
         donorCity: city || null,
       })
       if (res.success) {
-        setMessage(res.warning === "email_failed" ? "Reçu généré, mais l'email n'a pas pu être envoyé." : "Reçu généré et envoyé.")
+        const rn = (res as { receiptNumber?: string }).receiptNumber
+        if (res.warning === "email_failed") {
+          toast(`Reçu ${rn || ""} généré. Email non envoyé. Utilisez Renvoyer si besoin.`)
+        } else {
+          toast.success(`Reçu ${rn || ""} envoyé`)
+        }
         setOpen(false)
         setAmount("")
       } else {

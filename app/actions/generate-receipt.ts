@@ -31,6 +31,9 @@ export async function generateReceiptAction(input: GenerateReceiptInput) {
   if (!input || typeof input.amount !== "number" || input.amount <= 0) {
     return { success: false, errors: ["Montant invalide"] }
   }
+  if (input.amount < 6) {
+    return { success: false, errors: ["Montant minimum 6€"] }
+  }
   if (!input.donorEmail || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(input.donorEmail)) {
     return { success: false, errors: ["Email du donateur invalide"] }
   }
