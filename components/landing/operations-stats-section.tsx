@@ -43,7 +43,7 @@ const operationalStats: OperationalStat[] = [
   {
     icon: Flame,
     label: "Feux maîtrisés",
-    value: 23,
+    value: 89,
     subtitle: "Dont 23 feux de forêt",
     colorToken: "text-orange-600 dark:text-orange-400",
     ariaLabel: "89 feux maîtrisés dont 23 feux de forêt"
