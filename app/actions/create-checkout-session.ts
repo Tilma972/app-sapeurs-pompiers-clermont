@@ -56,5 +56,6 @@ export async function createCheckoutSession(data: {
     cancel_url: `${base}/dashboard/ma-tournee`,
   })
 
-  return { url: session.url }
+  // Return short internal URL to keep QR codes compact
+  return { url: `${base}/pay/${session.id}` }
 }

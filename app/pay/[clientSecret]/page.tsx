@@ -1,4 +1,4 @@
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import { StripePaymentPage } from '@/components/stripe-payment-page'
 
 type Props = {
@@ -8,7 +8,28 @@ type Props = {
 export default async function PayPage({ params }: Props) {
   const { clientSecret } = await params
 
-  if (!clientSecret || !clientSecret.startsWith('pi_')) {
+  // Support both PaymentIntent (pi_) and Checkout Session (cs_)
+  if (!clientSecret) {
+    notFound()
+  }
+
+  // If Checkout Session, immediately redirect to Stripe Checkout URL
+  if (clientSecret.startsWith('cs_')) {
+    const { getStripe } = await import('@/lib/stripe/client')
+    const stripe = getStripe()
+    try {
+      const session = await stripe.checkout.sessions.retrieve(clientSecret)
+      if (!session.url) {
+        notFound()
+      }
+      redirect(session.url)
+    } catch {
+      notFound()
+    }
+  }
+
+  // If PaymentIntent, continue with existing logic
+  if (!clientSecret.startsWith('pi_')) {
     notFound()
   }
   // Récupérer l'intentId lié au PaymentIntent via Supabase
