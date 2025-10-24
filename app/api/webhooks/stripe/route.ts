@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getStripe } from '@/lib/stripe/client'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createLogger } from '@/lib/log'
+import { sendEmail } from '@/lib/email/resend-client'
+import { buildSubject, buildHtml, buildText } from '@/lib/email/receipt-templates'
 
 const log = createLogger('webhook/stripe')
 
@@ -41,6 +43,62 @@ export async function POST(req: NextRequest) {
   })
 
   const e = event as { type: string; data: { object: unknown } }
+  // New flow: Stripe Checkout
+  if (e.type === 'checkout.session.completed') {
+    const session = e.data.object as {
+      id: string
+      amount_total?: number | null
+      customer_details?: { email?: string | null; name?: string | null } | null
+      metadata?: { tournee_id?: string; calendar_given?: string; user_id?: string }
+    }
+
+    const admin = createAdminClient()
+    const amount = (session.amount_total ?? 0) / 100
+    const donorEmail = session.customer_details?.email ?? null
+    const donorName = session.customer_details?.name ?? null
+
+    // Idempotence by stripe_session_id
+    const { data: existing } = await admin
+      .from('support_transactions')
+      .select('id')
+      .eq('stripe_session_id', session.id)
+      .maybeSingle()
+
+    if (!existing) {
+      const calendarAccepted = (session.metadata?.calendar_given === 'true') ? true : false
+      const userId = session.metadata?.user_id ?? null
+      const tourneeId = session.metadata?.tournee_id ?? null
+
+      const { data: tx } = await admin
+        .from('support_transactions')
+        .insert({
+          user_id: userId,
+          tournee_id: tourneeId,
+          amount,
+          calendar_accepted: calendarAccepted,
+          payment_method: 'carte',
+          payment_status: 'completed',
+          stripe_session_id: session.id,
+          supporter_email: donorEmail,
+          supporter_name: donorName,
+          notes: 'Stripe Checkout',
+        })
+        .select('id, amount, supporter_name, supporter_email')
+        .single()
+
+      if (tx && amount >= 6) {
+        const { data: rec } = await admin.rpc('issue_receipt', { p_transaction_id: tx.id }).single()
+        const receiptNumber = (rec as { receipt_number?: string } | null)?.receipt_number ?? null
+
+        if (donorEmail) {
+          const subject = buildSubject({ supporterName: tx.supporter_name as string | null, amount: tx.amount as number, receiptNumber: receiptNumber, transactionType: 'fiscal' })
+          const html = buildHtml({ supporterName: tx.supporter_name as string | null, amount: tx.amount as number, receiptNumber: receiptNumber, transactionType: 'fiscal' })
+          const text = buildText({ supporterName: tx.supporter_name as string | null, amount: tx.amount as number, receiptNumber: receiptNumber, transactionType: 'fiscal' })
+          await sendEmail({ to: donorEmail, subject, html, text })
+        }
+      }
+    }
+  }
   if (e.type === 'payment_intent.succeeded') {
     const paymentIntent = e.data.object as {
       id: string

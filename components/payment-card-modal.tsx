@@ -6,8 +6,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { QRCodeSVG } from "qrcode.react"
+import { createCheckoutSession } from "@/app/actions/create-checkout-session"
 
-export function PaymentCardModal({ onCreateCheckout }: { onCreateCheckout: (amount: number, calendarGiven: boolean) => Promise<{ url?: string; error?: string }> }) {
+export function PaymentCardModal({ tourneeId }: { tourneeId: string }) {
   const [open, setOpen] = useState(false)
   const [amount, setAmount] = useState<string>("")
   const [calendarGiven, setCalendarGiven] = useState<boolean>(true)
@@ -17,9 +18,10 @@ export function PaymentCardModal({ onCreateCheckout }: { onCreateCheckout: (amou
   const onGenerate = async () => {
     setError(null)
     const amt = parseFloat(amount)
-    const res = await onCreateCheckout(isFinite(amt) ? amt : 0, calendarGiven)
-    if (res.error) setError(res.error)
-    if (res.url) setCheckoutUrl(res.url)
+    const res = await createCheckoutSession({ amount: isFinite(amt) ? amt : 0, calendarGiven, tourneeId })
+    if ((res as { error?: string }).error) setError((res as { error?: string }).error!)
+    const url = (res as { url?: string }).url
+    if (url) setCheckoutUrl(url)
   }
 
   return (
