@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { QRCodeSVG } from "qrcode.react"
 import { createCheckoutSession } from "@/app/actions/create-checkout-session"
+import { Checkbox } from "@/components/ui/checkbox"
 
 export function PaymentCardModal({ tourneeId }: { tourneeId: string }) {
   const [open, setOpen] = useState(false)
@@ -29,36 +30,36 @@ export function PaymentCardModal({ tourneeId }: { tourneeId: string }) {
       <DialogTrigger asChild>
         <Button variant="default">💳 Paiement CB</Button>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="sm:max-w-lg bg-card text-foreground border border-border rounded-lg">
         <DialogHeader>
-          <DialogTitle>Paiement par carte</DialogTitle>
+          <DialogTitle className="text-lg font-semibold tracking-tight">Paiement par carte</DialogTitle>
         </DialogHeader>
-        <div className="grid gap-3">
-          <div className="grid grid-cols-2 gap-3">
+        <div className="grid gap-4">
+          <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label>Montant (€)</Label>
+              <Label className="text-sm text-muted-foreground">Montant (€)</Label>
               <Input inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="30" />
             </div>
             <div className="flex items-end">
-              <label className="flex items-center gap-2 text-sm">
-                <input type="checkbox" checked={calendarGiven} onChange={(e) => setCalendarGiven(e.target.checked)} />
-                Calendrier remis
-              </label>
+              <div className="flex items-center gap-2 text-sm">
+                <Checkbox id="calendarGivenCB" checked={calendarGiven} onCheckedChange={(v) => setCalendarGiven(!!v)} />
+                <Label htmlFor="calendarGivenCB" className="text-sm text-muted-foreground">Calendrier remis</Label>
+              </div>
             </div>
           </div>
 
           {!checkoutUrl ? (
             <div className="flex justify-end">
-              <Button onClick={onGenerate}>Générer QR paiement</Button>
+              <Button className="h-9" onClick={onGenerate}>Générer QR paiement</Button>
             </div>
           ) : (
             <div className="flex flex-col items-center gap-2">
               <QRCodeSVG value={checkoutUrl} size={200} />
-              <a className="text-sm text-blue-600 underline" href={checkoutUrl} target="_blank" rel="noreferrer">Ouvrir dans le navigateur</a>
+              <a className="text-sm text-primary underline" href={checkoutUrl} target="_blank" rel="noreferrer">Ouvrir dans le navigateur</a>
             </div>
           )}
 
-          {error && <p className="text-sm text-red-600">{error}</p>}
+          {error && <p className="text-sm text-destructive">{error}</p>}
         </div>
       </DialogContent>
     </Dialog>

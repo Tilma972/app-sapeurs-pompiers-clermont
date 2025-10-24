@@ -67,69 +67,69 @@ export function ReceiptGenerationModal({ tourneeId }: { tourneeId: string }) {
       <DialogTrigger asChild>
         <Button variant="secondary">📄 Reçu fiscal</Button>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="sm:max-w-lg bg-card text-foreground border border-border rounded-lg">
         <DialogHeader>
-          <DialogTitle>Générer un reçu fiscal</DialogTitle>
+          <DialogTitle className="text-lg font-semibold tracking-tight">Générer un reçu fiscal</DialogTitle>
         </DialogHeader>
-        <div className="grid gap-3">
-          <div className="grid grid-cols-2 gap-3">
+        <div className="grid gap-4">
+          <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label>Montant (€)</Label>
+              <Label className="text-sm text-muted-foreground">Montant (€)</Label>
               <Input inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="25" />
               <p className="text-xs text-muted-foreground mt-1">Minimum 6€</p>
             </div>
             <div>
-              <Label>Mode paiement</Label>
+              <Label className="text-sm text-muted-foreground">Mode paiement</Label>
               <div className="flex gap-2 mt-2">
-                <Button type="button" variant={paymentMethod === "especes" ? "default" : "outline"} onClick={() => setPaymentMethod("especes")}>Espèces</Button>
-                <Button type="button" variant={paymentMethod === "cheque" ? "default" : "outline"} onClick={() => setPaymentMethod("cheque")}>Chèque</Button>
+                <Button className="h-9" type="button" variant={paymentMethod === "especes" ? "default" : "outline"} onClick={() => setPaymentMethod("especes")}>Espèces</Button>
+                <Button className="h-9" type="button" variant={paymentMethod === "cheque" ? "default" : "outline"} onClick={() => setPaymentMethod("cheque")}>Chèque</Button>
               </div>
             </div>
           </div>
 
           <div className="flex items-center space-x-2">
             <Checkbox id="calendarGiven" checked={calendarGiven} onCheckedChange={(v) => setCalendarGiven(!!v)} />
-            <Label htmlFor="calendarGiven">Calendrier remis</Label>
+            <Label className="text-sm text-muted-foreground" htmlFor="calendarGiven">Calendrier remis</Label>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label>Prénom</Label>
+              <Label className="text-sm text-muted-foreground">Prénom</Label>
               <Input value={firstName} onChange={(e) => setFirstName(e.target.value)} />
             </div>
             <div>
-              <Label>Nom</Label>
+              <Label className="text-sm text-muted-foreground">Nom</Label>
               <Input value={lastName} onChange={(e) => setLastName(e.target.value)} />
             </div>
           </div>
 
           <div>
-            <Label>Email</Label>
+            <Label className="text-sm text-muted-foreground">Email</Label>
             <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="jean.dupont@email.com" />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label>Adresse (optionnel)</Label>
+              <Label className="text-sm text-muted-foreground">Adresse (optionnel)</Label>
               <Input value={address} onChange={(e) => setAddress(e.target.value)} />
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label>CP</Label>
+                <Label className="text-sm text-muted-foreground">CP</Label>
                 <Input value={zip} onChange={(e) => setZip(e.target.value)} />
               </div>
               <div>
-                <Label>Ville</Label>
+                <Label className="text-sm text-muted-foreground">Ville</Label>
                 <Input value={city} onChange={(e) => setCity(e.target.value)} />
               </div>
             </div>
           </div>
 
-          {message && <p className="text-sm text-red-600">{message}</p>}
+          {message && <p className="text-sm text-destructive">{message}</p>}
 
           <div className="flex justify-end gap-2 mt-2">
-            <Button variant="outline" onClick={() => setOpen(false)}>Annuler</Button>
-            <Button disabled={pending} onClick={onSubmit}>Générer et envoyer</Button>
+            <Button className="h-9" variant="outline" onClick={() => setOpen(false)}>Annuler</Button>
+            <Button className="h-9" disabled={pending} onClick={onSubmit}>Générer et envoyer</Button>
           </div>
         </div>
       </DialogContent>
