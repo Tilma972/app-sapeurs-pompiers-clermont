@@ -104,7 +104,7 @@ export async function POST(req: NextRequest) {
       id: string
       amount: number
       payment_method?: string
-      metadata?: { intentId?: string }
+      metadata?: { [k: string]: string | undefined }
       latest_charge?: string | null
       charges?: {
         data?: Array<{
@@ -112,34 +112,35 @@ export async function POST(req: NextRequest) {
         }>
       }
     }
-  const metadata = paymentIntent.metadata as { intentId?: string; donor_name?: string; donor_email?: string } | undefined
-  const intentId = metadata?.intentId as string | undefined
 
-    log.info('Payment succeeded', { intentId, amount: paymentIntent.amount })
+    const meta = (paymentIntent.metadata || {}) as {
+      tournee_id?: string
+      calendar_given?: string
+      user_id?: string
+      donor_name?: string
+      donor_email?: string
+    }
 
-    const { data: intent } = await admin
-      .from('donation_intents')
-      .select('*')
-      .eq('id', intentId)
-      .single()
+    const amount = paymentIntent.amount / 100
+    const calendarAccepted = meta.calendar_given === 'true'
 
-    if (!intent) {
-      log.error('Intent introuvable', { intentId })
+    // Idempotency: reuse stripe_session_id field to store PI id as well
+    const { data: existing } = await admin
+      .from('support_transactions')
+      .select('id')
+      .eq('stripe_session_id', paymentIntent.id)
+      .maybeSingle()
+
+    if (existing) {
+      log.info('Transaction déjà enregistrée (PI)', { payment_intent_id: paymentIntent.id })
       return NextResponse.json({ received: true })
     }
 
-    if (intent.status === 'completed') {
-      log.warn('Intent déjà complétée', { intentId })
-      return NextResponse.json({ received: true })
-    }
-
-    const finalAmount = paymentIntent.amount / 100
-
-  // Récupérer le nom/email (priorité aux metadata fournies par le formulaire, puis billing_details)
-  const donorName: string | undefined = metadata?.donor_name || undefined
-  const donorEmail: string | undefined = metadata?.donor_email || undefined
-  let billingName: string | undefined
-  let billingEmail: string | undefined
+    // Resolve name/email
+    let billingName: string | undefined
+    let billingEmail: string | undefined
+    const donorName: string | undefined = meta.donor_name || undefined
+    const donorEmail: string | undefined = meta.donor_email || undefined
 
     const charge = paymentIntent.charges?.data?.[0]
     const chargeDetails = charge?.billing_details as { name?: string | null; email?: string | null } | undefined
@@ -162,7 +163,6 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Dernier fallback: récupérer le dernier charge complet si disponible
     if ((!billingName && !billingEmail) && paymentIntent.latest_charge) {
       try {
         const stripe = getStripe()
@@ -175,55 +175,42 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Choisir la meilleure source de nom/email
     const effectiveName = donorName ?? billingName
     const effectiveEmail = donorEmail ?? billingEmail
 
-    // Parse prénom/nom à partir du nom complet
-    let donorFirstName: string | null = null
-    let donorLastName: string | null = null
-    if (effectiveName) {
-      const parts = effectiveName.trim().split(/\s+/)
-      if (parts.length === 1) {
-        donorFirstName = parts[0]
-      } else if (parts.length >= 2) {
-        donorFirstName = parts[0]
-        donorLastName = parts.slice(1).join(' ')
+    const { data: tx } = await admin
+      .from('support_transactions')
+      .insert({
+        user_id: meta.user_id ?? null,
+        tournee_id: meta.tournee_id ?? null,
+        amount,
+        calendar_accepted: calendarAccepted,
+        payment_method: 'carte',
+        payment_status: 'completed',
+        notes: `Stripe PI - ${paymentIntent.id}`,
+        supporter_name: effectiveName,
+        supporter_email: effectiveEmail,
+        stripe_session_id: paymentIntent.id,
+      })
+      .select('id, amount, supporter_name, supporter_email')
+      .single()
+
+    if (tx && amount >= 6) {
+      const { data: rec } = await admin.rpc('issue_receipt', { p_transaction_id: tx.id }).single()
+      const receiptNumber = (rec as { receipt_number?: string } | null)?.receipt_number ?? null
+
+      if (tx.supporter_email) {
+        const subject = buildSubject({ supporterName: tx.supporter_name as string | null, amount: tx.amount as number, receiptNumber: receiptNumber, transactionType: 'fiscal' })
+        const html = buildHtml({ supporterName: tx.supporter_name as string | null, amount: tx.amount as number, receiptNumber: receiptNumber, transactionType: 'fiscal' })
+        const text = buildText({ supporterName: tx.supporter_name as string | null, amount: tx.amount as number, receiptNumber: receiptNumber, transactionType: 'fiscal' })
+        await sendEmail({ to: tx.supporter_email as string, subject, html, text })
       }
     }
 
-    const { data: transaction } = await admin
-      .from('support_transactions')
-      .insert({
-        user_id: intent.sapeur_pompier_id,
-        tournee_id: intent.tournee_id,
-        amount: finalAmount,
-        calendar_accepted: true,
-        payment_method: 'carte',
-        payment_status: 'completed',
-        notes: `Stripe - ${paymentIntent.id}`,
-        supporter_name: effectiveName,
-        supporter_email: effectiveEmail,
-      })
-      .select()
-      .single()
-
-    await admin
-      .from('donation_intents')
-      .update({
-        status: 'completed',
-        final_amount: finalAmount,
-        support_transaction_id: transaction?.id,
-        donor_first_name: donorFirstName,
-        donor_last_name: donorLastName,
-        donor_email: effectiveEmail ?? null,
-      })
-      .eq('id', intentId)
-
-    log.info('✅ Don Stripe traité', { intentId, finalAmount })
+    log.info('✅ Don Stripe (PI) traité', { payment_intent_id: paymentIntent.id, amount })
   }
 
-  // Alternative: traiter directement le charge avec ses billing_details complets
+  // Alternative/fallback: traiter charge.succeeded si payment_intent.succeeded n'est pas passé
   if (e.type === 'charge.succeeded') {
     const charge = e.data.object as {
       id: string
@@ -232,95 +219,55 @@ export async function POST(req: NextRequest) {
       payment_intent?: string | null
     }
 
-  const stripe = getStripe()
-  type PartialPI = { id: string; amount: number; metadata?: { intentId?: string; donor_name?: string; donor_email?: string } }
-    let pi: PartialPI | null = null
+    const stripe = getStripe()
+    if (!charge.payment_intent) {
+      log.warn('charge.succeeded sans payment_intent')
+      return NextResponse.json({ received: true })
+    }
 
+    // Récupérer le PI pour accéder aux metadata
+    let pi: { id: string; amount: number; metadata?: { [k: string]: string } } | null = null
     try {
-      if (charge.payment_intent) {
-        const fullPi = await stripe.paymentIntents.retrieve(charge.payment_intent)
-        const partial: PartialPI = {
-          id: (fullPi as { id: string }).id,
-          amount: (fullPi as { amount: number }).amount,
-          metadata: (fullPi as { metadata?: { intentId?: string; donor_name?: string; donor_email?: string } }).metadata,
-        }
-        pi = partial
+      const fullPi = await stripe.paymentIntents.retrieve(charge.payment_intent)
+      pi = {
+        id: (fullPi as { id: string }).id,
+        amount: (fullPi as { amount: number }).amount,
+        metadata: (fullPi as { metadata?: { [k: string]: string } }).metadata,
       }
     } catch (err) {
       log.warn('Impossible de récupérer PaymentIntent depuis charge', { message: (err as Error)?.message })
-    }
-
-    const intentId = pi?.metadata?.intentId as string | undefined
-    if (!intentId) {
-      log.error('IntentId manquant sur charge.succeeded')
       return NextResponse.json({ received: true })
     }
 
-    const admin = createAdminClient()
-    const { data: intent } = await admin
-      .from('donation_intents')
-      .select('*')
-      .eq('id', intentId)
-      .single()
+    // Idempotency: ne rien faire si déjà créé par payment_intent.succeeded
+    const { data: existing } = await admin
+      .from('support_transactions')
+      .select('id')
+      .eq('stripe_session_id', pi.id)
+      .maybeSingle()
+    if (existing) return NextResponse.json({ received: true })
 
-    if (!intent) {
-      log.error('Intent introuvable (charge.succeeded)', { intentId })
-      return NextResponse.json({ received: true })
-    }
+    const meta = (pi.metadata || {}) as { tournee_id?: string; calendar_given?: string; user_id?: string; donor_name?: string; donor_email?: string }
+    const amount = charge.amount / 100
+    const effectiveName = meta.donor_name ?? (charge.billing_details?.name ?? undefined)
+    const effectiveEmail = meta.donor_email ?? (charge.billing_details?.email ?? undefined)
 
-    if (intent.status === 'completed') {
-      log.warn('Intent déjà complétée (charge.succeeded)', { intentId })
-      return NextResponse.json({ received: true })
-    }
-
-  const finalAmount = charge.amount / 100
-  const metaName = pi?.metadata?.donor_name ?? undefined
-  const metaEmail = pi?.metadata?.donor_email ?? undefined
-  const billingName2 = charge.billing_details?.name ?? undefined
-  const billingEmail2 = charge.billing_details?.email ?? undefined
-  const effectiveName2 = metaName ?? billingName2
-  const effectiveEmail2 = metaEmail ?? billingEmail2
-
-    let donorFirstName: string | null = null
-    let donorLastName: string | null = null
-    if (effectiveName2) {
-      const parts = effectiveName2.trim().split(/\s+/)
-      if (parts.length === 1) donorFirstName = parts[0]
-      else if (parts.length >= 2) {
-        donorFirstName = parts[0]
-        donorLastName = parts.slice(1).join(' ')
-      }
-    }
-
-    const { data: transaction } = await admin
+    await admin
       .from('support_transactions')
       .insert({
-        user_id: intent.sapeur_pompier_id,
-        tournee_id: intent.tournee_id,
-        amount: finalAmount,
-        calendar_accepted: true,
+        user_id: meta.user_id ?? null,
+        tournee_id: meta.tournee_id ?? null,
+        amount,
+        calendar_accepted: meta.calendar_given === 'true',
         payment_method: 'carte',
         payment_status: 'completed',
         notes: `Stripe Charge - ${charge.id}`,
-        supporter_name: effectiveName2,
-        supporter_email: effectiveEmail2,
+        supporter_name: effectiveName,
+        supporter_email: effectiveEmail,
+        stripe_session_id: pi.id,
       })
-      .select()
-      .single()
 
-    await admin
-      .from('donation_intents')
-      .update({
-        status: 'completed',
-        final_amount: finalAmount,
-        support_transaction_id: transaction?.id,
-        donor_first_name: donorFirstName,
-        donor_last_name: donorLastName,
-        donor_email: effectiveEmail2 ?? null,
-      })
-      .eq('id', intentId)
-
-    log.info('✅ Don Stripe traité (charge.succeeded)', { intentId, finalAmount })
+    log.info('✅ Don Stripe traité (charge fallback)', { payment_intent_id: pi.id, amount })
   }
 
   return NextResponse.json({ received: true })
