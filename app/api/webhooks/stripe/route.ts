@@ -210,9 +210,88 @@ export async function POST(req: NextRequest) {
     log.info('✅ Don Stripe (PI) traité', { payment_intent_id: paymentIntent.id, amount })
   }
 
-  // Simplification: ignorer charge.succeeded pour éviter les doublons. On traite tout via payment_intent.succeeded.
+  // Traiter charge.succeeded pour bénéficier de billing_details complets; PI reste en fallback
   if (e.type === 'charge.succeeded') {
-    log.info('charge.succeeded ignoré (traité via payment_intent.succeeded)')
+    const charge = e.data.object as {
+      id: string
+      amount: number
+      billing_details?: { name?: string | null; email?: string | null }
+      payment_intent?: string | null
+      metadata?: Record<string, string>
+    }
+
+    const metadata = charge.metadata || {}
+    let tourneeId = metadata.tournee_id
+    let userId = metadata.user_id
+    let calendarGiven = metadata.calendar_given === 'true'
+
+    // Si metadata manquantes sur la charge, tenter de lire celles du PaymentIntent
+    if ((!tourneeId || !userId) && charge.payment_intent) {
+      try {
+        const stripe = getStripe()
+        const pi = await stripe.paymentIntents.retrieve(charge.payment_intent)
+        const piMeta = (pi as { metadata?: Record<string, string> }).metadata || {}
+        tourneeId = tourneeId || piMeta.tournee_id
+        userId = userId || piMeta.user_id
+        if (typeof piMeta.calendar_given === 'string') {
+          calendarGiven = piMeta.calendar_given === 'true'
+        }
+      } catch (err) {
+        log.warn('Impossible de récupérer metadata depuis PI', { message: (err as Error)?.message, chargeId: charge.id })
+      }
+    }
+
+    if (!tourneeId || !userId) {
+      log.warn('Metadata manquantes sur charge', { chargeId: charge.id })
+      return NextResponse.json({ received: true })
+    }
+
+    // Idempotence par PI id (ou charge.id si PI absent)
+    const piId = charge.payment_intent || charge.id
+    const { data: existing } = await admin
+      .from('support_transactions')
+      .select('id')
+      .eq('stripe_session_id', piId)
+      .maybeSingle()
+
+    if (existing) {
+      log.info('Transaction déjà traitée', { piId })
+      return NextResponse.json({ received: true })
+    }
+
+    const donorName = charge.billing_details?.name || undefined
+    const donorEmail = charge.billing_details?.email || undefined
+    const amount = charge.amount / 100
+
+    const { data: tx } = await admin
+      .from('support_transactions')
+      .insert({
+        user_id: userId,
+        tournee_id: tourneeId,
+        amount,
+        calendar_accepted: calendarGiven,
+        payment_method: 'carte',
+        payment_status: 'completed',
+        stripe_session_id: piId,
+        supporter_name: donorName,
+        supporter_email: donorEmail,
+        notes: `Stripe Charge - ${charge.id}`,
+      })
+      .select('id, amount, supporter_name, supporter_email')
+      .single()
+
+    if (tx && amount >= 6 && donorEmail) {
+      const { data: rec } = await admin.rpc('issue_receipt', { p_transaction_id: tx.id }).single()
+      const receiptNumber = (rec as { receipt_number?: string } | null)?.receipt_number ?? null
+
+      const subject = buildSubject({ supporterName: donorName ?? null, amount, receiptNumber, transactionType: 'fiscal' })
+      const html = buildHtml({ supporterName: donorName ?? null, amount, receiptNumber, transactionType: 'fiscal' })
+      const text = buildText({ supporterName: donorName ?? null, amount, receiptNumber, transactionType: 'fiscal' })
+      await sendEmail({ to: donorEmail, subject, html, text })
+    }
+
+    log.info('✅ Don traité (charge.succeeded)', { chargeId: charge.id, amount })
+    return NextResponse.json({ received: true })
   }
 
   return NextResponse.json({ received: true })
