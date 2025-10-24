@@ -27,15 +27,15 @@ const operationalStats: OperationalStat[] = [
   {
     icon: Timer,
     label: "Interventions 2024",
-    value: 1986,
-    subtitle: "+12% vs 2023",
+    value: 1976,
+    subtitle: "+11% vs 2023",
     colorToken: "text-destructive", // Token shadcn
-    ariaLabel: "1986 interventions réalisées en 2024, soit une augmentation de 12% par rapport à 2023"
+    ariaLabel: "1976 interventions réalisées en 2024, soit une augmentation de 11% par rapport à 2023"
   },
   {
     icon: Users,
     label: "Sapeurs-pompiers",
-    value: 98,
+    value: 108,
     subtitle: "Centre de secours",
     colorToken: "text-accent", // Couleur d'accent du thème
     ariaLabel: "98 sapeurs-pompiers actifs au Centre de secours de Clermont-l\'Hérault"
