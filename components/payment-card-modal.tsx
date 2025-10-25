@@ -43,8 +43,12 @@ export function PaymentCardModal({ tourneeId }: { tourneeId: string }) {
         schema: 'public',
         table: 'support_transactions',
         filter: `stripe_session_id=eq.${piId}`,
-      }, () => {
-        toast.success('Paiement confirmé ✓')
+      }, (payload: { new?: { amount?: number | null; supporter_name?: string | null } }) => {
+        const amt = payload?.new?.amount ?? null
+        const name = payload?.new?.supporter_name ?? null
+        const amountLabel = typeof amt === 'number' ? `${amt.toFixed(2)}€` : ''
+        const nameLabel = name ? ` • ${name}` : ''
+        toast.success(`Paiement confirmé ${amountLabel}${nameLabel}`.trim())
         setOpen(false)
       })
       .subscribe()
@@ -63,11 +67,15 @@ export function PaymentCardModal({ tourneeId }: { tourneeId: string }) {
     const check = async () => {
       const { data } = await supabase
         .from('support_transactions')
-        .select('id')
+        .select('id, amount, supporter_name')
         .eq('stripe_session_id', piId)
         .maybeSingle()
-      if (!cancelled && data) {
-        toast.success('Paiement confirmé ✓')
+      type TxRow = { id: string; amount: number | null; supporter_name: string | null }
+      const row = data as TxRow | null
+      if (!cancelled && row) {
+        const amt = typeof row.amount === 'number' ? `${row.amount.toFixed(2)}€` : ''
+        const name = row.supporter_name ? ` • ${row.supporter_name}` : ''
+        toast.success(`Paiement confirmé ${amt}${name}`.trim())
         setOpen(false)
       }
     }
