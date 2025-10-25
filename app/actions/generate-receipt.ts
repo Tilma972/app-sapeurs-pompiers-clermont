@@ -85,9 +85,21 @@ export async function generateReceiptAction(input: GenerateReceiptInput) {
       return { success: false, errors: ["Échec de génération du reçu (RPC)"] }
     }
 
-  type IssueReceiptRow = { id: string; receipt_number: string }
-  const issuedRow = issued as IssueReceiptRow
-  const receiptNumber: string | undefined = issuedRow?.receipt_number ?? undefined
+    type IssueReceiptRow = { id: string; receipt_number: string }
+    const issuedRow = issued as IssueReceiptRow
+    const receiptNumber: string | undefined = issuedRow?.receipt_number ?? undefined
+
+    // Persist receipt generation metadata on the transaction (mirror webhook)
+    const receiptUrl = receiptNumber
+      ? `${process.env.NEXT_PUBLIC_SITE_URL}/recu/${receiptNumber}`
+      : null
+    await supabase
+      .from("support_transactions")
+      .update({
+        receipt_generated: new Date().toISOString(),
+        receipt_url: receiptUrl,
+      })
+      .eq("id", tx.id)
 
     // Send email (no attachment yet; HTML includes download link if applicable)
     const subject = buildSubject({
@@ -109,7 +121,7 @@ export async function generateReceiptAction(input: GenerateReceiptInput) {
       transactionType: "fiscal",
     })
 
-    const emailRes = await sendEmail({ to: tx.supporter_email as string, subject, html, text })
+  const emailRes = await sendEmail({ to: tx.supporter_email as string, subject, html, text })
 
     if (!("skipped" in emailRes) && emailRes.success) {
       // Mark email status on receipts (best-effort)
@@ -121,7 +133,13 @@ export async function generateReceiptAction(input: GenerateReceiptInput) {
           email_delivery_status: "sent",
           status: "sent",
         })
-  .eq("transaction_id", issuedRow?.id)
+        .eq("id", issuedRow.id)
+
+      // Mark email sent on the transaction as well (mirror webhook)
+      await supabase
+        .from("support_transactions")
+        .update({ receipt_sent: true })
+        .eq("id", tx.id)
 
       revalidatePath("/dashboard/ma-tournee")
       return { success: true, receiptNumber }
