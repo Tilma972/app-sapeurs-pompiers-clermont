@@ -90,11 +90,24 @@ export async function POST(req: NextRequest) {
         const { data: rec } = await admin.rpc('issue_receipt', { p_transaction_id: tx.id }).single()
         const receiptNumber = (rec as { receipt_number?: string } | null)?.receipt_number ?? null
 
+        // Persist receipt generation metadata
+        const receiptUrl = receiptNumber
+          ? `${process.env.NEXT_PUBLIC_SITE_URL}/recu/${receiptNumber}`
+          : null
+        await admin
+          .from('support_transactions')
+          .update({ receipt_generated: new Date().toISOString(), receipt_url: receiptUrl })
+          .eq('id', tx.id)
+
         if (donorEmail) {
           const subject = buildSubject({ supporterName: tx.supporter_name as string | null, amount: tx.amount as number, receiptNumber: receiptNumber, transactionType: 'fiscal' })
           const html = buildHtml({ supporterName: tx.supporter_name as string | null, amount: tx.amount as number, receiptNumber: receiptNumber, transactionType: 'fiscal' })
           const text = buildText({ supporterName: tx.supporter_name as string | null, amount: tx.amount as number, receiptNumber: receiptNumber, transactionType: 'fiscal' })
           await sendEmail({ to: donorEmail, subject, html, text })
+          await admin
+            .from('support_transactions')
+            .update({ receipt_sent: true })
+            .eq('id', tx.id)
         }
       }
     }
@@ -199,11 +212,24 @@ export async function POST(req: NextRequest) {
       const { data: rec } = await admin.rpc('issue_receipt', { p_transaction_id: tx.id }).single()
       const receiptNumber = (rec as { receipt_number?: string } | null)?.receipt_number ?? null
 
+      // Persist receipt generation metadata
+      const receiptUrl = receiptNumber
+        ? `${process.env.NEXT_PUBLIC_SITE_URL}/recu/${receiptNumber}`
+        : null
+      await admin
+        .from('support_transactions')
+        .update({ receipt_generated: new Date().toISOString(), receipt_url: receiptUrl })
+        .eq('id', tx.id)
+
       if (tx.supporter_email) {
         const subject = buildSubject({ supporterName: tx.supporter_name as string | null, amount: tx.amount as number, receiptNumber: receiptNumber, transactionType: 'fiscal' })
         const html = buildHtml({ supporterName: tx.supporter_name as string | null, amount: tx.amount as number, receiptNumber: receiptNumber, transactionType: 'fiscal' })
         const text = buildText({ supporterName: tx.supporter_name as string | null, amount: tx.amount as number, receiptNumber: receiptNumber, transactionType: 'fiscal' })
         await sendEmail({ to: tx.supporter_email as string, subject, html, text })
+        await admin
+          .from('support_transactions')
+          .update({ receipt_sent: true })
+          .eq('id', tx.id)
       }
     }
 
@@ -280,14 +306,29 @@ export async function POST(req: NextRequest) {
       .select('id, amount, supporter_name, supporter_email')
       .single()
 
-    if (tx && amount >= 6 && donorEmail) {
+    if (tx && amount >= 6) {
       const { data: rec } = await admin.rpc('issue_receipt', { p_transaction_id: tx.id }).single()
       const receiptNumber = (rec as { receipt_number?: string } | null)?.receipt_number ?? null
 
-      const subject = buildSubject({ supporterName: donorName ?? null, amount, receiptNumber, transactionType: 'fiscal' })
-      const html = buildHtml({ supporterName: donorName ?? null, amount, receiptNumber, transactionType: 'fiscal' })
-      const text = buildText({ supporterName: donorName ?? null, amount, receiptNumber, transactionType: 'fiscal' })
-      await sendEmail({ to: donorEmail, subject, html, text })
+      // Persist receipt generation metadata
+      const receiptUrl = receiptNumber
+        ? `${process.env.NEXT_PUBLIC_SITE_URL}/recu/${receiptNumber}`
+        : null
+      await admin
+        .from('support_transactions')
+        .update({ receipt_generated: new Date().toISOString(), receipt_url: receiptUrl })
+        .eq('id', tx.id)
+
+      if (donorEmail) {
+        const subject = buildSubject({ supporterName: donorName ?? null, amount, receiptNumber, transactionType: 'fiscal' })
+        const html = buildHtml({ supporterName: donorName ?? null, amount, receiptNumber, transactionType: 'fiscal' })
+        const text = buildText({ supporterName: donorName ?? null, amount, receiptNumber, transactionType: 'fiscal' })
+        await sendEmail({ to: donorEmail, subject, html, text })
+        await admin
+          .from('support_transactions')
+          .update({ receipt_sent: true })
+          .eq('id', tx.id)
+      }
     }
 
     log.info('✅ Don traité (charge.succeeded)', { chargeId: charge.id, amount })
