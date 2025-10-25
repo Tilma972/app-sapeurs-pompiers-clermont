@@ -54,6 +54,34 @@ export function PaymentCardModal({ tourneeId }: { tourneeId: string }) {
     }
   }, [open, piId])
 
+  // Fallback: polling au cas où Realtime n'est pas activé côté DB
+  useEffect(() => {
+    if (!open || !piId) return
+    const supabase = createClient()
+    let cancelled = false
+
+    const check = async () => {
+      const { data } = await supabase
+        .from('support_transactions')
+        .select('id')
+        .eq('stripe_session_id', piId)
+        .maybeSingle()
+      if (!cancelled && data) {
+        toast.success('Paiement confirmé ✓')
+        setOpen(false)
+      }
+    }
+
+    const id = setInterval(check, 2000)
+    // Premier check rapide
+    check()
+
+    return () => {
+      cancelled = true
+      clearInterval(id)
+    }
+  }, [open, piId])
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
