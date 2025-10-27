@@ -1,6 +1,12 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import { Card, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardFooter,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { getActiveTourneeWithTransactions } from "@/lib/supabase/tournee";
@@ -16,7 +22,7 @@ import {
   Receipt,
   TrendingUp,
   Clock,
-  MapPin
+  MapPin,
 } from "lucide-react";
 
 // Fonction utilitaire pour formater la durée
@@ -35,10 +41,12 @@ const calculateDuration = (startTime: string) => {
 
 export default async function MaTourneePage() {
   const supabase = await createClient();
-  
+
   // Vérification de l'authentification
-  const { data: { user } } = await supabase.auth.getUser();
-  
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
   if (!user) {
     redirect("/auth/login");
   }
@@ -58,25 +66,34 @@ export default async function MaTourneePage() {
     redirect("/dashboard/calendriers");
   }
 
-
   // Calculer la durée de la tournée
   const duration = calculateDuration(tournee.date_debut);
-  
+
   // Calculer les statistiques
   const calendarsDistributed = summary?.calendars_distributed || 0;
   const amountCollected = summary?.montant_total || 0;
-  const currency = new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR", maximumFractionDigits: 0 });
-  const currencyAvg = new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR", maximumFractionDigits: 1 });
-  const averagePerCalendar = calendarsDistributed > 0 ? amountCollected / calendarsDistributed : 0;
+  const currency = new Intl.NumberFormat("fr-FR", {
+    style: "currency",
+    currency: "EUR",
+    maximumFractionDigits: 0,
+  });
+  const currencyAvg = new Intl.NumberFormat("fr-FR", {
+    style: "currency",
+    currency: "EUR",
+    maximumFractionDigits: 1,
+  });
+  const averagePerCalendar =
+    calendarsDistributed > 0 ? amountCollected / calendarsDistributed : 0;
 
   // Pré-check rétribution activée
   const { data: profile } = await supabase
-    .from('profiles')
-    .select('team_id, equipes(enable_retribution)')
-    .eq('id', user.id)
+    .from("profiles")
+    .select("team_id, equipes(enable_retribution)")
+    .eq("id", user.id)
     .single();
   type EqFlag = { enable_retribution?: boolean };
-  const eqJoin = (profile as unknown as { equipes?: EqFlag | EqFlag[] })?.equipes;
+  const eqJoin = (profile as unknown as { equipes?: EqFlag | EqFlag[] })
+    ?.equipes;
   const eqFlag: EqFlag | undefined = Array.isArray(eqJoin) ? eqJoin[0] : eqJoin;
   const retributionEnabled = !!eqFlag?.enable_retribution;
 
@@ -87,17 +104,26 @@ export default async function MaTourneePage() {
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between min-w-0">
           <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <h1 className="text-xl sm:text-2xl font-bold text-foreground">Ma Tournée</h1>
-              <Badge variant="outline" className="text-green-600 border-green-200 text-xs">
+              <h1 className="text-xl sm:text-2xl font-bold text-foreground">
+                Ma Tournée
+              </h1>
+              <Badge
+                variant="outline"
+                className="text-green-600 border-green-200 text-xs"
+              >
                 <TrendingUp className="h-3 w-3 mr-1" />
                 En cours
               </Badge>
             </div>
-            <div className="mt-2 min-w-0"><RoleBadge /></div>
+            <div className="mt-2 min-w-0">
+              <RoleBadge />
+            </div>
             <div className="flex items-center gap-3 sm:gap-4 mt-2">
               <div className="flex items-center gap-1 text-muted-foreground min-w-0">
                 <MapPin className="h-4 w-4" />
-                <span className="text-sm truncate max-w-[180px] sm:max-w-none">{tournee.zone}</span>
+                <span className="text-sm truncate max-w-[180px] sm:max-w-none">
+                  {tournee.zone}
+                </span>
               </div>
               <div className="flex items-center gap-1 text-muted-foreground">
                 <Clock className="h-4 w-4" />
@@ -107,155 +133,205 @@ export default async function MaTourneePage() {
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-4 min-w-0">
             <div className="text-center min-w-0">
-              <div className="text-xl sm:text-2xl font-bold text-foreground truncate">{calendarsDistributed}</div>
-              <div className="text-xs sm:text-sm text-muted-foreground">Calendriers</div>
+              <div className="text-xl sm:text-2xl font-bold text-foreground truncate">
+                {calendarsDistributed}
+              </div>
+              <div className="text-xs sm:text-sm text-muted-foreground">
+                Calendriers
+              </div>
             </div>
             <div className="text-center min-w-0">
-              <div className="text-xl sm:text-2xl font-bold text-primary truncate">{currency.format(Math.max(0, Math.trunc(amountCollected || 0)))}</div>
-              <div className="text-xs sm:text-sm text-muted-foreground">Collecté</div>
+              <div className="text-xl sm:text-2xl font-bold text-primary truncate">
+                {currency.format(Math.max(0, Math.trunc(amountCollected || 0)))}
+              </div>
+              <div className="text-xs sm:text-sm text-muted-foreground">
+                Collecté
+              </div>
             </div>
             <div className="text-right hidden sm:block min-w-0">
               <div className="text-[11px] text-muted-foreground truncate">
-                ≈ {currencyAvg.format(Math.max(0, averagePerCalendar))} par calendrier
+                ≈ {currencyAvg.format(Math.max(0, averagePerCalendar))} par
+                calendrier
               </div>
             </div>
           </div>
         </div>
       </div>
-        
-        {/* Actions principales - Style ultra-compact */}
-  <div className="grid grid-cols-1 sm:grid-cols-1 lg:grid-cols-2 gap-4 min-w-0">
-          {/* Card pour enregistrer un don */}
-          <Card className="hover:shadow-lg transition-all duration-200">
-            <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardDescription className="text-xs">Collecte de soutien</CardDescription>
-                  <CardTitle className="text-lg font-semibold">Enregistrer un don</CardTitle>
-                </div>
-                <Badge variant="outline" className="text-green-600 border-green-200 text-xs">
-                  <TrendingUp className="h-3 w-3 mr-1" />
-                  Actif
-                </Badge>
-              </div>
-            </CardHeader>
-            <CardFooter className="px-4 pt-0 pb-3 sm:px-6">
-              <div className="w-full max-w-full">
-                <div className="text-xs text-muted-foreground mb-2">
-                  Don simple ou avec reçu fiscal
-                </div>
-                <div className="flex flex-col sm:flex-row gap-2">
-                  <PaymentCardModal tourneeId={tournee.id} />
-                  <ReceiptGenerationModal tourneeId={tournee.id} />
-                </div>
-              </div>
-            </CardFooter>
-          </Card>
 
-          {/* Card pour clôturer la tournée */}
-          <Card className="hover:shadow-lg transition-all duration-200">
-            <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardDescription className="text-xs">Finaliser la collecte</CardDescription>
-                  <CardTitle className="text-lg font-semibold">Clôturer la tournée</CardTitle>
-                </div>
-                <Badge variant="outline" className="text-orange-600 border-orange-200 text-xs">
-                  <CheckCircle className="h-3 w-3 mr-1" />
-                  Finalisation
-                </Badge>
+      {/* Actions principales - Style ultra-compact */}
+      <div className="grid grid-cols-1 sm:grid-cols-1 lg:grid-cols-2 gap-4 min-w-0">
+        {/* Card pour enregistrer un don */}
+        <Card className="hover:shadow-lg transition-all duration-200">
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <div>
+                <CardDescription className="text-xs">
+                  Collecte de soutien
+                </CardDescription>
+                <CardTitle className="text-lg font-semibold">
+                  Enregistrer un don
+                </CardTitle>
               </div>
-            </CardHeader>
-            <CardFooter className="px-4 pt-0 pb-3 sm:px-6">
-              <div className="w-full max-w-full">
-                <div className="text-xs text-muted-foreground mb-2">
-                  Terminer la collecte
-                </div>
-                {retributionEnabled ? (
-                  <TourneeClotureModal 
-                    trigger={
-                      <Button className="w-full h-10 sm:h-8 text-sm bg-orange-600 hover:bg-orange-700">
-                        <CheckCircle className="h-3 w-3 mr-1" />
-                        Clôturer ma tournée
-                      </Button>
-                    }
-                    tourneeData={{
-                      tournee,
-                      transactions,
-                      summary
-                    }}
-                    tourneeSummary={summary}
-                  />
-                ) : (
-                  <Button className="w-full h-10 sm:h-8 text-sm" variant="outline" disabled title="Activez la rétribution dans Gestion Équipe">
-                    Rétribution désactivée pour votre équipe
-                  </Button>
-                )}
+              <Badge
+                variant="outline"
+                className="text-green-600 border-green-200 text-xs truncate max-w-[80px]"
+              >
+                <TrendingUp className="h-3 w-3 mr-1 shrink-0" />
+                <span className="truncate">Actif</span>
+              </Badge>
+            </div>
+          </CardHeader>
+          <CardFooter className="px-4 pt-0 pb-3 sm:px-6">
+            <div className="w-full max-w-full">
+              <div className="text-xs text-muted-foreground mb-2">
+                Don simple ou avec reçu fiscal
               </div>
-            </CardFooter>
-          </Card>
-        </div>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <PaymentCardModal tourneeId={tournee.id} />
+                <ReceiptGenerationModal tourneeId={tournee.id} />
+              </div>
+            </div>
+          </CardFooter>
+        </Card>
 
-        {/* Carte "Résumé" supprimée car redondante avec l'en-tête */}
-
-        {/* Historique des transactions - Style compact conditionnel */}
-        {transactions.length > 0 && (
-          <Card className="hover:shadow-lg transition-all duration-200">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardDescription className="text-xs">Activité récente</CardDescription>
-                  <CardTitle className="text-lg font-semibold">Transactions</CardTitle>
-                </div>
-                <Badge variant="outline" className="text-purple-600 border-purple-200 text-xs">
-                  <Receipt className="h-3 w-3 mr-1" />
-                  {transactions.length}
-                </Badge>
+        {/* Card pour clôturer la tournée */}
+        <Card className="hover:shadow-lg transition-all duration-200">
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <div>
+                <CardDescription className="text-xs">
+                  Finaliser la collecte
+                </CardDescription>
+                <CardTitle className="text-lg font-semibold">
+                  Clôturer la tournée
+                </CardTitle>
               </div>
-            </CardHeader>
-            <CardFooter className="pt-0 px-4 sm:px-6">
-              <div className="space-y-2 w-full">
-                {transactions.slice(0, 2).map((transaction, index) => (
-                  <div key={transaction.id} className="flex items-center justify-between p-3 sm:p-2 bg-muted/30 rounded">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <div className="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center">
-                        <span className="text-xs font-bold text-primary">{index + 1}</span>
-                      </div>
-                      <div className="min-w-0">
-                        <div className="text-sm font-medium text-foreground truncate">
-                          {transaction.supporter_name || 'Anonyme'}
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          {transaction.created_at ? new Date(transaction.created_at).toLocaleTimeString('fr-FR', { 
-                            hour: '2-digit', 
-                            minute: '2-digit' 
-                          }) : 'N/A'}
-                        </div>
-                      </div>
+              <Badge
+                variant="outline"
+                className="text-orange-600 border-orange-200 text-xs"
+              >
+                <CheckCircle className="h-3 w-3 mr-1" />
+                Finalisation
+              </Badge>
+            </div>
+          </CardHeader>
+          <CardFooter className="px-4 pt-0 pb-3 sm:px-6">
+            <div className="w-full max-w-full">
+              <div className="text-xs text-muted-foreground mb-2">
+                Terminer la collecte
+              </div>
+              {retributionEnabled ? (
+                <TourneeClotureModal
+                  trigger={
+                    <Button className="w-full h-10 sm:h-8 text-sm bg-orange-600 hover:bg-orange-700">
+                      <CheckCircle className="h-3 w-3 mr-1" />
+                      Clôturer ma tournée
+                    </Button>
+                  }
+                  tourneeData={{
+                    tournee,
+                    transactions,
+                    summary,
+                  }}
+                  tourneeSummary={summary}
+                />
+              ) : (
+                <Button
+                  className="w-full h-10 sm:h-8 text-sm"
+                  variant="outline"
+                  disabled
+                  title="Activez la rétribution dans Gestion Équipe"
+                >
+                  Rétribution désactivée pour votre équipe
+                </Button>
+              )}
+            </div>
+          </CardFooter>
+        </Card>
+      </div>
+
+      {/* Carte "Résumé" supprimée car redondante avec l'en-tête */}
+
+      {/* Historique des transactions - Style compact conditionnel */}
+      {transactions.length > 0 && (
+        <Card className="hover:shadow-lg transition-all duration-200">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <CardDescription className="text-xs">
+                  Activité récente
+                </CardDescription>
+                <CardTitle className="text-lg font-semibold">
+                  Transactions
+                </CardTitle>
+              </div>
+              <Badge
+                variant="outline"
+                className="text-purple-600 border-purple-200 text-xs"
+              >
+                <Receipt className="h-3 w-3 mr-1" />
+                {transactions.length}
+              </Badge>
+            </div>
+          </CardHeader>
+          <CardFooter className="pt-0 px-4 sm:px-6">
+            <div className="space-y-2 w-full">
+              {transactions.slice(0, 2).map((transaction, index) => (
+                <div
+                  key={transaction.id}
+                  className="flex items-center justify-between p-3 sm:p-2 bg-muted/30 rounded"
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <div className="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center">
+                      <span className="text-xs font-bold text-primary">
+                        {index + 1}
+                      </span>
                     </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      {transaction.supporter_email ? (
-                        <ResendReceiptButton transactionId={transaction.id} />
-                      ) : null}
-                      <div className="text-right min-w-[90px]">
-                        <div className="text-sm font-bold text-foreground">{currency.format(Math.max(0, Math.trunc(transaction.amount || 0)))}</div>
-                        <div className="text-xs text-muted-foreground text-right">
-                          {transaction.calendar_accepted ? 'Soutien' : 'Fiscal'}
-                        </div>
+                    <div className="min-w-0">
+                      <div className="text-sm font-medium text-foreground truncate">
+                        {transaction.supporter_name || "Anonyme"}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {transaction.created_at
+                          ? new Date(transaction.created_at).toLocaleTimeString(
+                              "fr-FR",
+                              {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              }
+                            )
+                          : "N/A"}
                       </div>
                     </div>
                   </div>
-                ))}
-                {transactions.length > 2 && (
-                  <div className="text-center text-xs text-muted-foreground pt-1">
-                    +{transactions.length - 2} autre{transactions.length - 2 > 1 ? 's' : ''} transaction{transactions.length - 2 > 1 ? 's' : ''}
+                  <div className="flex items-center gap-2 shrink-0">
+                    {transaction.supporter_email ? (
+                      <ResendReceiptButton transactionId={transaction.id} />
+                    ) : null}
+                    <div className="text-right min-w-[90px]">
+                      <div className="text-sm font-bold text-foreground">
+                        {currency.format(
+                          Math.max(0, Math.trunc(transaction.amount || 0))
+                        )}
+                      </div>
+                      <div className="text-xs text-muted-foreground text-right">
+                        {transaction.calendar_accepted ? "Soutien" : "Fiscal"}
+                      </div>
+                    </div>
                   </div>
-                )}
-              </div>
-            </CardFooter>
-          </Card>
-        )}
-
+                </div>
+              ))}
+              {transactions.length > 2 && (
+                <div className="text-center text-xs text-muted-foreground pt-1">
+                  +{transactions.length - 2} autre
+                  {transactions.length - 2 > 1 ? "s" : ""} transaction
+                  {transactions.length - 2 > 1 ? "s" : ""}
+                </div>
+              )}
+            </div>
+          </CardFooter>
+        </Card>
+      )}
     </div>
   );
 }
