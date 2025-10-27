@@ -6,7 +6,7 @@ import { stripePromise } from '@/lib/stripe/client-side'
 import { Button } from '@/components/ui/button'
 import { CheckCircle, Loader2 } from 'lucide-react'
 
-function PaymentForm({ onSuccess, intentId }: { onSuccess: () => void; intentId?: string }) {
+function PaymentForm({ onSuccess }: { onSuccess: () => void }) {
   const stripe = useStripe()
   const elements = useElements()
   const [isLoading, setIsLoading] = useState(false)
@@ -21,9 +21,7 @@ function PaymentForm({ onSuccess, intentId }: { onSuccess: () => void; intentId?
     setIsLoading(true)
     setError(undefined)
 
-    const returnUrl = intentId
-      ? `${window.location.origin}/don/success?intent=${intentId}`
-      : `${window.location.origin}/don/success`
+    const returnUrl = `${window.location.origin}/don/success`
 
     try {
       const result = await stripe.confirmPayment({
@@ -122,15 +120,8 @@ function PaymentForm({ onSuccess, intentId }: { onSuccess: () => void; intentId?
   )
 }
 
-export function StripePaymentPage({ clientSecret, intentId }: { clientSecret: string; intentId?: string }) {
+export function StripePaymentPage({ clientSecret }: { clientSecret: string }) {
   const [mounted, setMounted] = useState(false)
-  // Donor info step: only when we know intentId
-  const [step, setStep] = useState<'info' | 'payment'>(intentId ? 'info' : 'payment')
-  const [firstName, setFirstName] = useState('')
-  const [lastName, setLastName] = useState('')
-  const [email, setEmail] = useState('')
-  const [saving, setSaving] = useState(false)
-  const [saveError, setSaveError] = useState<string | undefined>()
 
   useEffect(() => {
     setMounted(true)
@@ -147,36 +138,7 @@ export function StripePaymentPage({ clientSecret, intentId }: { clientSecret: st
     )
   }
 
-  const handleSaveDonorInfo = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!intentId) {
-      setStep('payment')
-      return
-    }
-    if (!firstName || !lastName || !email) {
-      setSaveError('Veuillez renseigner prénom, nom et email.')
-      return
-    }
-    setSaving(true)
-    setSaveError(undefined)
-    try {
-      const res = await fetch(`/api/donations/${intentId}/donor`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ firstName, lastName, email }),
-      })
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}))
-        throw new Error(data?.error || 'Impossible d’enregistrer les informations du donateur.')
-      }
-      setStep('payment')
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Erreur inconnue lors de l’enregistrement.'
-      setSaveError(msg)
-    } finally {
-      setSaving(false)
-    }
-  }
+  // Donor info is collected directly in PaymentForm and passed in billing_details.
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center p-4">
@@ -189,69 +151,16 @@ export function StripePaymentPage({ clientSecret, intentId }: { clientSecret: st
           <p className="text-gray-600 text-sm">Clermont-l&apos;Hérault</p>
         </div>
 
-        {step === 'info' ? (
-          <form onSubmit={handleSaveDonorInfo} className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Prénom</label>
-                <input
-                  type="text"
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
-                  className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                  placeholder="Jean"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Nom</label>
-                <input
-                  type="text"
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                  className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                  placeholder="Dupont"
-                />
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
-                placeholder="jean.dupont@example.com"
-              />
-            </div>
-            {saveError && (
-              <div className="text-sm text-red-600 bg-red-50 p-3 rounded border border-red-200">{saveError}</div>
-            )}
-            <Button type="submit" className="w-full" disabled={saving}>
-              {saving ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Enregistrement...
-                </>
-              ) : (
-                'Continuer vers le paiement'
-              )}
-            </Button>
-          </form>
-        ) : (
-          <Elements
-            stripe={stripePromise}
-            options={{
-              clientSecret,
-              appearance: { theme: 'stripe', variables: { colorPrimary: '#3b82f6', borderRadius: '8px' } },
-              loader: 'auto',
-            }}
-          >
-            <PaymentForm onSuccess={() => { /* Redirect handled by Stripe */ }} intentId={intentId} />
-          </Elements>
-        )}
+        <Elements
+          stripe={stripePromise}
+          options={{
+            clientSecret,
+            appearance: { theme: 'stripe', variables: { colorPrimary: '#3b82f6', borderRadius: '8px' } },
+            loader: 'auto',
+          }}
+        >
+          <PaymentForm onSuccess={() => { /* Redirect handled by Stripe */ }} />
+        </Elements>
 
         <div className="mt-6 pt-6 border-t text-center">
           <p className="text-xs text-gray-500">
