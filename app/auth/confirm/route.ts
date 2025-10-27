@@ -16,15 +16,21 @@ export async function GET(request: NextRequest) {
       type,
       token_hash,
     });
+    
     if (!error) {
-      // redirect user to specified redirect URL or root of app
+      // Redirection spécifique selon le type
+      if (type === "recovery") {
+        // Pour la récupération de mot de passe, toujours rediriger vers /auth/update-password
+        redirect("/auth/update-password");
+      }
+      // Pour les autres types (signup, email change, etc.), utiliser le paramètre 'next'
       redirect(next);
     } else {
       // redirect the user to an error page with some instructions
-      redirect(`/auth/error?error=${error?.message}`);
+      redirect(`/auth/error?error=${encodeURIComponent(error?.message || "Verification failed")}`);
     }
   }
 
   // redirect the user to an error page with some instructions
-  redirect(`/auth/error?error=No token hash or type`);
+  redirect(`/auth/error?error=${encodeURIComponent("No token hash or type provided")}`);
 }
