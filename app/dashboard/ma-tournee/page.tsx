@@ -105,7 +105,7 @@ export default async function MaTourneePage() {
               </div>
             </div>
           </div>
-          <div className="flex flex-wrap items-center gap-4 sm:gap-6">
+          <div className="flex flex-wrap items-center gap-4 sm:gap-6 min-w-0">
             <div className="text-center">
               <div className="text-xl sm:text-2xl font-bold text-foreground">{calendarsDistributed}</div>
               <div className="text-sm text-muted-foreground">Calendriers</div>
@@ -114,8 +114,8 @@ export default async function MaTourneePage() {
               <div className="text-xl sm:text-2xl font-bold text-primary">{currency.format(Math.max(0, Math.trunc(amountCollected || 0)))}</div>
               <div className="text-sm text-muted-foreground">Collecté</div>
             </div>
-            <div className="text-right">
-              <div className="text-xs sm:text-[11px] text-muted-foreground whitespace-nowrap">
+            <div className="text-right min-w-0">
+              <div className="text-xs sm:text-[11px] text-muted-foreground truncate">
                 ≈ {currencyAvg.format(Math.max(0, averagePerCalendar))} par calendrier
               </div>
             </div>
@@ -139,8 +139,8 @@ export default async function MaTourneePage() {
                 </Badge>
               </div>
             </CardHeader>
-            <CardFooter className="pt-0 pb-3">
-              <div className="w-full">
+            <CardFooter className="px-4 pt-0 pb-3 sm:px-6">
+              <div className="w-full max-w-full">
                 <div className="text-xs text-muted-foreground mb-2">
                   Don simple ou avec reçu fiscal
                 </div>
@@ -166,8 +166,8 @@ export default async function MaTourneePage() {
                 </Badge>
               </div>
             </CardHeader>
-            <CardFooter className="pt-0 pb-3">
-              <div className="w-full">
+            <CardFooter className="px-4 pt-0 pb-3 sm:px-6">
+              <div className="w-full max-w-full">
                 <div className="text-xs text-muted-foreground mb-2">
                   Terminer la collecte
                 </div>
@@ -213,16 +213,16 @@ export default async function MaTourneePage() {
                 </Badge>
               </div>
             </CardHeader>
-            <CardFooter className="pt-0">
+            <CardFooter className="pt-0 px-4 sm:px-6">
               <div className="space-y-2 w-full">
                 {transactions.slice(0, 2).map((transaction, index) => (
                   <div key={transaction.id} className="flex items-center justify-between p-3 sm:p-2 bg-muted/30 rounded">
-                    <div className="flex items-center space-x-2 min-w-0">
+                    <div className="flex items-center gap-2 min-w-0">
                       <div className="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center">
                         <span className="text-xs font-bold text-primary">{index + 1}</span>
                       </div>
                       <div className="min-w-0">
-                        <div className="text-sm font-medium text-foreground break-words">
+                        <div className="text-sm font-medium text-foreground truncate">
                           {transaction.supporter_name || 'Anonyme'}
                         </div>
                         <div className="text-xs text-muted-foreground">
@@ -233,7 +233,7 @@ export default async function MaTourneePage() {
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 shrink-0">
                       {transaction.supporter_email ? (
                         <ResendReceiptButton transactionId={transaction.id} />
                       ) : null}

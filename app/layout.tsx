@@ -3,6 +3,7 @@ import { Geist } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "react-hot-toast";
 import "./globals.css";
+import { OverflowDebugger } from "@/components/overflow-debugger";
 
 const defaultUrl = process.env.VERCEL_URL
   ? `https://${process.env.VERCEL_URL}`
@@ -32,7 +33,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="fr" suppressHydrationWarning>
+    <html lang="fr" suppressHydrationWarning className="overflow-x-clip">
       <body
         className={[
           "min-h-dvh w-full overflow-x-hidden bg-background text-foreground antialiased",
@@ -69,6 +70,7 @@ export default function RootLayout({
           </footer>
 
           <Toaster position="bottom-center" />
+          {process.env.NODE_ENV === "development" ? <OverflowDebugger /> : null}
         </ThemeProvider>
       </body>
     </html>

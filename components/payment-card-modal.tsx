@@ -95,7 +95,7 @@ export function PaymentCardModal({ tourneeId }: { tourneeId: string }) {
       <DialogTrigger asChild>
         <Button variant="default">💳 Paiement CB</Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-lg bg-card text-foreground border border-border rounded-lg">
+      <DialogContent className="mx-4 w-[min(100vw-2rem,40rem)] max-w-full sm:max-w-lg bg-card text-foreground border border-border rounded-lg p-4 sm:p-6 overflow-x-hidden">
         <DialogHeader>
           <DialogTitle className="text-lg font-semibold tracking-tight">Paiement par carte</DialogTitle>
         </DialogHeader>

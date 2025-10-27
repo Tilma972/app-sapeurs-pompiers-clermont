@@ -100,7 +100,7 @@ export function TourneeClotureModal({ trigger, tourneeData, tourneeSummary }: To
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
-      <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto bg-card">
+  <DialogContent className="mx-4 w-[min(100vw-2rem,40rem)] max-w-full sm:max-w-md max-h-[85vh] overflow-y-auto overflow-x-hidden bg-card p-4 sm:p-6">
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-2">
             <CheckCircle className="h-5 w-5 text-orange-600" />
@@ -255,7 +255,7 @@ export function TourneeClotureModal({ trigger, tourneeData, tourneeSummary }: To
         </DialogFooter>
       </DialogContent>
       <Dialog open={confirmZeroOpen} onOpenChange={setConfirmZeroOpen}>
-        <DialogContent className="max-w-sm">
+        <DialogContent className="mx-4 w-[min(100vw-2rem,28rem)] max-w-full sm:max-w-sm p-4 sm:p-6 overflow-x-hidden">
           <DialogHeader>
             <DialogTitle className="flex items-center space-x-2">
               <AlertTriangle className="h-5 w-5 text-yellow-600" />
