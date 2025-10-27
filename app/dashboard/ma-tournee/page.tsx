@@ -19,8 +19,8 @@ import {
   TrendingUp,
   Users,
   Wallet,
-  ChevronRight,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -37,6 +37,34 @@ const calculateDuration = (startTime: string) => {
   return Math.floor((now.getTime() - start.getTime()) / (1000 * 60));
 };
 
+// Mini composant stat (utilisé pour mobile et desktop)
+function StatCard({
+  icon: Icon,
+  label,
+  value,
+  hint,
+}: {
+  icon: LucideIcon;
+  label: string;
+  value: string;
+  hint?: string;
+}) {
+  return (
+    <Card className="min-w-0 overflow-hidden">
+      <CardHeader className="flex items-center justify-between gap-2 pb-2">
+        <CardTitle className="min-w-0 text-sm font-medium truncate">
+          {label}
+        </CardTitle>
+        <Icon className="h-4 w-4 text-muted-foreground shrink-0" />
+      </CardHeader>
+      <CardContent className="min-w-0">
+        <div className="text-2xl font-bold">{value}</div>
+        {hint && <p className="text-xs text-muted-foreground mt-2 truncate">{hint}</p>}
+      </CardContent>
+    </Card>
+  );
+}
+
 export default async function MaTourneePage() {
   const supabase = await createClient();
 
@@ -44,30 +72,30 @@ export default async function MaTourneePage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
-    redirect("/auth/login");
-  }
+  if (!user) redirect("/auth/login");
 
   const tourneeData = await getActiveTourneeWithTransactions();
 
-  if (!tourneeData) {
-    redirect("/dashboard/calendriers");
-  }
+  if (!tourneeData) redirect("/dashboard/calendriers");
 
   const { tournee, transactions, summary } = tourneeData;
 
-  if (!tournee) {
-    redirect("/dashboard/calendriers");
-  }
+  if (!tournee) redirect("/dashboard/calendriers");
 
   const duration = calculateDuration(tournee.date_debut);
   const calendarsDistributed = summary?.calendars_distributed || 0;
   const amountCollected = summary?.montant_total || 0;
+
   const currency = new Intl.NumberFormat("fr-FR", {
     style: "currency",
     currency: "EUR",
     maximumFractionDigits: 0,
   });
+
+  const average =
+    calendarsDistributed > 0
+      ? currency.format(amountCollected / calendarsDistributed)
+      : "0€";
 
   // Pré-check rétribution
   const { data: profile } = await supabase
@@ -76,199 +104,136 @@ export default async function MaTourneePage() {
     .eq("id", user.id)
     .single();
   type EqFlag = { enable_retribution?: boolean };
-  const eqJoin = (profile as unknown as { equipes?: EqFlag | EqFlag[] })
-    ?.equipes;
+  const eqJoin = (profile as unknown as { equipes?: EqFlag | EqFlag[] })?.equipes;
   const eqFlag: EqFlag | undefined = Array.isArray(eqJoin) ? eqJoin[0] : eqJoin;
   const retributionEnabled = !!eqFlag?.enable_retribution;
 
   return (
-    <div className="min-h-screen pb-20 sm:pb-8">
-      {/* Header Mobile Optimisé */}
-      <div className="px-4 pt-4 pb-3 sm:px-6 sm:pt-6">
-        <div className="space-y-2">
-          <div className="flex items-start justify-between gap-2">
-            <h1 className="text-xl font-bold sm:text-2xl">Ma Tournée</h1>
-            <Badge 
-              variant="outline" 
-              className="shrink-0 text-xs sm:text-sm"
-            >
-              <span className="animate-pulse mr-1 h-2 w-2 rounded-full bg-green-500 sm:h-2.5 sm:w-2.5" />
-              Active
-            </Badge>
-          </div>
-          
-          {/* Info compacte sur mobile */}
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground sm:text-sm">
-            <div className="flex items-center gap-1">
-              <MapPin className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-              <span>{tournee.zone}</span>
+    <div className="space-y-6 pb-24 sm:pb-8 w-full">
+      {/* Header - mobile first, compact */}
+      <div className="space-y-3">
+        <div className="flex items-start justify-between gap-3">
+          <div className="space-y-1 min-w-0 flex-1">
+            <h1 className="text-2xl font-bold tracking-tight">Ma Tournée</h1>
+            <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+              <div className="flex items-center gap-1">
+                <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                <span className="truncate">{tournee.zone}</span>
+              </div>
+              <span className="text-muted-foreground/40">•</span>
+              <div className="flex items-center gap-1">
+                <Clock className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                <span>{formatDuration(duration)}</span>
+              </div>
             </div>
-            <div className="flex items-center gap-1">
-              <Clock className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-              <span>{formatDuration(duration)}</span>
+            <div className="pt-1">
+              <RoleBadge />
             </div>
-            <RoleBadge />
           </div>
+          <Badge variant="outline" className="hidden sm:flex shrink-0">
+            <TrendingUp className="mr-1 h-3 w-3" />
+            En cours
+          </Badge>
         </div>
       </div>
 
-      {/* Stats Horizontales Scrollables sur Mobile */}
-      <div className="px-4 py-3 sm:px-6 sm:py-4">
-        {/* Mobile: scroll horizontal */}
-        <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 sm:hidden snap-x snap-mandatory">
-          {/* Stat 1 */}
-          <div className="min-w-[140px] snap-start rounded-xl bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/50 dark:to-blue-900/30 p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <Wallet className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-              <span className="text-xs font-medium text-muted-foreground">Collecté</span>
-            </div>
-            <p className="text-xl font-bold text-blue-900 dark:text-blue-100">
-              {currency.format(amountCollected)}
-            </p>
-          </div>
+      <Separator />
 
-          {/* Stat 2 */}
-          <div className="min-w-[140px] snap-start rounded-xl bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950/50 dark:to-green-900/30 p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <Calendar className="h-4 w-4 text-green-600 dark:text-green-400" />
-              <span className="text-xs font-medium text-muted-foreground">Calendriers</span>
+      {/* METRIQUES
+         - Mobile: bande défilante (snap) + cards compactes
+         - ≥ sm: grille classique 2/3 colonnes
+      */}
+      <div className="-mx-4 sm:mx-0">
+        {/* Row mobile scrollable */}
+        <div className="sm:hidden px-4">
+          <div className="flex gap-3 overflow-x-auto pb-1 snap-x snap-mandatory">
+            <div className="min-w-[12.5rem] shrink-0 snap-start">
+              <StatCard
+                icon={Wallet}
+                label="Montant Collecté"
+                value={currency.format(amountCollected)}
+              />
             </div>
-            <p className="text-xl font-bold text-green-900 dark:text-green-100">
-              {calendarsDistributed}
-            </p>
-          </div>
-
-          {/* Stat 3 */}
-          <div className="min-w-[140px] snap-start rounded-xl bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950/50 dark:to-purple-900/30 p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <TrendingUp className="h-4 w-4 text-purple-600 dark:text-purple-400" />
-              <span className="text-xs font-medium text-muted-foreground">Moyenne</span>
+            <div className="min-w-[12.5rem] shrink-0 snap-start">
+              <StatCard
+                icon={Calendar}
+                label="Calendriers"
+                value={String(calendarsDistributed)}
+                hint="Distribués aujourd’hui"
+              />
             </div>
-            <p className="text-xl font-bold text-purple-900 dark:text-purple-100">
-              {calendarsDistributed > 0
-                ? currency.format(amountCollected / calendarsDistributed)
-                : "0€"}
-            </p>
+            <div className="min-w-[12.5rem] shrink-0 snap-start">
+              <StatCard
+                icon={TrendingUp}
+                label="Moyenne"
+                value={average}
+                hint="Par calendrier"
+              />
+            </div>
           </div>
         </div>
 
-        {/* Desktop: grid classique */}
-        <div className="hidden sm:grid sm:grid-cols-3 sm:gap-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Montant Collecté
-              </CardTitle>
-              <Wallet className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {currency.format(amountCollected)}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Calendriers
-              </CardTitle>
-              <Calendar className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{calendarsDistributed}</div>
-              <p className="text-xs text-muted-foreground">
-                Distribués aujourd&apos;hui
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Moyenne
-              </CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {calendarsDistributed > 0
-                  ? currency.format(amountCollected / calendarsDistributed)
-                  : "0€"}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Par calendrier
-              </p>
-            </CardContent>
-          </Card>
+        {/* Grille desktop/tablette */}
+        <div className="hidden sm:grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <StatCard
+            icon={Wallet}
+            label="Montant Collecté"
+            value={currency.format(amountCollected)}
+          />
+          <StatCard
+            icon={Calendar}
+            label="Calendriers"
+            value={String(calendarsDistributed)}
+            hint="Distribués aujourd’hui"
+          />
+          <StatCard
+            icon={TrendingUp}
+            label="Moyenne"
+            value={average}
+            hint="Par calendrier"
+          />
         </div>
       </div>
 
-      {/* Actions Principales - Format Mobile First */}
-      <div className="px-4 py-3 sm:px-6 sm:py-4 space-y-3">
-        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider sm:text-base">
-          Actions
-        </h3>
-
-        {/* Mobile: Boutons empilés pleine largeur */}
-        <div className="space-y-2 sm:hidden">
-          <PaymentCardModal 
-            tourneeId={tournee.id}
-          />
-          
-          <ReceiptGenerationModal 
-            tourneeId={tournee.id}
-          />
-
-          {retributionEnabled && (
-            <TourneeClotureModal
-              trigger={
-                <Button
-                  variant="destructive"
-                  className="w-full h-12"
-                  size="default"
-                >
-                  Clôturer la tournée
-                </Button>
-              }
-              tourneeData={{ tournee, transactions, summary }}
-              tourneeSummary={summary}
-            />
-          )}
+      {/* Actions */}
+      <div className="space-y-3">
+        <div className="hidden sm:block">
+          <h3 className="text-lg font-semibold mb-3">Actions rapides</h3>
         </div>
 
-        {/* Desktop: Cards comme avant */}
-        <div className="hidden sm:block sm:space-y-3">
-          <Card className="border-2 border-primary">
-            <CardContent className="p-6">
-              <div className="flex items-start justify-between gap-4 mb-4">
-                <div className="space-y-1">
-                  <h4 className="font-semibold text-lg">
-                    Enregistrer un don
-                  </h4>
-                  <p className="text-sm text-muted-foreground">
-                    Don simple ou avec reçu fiscal
-                  </p>
-                </div>
-                <ArrowUpRight className="h-5 w-5 text-primary" />
+        {/* Desktop/tablette: carte “grosse” d’action */}
+        <Card className="border-2 border-primary hover:border-primary/80 transition-all hidden sm:block">
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex items-start justify-between gap-4 mb-4">
+              <div className="space-y-1 flex-1 min-w-0">
+                <h4 className="font-semibold text-base sm:text-lg">
+                  Enregistrer un don
+                </h4>
+                <p className="text-sm text-muted-foreground">
+                  Don simple ou avec reçu fiscal
+                </p>
               </div>
-              <div className="flex gap-2">
-                <PaymentCardModal tourneeId={tournee.id} />
-                <ReceiptGenerationModal tourneeId={tournee.id} />
-              </div>
-            </CardContent>
-          </Card>
+              <ArrowUpRight className="h-5 w-5 text-primary shrink-0" />
+            </div>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <PaymentCardModal tourneeId={tournee.id} />
+              <ReceiptGenerationModal tourneeId={tournee.id} />
+            </div>
+          </CardContent>
+        </Card>
 
-          {retributionEnabled && (
-            <Card className="border-orange-500/50 bg-orange-500/5">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-1">
-                    <h4 className="font-medium">Clôturer la tournée</h4>
-                    <p className="text-xs text-muted-foreground">
-                      Terminer et finaliser la collecte
-                    </p>
-                  </div>
+        {/* Clôture - visible partout */}
+        <Card className="border-orange-500/50 bg-orange-500/5 hover:bg-orange-500/10 transition-colors">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between gap-3">
+              <div className="space-y-1 min-w-0 flex-1">
+                <h4 className="font-medium">Clôturer la tournée</h4>
+                <p className="text-xs text-muted-foreground">
+                  Terminer et finaliser la collecte
+                </p>
+              </div>
+              <div className="shrink-0">
+                {retributionEnabled ? (
                   <TourneeClotureModal
                     trigger={
                       <Button
@@ -281,77 +246,33 @@ export default async function MaTourneePage() {
                     tourneeData={{ tournee, transactions, summary }}
                     tourneeSummary={summary}
                   />
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </div>
+                ) : (
+                  <Button variant="outline" size="sm" disabled>
+                    Désactivée
+                  </Button>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Transactions - Format Liste Mobile Optimisé */}
+      {/* Transactions */}
       {transactions.length > 0 && (
-        <div className="px-4 py-3 sm:px-6 sm:py-4">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider sm:text-base">
-              Dernières transactions
-            </h3>
-            <Badge variant="secondary" className="text-xs">
-              {transactions.length}
-            </Badge>
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold">Activité récente</h3>
+            <Badge variant="secondary">{transactions.length}</Badge>
           </div>
 
-          {/* Mobile: Liste simplifiée */}
-          <div className="space-y-2 sm:hidden">
-            {transactions.slice(0, 5).map((transaction) => (
-              <div
-                key={transaction.id}
-                className="flex items-center justify-between gap-3 p-3 bg-card rounded-lg border"
-              >
-                <div className="flex items-center gap-3 flex-1 min-w-0">
-                  <Avatar className="h-8 w-8">
-                    <AvatarFallback className="text-xs">
-                      {(transaction.supporter_name || "A")[0].toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">
-                      {transaction.supporter_name || "Anonyme"}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {transaction.created_at
-                        ? new Date(transaction.created_at).toLocaleTimeString(
-                            "fr-FR",
-                            { hour: "2-digit", minute: "2-digit" }
-                          )
-                        : "N/A"}
-                    </p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm font-bold">
-                    {currency.format(transaction.amount || 0)}
-                  </p>
-                  {transaction.supporter_email && (
-                    <div className="mt-1">
-                      <ResendReceiptButton 
-                        transactionId={transaction.id}
-                      />
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Desktop: Card comme avant */}
-          <Card className="hidden sm:block">
+          <Card>
             <CardContent className="p-0">
               {transactions.slice(0, 5).map((transaction, index) => (
                 <div key={transaction.id}>
                   <div className="flex items-center justify-between gap-3 p-4 hover:bg-accent/50 transition-colors">
                     <div className="flex items-center gap-3 flex-1 min-w-0">
-                      <Avatar className="h-9 w-9">
-                        <AvatarFallback>
+                      <Avatar className="h-9 w-9 shrink-0">
+                        <AvatarFallback className="bg-primary/10 text-primary font-semibold">
                           {(transaction.supporter_name || "A")[0].toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
@@ -361,65 +282,66 @@ export default async function MaTourneePage() {
                         </p>
                         <p className="text-xs text-muted-foreground">
                           {transaction.created_at
-                            ? new Date(
-                                transaction.created_at
-                              ).toLocaleTimeString("fr-FR", {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              })
+                            ? new Date(transaction.created_at).toLocaleTimeString(
+                                "fr-FR",
+                                { hour: "2-digit", minute: "2-digit" }
+                              )
                             : "N/A"}
                           {" • "}
-                          {transaction.calendar_accepted
-                            ? "Don simple"
-                            : "Reçu fiscal"}
+                          {transaction.calendar_accepted ? "Don simple" : "Reçu fiscal"}
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 shrink-0 text-right min-w-[64px]">
                       {transaction.supporter_email && (
                         <ResendReceiptButton transactionId={transaction.id} />
                       )}
-                      <p className="text-sm font-bold">
-                        {currency.format(transaction.amount || 0)}
-                      </p>
+                      <div className="text-right w-full">
+                        <p className="text-sm font-bold">
+                          {currency.format(transaction.amount || 0)}
+                        </p>
+                      </div>
                     </div>
                   </div>
-                  {index < Math.min(transactions.length, 5) - 1 && (
-                    <Separator />
-                  )}
+                  {index < Math.min(transactions.length, 5) - 1 && <Separator />}
                 </div>
               ))}
             </CardContent>
           </Card>
 
           {transactions.length > 5 && (
-            <Button 
-              variant="ghost" 
-              className="w-full mt-3 text-xs sm:text-sm"
-            >
-              Voir {transactions.length - 5} autres transactions
-              <ChevronRight className="ml-1 h-3 w-3 sm:h-4 sm:w-4" />
-            </Button>
+            <p className="text-center text-sm text-muted-foreground">
+              +{transactions.length - 5} autres transactions
+            </p>
           )}
         </div>
       )}
 
-      {/* Empty State Mobile Optimisé */}
+      {/* Empty state */}
       {transactions.length === 0 && (
-        <div className="px-4 py-8 sm:px-6">
-          <Card className="border-dashed">
-            <CardContent className="flex flex-col items-center justify-center py-8 text-center sm:py-12">
-              <Users className="h-10 w-10 text-muted-foreground mb-3 sm:h-12 sm:w-12 sm:mb-4" />
-              <h3 className="font-semibold text-base mb-1 sm:text-lg">
-                Aucune transaction
-              </h3>
-              <p className="text-xs text-muted-foreground max-w-[250px] sm:text-sm sm:max-w-sm">
-                Commencez à enregistrer des dons pour voir l&apos;activité ici
-              </p>
-            </CardContent>
-          </Card>
-        </div>
+        <Card className="border-dashed border-2">
+          <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+            <Users className="h-12 w-12 text-muted-foreground mb-4" />
+            <h3 className="font-semibold text-lg mb-1">Aucune transaction</h3>
+            <p className="text-sm text-muted-foreground mb-4 max-w-sm">
+              Commencez à enregistrer des dons pour voir l’activité ici
+            </p>
+          </CardContent>
+        </Card>
       )}
+
+      {/* Barre d’action mobile (collante) */}
+      <div className="sm:hidden fixed inset-x-0 bottom-3 z-40 px-4">
+        <div className="rounded-xl border bg-background/95 shadow-lg backdrop-blur supports-[backdrop-filter]:bg-background/60 p-3 flex gap-2">
+          {/* Astuce: si les modals génèrent des <button>, elles s’adapteront à la largeur disponible */}
+          <div className="flex-1">
+            <PaymentCardModal tourneeId={tournee.id} />
+          </div>
+          <div className="flex-1">
+            <ReceiptGenerationModal tourneeId={tournee.id} />
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
