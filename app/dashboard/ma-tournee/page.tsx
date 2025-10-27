@@ -141,7 +141,7 @@ export default async function MaTourneePage() {
 
       {/* METRIQUES – grille responsive explicite (cols 1 → 2 → 3) */}
       <div className="-mx-4 px-4 sm:mx-0 sm:px-0">
-        <div className="grid gap-4 grid-cols-1 min-[380px]:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 grid-cols-2 max-[350px]:grid-cols-1 lg:grid-cols-3">
           <StatCard
             icon={Wallet}
             label="Montant Collecté"
