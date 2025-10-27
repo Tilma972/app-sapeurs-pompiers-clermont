@@ -81,41 +81,41 @@ export default async function MaTourneePage() {
   const retributionEnabled = !!eqFlag?.enable_retribution;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 px-3 sm:px-0">
       {/* En-tête de la tournée - Style moderne shadcn/ui */}
-      <div className="bg-card rounded-lg p-6 border border-border">
-        <div className="flex items-center justify-between">
+      <div className="bg-card rounded-lg p-4 sm:p-6 border border-border">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-bold text-foreground">Ma Tournée</h1>
+              <h1 className="text-xl sm:text-2xl font-bold text-foreground">Ma Tournée</h1>
               <Badge variant="outline" className="text-green-600 border-green-200 text-xs">
                 <TrendingUp className="h-3 w-3 mr-1" />
                 En cours
               </Badge>
             </div>
             <div className="mt-2"><RoleBadge /></div>
-            <div className="flex items-center space-x-4 mt-2">
-              <div className="flex items-center space-x-1 text-muted-foreground">
+            <div className="flex items-center gap-3 sm:gap-4 mt-2">
+              <div className="flex items-center gap-1 text-muted-foreground min-w-0">
                 <MapPin className="h-4 w-4" />
-                <span className="text-sm">{tournee.zone}</span>
+                <span className="text-sm truncate max-w-[180px] sm:max-w-none">{tournee.zone}</span>
               </div>
-              <div className="flex items-center space-x-1 text-muted-foreground">
+              <div className="flex items-center gap-1 text-muted-foreground">
                 <Clock className="h-4 w-4" />
                 <span className="text-sm">{formatDuration(duration)}</span>
               </div>
             </div>
           </div>
-          <div className="flex items-center space-x-6">
+          <div className="flex flex-wrap items-center gap-4 sm:gap-6">
             <div className="text-center">
-              <div className="text-2xl font-bold text-foreground">{calendarsDistributed}</div>
+              <div className="text-xl sm:text-2xl font-bold text-foreground">{calendarsDistributed}</div>
               <div className="text-sm text-muted-foreground">Calendriers</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-primary">{currency.format(Math.max(0, Math.trunc(amountCollected || 0)))}</div>
+              <div className="text-xl sm:text-2xl font-bold text-primary">{currency.format(Math.max(0, Math.trunc(amountCollected || 0)))}</div>
               <div className="text-sm text-muted-foreground">Collecté</div>
             </div>
             <div className="text-right">
-              <div className="text-[11px] text-muted-foreground whitespace-nowrap">
+              <div className="text-xs sm:text-[11px] text-muted-foreground whitespace-nowrap">
                 ≈ {currencyAvg.format(Math.max(0, averagePerCalendar))} par calendrier
               </div>
             </div>
@@ -174,7 +174,7 @@ export default async function MaTourneePage() {
                 {retributionEnabled ? (
                   <TourneeClotureModal 
                     trigger={
-                      <Button className="w-full h-8 text-sm bg-orange-600 hover:bg-orange-700">
+                      <Button className="w-full h-10 sm:h-8 text-sm bg-orange-600 hover:bg-orange-700">
                         <CheckCircle className="h-3 w-3 mr-1" />
                         Clôturer ma tournée
                       </Button>
@@ -187,7 +187,7 @@ export default async function MaTourneePage() {
                     tourneeSummary={summary}
                   />
                 ) : (
-                  <Button className="w-full h-8 text-sm" variant="outline" disabled title="Activez la rétribution dans Gestion Équipe">
+                  <Button className="w-full h-10 sm:h-8 text-sm" variant="outline" disabled title="Activez la rétribution dans Gestion Équipe">
                     Rétribution désactivée pour votre équipe
                   </Button>
                 )}
@@ -216,7 +216,7 @@ export default async function MaTourneePage() {
             <CardFooter className="pt-0">
               <div className="space-y-2 w-full">
                 {transactions.slice(0, 2).map((transaction, index) => (
-                  <div key={transaction.id} className="flex items-center justify-between p-2 bg-muted/30 rounded">
+                  <div key={transaction.id} className="flex items-center justify-between p-3 sm:p-2 bg-muted/30 rounded">
                     <div className="flex items-center space-x-2">
                       <div className="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center">
                         <span className="text-xs font-bold text-primary">{index + 1}</span>
