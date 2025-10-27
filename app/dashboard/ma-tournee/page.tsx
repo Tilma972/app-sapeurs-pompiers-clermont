@@ -25,6 +25,10 @@ import {
   MapPin,
 } from "lucide-react";
 
+// Force cette page en rendu dynamique pour éviter tout cache côté Next.js lors du debug
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 // Fonction utilitaire pour formater la durée
 const formatDuration = (minutes: number) => {
   const hours = Math.floor(minutes / 60);
@@ -107,13 +111,16 @@ export default async function MaTourneePage() {
               <h1 className="text-xl sm:text-2xl font-bold text-foreground">
                 Ma Tournée
               </h1>
-              <Badge
-                variant="outline"
-                className="text-green-600 border-green-200 text-xs"
-              >
-                <TrendingUp className="h-3 w-3 mr-1" />
-                En cours
-              </Badge>
+              {/* TODO(debug-overflow): badge 'En cours' temporairement désactivé */}
+              {false && (
+                <Badge
+                  variant="outline"
+                  className="text-green-600 border-green-200 text-xs"
+                >
+                  <TrendingUp className="h-3 w-3 mr-1" />
+                  En cours
+                </Badge>
+              )}
             </div>
             <div className="mt-2 min-w-0">
               <RoleBadge />
@@ -271,13 +278,16 @@ export default async function MaTourneePage() {
                   Transactions
                 </CardTitle>
               </div>
-              <Badge
-                variant="outline"
-                className="text-purple-600 border-purple-200 text-xs"
-              >
-                <Receipt className="h-3 w-3 mr-1" />
-                {transactions.length}
-              </Badge>
+              {/* TODO(debug-overflow): badge 'Transactions' temporairement désactivé */}
+              {false && (
+                <Badge
+                  variant="outline"
+                  className="text-purple-600 border-purple-200 text-xs"
+                >
+                  <Receipt className="h-3 w-3 mr-1" />
+                  {transactions.length}
+                </Badge>
+              )}
             </div>
           </CardHeader>
           <CardFooter className="pt-0 px-4 sm:px-6">
