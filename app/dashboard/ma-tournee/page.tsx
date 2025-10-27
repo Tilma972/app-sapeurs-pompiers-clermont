@@ -172,13 +172,16 @@ export default async function MaTourneePage() {
                   Enregistrer un don
                 </CardTitle>
               </div>
-              <Badge
-                variant="outline"
-                className="text-green-600 border-green-200 text-xs truncate max-w-[80px]"
-              >
-                <TrendingUp className="h-3 w-3 mr-1 shrink-0" />
-                <span className="truncate">Actif</span>
-              </Badge>
+              {/* TODO(debug-overflow): badge 'Actif' temporairement désactivé */}
+              {false && (
+                <Badge
+                  variant="outline"
+                  className="text-green-600 border-green-200 text-xs truncate max-w-[80px]"
+                >
+                  <TrendingUp className="h-3 w-3 mr-1 shrink-0" />
+                  <span className="truncate">Actif</span>
+                </Badge>
+              )}
             </div>
           </CardHeader>
           <CardFooter className="px-4 pt-0 pb-3 sm:px-6">
@@ -206,13 +209,16 @@ export default async function MaTourneePage() {
                   Clôturer la tournée
                 </CardTitle>
               </div>
-              <Badge
-                variant="outline"
-                className="text-orange-600 border-orange-200 text-xs"
-              >
-                <CheckCircle className="h-3 w-3 mr-1" />
-                Finalisation
-              </Badge>
+              {/* TODO(debug-overflow): badge 'Finalisation' temporairement désactivé */}
+              {false && (
+                <Badge
+                  variant="outline"
+                  className="text-orange-600 border-orange-200 text-xs"
+                >
+                  <CheckCircle className="h-3 w-3 mr-1" />
+                  Finalisation
+                </Badge>
+              )}
             </div>
           </CardHeader>
           <CardFooter className="px-4 pt-0 pb-3 sm:px-6">
