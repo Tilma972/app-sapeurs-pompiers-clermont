@@ -33,8 +33,12 @@ export function UpdatePasswordForm({
     try {
       const { error } = await supabase.auth.updateUser({ password });
       if (error) throw error;
-      // Redirection vers le dashboard après la mise à jour du mot de passe
-      router.push("/dashboard");
+      
+      // Petit délai pour s'assurer que la session est mise à jour
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Redirection vers le dashboard avec remplacement de l'historique
+      router.replace("/dashboard");
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "An error occurred");
     } finally {

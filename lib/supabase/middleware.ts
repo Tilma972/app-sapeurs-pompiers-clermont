@@ -48,8 +48,7 @@ export async function updateSession(request: NextRequest) {
   const user = data?.claims;
 
   // Gestion intelligente des routes publiques vs privées
-  const isPrivateRoute = request.nextUrl.pathname.startsWith("/dashboard") ||
-                        request.nextUrl.pathname.startsWith("/protected");
+  const isPrivateRoute = request.nextUrl.pathname.startsWith("/dashboard");
 
   // Redirection automatique pour un utilisateur connecté qui visite la racine
   if (user && request.nextUrl.pathname === "/") {
@@ -68,7 +67,7 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Forcer l'absence de cache pour les routes privées (dashboard/protected)
+  // Forcer l'absence de cache pour les routes privées (dashboard)
   if (isPrivateRoute) {
     try {
       supabaseResponse.headers.set(
