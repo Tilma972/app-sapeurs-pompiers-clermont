@@ -67,7 +67,7 @@ export function ReceiptGenerationModal({ tourneeId }: { tourneeId: string }) {
       <DialogTrigger asChild>
         <Button variant="secondary">📄 Reçu fiscal</Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-lg bg-card text-foreground border border-border rounded-lg">
+  <DialogContent className="w-full max-w-[min(100vw-2rem,40rem)] px-4 sm:px-6 bg-card text-foreground border border-border rounded-lg">
         <DialogHeader>
           <DialogTitle className="text-lg font-semibold tracking-tight">Générer un reçu fiscal</DialogTitle>
         </DialogHeader>
