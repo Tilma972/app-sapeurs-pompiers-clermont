@@ -217,13 +217,14 @@
 /* Hero Carousel Styles */
 .hero-carousel {
   position: relative;
-  height: 100vh;
+  /* Avoid fixed viewport height on mobile */
+  min-height: 100dvh;
   overflow: hidden;
 }
 
 .hero-slide {
   position: relative;
-  height: 100vh;
+  min-height: 100dvh;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -248,8 +249,8 @@
   position: relative;
   z-index: 2;
   text-align: center;
-  max-width: 4xl;
-  padding: 0 1rem;
+  /* Use Tailwind utilities for predictable sizing */
+  @apply max-w-4xl px-4;
 }
 
 .hero-dots {
