@@ -84,8 +84,8 @@ export default async function MaTourneePage() {
     <div className="space-y-6 px-3 sm:px-0">
       {/* En-tête de la tournée - Style moderne shadcn/ui */}
       <div className="bg-card rounded-lg p-4 sm:p-6 border border-border">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between min-w-0">
+          <div className="min-w-0">
             <div className="flex items-center gap-2">
               <h1 className="text-xl sm:text-2xl font-bold text-foreground">Ma Tournée</h1>
               <Badge variant="outline" className="text-green-600 border-green-200 text-xs">
@@ -93,7 +93,7 @@ export default async function MaTourneePage() {
                 En cours
               </Badge>
             </div>
-            <div className="mt-2"><RoleBadge /></div>
+            <div className="mt-2 min-w-0"><RoleBadge /></div>
             <div className="flex items-center gap-3 sm:gap-4 mt-2">
               <div className="flex items-center gap-1 text-muted-foreground min-w-0">
                 <MapPin className="h-4 w-4" />
@@ -124,7 +124,7 @@ export default async function MaTourneePage() {
       </div>
         
         {/* Actions principales - Style ultra-compact */}
-  <div className="grid grid-cols-1 sm:grid-cols-1 lg:grid-cols-2 gap-4">
+  <div className="grid grid-cols-1 sm:grid-cols-1 lg:grid-cols-2 gap-4 min-w-0">
           {/* Card pour enregistrer un don */}
           <Card className="hover:shadow-lg transition-all duration-200">
             <CardHeader className="pb-2">
