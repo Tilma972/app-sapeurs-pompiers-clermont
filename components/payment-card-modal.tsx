@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import type { ReactNode } from "react"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
@@ -11,7 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { createClient } from "@/lib/supabase/client"
 import { toast } from "react-hot-toast"
 
-export function PaymentCardModal({ tourneeId }: { tourneeId: string }) {
+export function PaymentCardModal({ tourneeId, trigger }: { tourneeId: string; trigger?: ReactNode }) {
   const [open, setOpen] = useState(false)
   const [amount, setAmount] = useState<string>("")
   const [calendarGiven, setCalendarGiven] = useState<boolean>(true)
@@ -93,7 +94,7 @@ export function PaymentCardModal({ tourneeId }: { tourneeId: string }) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="default">💳 Paiement CB</Button>
+        {trigger ?? <Button variant="default">💳 Paiement CB</Button>}
       </DialogTrigger>
       <DialogContent className="mx-4 w-[min(100vw-2rem,40rem)] max-w-full sm:max-w-lg bg-card text-foreground border border-border rounded-lg p-4 sm:p-6 overflow-x-hidden">
         <DialogHeader>

@@ -302,10 +302,16 @@ export default async function MaTourneePage() {
         <div className="rounded-xl border bg-background/95 shadow-lg backdrop-blur supports-[backdrop-filter]:bg-background/60 p-3 flex gap-2">
           {/* Astuce: si les modals génèrent des <button>, elles s’adapteront à la largeur disponible */}
           <div className="flex-1">
-            <PaymentCardModal tourneeId={tournee.id} />
+            <PaymentCardModal 
+              tourneeId={tournee.id}
+              trigger={<Button className="w-full">Paiement CB</Button>}
+            />
           </div>
           <div className="flex-1">
-            <ReceiptGenerationModal tourneeId={tournee.id} />
+            <ReceiptGenerationModal 
+              tourneeId={tournee.id}
+              trigger={<Button variant="outline" className="w-full">Reçu fiscal</Button>}
+            />
           </div>
         </div>
       </div>
