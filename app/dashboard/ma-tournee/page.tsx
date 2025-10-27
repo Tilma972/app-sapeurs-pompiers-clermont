@@ -3,7 +3,6 @@ import { redirect } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { getActiveTourneeWithTransactions } from "@/lib/supabase/tournee";
@@ -69,14 +68,7 @@ export default async function MaTourneePage() {
     maximumFractionDigits: 0,
   });
 
-  // Objectif fictif pour la démo (à adapter selon votre logique)
-  const targetAmount = 5000;
-  const progressPercentage = Math.min(
-    (amountCollected / targetAmount) * 100,
-    100
-  );
-
-  // Pré-check rétribution
+    // Pré-check rétribution
   const { data: profile } = await supabase
     .from("profiles")
     .select("team_id, equipes(enable_retribution)")
@@ -137,11 +129,7 @@ export default async function MaTourneePage() {
           <CardContent className="min-w-0">
             <div className="text-2xl font-bold">
               {currency.format(amountCollected)}
-            </div>
-            <Progress value={progressPercentage} className="mt-2" />
-            <p className="text-xs text-muted-foreground mt-2 truncate">
-              {progressPercentage.toFixed(0)}% de l&apos;objectif
-            </p>
+            </div>            
           </CardContent>
         </Card>
 
