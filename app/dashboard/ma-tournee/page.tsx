@@ -105,17 +105,17 @@ export default async function MaTourneePage() {
               </div>
             </div>
           </div>
-          <div className="flex flex-wrap items-center gap-4 sm:gap-6 min-w-0">
-            <div className="text-center">
-              <div className="text-xl sm:text-2xl font-bold text-foreground">{calendarsDistributed}</div>
-              <div className="text-sm text-muted-foreground">Calendriers</div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-4 min-w-0">
+            <div className="text-center min-w-0">
+              <div className="text-xl sm:text-2xl font-bold text-foreground truncate">{calendarsDistributed}</div>
+              <div className="text-xs sm:text-sm text-muted-foreground">Calendriers</div>
             </div>
-            <div className="text-center">
-              <div className="text-xl sm:text-2xl font-bold text-primary">{currency.format(Math.max(0, Math.trunc(amountCollected || 0)))}</div>
-              <div className="text-sm text-muted-foreground">Collecté</div>
+            <div className="text-center min-w-0">
+              <div className="text-xl sm:text-2xl font-bold text-primary truncate">{currency.format(Math.max(0, Math.trunc(amountCollected || 0)))}</div>
+              <div className="text-xs sm:text-sm text-muted-foreground">Collecté</div>
             </div>
-            <div className="text-right min-w-0">
-              <div className="text-xs sm:text-[11px] text-muted-foreground truncate">
+            <div className="text-right hidden sm:block min-w-0">
+              <div className="text-[11px] text-muted-foreground truncate">
                 ≈ {currencyAvg.format(Math.max(0, averagePerCalendar))} par calendrier
               </div>
             </div>
