@@ -124,7 +124,7 @@ export default async function MaTourneePage() {
       </div>
         
         {/* Actions principales - Style ultra-compact */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+  <div className="grid grid-cols-1 sm:grid-cols-1 lg:grid-cols-2 gap-4">
           {/* Card pour enregistrer un don */}
           <Card className="hover:shadow-lg transition-all duration-200">
             <CardHeader className="pb-2">
@@ -217,12 +217,12 @@ export default async function MaTourneePage() {
               <div className="space-y-2 w-full">
                 {transactions.slice(0, 2).map((transaction, index) => (
                   <div key={transaction.id} className="flex items-center justify-between p-3 sm:p-2 bg-muted/30 rounded">
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center space-x-2 min-w-0">
                       <div className="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center">
                         <span className="text-xs font-bold text-primary">{index + 1}</span>
                       </div>
-                      <div>
-                        <div className="text-sm font-medium text-foreground">
+                      <div className="min-w-0">
+                        <div className="text-sm font-medium text-foreground break-words">
                           {transaction.supporter_name || 'Anonyme'}
                         </div>
                         <div className="text-xs text-muted-foreground">

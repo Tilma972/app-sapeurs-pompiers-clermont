@@ -296,23 +296,22 @@
 }
 
 /* Fix pour Firefox */
-* {
+:root {
   scrollbar-width: thin;
   scrollbar-color: hsl(var(--muted-foreground)) hsl(var(--background));
 }
 
-/* Z-index pour navigation dots */
+/* Z-index pour navigation dots et couches hero */
 .hero-dots {
-  z-index: 50 !important;
+  z-index: 50;
 }
 
-/* Fix pour les éléments qui masquent la navigation */
 .hero-content {
-  z-index: 2 !important;
+  z-index: 20;
 }
 
 .hero-overlay {
-  z-index: 1 !important;
+  z-index: 10;
 }
 
 /* Animation Ken Burns pour les images du hero */
