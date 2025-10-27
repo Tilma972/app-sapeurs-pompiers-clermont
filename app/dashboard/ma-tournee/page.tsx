@@ -139,42 +139,9 @@ export default async function MaTourneePage() {
 
       <Separator />
 
-      {/* METRIQUES
-         - Mobile: bande défilante (snap) + cards compactes
-         - ≥ sm: grille classique 2/3 colonnes
-      */}
-      <div className="-mx-4 sm:mx-0">
-        {/* Row mobile scrollable */}
-        <div className="sm:hidden px-4">
-          <div className="flex gap-3 overflow-x-auto pb-1 snap-x snap-mandatory">
-            <div className="min-w-[12.5rem] shrink-0 snap-start">
-              <StatCard
-                icon={Wallet}
-                label="Montant Collecté"
-                value={currency.format(amountCollected)}
-              />
-            </div>
-            <div className="min-w-[12.5rem] shrink-0 snap-start">
-              <StatCard
-                icon={Calendar}
-                label="Calendriers"
-                value={String(calendarsDistributed)}
-                hint="Distribués aujourd’hui"
-              />
-            </div>
-            <div className="min-w-[12.5rem] shrink-0 snap-start">
-              <StatCard
-                icon={TrendingUp}
-                label="Moyenne"
-                value={average}
-                hint="Par calendrier"
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Grille desktop/tablette */}
-        <div className="hidden sm:grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {/* METRIQUES – une grille unique responsive (auto-fit) */}
+      <div className="-mx-4 px-4 sm:mx-0 sm:px-0">
+        <div className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(12rem,1fr))]">
           <StatCard
             icon={Wallet}
             label="Montant Collecté"
