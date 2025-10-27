@@ -121,8 +121,8 @@ export default async function MaTourneePage() {
       <Separator />
 
       {/* Stats Cards - Pattern shadcn Dashboard avec Progress */}
-  {/* ✅ Stats en 1 colonne mobile, 3 colonnes desktop */}
-  <div className="grid gap-4 grid-cols-1 sm:grid-cols-3">
+  {/* ✅ Stats: 1 col (base), 2 cols (sm), 3 cols (lg) */}
+  <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Montant Collecté</CardTitle>
@@ -256,11 +256,11 @@ export default async function MaTourneePage() {
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 shrink-0">
+                    <div className="flex items-center gap-2 shrink-0 text-right min-w-[64px]">
                       {transaction.supporter_email && (
                         <ResendReceiptButton transactionId={transaction.id} />
                       )}
-                      <div className="text-right">
+                      <div className="text-right w-full">
                         <p className="text-sm font-bold">
                           {currency.format(transaction.amount || 0)}
                         </p>
