@@ -68,6 +68,27 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  // Forcer l'absence de cache pour les routes privées (dashboard/protected)
+  if (isPrivateRoute) {
+    try {
+      supabaseResponse.headers.set(
+        "Cache-Control",
+        "no-store, private, max-age=0, must-revalidate",
+      );
+      // En complément, demander explicitement au CDN Vercel de ne pas mettre en cache
+      supabaseResponse.headers.set(
+        "CDN-Cache-Control",
+        "no-store",
+      );
+      supabaseResponse.headers.set(
+        "Vercel-CDN-Cache-Control",
+        "no-store",
+      );
+    } catch {
+      // ignore header set failures
+    }
+  }
+
   // IMPORTANT: You *must* return the supabaseResponse object as it is.
   // If you're creating a new response object with NextResponse.next() make sure to:
   // 1. Pass the request in it, like so:
