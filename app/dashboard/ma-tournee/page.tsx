@@ -1,11 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -76,7 +71,10 @@ export default async function MaTourneePage() {
 
   // Objectif fictif pour la démo (à adapter selon votre logique)
   const targetAmount = 5000;
-  const progressPercentage = Math.min((amountCollected / targetAmount) * 100, 100);
+  const progressPercentage = Math.min(
+    (amountCollected / targetAmount) * 100,
+    100
+  );
 
   // Pré-check rétribution
   const { data: profile } = await supabase
@@ -85,7 +83,8 @@ export default async function MaTourneePage() {
     .eq("id", user.id)
     .single();
   type EqFlag = { enable_retribution?: boolean };
-  const eqJoin = (profile as unknown as { equipes?: EqFlag | EqFlag[] })?.equipes;
+  const eqJoin = (profile as unknown as { equipes?: EqFlag | EqFlag[] })
+    ?.equipes;
   const eqFlag: EqFlag | undefined = Array.isArray(eqJoin) ? eqJoin[0] : eqJoin;
   const retributionEnabled = !!eqFlag?.enable_retribution;
 
@@ -121,45 +120,62 @@ export default async function MaTourneePage() {
       <Separator />
 
       {/* Stats Cards - Pattern shadcn Dashboard avec Progress */}
-  {/* ✅ Stats: 1 col (base), 2 cols (sm), 3 cols (lg) */}
-  <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Montant Collecté</CardTitle>
-            <Wallet className="h-4 w-4 text-muted-foreground" />
+      {/* ✅ Stats: 1 col (base), 2 cols (sm), 3 cols (lg) */}
+      <div
+        className="
+  grid gap-4 auto-rows-fr
+  grid-cols-[repeat(auto-fit,_minmax(14rem,_1fr))]
+"
+      >
+        <Card className="min-w-0 overflow-hidden">
+          <CardHeader className="flex items-center justify-between gap-2 pb-2">
+            <CardTitle className="min-w-0 text-sm font-medium truncate">
+              Montant Collecté
+            </CardTitle>
+            <Wallet className="h-4 w-4 text-muted-foreground shrink-0" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{currency.format(amountCollected)}</div>
+          <CardContent className="min-w-0">
+            <div className="text-2xl font-bold">
+              {currency.format(amountCollected)}
+            </div>
             <Progress value={progressPercentage} className="mt-2" />
-            <p className="text-xs text-muted-foreground mt-2">
+            <p className="text-xs text-muted-foreground mt-2 truncate">
               {progressPercentage.toFixed(0)}% de l&apos;objectif
             </p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Calendriers</CardTitle>
-            <Calendar className="h-4 w-4 text-muted-foreground" />
+        <Card className="min-w-0 overflow-hidden">
+          <CardHeader className="flex items-center justify-between gap-2 pb-2">
+            <CardTitle className="min-w-0 text-sm font-medium truncate">
+              Calendriers
+            </CardTitle>
+            <Calendar className="h-4 w-4 text-muted-foreground shrink-0" />
           </CardHeader>
-          <CardContent>
+          <CardContent className="min-w-0">
             <div className="text-2xl font-bold">{calendarsDistributed}</div>
-            <p className="text-xs text-muted-foreground mt-2">Distribués aujourd&apos;hui</p>
+            <p className="text-xs text-muted-foreground mt-2 truncate">
+              Distribués aujourd&apos;hui
+            </p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Moyenne</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+        <Card className="min-w-0 overflow-hidden">
+          <CardHeader className="flex items-center justify-between gap-2 pb-2">
+            <CardTitle className="min-w-0 text-sm font-medium truncate">
+              Moyenne
+            </CardTitle>
+            <TrendingUp className="h-4 w-4 text-muted-foreground shrink-0" />
           </CardHeader>
-          <CardContent>
+          <CardContent className="min-w-0">
             <div className="text-2xl font-bold">
               {calendarsDistributed > 0
                 ? currency.format(amountCollected / calendarsDistributed)
                 : "0€"}
             </div>
-            <p className="text-xs text-muted-foreground mt-2">Par calendrier</p>
+            <p className="text-xs text-muted-foreground mt-2 truncate">
+              Par calendrier
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -175,7 +191,9 @@ export default async function MaTourneePage() {
           <CardContent className="p-4 sm:p-6">
             <div className="flex items-start justify-between gap-4 mb-4">
               <div className="space-y-1 flex-1 min-w-0">
-                <h4 className="font-semibold text-base sm:text-lg">Enregistrer un don</h4>
+                <h4 className="font-semibold text-base sm:text-lg">
+                  Enregistrer un don
+                </h4>
                 <p className="text-sm text-muted-foreground">
                   Don simple ou avec reçu fiscal
                 </p>
@@ -203,7 +221,10 @@ export default async function MaTourneePage() {
                 {retributionEnabled ? (
                   <TourneeClotureModal
                     trigger={
-                      <Button size="sm" className="bg-orange-600 hover:bg-orange-700">
+                      <Button
+                        size="sm"
+                        className="bg-orange-600 hover:bg-orange-700"
+                      >
                         Clôturer
                       </Button>
                     }
@@ -246,13 +267,17 @@ export default async function MaTourneePage() {
                         </p>
                         <p className="text-xs text-muted-foreground">
                           {transaction.created_at
-                            ? new Date(transaction.created_at).toLocaleTimeString("fr-FR", {
+                            ? new Date(
+                                transaction.created_at
+                              ).toLocaleTimeString("fr-FR", {
                                 hour: "2-digit",
                                 minute: "2-digit",
                               })
                             : "N/A"}
                           {" • "}
-                          {transaction.calendar_accepted ? "Don simple" : "Reçu fiscal"}
+                          {transaction.calendar_accepted
+                            ? "Don simple"
+                            : "Reçu fiscal"}
                         </p>
                       </div>
                     </div>
@@ -267,7 +292,9 @@ export default async function MaTourneePage() {
                       </div>
                     </div>
                   </div>
-                  {index < Math.min(transactions.length, 5) - 1 && <Separator />}
+                  {index < Math.min(transactions.length, 5) - 1 && (
+                    <Separator />
+                  )}
                 </div>
               ))}
             </CardContent>
@@ -296,4 +323,3 @@ export default async function MaTourneePage() {
     </div>
   );
 }
- 
