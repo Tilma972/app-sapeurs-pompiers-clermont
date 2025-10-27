@@ -147,3 +147,11 @@ Exemples de politiques:
 - Modèle finance interne: cents vs décimales; autorisations trésorier
 - Modération: seuil auto de masquage vs full manuel
 - Offline avancé: file d’attente actions (phase ultérieure)
+
+## Changements récents (journal)
+
+- 2025-10-27
+  - Phase 3 cleanup: suppression du legacy donation_intents (flux Checkout), bascule complète Payment Intents + route courte /pay.
+  - Retrait du flux de "finalisation différée" (donor_completion_tokens): actions remplacées par des stubs, route finaliser-don désactivée, et migration ajoutée pour supprimer la table et artefacts associés (policies/indexes/Realtime).
+  - Webhook Stripe stabilisé (charge.succeeded prioritaire) avec émission des reçus et suivi email (receipt_generated/receipt_url/receipt_sent).
+  - UI: QR code vers /pay/{client_secret}, collecte nom/email directement sur la page de paiement, toasts temps réel avec fallback polling.
