@@ -154,6 +154,7 @@ export default async function MaTourneePage() {
             hint="Distribués aujourd’hui"
           />
           <StatCard
+          
             icon={TrendingUp}
             label="Moyenne"
             value={average}
