@@ -21,6 +21,7 @@ export function TourneeStatusCard({
 }: TourneeStatusCardProps) {
   const nf = new Intl.NumberFormat('fr-FR')
   const currency = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 })
+  const average = count > 0 ? Math.round(amount / count) : 0
   if (status === 'inactive') {
     return (
       <Card className="bg-card border border-border">
@@ -64,6 +65,9 @@ export function TourneeStatusCard({
           <div className="bg-muted rounded-lg p-3">
             <p className="text-sm text-muted-foreground">Montant</p>
             <p className="text-2xl font-bold text-primary">{currency.format(amount)}</p>
+            {count > 0 && (
+              <p className="text-xs text-muted-foreground mt-1">~{nf.format(average)} €/cal</p>
+            )}
           </div>
         </div>
       </CardContent>
