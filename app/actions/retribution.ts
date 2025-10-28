@@ -65,7 +65,7 @@ export async function cloturerTourneeAvecRetribution(data: {
       return { ok: false, error: (error.message || 'Erreur lors de la clôture') as string }
     }
 
-    revalidatePath('/dashboard/ma-tournee')
+  revalidatePath('/ma-tournee')
     revalidatePath('/dashboard/mon-compte')
     return { ok: true as const, result }
   } catch (err) {

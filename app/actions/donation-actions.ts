@@ -182,8 +182,8 @@ export async function submitSupportTransaction(formData: FormData) {
       }
     }
 
-    // Revalidation des pages
-    revalidatePath('/dashboard/ma-tournee')
+  // Revalidation des pages
+  revalidatePath('/ma-tournee')
     revalidatePath('/dashboard/calendriers')
 
     return { 
@@ -302,8 +302,8 @@ export async function cloturerTournee(formData: FormData) {
       }
     }
 
-    // Revalidation des pages
-    revalidatePath('/dashboard/ma-tournee')
+  // Revalidation des pages
+  revalidatePath('/ma-tournee')
     revalidatePath('/dashboard/calendriers')
 
     return { 

@@ -67,8 +67,8 @@ export async function resendReceiptAction(transactionId: string) {
         log.warn('MAJ reçu après renvoi email a échoué', { transactionId: tx.id })
       }
 
-      // Revalidate views where this might show
-      revalidatePath('/dashboard/ma-tournee')
+  // Revalidate views where this might show
+  revalidatePath('/ma-tournee')
       revalidatePath('/dashboard/calendriers')
       return { success: true, message: 'Reçu renvoyé avec succès' }
     }

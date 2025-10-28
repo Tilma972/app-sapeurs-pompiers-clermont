@@ -16,9 +16,9 @@ export async function startNewTournee(formData: FormData) {
       }
     }
 
-    // Revalidation des pages
-    revalidatePath('/dashboard/calendriers')
-    revalidatePath('/dashboard/ma-tournee')
+  // Revalidation des pages
+  revalidatePath('/dashboard/calendriers')
+  revalidatePath('/ma-tournee')
 
     return { 
       success: true, 

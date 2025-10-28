@@ -20,8 +20,8 @@ export function StartTourneeButton() {
       const result = await startNewTournee(formData);
       
       if (result.success) {
-        // Rediriger vers la page ma-tournee
-        router.push('/dashboard/ma-tournee');
+        // Rediriger vers la page ma-tournee (nouvelle route focus)
+        router.push('/ma-tournee');
       } else {
         console.error('Erreur lors du démarrage de la tournée:', result.errors);
         // TODO: Afficher un message d'erreur à l'utilisateur

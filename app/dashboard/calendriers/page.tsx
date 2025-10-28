@@ -64,7 +64,7 @@ export default async function CalendriersPage() {
           </CardHeader>
           <CardContent className="pt-0">
             {hasActiveTournee ? (
-              <Link href="/dashboard/ma-tournee">
+              <Link href="/ma-tournee">
                 <Button className="w-full h-10 sm:h-12 text-sm sm:text-base font-semibold">
                   <Play className="h-4 w-4 mr-2" />
                   Continuer ma tournée
