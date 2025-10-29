@@ -37,7 +37,7 @@ export default async function DashboardPreviewPage() {
 
   return (
     <FocusedContainer>
-      <div className="space-y-5">
+      <div className="space-y-3">
         <HeroSection
           backgroundImage={
             "https://npyfregghvnmqxwgkfea.supabase.co/storage/v1/object/public/landing_page/esprit_pompiers.jpeg"
