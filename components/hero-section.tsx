@@ -11,6 +11,7 @@ interface HeroSectionProps {
   children?: React.ReactNode;
   className?: string;
   overlayOpacity?: "light" | "medium" | "heavy";
+  rounded?: boolean;
 }
 
 export function HeroSection({
@@ -20,6 +21,7 @@ export function HeroSection({
   children,
   className,
   overlayOpacity = "medium",
+  rounded = true,
 }: HeroSectionProps) {
   const overlayClasses = {
     light: "from-black/40 via-black/50 to-background",
@@ -28,7 +30,13 @@ export function HeroSection({
   } as const;
 
   return (
-    <div className={cn("relative h-[220px] sm:h-[320px] overflow-hidden rounded-xl", className)}>
+    <div
+      className={cn(
+        "relative h-[220px] sm:h-[320px] overflow-hidden",
+        rounded ? "rounded-xl" : "rounded-none",
+        className
+      )}
+    >
       {/* Background Image */}
       <div className="absolute inset-0">
         <Image

@@ -37,15 +37,19 @@ export default async function DashboardPreviewPage() {
 
   return (
     <FocusedContainer>
-      <div className="space-y-3">
-        <HeroSection
+      <div className="space-y-5">
+        {/* Full-bleed hero, pulled up to sit just beneath the AppBar border */}
+        <div className="relative left-1/2 right-1/2 -mx-[50vw] -translate-x-1/2 w-screen -mt-12 sm:-mt-12">
+          <HeroSection
           backgroundImage={
             "https://npyfregghvnmqxwgkfea.supabase.co/storage/v1/object/public/landing_page/esprit_pompiers.jpeg"
           }
           title={`Bienvenue, ${userName}`}
           subtitle={teamName ? `Équipe ${teamName}` : undefined}
-          overlayOpacity="medium"
-        />
+            overlayOpacity="medium"
+            rounded={false}
+          />
+        </div>
 
         <section className="space-y-3">
           <div className="flex items-center justify-between">
@@ -67,7 +71,7 @@ export default async function DashboardPreviewPage() {
           </Card>
         </section>
 
-        <Separator className="my-2" />
+  <Separator className="my-2" />
 
         <FeatureCardsGrid
           annoncesCount={annoncesCount}
