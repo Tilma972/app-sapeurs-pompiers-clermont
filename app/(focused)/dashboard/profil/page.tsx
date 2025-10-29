@@ -62,14 +62,19 @@ export default async function ProfilPage() {
             <div className="space-y-2">
               <Label className="text-sm text-muted-foreground">Équipe/Caserne</Label>
               <div className="p-3 bg-muted rounded-md border">
-                {profile.team ? (
-                  <Badge variant="outline" className="px-2 py-0.5">
-                    <Building className="h-3 w-3 mr-1" />
-                    {profile.team}
-                  </Badge>
-                ) : (
-                  <span className="text-muted-foreground italic">Non renseigné</span>
-                )}
+                {(() => {
+                  const teamId = (profile as unknown as { team_id?: string | null }).team_id
+                  const teamName = teamId ? (teams as Array<{ id: string; nom: string }> | undefined)?.find((t) => t.id === teamId)?.nom : undefined
+                  const label = teamName || profile.team || undefined
+                  return label ? (
+                    <Badge variant="outline" className="px-2 py-0.5">
+                      <Building className="h-3 w-3 mr-1" />
+                      {label}
+                    </Badge>
+                  ) : (
+                    <span className="text-muted-foreground italic">Non renseigné</span>
+                  )
+                })()}
               </div>
             </div>
           </div>

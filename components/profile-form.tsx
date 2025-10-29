@@ -22,10 +22,8 @@ interface ProfileFormProps {
 
 const schema = z.object({
   full_name: z.string().trim().min(2, "Nom trop court").max(80, "Nom trop long"),
-  team: z
+  team_id: z
     .string()
-    .trim()
-    .max(80, "Nom d'équipe trop long")
     .optional()
     .transform((v) => (v === "" ? undefined : v)),
 });
@@ -40,7 +38,8 @@ export function ProfileForm({ profile, teamOptions = [] }: ProfileFormProps) {
     resolver: zodResolver(schema),
     defaultValues: {
       full_name: profile.full_name || "",
-  team: profile.team || "",
+      // team_id peut ne pas être typé explicitement dans Profile, on accède via index
+      team_id: (profile as unknown as { team_id?: string | null }).team_id || "",
     },
     mode: "onBlur",
     reValidateMode: "onChange",
@@ -51,7 +50,9 @@ export function ProfileForm({ profile, teamOptions = [] }: ProfileFormProps) {
     try {
       const updated = await updateUserProfileClient({
         full_name: values.full_name,
-        team: values.team ?? null,
+        team_id: values.team_id ?? null,
+        // compat: stocker aussi le nom texte si disponible
+        team: values.team_id ? (teamOptions.find(t => t.id === values.team_id)?.nom ?? null) : null,
       });
       if (updated) {
         setMessage({ type: 'success', text: 'Profil mis à jour avec succès !' });
@@ -100,7 +101,7 @@ export function ProfileForm({ profile, teamOptions = [] }: ProfileFormProps) {
         />
         <FormField
           control={form.control}
-          name="team"
+          name="team_id"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Équipe/Caserne</FormLabel>
@@ -113,7 +114,7 @@ export function ProfileForm({ profile, teamOptions = [] }: ProfileFormProps) {
                   >
                     <option value="">Aucune</option>
                     {teamOptions.map((t) => (
-                      <option key={t.id} value={t.nom}>{t.nom}</option>
+                      <option key={t.id} value={t.id}>{t.nom}</option>
                     ))}
                   </select>
                 ) : (
