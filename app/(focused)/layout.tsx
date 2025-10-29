@@ -1,4 +1,5 @@
-import { FocusedHeader } from "@/components/layouts/focused/focused-header"
+import { FocusedAppBar } from "@/components/layouts/focused/focused-app-bar"
+import { FocusedBottomNav } from "@/components/layouts/focused/focused-bottom-nav"
 import { createClient } from "@/lib/supabase/server"
 
 export default async function FocusedLayout({
@@ -17,13 +18,18 @@ export default async function FocusedLayout({
 
   return (
     <div className="min-h-screen">
-      <FocusedHeader 
+      <FocusedAppBar
         user={{
           avatar_url: (user?.user_metadata as { avatar_url?: string } | undefined)?.avatar_url,
-          initials
+          initials,
+          full_name: (user?.user_metadata as { full_name?: string } | undefined)?.full_name,
+          email: user?.email ?? undefined,
         }}
       />
-      {children}
+      <main className="pt-16 pb-20 sm:pb-6">
+        {children}
+      </main>
+      <FocusedBottomNav />
     </div>
   )
 }
