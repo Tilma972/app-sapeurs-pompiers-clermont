@@ -31,8 +31,12 @@ BEGIN
   RAISE NOTICE 'Vérification OK : Tous les profils ont team_id';
 END $$;
 
--- ÉTAPE 2 : Supprimer la colonne obsolète (décommenter après validation)
--- ALTER TABLE profiles DROP COLUMN IF EXISTS team;
+-- ÉTAPE 2 : Retirer le trigger de synchronisation et la fonction associée (créés pour la transition)
+DROP TRIGGER IF EXISTS trg_profiles_sync_team ON public.profiles;
+DROP FUNCTION IF EXISTS public.sync_profiles_team_from_team_id();
+
+-- ÉTAPE 3 : Supprimer la colonne obsolète (après vérification stricte ci-dessus)
+ALTER TABLE public.profiles DROP COLUMN IF EXISTS team;
 
 -- ÉTAPE 3 : Nettoyer les données de test (optionnel)
 -- DELETE FROM test_tables WHERE created_at < NOW() - INTERVAL '90 days';
@@ -40,4 +44,7 @@ END $$;
 -- ÉTAPE 4 : Nettoyer les webhook logs anciens (optionnel)
 -- DELETE FROM webhook_logs WHERE created_at < NOW() - INTERVAL '90 days';
 
-RAISE NOTICE 'Migration 020 : Cleanup en attente de validation manuelle';
+DO $$
+BEGIN
+  RAISE NOTICE 'Migration 020 : Cleanup exécuté (trigger supprimé et colonne team droppée si existante)';
+END $$;
