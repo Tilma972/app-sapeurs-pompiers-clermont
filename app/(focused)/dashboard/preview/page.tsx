@@ -39,7 +39,7 @@ export default async function DashboardPreviewPage() {
     <FocusedContainer>
       <div className="space-y-5">
         {/* Full-bleed hero, pulled up to sit just beneath the AppBar border */}
-        <div className="relative left-1/2 right-1/2 -mx-[50vw] -translate-x-1/2 w-screen -mt-12 sm:-mt-12">
+        <div className="relative left-1/2 -mx-[50vw] -translate-x-1/2 w-screen -mt-12 sm:-mt-12">
           <HeroSection
           backgroundImage={
             "https://npyfregghvnmqxwgkfea.supabase.co/storage/v1/object/public/landing_page/esprit_pompiers.jpeg"
@@ -48,6 +48,7 @@ export default async function DashboardPreviewPage() {
           subtitle={teamName ? `Équipe ${teamName}` : undefined}
             overlayOpacity="medium"
             rounded={false}
+            objectPosition="center"
           />
         </div>
 

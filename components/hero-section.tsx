@@ -12,6 +12,7 @@ interface HeroSectionProps {
   className?: string;
   overlayOpacity?: "light" | "medium" | "heavy";
   rounded?: boolean;
+  objectPosition?: string; // e.g. "center" | "center 40%"
 }
 
 export function HeroSection({
@@ -22,6 +23,7 @@ export function HeroSection({
   className,
   overlayOpacity = "medium",
   rounded = true,
+  objectPosition = "center",
 }: HeroSectionProps) {
   const overlayClasses = {
     light: "from-black/40 via-black/50 to-background",
@@ -43,11 +45,12 @@ export function HeroSection({
           src={backgroundImage}
           alt={title}
           fill
-          className="object-cover"
+          className="object-cover object-center"
           priority
           unoptimized
           quality={85}
-          sizes="(max-width: 640px) 100vw, 640px"
+          sizes="100vw"
+          style={{ objectPosition }}
         />
         {/* Dark gradient overlay */}
         <div
