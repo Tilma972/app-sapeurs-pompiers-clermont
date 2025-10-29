@@ -37,6 +37,7 @@ export function HeroSection({
           fill
           className="object-cover"
           priority
+          unoptimized
           quality={85}
           sizes="(max-width: 640px) 100vw, 640px"
         />

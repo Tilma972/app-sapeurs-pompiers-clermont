@@ -2,6 +2,10 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   images: {
+    domains: [
+      'npyfregghvnmqxwgkfea.supabase.co',
+      'images.unsplash.com',
+    ],
     qualities: [25, 50, 75, 90, 100],
     remotePatterns: [
       {
