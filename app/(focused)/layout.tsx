@@ -1,6 +1,7 @@
 import { FocusedAppBar } from "@/components/layouts/focused/focused-app-bar"
 import { FocusedBottomNav } from "@/components/layouts/focused/focused-bottom-nav"
 import { createClient } from "@/lib/supabase/server"
+import { redirect } from "next/navigation"
 
 export default async function FocusedLayout({
   children,
@@ -9,6 +10,17 @@ export default async function FocusedLayout({
 }) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
+  if (user) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('is_active')
+      .eq('id', user.id)
+      .single()
+    if (profile && profile.is_active === false) {
+      // Utilisateur non approuvé: renvoyer vers la landing avec un flag
+      redirect('/?pending=1')
+    }
+  }
   
   const initials = user?.user_metadata?.full_name
     ?.split(' ')

@@ -6,7 +6,24 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
+"use client";
+
+import { useEffect } from 'react';
+import { toast } from 'react-hot-toast';
+
 export default function Page() {
+  useEffect(() => {
+    // Tente d'informer les admins qu'une approbation est requise
+    fetch('/api/auth/notify-pending', { method: 'POST' })
+      .then(async (res) => {
+        if (!res.ok) return;
+        const json = await res.json().catch(() => null)
+        if (json?.notified) {
+          toast.success('Votre demande a été transmise aux administrateurs');
+        }
+      })
+      .catch(() => {})
+  }, [])
   return (
     <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
       <div className="w-full max-w-sm">
@@ -14,14 +31,13 @@ export default function Page() {
           <Card>
             <CardHeader>
               <CardTitle className="text-2xl">
-                Thank you for signing up!
+                Merci pour votre inscription !
               </CardTitle>
-              <CardDescription>Check your email to confirm</CardDescription>
+              <CardDescription>Veuillez confirmer votre email pour continuer</CardDescription>
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground">
-                You&apos;ve successfully signed up. Please check your email to
-                confirm your account before signing in.
+                Votre demande est maintenant en attente d&apos;approbation par un administrateur. Vous serez notifié par email dès validation.
               </p>
             </CardContent>
           </Card>
