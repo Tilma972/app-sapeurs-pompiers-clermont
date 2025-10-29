@@ -26,7 +26,7 @@ export default async function FocusedLayout({
           email: user?.email ?? undefined,
         }}
       />
-      <main className="pt-16 pb-20 sm:pb-6">
+      <main className="pt-14 pb-20 sm:pb-6">
         {children}
       </main>
       <FocusedBottomNav />
