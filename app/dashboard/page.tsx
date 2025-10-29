@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { getCurrentUserProfile } from "@/lib/supabase/profile";
 import { getGlobalStats } from "@/lib/supabase/tournee";
 import { FeatureCard, type Feature } from "@/components/feature-card";
+import { FocusedContainer } from "@/components/layouts/focused/focused-container";
 
 
 export default async function DashboardPage() {
@@ -77,7 +78,8 @@ export default async function DashboardPage() {
   ];
 
   return (
-    <div className="space-y-6">
+    <FocusedContainer>
+      <div className="space-y-6">
       {/* En-tête de bienvenue */}
       <div className="bg-card rounded-lg p-6 border border-border">
         <div className="flex items-center justify-between">
@@ -113,6 +115,7 @@ export default async function DashboardPage() {
             </p>
           </div>
         </div>
-    </div>
+      </div>
+    </FocusedContainer>
   );
 }
