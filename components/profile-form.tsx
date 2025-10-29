@@ -48,11 +48,10 @@ export function ProfileForm({ profile, teamOptions = [] }: ProfileFormProps) {
   const onSubmit = async (values: FormValues) => {
     setMessage(null);
     try {
+      // Depuis le cleanup 020, la colonne legacy `team` a été supprimée : ne plus l'envoyer
       const updated = await updateUserProfileClient({
         full_name: values.full_name,
         team_id: values.team_id ?? null,
-        // compat: stocker aussi le nom texte si disponible
-        team: values.team_id ? (teamOptions.find(t => t.id === values.team_id)?.nom ?? null) : null,
       });
       if (updated) {
         setMessage({ type: 'success', text: 'Profil mis à jour avec succès !' });
