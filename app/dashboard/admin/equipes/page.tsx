@@ -69,8 +69,24 @@ export default async function AdminEquipesPage() {
       </div>
 
       <div className="space-y-4">
-        {equipes.map((equipe: { id: string; nom: string; enable_retribution: boolean; pourcentage_minimum_pot: number; pourcentage_recommande_pot: number; mode_transparence: 'prive' | 'equipe' | 'anonyme'; }) => (
-          <EquipeSettingsForm key={equipe.id} equipe={equipe} />
+        {equipes.map((equipe: {
+          id: string;
+          nom: string;
+          status?: 'active' | 'archived';
+          enable_retribution: boolean;
+          pourcentage_minimum_pot: number;
+          pourcentage_recommande_pot: number;
+          mode_transparence: 'prive' | 'equipe' | 'anonyme';
+          communes?: string[] | null;
+          secteur_centre_lat?: number | null;
+          secteur_centre_lon?: number | null;
+        }) => (
+          <EquipeSettingsForm
+            key={equipe.id}
+            equipe={equipe}
+            canEdit={profile?.role === 'admin'}
+            canArchive={profile?.role === 'admin'}
+          />
         ))}
       </div>
     </div>
