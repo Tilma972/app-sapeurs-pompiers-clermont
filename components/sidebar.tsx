@@ -8,6 +8,7 @@ import {
   Calendar,
   Home,
   User,
+  Users,
   ShoppingBag,
   Camera,
   Gift,
@@ -17,6 +18,8 @@ import {
 import { LogoutButton } from "@/components/logout-button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Menu } from "lucide-react";
+import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 
 const navigation = [
   { name: "Tableau de bord", href: "/dashboard", icon: Home },
@@ -36,6 +39,28 @@ interface SidebarProps {
 
 export function Sidebar({ className }: SidebarProps) {
   const pathname = usePathname();
+  const [role, setRole] = useState<string | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    const load = async () => {
+      try {
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .single();
+        if (mounted) setRole(profile?.role ?? null);
+      } catch {
+        // noop
+      }
+    };
+    load();
+    return () => { mounted = false };
+  }, []);
 
   const NavList = () => (
     <nav className="flex-1 px-4 py-6 space-y-2">
@@ -58,6 +83,39 @@ export function Sidebar({ className }: SidebarProps) {
           </Link>
         );
       })}
+
+      {/* Admin section (visible only to admin/trésorier) */}
+      {role && ["admin","tresorier"].includes(role) && (
+        <div className="pt-4 mt-2 border-t border-border space-y-2">
+          <div className="px-2 text-xs uppercase tracking-wide text-muted-foreground">Administration</div>
+          {[
+            { name: "Vue d'ensemble", href: "/dashboard/admin", icon: Home },
+            { name: "Inscriptions en attente", href: "/dashboard/admin/pending", icon: User },
+            { name: "Utilisateurs", href: "/dashboard/admin/users", icon: Users },
+            { name: "Équipes", href: "/dashboard/admin/equipes", icon: Calendar },
+            { name: "Chèques", href: "/dashboard/admin/cheques", icon: Wallet },
+            { name: "Reçus fiscaux", href: "/dashboard/admin/receipts", icon: Gift },
+          ].map((item) => {
+            const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+            return (
+              <Link key={item.name} href={item.href}>
+                <Button
+                  variant={isActive ? "secondary" : "ghost"}
+                  className={cn(
+                    "w-full justify-start h-10 px-3 transition-colors",
+                    isActive
+                      ? "bg-accent text-accent-foreground hover:bg-accent/90"
+                      : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                  )}
+                >
+                  <item.icon className="mr-3 h-4 w-4" />
+                  {item.name}
+                </Button>
+              </Link>
+            );
+          })}
+        </div>
+      )}
     </nav>
   );
 

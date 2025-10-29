@@ -54,13 +54,7 @@ export default async function AdminDashboardPage() {
     { key: 'receipts', label: `${receiptsToSend.count || 0} reçu(s) à envoyer`, href: '/dashboard/admin/receipts', show: (receiptsToSend.count || 0) > 0, icon: <Receipt className="h-4 w-4 text-amber-500" /> },
   ]
 
-  const quickLinks: Array<{ href: string; label: string; description?: string }> = [
-    { href: '/dashboard/admin/pending', label: 'Inscriptions en attente' },
-    { href: '/dashboard/admin/equipes', label: 'Gestion des équipes' },
-    { href: '/dashboard/admin/cheques', label: 'Chèques' },
-    { href: '/dashboard/admin/receipts', label: 'Reçus fiscaux' },
-    { href: '/dashboard/admin/users', label: 'Utilisateurs' },
-  ]
+  // Accès rapides désormais rendus dans la sidebar (Administration)
 
   return (
     <AdminPage>
@@ -99,17 +93,7 @@ export default async function AdminDashboardPage() {
           </AdminSection>
         )}
 
-        {/* Accès rapides */}
-        <AdminSection title="Accès rapides">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            {quickLinks.map(link => (
-              <Link key={link.href} href={link.href} className="rounded-lg border p-4 hover:bg-muted/70">
-                <div className="font-medium">{link.label}</div>
-                {link.description && <div className="text-sm text-muted-foreground">{link.description}</div>}
-              </Link>
-            ))}
-          </div>
-        </AdminSection>
+        {/* Accès rapides déplacés dans la sidebar (section Administration) */}
       </AdminContent>
     </AdminPage>
   )
