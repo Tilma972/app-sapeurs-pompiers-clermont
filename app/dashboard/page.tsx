@@ -26,7 +26,7 @@ export default async function DashboardPage() {
       title: "Tournées & Calendriers",
       description: "Suivez la collecte et les distributions",
       iconKey: "calendar",
-      href: "/dashboard/calendriers",
+      href: "/calendriers",
       gradient: "from-sky-500 to-blue-600",
       badges: [
         `${(globalStats?.total_calendriers_distribues ?? 0).toLocaleString("fr-FR")} calendriers`,

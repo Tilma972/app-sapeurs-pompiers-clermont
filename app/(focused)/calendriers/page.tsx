@@ -7,7 +7,6 @@ import {
   getActiveTourneeWithTransactions,
   getUserPersonalStats,
   getUserHistory,
-  
 } from "@/lib/supabase/tournee";
 import { Play, TrendingUp } from "lucide-react";
 import Link from "next/link";
@@ -15,6 +14,7 @@ import { StartTourneeButton } from "@/components/start-tournee-button";
 import TeamsProgressList from "@/components/charts/teams-progress-list";
 import { getEquipesRanking } from "@/lib/supabase/equipes";
 import { PersonalStatsCard } from "@/components/personal-stats-card";
+import { FocusedContainer } from "@/components/layouts/focused/focused-container";
 
 export default async function CalendriersPage() {
   const supabase = await createClient();
@@ -30,7 +30,6 @@ export default async function CalendriersPage() {
   const profile = await getCurrentUserProfile();
   const personalStats = await getUserPersonalStats();
   const userHistory = await getUserHistory();
-  // const teamsSummary = await getTeamsSummary(); // non utilisé ici
   const equipesRanking = await getEquipesRanking();
   
   // Vérification s'il y a une tournée active
@@ -41,12 +40,9 @@ export default async function CalendriersPage() {
   const objectiveCalendars = 50;
   const calendarsRemaining = Math.max(0, objectiveCalendars - (personalStats?.totalCalendarsDistributed || 0));
 
-  // Formatters localisation FR
-  // Formatters utilisés dans les composants intégrés (KpiCard gère l'affichage)
-
   return (
-    <div className="space-y-6 sm:space-y-8">
-        
+    <FocusedContainer>
+      <div className="space-y-6">
         {/* Carte d'Action - Démarrer une nouvelle tournée */}
         <Card className="bg-card border border-border shadow-sm">
           <CardHeader className="pb-3 sm:pb-4">
@@ -101,11 +97,7 @@ export default async function CalendriersPage() {
             <TeamsProgressList items={equipesRanking} limit={6} compact />
           </CardContent>
         </Card>
-        
-
-        {/* Carte "Mon Historique" supprimée: l'historique récent est intégré dans "Mon activité" */}
-
-        {/* Carte "Classement des Équipes" supprimée (redondante) */}
-    </div>
+      </div>
+    </FocusedContainer>
   );
 }
