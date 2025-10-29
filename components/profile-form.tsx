@@ -5,10 +5,11 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent } from "@/components/ui/card";
+// Card no longer used; inline alerts replace previous card status
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { updateUserProfileClient } from "@/lib/supabase/profile-client";
 import { Profile } from "@/lib/types/profile";
-import { Loader2, Check, X } from "lucide-react";
+import { Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 
 interface ProfileFormProps {
   profile: Profile;
@@ -63,33 +64,24 @@ export function ProfileForm({ profile }: ProfileFormProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Message de statut */}
-      {message && (
-        <Card className={`${
-          message.type === 'success' 
-            ? 'bg-green-50 border-green-200' 
-            : 'bg-red-50 border-red-200'
-        }`}>
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-2">
-              {message.type === 'success' ? (
-                <Check className="h-4 w-4 text-green-600" />
-              ) : (
-                <X className="h-4 w-4 text-red-600" />
-              )}
-              <span className={`text-sm font-medium ${
-                message.type === 'success' ? 'text-green-800' : 'text-red-800'
-              }`}>
-                {message.text}
-              </span>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      <div aria-live="polite">
+        {message && (
+          <Alert className={message.type === 'success' ? 'border-green-600/30 text-foreground' : ''}>
+            {message.type === 'success' ? (
+              <CheckCircle2 className="h-4 w-4 text-green-600" />
+            ) : (
+              <AlertCircle className="h-4 w-4 text-destructive" />
+            )}
+            <AlertTitle>{message.type === 'success' ? 'Succès' : 'Erreur'}</AlertTitle>
+            <AlertDescription>{message.text}</AlertDescription>
+          </Alert>
+        )}
+      </div>
 
       {/* Champs du formulaire */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-2">
-          <Label htmlFor="full_name" className="text-sm font-medium">
+          <Label htmlFor="full_name" className="text-sm text-muted-foreground">
             Nom complet *
           </Label>
           <Input
@@ -103,13 +95,13 @@ export function ProfileForm({ profile }: ProfileFormProps) {
             disabled={isLoading}
             className=""
           />
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-muted-foreground">
             Votre nom tel qu&apos;il apparaîtra dans l&apos;application
           </p>
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="team" className="text-sm font-medium">
+          <Label htmlFor="team" className="text-sm text-muted-foreground">
             Équipe/Caserne
           </Label>
           <Input
@@ -122,17 +114,18 @@ export function ProfileForm({ profile }: ProfileFormProps) {
             disabled={isLoading}
             className=""
           />
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-muted-foreground">
             Votre caserne ou équipe (optionnel)
           </p>
         </div>
       </div>
 
-      {/* Boutons d'action */}
-      <div className="flex justify-end space-x-3 pt-4 border-t">
+      {/* Boutons d'action (mobile-first) */}
+      <div className="pt-4 border-t flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
         <Button
           type="button"
           variant="outline"
+          className="w-full sm:w-auto"
           onClick={() => router.back()}
           disabled={isLoading}
         >
@@ -140,8 +133,8 @@ export function ProfileForm({ profile }: ProfileFormProps) {
         </Button>
         <Button
           type="submit"
+          className="w-full sm:w-auto"
           disabled={isLoading || !formData.full_name.trim()}
-          className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
         >
           {isLoading ? (
             <>
