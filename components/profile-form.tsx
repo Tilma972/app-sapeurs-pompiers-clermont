@@ -14,8 +14,10 @@ import { updateUserProfileClient } from "@/lib/supabase/profile-client";
 import { Profile } from "@/lib/types/profile";
 import { Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 
+interface TeamOption { id: string; nom: string }
 interface ProfileFormProps {
   profile: Profile;
+  teamOptions?: TeamOption[];
 }
 
 const schema = z.object({
@@ -30,7 +32,7 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>;
 
-export function ProfileForm({ profile }: ProfileFormProps) {
+export function ProfileForm({ profile, teamOptions = [] }: ProfileFormProps) {
   const router = useRouter();
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
@@ -38,7 +40,7 @@ export function ProfileForm({ profile }: ProfileFormProps) {
     resolver: zodResolver(schema),
     defaultValues: {
       full_name: profile.full_name || "",
-      team: profile.team || "",
+  team: profile.team || "",
     },
     mode: "onBlur",
     reValidateMode: "onChange",
@@ -103,7 +105,20 @@ export function ProfileForm({ profile }: ProfileFormProps) {
             <FormItem>
               <FormLabel>Équipe/Caserne</FormLabel>
               <FormControl>
-                <Input placeholder="Ex: Caserne de Paris 15e" {...field} />
+                {teamOptions.length > 0 ? (
+                  <select
+                    className="h-10 w-full rounded-md border bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    value={field.value ?? ""}
+                    onChange={(e) => field.onChange(e.target.value)}
+                  >
+                    <option value="">Aucune</option>
+                    {teamOptions.map((t) => (
+                      <option key={t.id} value={t.nom}>{t.nom}</option>
+                    ))}
+                  </select>
+                ) : (
+                  <Input placeholder="Ex: Caserne de Paris 15e" {...field} />
+                )}
               </FormControl>
               <FormDescription>Votre caserne ou équipe (optionnel)</FormDescription>
               <FormMessage />

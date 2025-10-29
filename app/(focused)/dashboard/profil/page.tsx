@@ -16,6 +16,13 @@ export default async function ProfilPage() {
   const profile = await getCurrentUserProfile();
   if (!profile) redirect("/dashboard");
 
+  // Charger les équipes actives pour le Select dynamique
+  const { data: teams } = await supabase
+    .from('equipes')
+    .select('id, nom')
+    .eq('actif', true)
+    .order('ordre_affichage', { ascending: true });
+
   return (
     <FocusedContainer>
       {/* Informations actuelles */}
@@ -91,7 +98,7 @@ export default async function ProfilPage() {
           <CardDescription>Mettez à jour vos informations personnelles</CardDescription>
         </CardHeader>
         <CardContent>
-          <ProfileForm profile={profile} />
+          <ProfileForm profile={profile} teamOptions={(teams as Array<{ id: string; nom: string }>) || []} />
         </CardContent>
       </Card>
     </FocusedContainer>
