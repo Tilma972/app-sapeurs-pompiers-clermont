@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Calendar, Euro } from "lucide-react"
+import { MedalIcon } from "@/components/icons/medal"
 
 export interface Team {
   id: string
@@ -112,30 +113,39 @@ export function TeamsLeaderboardProgress({
                 <div className="flex min-w-0 flex-1 items-center gap-2">
                   {/* Medal badges for top 3, simple index for others */}
                   {index === 0 ? (
-                    <span className="relative inline-flex items-center justify-center h-6 w-6 rounded-full bg-amber-400 text-black text-xs font-semibold" aria-hidden="true">
-                      {/* Gold medal SVG */}
-                      <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                        <circle cx="12" cy="10" r="4" fill="currentColor" />
-                        <path d="M8 14l-1 6 5-3 5 3-1-6" fill="currentColor" opacity="0.9" />
-                      </svg>
+                    <span
+                      className="inline-flex items-center justify-center h-6 w-6 rounded-full text-xs font-semibold"
+                      aria-hidden="true"
+                      style={{
+                        backgroundColor: "var(--badge-gold-bg, #f5d042)",
+                        color: "var(--badge-gold-fg, #7a5500)",
+                      }}
+                    >
+                      <MedalIcon className="h-4 w-4" title={`Médaille d'or — ${team.name}`} />
                       <span className="sr-only">{`1er — Médaille d'or, ${team.name}`}</span>
                     </span>
                   ) : index === 1 ? (
-                    <span className="relative inline-flex items-center justify-center h-6 w-6 rounded-full bg-slate-300 text-black text-xs font-semibold" aria-hidden="true">
-                      {/* Silver medal SVG */}
-                      <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                        <circle cx="12" cy="10" r="4" fill="currentColor" />
-                        <path d="M8 14l-1 6 5-3 5 3-1-6" fill="currentColor" opacity="0.9" />
-                      </svg>
+                    <span
+                      className="inline-flex items-center justify-center h-6 w-6 rounded-full text-xs font-semibold"
+                      aria-hidden="true"
+                      style={{
+                        backgroundColor: "var(--badge-silver-bg, #e6e9ee)",
+                        color: "var(--badge-silver-fg, #3b3f46)",
+                      }}
+                    >
+                      <MedalIcon className="h-4 w-4" title={`Médaille d'argent — ${team.name}`} />
                       <span className="sr-only">{`2e — Médaille d'argent, ${team.name}`}</span>
                     </span>
                   ) : index === 2 ? (
-                    <span className="relative inline-flex items-center justify-center h-6 w-6 rounded-full bg-amber-700 text-white text-xs font-semibold" aria-hidden="true">
-                      {/* Bronze medal SVG (toned darker) */}
-                      <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                        <circle cx="12" cy="10" r="4" fill="currentColor" />
-                        <path d="M8 14l-1 6 5-3 5 3-1-6" fill="currentColor" opacity="0.95" />
-                      </svg>
+                    <span
+                      className="inline-flex items-center justify-center h-6 w-6 rounded-full text-xs font-semibold"
+                      aria-hidden="true"
+                      style={{
+                        backgroundColor: "var(--badge-bronze-bg, #b4764a)",
+                        color: "var(--badge-bronze-fg, #ffffff)",
+                      }}
+                    >
+                      <MedalIcon className="h-4 w-4" title={`Médaille de bronze — ${team.name}`} />
                       <span className="sr-only">{`3e — Médaille de bronze, ${team.name}`}</span>
                     </span>
                   ) : (

@@ -91,10 +91,13 @@ export default async function CalendriersPage() {
           </Card>
         )}
 
-        {/* Visual separator replacing explanatory card */}
+        {/* Visual separator with visible label and optional explanatory text */}
         <div className="py-2">
+          <div className="text-sm text-muted-foreground mb-2 text-center">Objectifs et progression</div>
           <hr className="border-t border-muted" />
-          <p className="sr-only">Objectifs et progression — consultez le classement et les performances par équipe</p>
+          <div className="mt-2 text-xs text-muted-foreground text-center">
+            {`Cette vue compare les équipes sur la même échelle d'objectif pour une lecture rapide.`}
+          </div>
         </div>
 
         {/* Classement des équipes (barres horizontales + toggle Calendriers/€) */}
