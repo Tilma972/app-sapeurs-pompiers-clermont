@@ -1,5 +1,4 @@
 import { FocusedContainer } from "@/components/layouts/focused/focused-container"
-import { FocusedActionBar } from "@/components/layouts/focused/focused-action-bar"
 import { TourneeStatusCard } from "@/components/tournee/tournee-status-card"
 import { Button } from "@/components/ui/button"
 import { createClient } from "@/lib/supabase/server"
@@ -81,8 +80,8 @@ export default async function MaTourneePage() {
         </div>
       </FocusedContainer>
 
-      {/* Barre d'action bas – Clôture */}
-      <FocusedActionBar>
+      {/* Clôture intégrée au contenu */}
+      <FocusedContainer>
         <TourneeClotureModal
           trigger={
             <Button size="lg" variant="destructive" className="w-full h-14 text-lg">
@@ -92,7 +91,7 @@ export default async function MaTourneePage() {
           tourneeData={{ tournee, transactions, summary }}
           tourneeSummary={summary}
         />
-      </FocusedActionBar>
+      </FocusedContainer>
     </>
   )
 }
