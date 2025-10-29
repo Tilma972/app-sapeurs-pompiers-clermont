@@ -2,11 +2,14 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-// Card no longer used; inline alerts replace previous card status
+// Label unused; FormLabel provides label styling
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { updateUserProfileClient } from "@/lib/supabase/profile-client";
 import { Profile } from "@/lib/types/profile";
 import { Loader2, CheckCircle2, AlertCircle } from "lucide-react";
@@ -15,54 +18,53 @@ interface ProfileFormProps {
   profile: Profile;
 }
 
+const schema = z.object({
+  full_name: z.string().trim().min(2, "Nom trop court").max(80, "Nom trop long"),
+  team: z
+    .string()
+    .trim()
+    .max(80, "Nom d'équipe trop long")
+    .optional()
+    .transform((v) => (v === "" ? undefined : v)),
+});
+
+type FormValues = z.infer<typeof schema>;
+
 export function ProfileForm({ profile }: ProfileFormProps) {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-  
-  const [formData, setFormData] = useState({
-    full_name: profile.full_name,
-    team: profile.team || '',
+
+  const form = useForm<FormValues>({
+    resolver: zodResolver(schema),
+    defaultValues: {
+      full_name: profile.full_name || "",
+      team: profile.team || "",
+    },
+    mode: "onBlur",
+    reValidateMode: "onChange",
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
+  const onSubmit = async (values: FormValues) => {
     setMessage(null);
-
     try {
-      const updatedProfile = await updateUserProfileClient({
-        full_name: formData.full_name.trim(),
-        team: formData.team.trim() || null,
+      const updated = await updateUserProfileClient({
+        full_name: values.full_name,
+        team: values.team ?? null,
       });
-
-      if (updatedProfile) {
+      if (updated) {
         setMessage({ type: 'success', text: 'Profil mis à jour avec succès !' });
-        // Rafraîchir la page après 2 secondes
-        setTimeout(() => {
-          router.refresh();
-        }, 2000);
+        setTimeout(() => router.refresh(), 1200);
       } else {
         setMessage({ type: 'error', text: 'Erreur lors de la mise à jour du profil' });
       }
-    } catch (error) {
-      console.error('Erreur:', error);
+    } catch {
       setMessage({ type: 'error', text: 'Une erreur est survenue' });
-    } finally {
-      setIsLoading(false);
     }
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+  <Form {...form}>
+  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
       {/* Message de statut */}
       <div aria-live="polite">
         {message && (
@@ -80,44 +82,34 @@ export function ProfileForm({ profile }: ProfileFormProps) {
 
       {/* Champs du formulaire */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="space-y-2">
-          <Label htmlFor="full_name" className="text-sm text-muted-foreground">
-            Nom complet *
-          </Label>
-          <Input
-            id="full_name"
-            name="full_name"
-            type="text"
-            value={formData.full_name}
-            onChange={handleInputChange}
-            placeholder="Votre nom complet"
-            required
-            disabled={isLoading}
-            className=""
-          />
-          <p className="text-xs text-muted-foreground">
-            Votre nom tel qu&apos;il apparaîtra dans l&apos;application
-          </p>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="team" className="text-sm text-muted-foreground">
-            Équipe/Caserne
-          </Label>
-          <Input
-            id="team"
-            name="team"
-            type="text"
-            value={formData.team}
-            onChange={handleInputChange}
-            placeholder="Ex: Caserne de Paris 15e"
-            disabled={isLoading}
-            className=""
-          />
-          <p className="text-xs text-muted-foreground">
-            Votre caserne ou équipe (optionnel)
-          </p>
-        </div>
+        <FormField
+          control={form.control}
+          name="full_name"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Nom complet *</FormLabel>
+              <FormControl>
+                <Input placeholder="Votre nom complet" {...field} />
+              </FormControl>
+              <FormDescription>Votre nom tel qu&apos;il apparaîtra dans l&apos;application</FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="team"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Équipe/Caserne</FormLabel>
+              <FormControl>
+                <Input placeholder="Ex: Caserne de Paris 15e" {...field} />
+              </FormControl>
+              <FormDescription>Votre caserne ou équipe (optionnel)</FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
       </div>
 
       {/* Boutons d'action (mobile-first) */}
@@ -127,16 +119,16 @@ export function ProfileForm({ profile }: ProfileFormProps) {
           variant="outline"
           className="w-full sm:w-auto"
           onClick={() => router.back()}
-          disabled={isLoading}
+          disabled={form.formState.isSubmitting}
         >
           Annuler
         </Button>
         <Button
           type="submit"
           className="w-full sm:w-auto"
-          disabled={isLoading || !formData.full_name.trim()}
+          disabled={form.formState.isSubmitting}
         >
-          {isLoading ? (
+          {form.formState.isSubmitting ? (
             <>
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />
               Mise à jour...
@@ -147,5 +139,6 @@ export function ProfileForm({ profile }: ProfileFormProps) {
         </Button>
       </div>
     </form>
+    </Form>
   );
 }
