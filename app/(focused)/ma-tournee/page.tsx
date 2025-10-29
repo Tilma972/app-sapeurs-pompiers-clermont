@@ -37,20 +37,10 @@ export default async function MaTourneePage() {
   const calendars = summary?.calendars_distributed || 0
   const amount = summary?.montant_total || 0
   const startTime = new Date(tournee.date_debut).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })
-  const now = new Date()
-  const started = new Date(tournee.date_debut)
-  const durationMin = Math.floor((now.getTime() - started.getTime()) / 60000)
-  const dh = Math.floor(durationMin / 60)
-  const dm = durationMin % 60
-  const durationLabel = `${dh}h ${dm}min`
 
   return (
     <>
       <FocusedContainer>
-        {/* Meta sous le header: durée de la tournée */}
-        <div className="flex justify-center">
-          <span className="text-sm text-muted-foreground">Durée: {durationLabel}</span>
-        </div>
         <TourneeStatusCard 
           status="active"
           startTime={startTime}
