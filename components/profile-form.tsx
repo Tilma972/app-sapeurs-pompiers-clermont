@@ -101,7 +101,7 @@ export function ProfileForm({ profile }: ProfileFormProps) {
             placeholder="Votre nom complet"
             required
             disabled={isLoading}
-            className="bg-white/80"
+            className=""
           />
           <p className="text-xs text-gray-500">
             Votre nom tel qu&apos;il apparaîtra dans l&apos;application
@@ -120,7 +120,7 @@ export function ProfileForm({ profile }: ProfileFormProps) {
             onChange={handleInputChange}
             placeholder="Ex: Caserne de Paris 15e"
             disabled={isLoading}
-            className="bg-white/80"
+            className=""
           />
           <p className="text-xs text-gray-500">
             Votre caserne ou équipe (optionnel)

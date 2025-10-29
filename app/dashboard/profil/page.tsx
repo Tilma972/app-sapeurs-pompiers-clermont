@@ -27,23 +27,23 @@ export default async function ProfilPage() {
   return (
     <div className="space-y-6">
       {/* En-tête du profil */}
-      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-6 border border-blue-200">
-        <div className="flex items-center space-x-4">
-          <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center">
-            <User className="h-6 w-6 text-white" />
+      <div className="bg-card rounded-lg p-6 border">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-md bg-primary text-primary-foreground inline-flex items-center justify-center">
+            <User className="h-5 w-5" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Mon Profil</h1>
-            <p className="text-gray-600 mt-1">Gérez vos informations personnelles</p>
+            <h1 className="text-2xl font-bold">Mon Profil</h1>
+            <p className="text-sm text-muted-foreground mt-1">Gérez vos informations personnelles</p>
           </div>
         </div>
       </div>
         {/* Section d'informations actuelles */}
         <div className="mb-8">
-          <Card className="bg-white/60 backdrop-blur-sm border border-white/20 shadow-lg">
+          <Card>
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
-                <User className="h-5 w-5 text-blue-600" />
+                <User className="h-5 w-5 text-muted-foreground" />
                 <span>Informations actuelles</span>
               </CardTitle>
               <CardDescription>
@@ -53,42 +53,42 @@ export default async function ProfilPage() {
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label className="text-sm font-medium text-gray-600">Nom complet</Label>
-                  <div className="p-3 bg-gray-50 rounded-lg border">
-                    <span className="font-medium">{profile.full_name}</span>
+                  <Label className="text-sm text-muted-foreground">Nom complet</Label>
+                  <div className="p-3 bg-muted rounded-md border">
+                    <span className="font-medium text-foreground">{profile.full_name}</span>
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-sm font-medium text-gray-600">Email</Label>
-                  <div className="p-3 bg-gray-50 rounded-lg border">
-                    <span className="font-medium">{user.email}</span>
+                  <Label className="text-sm text-muted-foreground">Email</Label>
+                  <div className="p-3 bg-muted rounded-md border">
+                    <span className="font-medium text-foreground">{user.email}</span>
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-sm font-medium text-gray-600">Rôle</Label>
-                  <div className="p-3 bg-gray-50 rounded-lg border">
-                    <Badge variant="secondary" className="bg-purple-100 text-purple-700 border-purple-200">
+                  <Label className="text-sm text-muted-foreground">Rôle</Label>
+                  <div className="p-3 bg-muted rounded-md border">
+                    <Badge variant="outline" className="px-2 py-0.5">
                       <Shield className="h-3 w-3 mr-1" />
                       {profile.role}
                     </Badge>
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-sm font-medium text-gray-600">Équipe/Caserne</Label>
-                  <div className="p-3 bg-gray-50 rounded-lg border">
+                  <Label className="text-sm text-muted-foreground">Équipe/Caserne</Label>
+                  <div className="p-3 bg-muted rounded-md border">
                     {profile.team ? (
-                      <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                      <Badge variant="outline" className="px-2 py-0.5">
                         <Building className="h-3 w-3 mr-1" />
                         {profile.team}
                       </Badge>
                     ) : (
-                      <span className="text-gray-500 italic">Non renseigné</span>
+                      <span className="text-muted-foreground italic">Non renseigné</span>
                     )}
                   </div>
                 </div>
               </div>
               <div className="pt-4 border-t">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm text-gray-600">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm text-muted-foreground">
                   <div>
                     <span className="font-medium">Membre depuis :</span>{" "}
                     {new Date(profile.created_at).toLocaleDateString('fr-FR', {
@@ -112,10 +112,10 @@ export default async function ProfilPage() {
         </div>
 
         {/* Formulaire de modification */}
-        <Card className="bg-white/60 backdrop-blur-sm border border-white/20 shadow-lg">
+        <Card>
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
-              <User className="h-5 w-5 text-green-600" />
+              <User className="h-5 w-5 text-muted-foreground" />
               <span>Modifier mes informations</span>
             </CardTitle>
             <CardDescription>
