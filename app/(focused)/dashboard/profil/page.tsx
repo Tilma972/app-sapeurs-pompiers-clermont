@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { getCurrentUserProfile } from "@/lib/supabase/profile";
+import { ProfileWithTeamId } from "@/lib/types/profile";
 import { ProfileForm } from "@/components/profile-form";
 import { User, Shield, Building } from "lucide-react";
 import { FocusedContainer } from "@/components/layouts/focused/focused-container";
@@ -63,7 +64,7 @@ export default async function ProfilPage() {
               <Label className="text-sm text-muted-foreground">Équipe/Caserne</Label>
               <div className="p-3 bg-muted rounded-md border">
                 {(() => {
-                  const teamId = (profile as unknown as { team_id?: string | null }).team_id
+                  const teamId = (profile as ProfileWithTeamId).team_id
                   const teamName = teamId ? (teams as Array<{ id: string; nom: string }> | undefined)?.find((t) => t.id === teamId)?.nom : undefined
                   const label = teamName || profile.team || undefined
                   return label ? (

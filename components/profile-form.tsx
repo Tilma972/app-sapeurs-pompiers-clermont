@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { updateUserProfileClient } from "@/lib/supabase/profile-client";
-import { Profile } from "@/lib/types/profile";
+import { Profile, ProfileWithTeamId } from "@/lib/types/profile";
 import { Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 
 interface TeamOption { id: string; nom: string }
@@ -38,8 +38,8 @@ export function ProfileForm({ profile, teamOptions = [] }: ProfileFormProps) {
     resolver: zodResolver(schema),
     defaultValues: {
       full_name: profile.full_name || "",
-      // team_id peut ne pas être typé explicitement dans Profile, on accède via index
-      team_id: (profile as unknown as { team_id?: string | null }).team_id || "",
+  // team_id peut ne pas être présent dans Profile si les types ne sont pas régénérés
+  team_id: (profile as ProfileWithTeamId).team_id || "",
     },
     mode: "onBlur",
     reValidateMode: "onChange",
