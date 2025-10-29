@@ -3,16 +3,17 @@ import { redirect } from "next/navigation";
 import { FocusedContainer } from "@/components/layouts/focused/focused-container";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { KpiCard } from "@/components/kpi-card";
-import { getUserPersonalStats, getUserHistory } from "@/lib/supabase/tournee";
+import { getUserPersonalStats, getUserHistory, getLastCompletedTourneeSummary } from "@/lib/supabase/tournee";
 
 export default async function RapportsPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/auth/login");
 
-  const [stats, history] = await Promise.all([
+  const [stats, history, lastTour] = await Promise.all([
     getUserPersonalStats(),
     getUserHistory(),
+    getLastCompletedTourneeSummary(),
   ]);
 
   const currency = new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR", maximumFractionDigits: 0 });
@@ -27,6 +28,38 @@ export default async function RapportsPage() {
             <p className="text-xs text-muted-foreground">Statistiques personnelles et historique de mes tournées</p>
           </div>
         </div>
+
+        {/* Dernière tournée */}
+        <Card className="bg-card border border-border shadow-sm">
+          <CardHeader className="pb-3 sm:pb-4">
+            <CardTitle className="text-base sm:text-lg">Dernière tournée</CardTitle>
+            <CardDescription>Résumé de la dernière tournée terminée</CardDescription>
+          </CardHeader>
+          <CardContent className="pt-0">
+            {lastTour ? (
+              <div className="grid grid-cols-4 gap-2 sm:gap-4 items-end">
+                <div>
+                  <div className="text-xs text-muted-foreground">Date</div>
+                  <div className="text-sm font-medium">{new Date(lastTour.date).toLocaleDateString("fr-FR")}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-muted-foreground">Calendriers</div>
+                  <div className="text-lg font-semibold">{numberFr.format(lastTour.calendarsDistributed)}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-muted-foreground">Collecté</div>
+                  <div className="text-lg font-semibold">{currency.format(Math.max(0, Math.trunc(lastTour.amountCollected)))}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-muted-foreground">Reçus émis</div>
+                  <div className="text-lg font-semibold">{numberFr.format(lastTour.receiptsCount)}</div>
+                </div>
+              </div>
+            ) : (
+              <div className="text-xs text-muted-foreground">Aucune tournée terminée</div>
+            )}
+          </CardContent>
+        </Card>
 
         <Card className="bg-card border border-border shadow-sm">
           <CardHeader className="pb-3 sm:pb-4">
