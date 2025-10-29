@@ -50,11 +50,15 @@ export function TeamsLeaderboardProgress({
     <Card className={className} role="region" aria-label="Classement des équipes">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between gap-2">
-          <CardTitle className="text-lg">Classement des équipes</CardTitle>
+          {/* Left side: title - allow truncation when space is tight */}
+          <div className="min-w-0">
+            <CardTitle className="text-lg truncate">Classement des équipes</CardTitle>
+          </div>
 
-          {/* Toggle simple et accessible (une seule métrique visible à la fois) */}
+          {/* Toggle simple et accessible (une seule métrique visible à la fois)
+              keep it from shrinking so it won't overlap content */}
           <div
-            className="flex gap-1 rounded-lg bg-muted p-1"
+            className="flex gap-1 rounded-lg bg-muted p-1 flex-shrink-0"
             role="tablist"
             aria-label="Choix de métrique"
           >
@@ -64,7 +68,7 @@ export function TeamsLeaderboardProgress({
               variant={viewMode === "calendars" ? "default" : "ghost"}
               size="sm"
               onClick={() => setViewMode("calendars")}
-              className="h-9 px-3 text-xs" // cible tactile confortable
+              className="h-9 px-3 text-xs"
             >
               <Calendar className="mr-1 h-3.5 w-3.5" aria-hidden="true" />
               Calendriers
@@ -143,6 +147,9 @@ export function TeamsLeaderboardProgress({
                     <span className="text-sm font-semibold">{formatCurrency(team.amountCollected)}</span>
                   )}
                 </div>
+
+                {/* Visually-hidden progress text for screen readers */}
+                <span className="sr-only">{progressLabel}</span>
               </div>
 
               {/* Micro bullet bar déterminée (piste vs indicateur) */}
