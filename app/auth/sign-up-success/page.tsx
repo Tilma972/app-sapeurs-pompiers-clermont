@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Card,
   CardContent,
@@ -5,9 +7,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-
-"use client";
-
 import { useEffect } from 'react';
 import { toast } from 'react-hot-toast';
 

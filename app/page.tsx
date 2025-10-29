@@ -12,7 +12,7 @@ import { LandingHeaderWrapper } from "@/components/landing/landing-header-wrappe
 import { OperationsStatsSection } from "@/components/landing/operations-stats-section";
 import { SectorMapSection } from "@/components/landing/sector-map-section";
 
-export default async function Home({ searchParams }: { searchParams?: { pending?: string } }) {
+export default async function Home({ searchParams }: { searchParams?: Promise<{ pending?: string }> }) {
   // Vérification intelligente de l'authentification
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -22,11 +22,12 @@ export default async function Home({ searchParams }: { searchParams?: { pending?
   //   redirect("/dashboard");
   // }
 
+  const params = (await searchParams) || {};
   return (
     <div className="min-h-screen">
       {/* Header avec navigation */}
       <LandingHeaderWrapper user={user} />
-      {searchParams?.pending === '1' && (
+  {params?.pending === '1' && (
         <div className="mx-auto max-w-5xl px-4">
             <div className="mt-4 rounded-lg border bg-yellow-50 text-yellow-900 p-4 text-sm">
               Votre inscription a bien été enregistrée et est en attente d&apos;approbation par un administrateur. Vous recevrez un email dès validation.

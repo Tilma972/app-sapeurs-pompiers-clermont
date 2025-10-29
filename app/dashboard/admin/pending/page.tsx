@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { toast } from 'react-hot-toast'
 import { Shield, RefreshCcw } from 'lucide-react'
+import { createClient } from '@/lib/supabase/client'
 
 type PendingUser = {
   id: string
@@ -14,9 +15,15 @@ type PendingUser = {
   team_id: string | null
 }
 
+type Team = { id: string; nom: string }
+
 export default function AdminPendingUsersPage() {
+  const supabase = createClient()
   const [loading, setLoading] = useState(true)
   const [users, setUsers] = useState<PendingUser[]>([])
+  const [teams, setTeams] = useState<Team[]>([])
+  const [roleDraft, setRoleDraft] = useState<Record<string, string>>({})
+  const [teamDraft, setTeamDraft] = useState<Record<string, string>>({})
 
   async function load() {
     setLoading(true)
@@ -25,6 +32,13 @@ export default function AdminPendingUsersPage() {
       if (!res.ok) throw new Error(res.status === 403 ? 'Accès refusé' : 'Erreur de chargement')
       const json = await res.json()
       setUsers(json.users || [])
+      // Load teams for selection
+      const { data: t } = await supabase
+        .from('equipes')
+        .select('id, nom')
+        .eq('actif', true)
+        .order('ordre_affichage')
+      setTeams(t || [])
     } catch (e) {
       console.error(e)
       toast.error(e instanceof Error ? e.message : 'Erreur')
@@ -33,10 +47,19 @@ export default function AdminPendingUsersPage() {
     }
   }
 
-  useEffect(() => { load() }, [])
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    load()
+    // We intentionally don't include `load` to avoid re-creating it each render.
+  }, [])
 
   async function approve(id: string) {
-    const res = await fetch('/api/admin/pending/approve', { method: 'POST', body: JSON.stringify({ id }) })
+    const payload = {
+      id,
+      role: roleDraft[id] || users.find(u => u.id === id)?.role || 'membre',
+      team_id: (teamDraft[id] ?? users.find(u => u.id === id)?.team_id) || null,
+    }
+    const res = await fetch('/api/admin/pending/approve', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
     if (!res.ok) {
       const { error } = await res.json().catch(() => ({ error: 'Erreur' }))
       toast.error(error)
@@ -83,14 +106,44 @@ export default function AdminPendingUsersPage() {
           ) : (
             <div className="space-y-3">
               {users.map(u => (
-                <div key={u.id} className="p-4 border rounded-lg flex items-center justify-between">
-                  <div>
-                    <div className="font-medium">{u.full_name || 'Nom non renseigné'}</div>
-                    <div className="text-xs text-muted-foreground">Créé le {u.created_at ? new Date(u.created_at).toLocaleDateString('fr-FR') : '—'}</div>
+                <div key={u.id} className="p-4 border rounded-lg">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="min-w-0">
+                      <div className="font-medium truncate">{u.full_name || 'Nom non renseigné'}</div>
+                      <div className="text-xs text-muted-foreground">Créé le {u.created_at ? new Date(u.created_at).toLocaleDateString('fr-FR') : '—'}</div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button size="sm" variant="secondary" onClick={() => approve(u.id)}>Approuver</Button>
+                      <Button size="sm" variant="destructive" onClick={() => reject(u.id)}>Rejeter</Button>
+                    </div>
                   </div>
-                  <div className="flex gap-2">
-                    <Button size="sm" variant="secondary" onClick={() => approve(u.id)}>Approuver</Button>
-                    <Button size="sm" variant="destructive" onClick={() => reject(u.id)}>Rejeter</Button>
+                  <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs text-muted-foreground mb-1">Rôle</label>
+                      <select
+                        className="border rounded px-2 py-2 text-sm w-full"
+                        value={roleDraft[u.id] ?? u.role ?? 'membre'}
+                        onChange={(e) => setRoleDraft(s => ({ ...s, [u.id]: e.target.value }))}
+                      >
+                        <option value="membre">Membre</option>
+                        <option value="chef_equipe">Chef d&apos;équipe</option>
+                        <option value="tresorier">Trésorier</option>
+                        <option value="admin">Admin</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs text-muted-foreground mb-1">Équipe</label>
+                      <select
+                        className="border rounded px-2 py-2 text-sm w-full"
+                        value={teamDraft[u.id] ?? u.team_id ?? ''}
+                        onChange={(e) => setTeamDraft(s => ({ ...s, [u.id]: e.target.value }))}
+                      >
+                        <option value="">Aucune équipe</option>
+                        {teams.map(t => (
+                          <option key={t.id} value={t.id}>{t.nom}</option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
                 </div>
               ))}
