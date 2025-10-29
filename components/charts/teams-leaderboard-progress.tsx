@@ -49,16 +49,15 @@ export function TeamsLeaderboardProgress({
   return (
     <Card className={className} role="region" aria-label="Classement des équipes">
       <CardHeader className="pb-3">
-        <div className="flex items-center justify-between gap-2">
-          {/* Left side: title - allow truncation when space is tight */}
+        {/* On small screens stack title + toggle; on larger screens keep them on a row */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
           <div className="min-w-0">
             <CardTitle className="text-lg truncate">Classement des équipes</CardTitle>
           </div>
 
-          {/* Toggle simple et accessible (une seule métrique visible à la fois)
-              keep it from shrinking so it won't overlap content */}
+          {/* Toggle: placed under title on mobile (mt-2), on the right on sm+ */}
           <div
-            className="flex gap-1 rounded-lg bg-muted p-1 flex-shrink-0"
+            className="flex gap-1 rounded-lg bg-muted p-1 flex-shrink-0 mt-2 sm:mt-0"
             role="tablist"
             aria-label="Choix de métrique"
           >
@@ -111,13 +110,34 @@ export function TeamsLeaderboardProgress({
             >
               <div className="flex items-center justify-between gap-2">
                 <div className="flex min-w-0 flex-1 items-center gap-2">
-                  <Badge
-                    variant="outline"
-                    className="h-5 w-5 shrink-0 rounded-full p-0 text-xs font-semibold"
-                    aria-label={`Rang ${index + 1}`}
-                  >
-                    {index + 1}
-                  </Badge>
+                  {/* Medal badges for top 3, simple index for others */}
+                  {index === 0 ? (
+                    <span
+                      className="inline-flex items-center justify-center h-6 w-6 rounded-full bg-yellow-400 text-black text-xs font-semibold"
+                      aria-label="1er"
+                      title="1er"
+                    >
+                      🥇
+                    </span>
+                  ) : index === 1 ? (
+                    <span
+                      className="inline-flex items-center justify-center h-6 w-6 rounded-full bg-slate-300 text-black text-xs font-semibold"
+                      aria-label="2e"
+                      title="2e"
+                    >
+                      🥈
+                    </span>
+                  ) : index === 2 ? (
+                    <span
+                      className="inline-flex items-center justify-center h-6 w-6 rounded-full bg-amber-700 text-white text-xs font-semibold"
+                      aria-label="3e"
+                      title="3e"
+                    >
+                      🥉
+                    </span>
+                  ) : (
+                    <span className="w-6 text-xs text-muted-foreground text-right">{index + 1}</span>
+                  )}
                   <span className="truncate text-sm font-medium">{team.name}</span>
                 </div>
 
