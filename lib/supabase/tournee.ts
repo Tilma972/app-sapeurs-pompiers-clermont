@@ -524,87 +524,92 @@ export async function getTeamsSummary(): Promise<{
   const supabase = await createClient();
 
   try {
-    // Essayer d'abord la vue tournee_summary
-    let stats, error;
-    
-    try {
-      // Essayer d'abord la vue tournee_summary avec un join manuel
-      const result = await supabase
-        .from('tournee_summary')
-        .select(`
-          calendars_distributed,
-          montant_total,
-          user_id
-        `);
-      
-      if (result.data && result.data.length > 0) {
-        // Récupérer les profils des utilisateurs
-        const userIds = result.data.map(stat => stat.user_id).filter(Boolean);
-        const { data: profiles } = await supabase
-          .from('profiles')
-          .select('id, team')
-          .in('id', userIds);
-        
-        // Combiner les données
-        stats = result.data.map(stat => ({
-          ...stat,
-          profiles: profiles?.find(p => p.id === stat.user_id) || { team: 'Sans équipe' }
-        }));
-        error = null;
-      } else {
-        stats = result.data;
-        error = result.error;
-      }
-    } catch (viewError) {
-      console.warn('Vue tournee_summary non disponible, utilisation du fallback:', viewError);
-      // Fallback : utiliser directement les tables tournees et profiles
-      const result = await supabase
+    // 1) Tenter via la vue agrégée tournee_summary
+    const { data: summaryData, error: summaryError } = await supabase
+      .from('tournee_summary')
+      .select('calendars_distributed, montant_total, user_id');
+
+    let rows:
+      | Array<{ calendars: number; amount: number; user_id: string | null }>
+      | null = null;
+
+    if (summaryData && summaryError == null) {
+      rows = summaryData.map((r: any) => ({ // eslint-disable-line @typescript-eslint/no-explicit-any
+        calendars: r.calendars_distributed || 0,
+        amount: r.montant_total || 0,
+        user_id: r.user_id || null,
+      }));
+    } else {
+      // 2) Fallback: lire directement les tournées terminées ou actives avec montants présents
+      const { data: tourneesData, error: tourneesError } = await supabase
         .from('tournees')
-        .select(`
-          calendriers_distribues,
-          montant_collecte,
-          profiles!inner(team)
-        `)
+        .select('user_id, calendriers_distribues, montant_collecte')
         .not('calendriers_distribues', 'is', null)
         .not('montant_collecte', 'is', null);
-      
-      stats = result.data;
-      error = result.error;
+
+      if (tourneesError) {
+        console.error('Erreur lors de la récupération des données de tournées:', tourneesError);
+        return [];
+      }
+
+      rows = (tourneesData || []).map((r: any) => ({ // eslint-disable-line @typescript-eslint/no-explicit-any
+        calendars: r.calendriers_distribues || 0,
+        amount: r.montant_collecte || 0,
+        user_id: r.user_id || null,
+      }));
     }
 
-    if (error) {
-      console.error('Erreur lors de la récupération du résumé des équipes:', {
-        message: error.message,
-        details: error.details,
-        hint: error.hint,
-        code: error.code
-      });
-      return [];
+    // 3) Récupérer team_id pour chaque user et le nom d'équipe associé
+    const userIds = Array.from(new Set((rows || []).map(r => r.user_id).filter(Boolean))) as string[];
+
+    let userIdToTeamId = new Map<string, string | null>();
+    let teamIdToName = new Map<string, string>();
+
+    if (userIds.length > 0) {
+      const { data: profs, error: profsError } = await supabase
+        .from('profiles')
+        .select('id, team_id')
+        .in('id', userIds);
+
+      if (profsError) {
+        console.warn('Impossible de récupérer profiles.team_id, utilisation de "Sans équipe":', profsError);
+      } else {
+        userIdToTeamId = new Map((profs || []).map(p => [p.id as string, (p as any).team_id || null])); // eslint-disable-line @typescript-eslint/no-explicit-any
+        const teamIds = Array.from(new Set((profs || []).map(p => (p as any).team_id).filter(Boolean))) as string[]; // eslint-disable-line @typescript-eslint/no-explicit-any
+
+        if (teamIds.length > 0) {
+          const { data: equipes, error: equipesError } = await supabase
+            .from('equipes')
+            .select('id, nom')
+            .in('id', teamIds);
+
+          if (equipesError) {
+            console.warn('Impossible de récupérer equipes.nom pour les team_id:', equipesError);
+          } else {
+            teamIdToName = new Map((equipes || []).map(e => [e.id as string, (e as any).nom as string])); // eslint-disable-line @typescript-eslint/no-explicit-any
+          }
+        }
+      }
     }
 
-    // Grouper par équipe
+    // 4) Grouper par nom d'équipe résolu via team_id
     const teamStats = new Map<string, { calendars: number; amount: number }>();
 
-    stats?.forEach((stat: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
-      const team = stat.profiles?.team || 'Sans équipe';
-      const current = teamStats.get(team) || { calendars: 0, amount: 0 };
-      
-      // Gérer les deux cas : vue tournee_summary ou fallback direct
-      const calendars = stat.calendars_distributed || stat.calendriers_distribues || 0;
-      const amount = stat.montant_total || stat.montant_collecte || 0;
-      
-      teamStats.set(team, {
-        calendars: current.calendars + calendars,
-        amount: current.amount + amount
+    (rows || []).forEach((r) => {
+      const teamId = r.user_id ? userIdToTeamId.get(r.user_id) ?? null : null;
+      const teamName = (teamId && teamIdToName.get(teamId)) || 'Sans équipe';
+      const current = teamStats.get(teamName) || { calendars: 0, amount: 0 };
+      teamStats.set(teamName, {
+        calendars: current.calendars + (r.calendars || 0),
+        amount: current.amount + (r.amount || 0),
       });
     });
 
-    // Convertir en array et trier par montant
     return Array.from(teamStats.entries())
       .map(([team, stats]) => ({
         team,
         totalCalendarsDistributed: stats.calendars,
-        totalAmountCollected: stats.amount
+        totalAmountCollected: stats.amount,
       }))
       .sort((a, b) => b.totalAmountCollected - a.totalAmountCollected);
   } catch (error) {
