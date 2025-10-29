@@ -91,19 +91,11 @@ export default async function CalendriersPage() {
           </Card>
         )}
 
-        {/* Carte de contexte (optionnelle) */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Objectifs et progression</CardTitle>
-            <CardDescription>Consultez le classement et les performances par équipe</CardDescription>
-          </CardHeader>
-          <CardContent className="text-sm">
-            <p>
-              Cette vue compare les équipes sur la même échelle d&apos;objectif pour une
-              lecture immédiate et motivante.
-            </p>
-          </CardContent>
-        </Card>
+        {/* Visual separator replacing explanatory card */}
+        <div className="py-2">
+          <hr className="border-t border-muted" />
+          <p className="sr-only">Objectifs et progression — consultez le classement et les performances par équipe</p>
+        </div>
 
         {/* Classement des équipes (barres horizontales + toggle Calendriers/€) */}
         <TeamsLeaderboardProgress teams={data} className="shadow-sm" />

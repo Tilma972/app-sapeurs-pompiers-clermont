@@ -112,28 +112,31 @@ export function TeamsLeaderboardProgress({
                 <div className="flex min-w-0 flex-1 items-center gap-2">
                   {/* Medal badges for top 3, simple index for others */}
                   {index === 0 ? (
-                    <span
-                      className="inline-flex items-center justify-center h-6 w-6 rounded-full bg-yellow-400 text-black text-xs font-semibold"
-                      aria-label="1er"
-                      title="1er"
-                    >
-                      🥇
+                    <span className="relative inline-flex items-center justify-center h-6 w-6 rounded-full bg-amber-400 text-black text-xs font-semibold" aria-hidden="true">
+                      {/* Gold medal SVG */}
+                      <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <circle cx="12" cy="10" r="4" fill="currentColor" />
+                        <path d="M8 14l-1 6 5-3 5 3-1-6" fill="currentColor" opacity="0.9" />
+                      </svg>
+                      <span className="sr-only">{`1er — Médaille d'or, ${team.name}`}</span>
                     </span>
                   ) : index === 1 ? (
-                    <span
-                      className="inline-flex items-center justify-center h-6 w-6 rounded-full bg-slate-300 text-black text-xs font-semibold"
-                      aria-label="2e"
-                      title="2e"
-                    >
-                      🥈
+                    <span className="relative inline-flex items-center justify-center h-6 w-6 rounded-full bg-slate-300 text-black text-xs font-semibold" aria-hidden="true">
+                      {/* Silver medal SVG */}
+                      <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <circle cx="12" cy="10" r="4" fill="currentColor" />
+                        <path d="M8 14l-1 6 5-3 5 3-1-6" fill="currentColor" opacity="0.9" />
+                      </svg>
+                      <span className="sr-only">{`2e — Médaille d'argent, ${team.name}`}</span>
                     </span>
                   ) : index === 2 ? (
-                    <span
-                      className="inline-flex items-center justify-center h-6 w-6 rounded-full bg-amber-700 text-white text-xs font-semibold"
-                      aria-label="3e"
-                      title="3e"
-                    >
-                      🥉
+                    <span className="relative inline-flex items-center justify-center h-6 w-6 rounded-full bg-amber-700 text-white text-xs font-semibold" aria-hidden="true">
+                      {/* Bronze medal SVG (toned darker) */}
+                      <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <circle cx="12" cy="10" r="4" fill="currentColor" />
+                        <path d="M8 14l-1 6 5-3 5 3-1-6" fill="currentColor" opacity="0.95" />
+                      </svg>
+                      <span className="sr-only">{`3e — Médaille de bronze, ${team.name}`}</span>
                     </span>
                   ) : (
                     <span className="w-6 text-xs text-muted-foreground text-right">{index + 1}</span>
