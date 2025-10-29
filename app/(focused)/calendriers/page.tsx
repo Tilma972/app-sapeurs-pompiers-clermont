@@ -49,7 +49,7 @@ export default async function CalendriersPage() {
   return (
     <FocusedContainer>
       <div className="space-y-6">
-        <section className="space-y-2">
+        <section className="space-y-2 -mt-2 sm:mt-0">
           <h1 className="text-2xl font-semibold">Calendriers</h1>
           <p className="text-sm text-muted-foreground">
             Suivi en temps réel des objectifs et du classement des équipes

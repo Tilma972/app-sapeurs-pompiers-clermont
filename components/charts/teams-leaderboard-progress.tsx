@@ -149,7 +149,8 @@ export function TeamsLeaderboardProgress({
                       <span className="sr-only">{`3e — Médaille de bronze, ${team.name}`}</span>
                     </span>
                   ) : (
-                    <span className="w-6 text-xs text-muted-foreground text-right">{index + 1}</span>
+                    /* no numeric prefix for ranks beyond top 3 (remove 4,5 etc.) */
+                    <span className="w-6" aria-hidden="true" />
                   )}
                   <span className="truncate text-sm font-medium">{team.name}</span>
                 </div>
