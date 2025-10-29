@@ -73,6 +73,27 @@
 }
 
 @layer components {
+  /* iOS/Android safe-area helpers */
+  .pt-safe {
+    padding-top: max(env(safe-area-inset-top), 0px);
+  }
+  .pb-safe {
+    padding-bottom: max(env(safe-area-inset-bottom), 0px);
+  }
+  .pl-safe {
+    padding-left: max(env(safe-area-inset-left), 0px);
+  }
+  .pr-safe {
+    padding-right: max(env(safe-area-inset-right), 0px);
+  }
+  .px-safe {
+    padding-left: max(env(safe-area-inset-left), 0px);
+    padding-right: max(env(safe-area-inset-right), 0px);
+  }
+  .py-safe {
+    padding-top: max(env(safe-area-inset-top), 0px);
+    padding-bottom: max(env(safe-area-inset-bottom), 0px);
+  }
   /* Glassmorphism Effects - Ma signature créative */
   .glass-card {
     @apply bg-card/80 backdrop-blur-xl border border-white/20 shadow-xl;
