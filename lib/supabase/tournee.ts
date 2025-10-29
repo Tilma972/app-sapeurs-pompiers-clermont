@@ -459,6 +459,61 @@ export async function getUserHistory(): Promise<{
 }
 
 /**
+ * Récupère un résumé de la dernière tournée terminée de l'utilisateur
+ */
+export async function getLastCompletedTourneeSummary(): Promise<{
+  id: string;
+  date: string;
+  calendarsDistributed: number;
+  amountCollected: number;
+  receiptsCount: number;
+} | null> {
+  const supabase = await createClient();
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    return null;
+  }
+
+  try {
+    // Dernière tournée terminée
+    const { data: tournee, error: tourneeError } = await supabase
+      .from('tournees')
+      .select('id, date_fin, date_debut, calendriers_distribues, montant_collecte')
+      .eq('user_id', user.id)
+      .eq('statut', 'completed')
+      .order('date_fin', { ascending: false })
+      .limit(1)
+      .single();
+
+    if (tourneeError && tourneeError.code !== 'PGRST116') {
+      console.error('[getLastCompletedTourneeSummary] Erreur tournée:', tourneeError);
+      return null;
+    }
+
+    if (!tournee) return null;
+
+    // Compter les reçus émis pour cette tournée
+    const { count: receiptsCount } = await supabase
+      .from('support_transactions')
+      .select('*', { count: 'exact', head: true })
+      .eq('tournee_id', tournee.id)
+      .not('receipt_number', 'is', null);
+
+    return {
+      id: tournee.id,
+      date: tournee.date_fin || tournee.date_debut || new Date().toISOString(),
+      calendarsDistributed: tournee.calendriers_distribues || 0,
+      amountCollected: tournee.montant_collecte || 0,
+      receiptsCount: receiptsCount || 0,
+    };
+  } catch (error) {
+    console.error('[getLastCompletedTourneeSummary] Erreur générale:', error);
+    return null;
+  }
+}
+
+/**
  * Récupère le résumé des équipes pour le graphique
  */
 export async function getTeamsSummary(): Promise<{
