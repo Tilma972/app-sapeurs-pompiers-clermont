@@ -36,22 +36,23 @@ export default async function DashboardPreviewPage() {
   const profileComplete = Boolean(profile?.full_name);
 
   return (
-    <FocusedContainer>
-      <div className="space-y-5">
-        {/* Full-bleed hero, pulled up to sit just beneath the AppBar border */}
-        <div className="relative left-1/2 -mx-[50vw] -translate-x-1/2 w-screen -mt-12 sm:-mt-12">
-          <HeroSection
+    <>
+      {/* Full-width hero outside the constrained FocusedContainer */}
+      <div className="w-full -mt-10">
+        <HeroSection
           backgroundImage={
             "https://npyfregghvnmqxwgkfea.supabase.co/storage/v1/object/public/landing_page/esprit_pompiers.jpeg"
           }
           title={`Bienvenue, ${userName}`}
           subtitle={teamName ? `Équipe ${teamName}` : undefined}
-            overlayOpacity="medium"
-            rounded={false}
-            objectPosition="center"
-          />
-        </div>
+          overlayOpacity="medium"
+          rounded={false}
+          objectPosition="center"
+        />
+      </div>
 
+      <FocusedContainer>
+        <div className="space-y-5">
         <section className="space-y-3">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold">Tournées & Distribution</h2>
@@ -81,7 +82,8 @@ export default async function DashboardPreviewPage() {
           offersCount={offersCount}
           profileComplete={profileComplete}
         />
-      </div>
-    </FocusedContainer>
+        </div>
+      </FocusedContainer>
+    </>
   );
 }
