@@ -46,7 +46,7 @@ export function FocusedAppBar({ title = "Ma Tournée", user }: FocusedAppBarProp
               <Menu />
             </Button>
           </SheetTrigger>
-          <SheetContent side="left" className="p-0 w-80 sm:w-96">
+          <SheetContent side="left" className="p-0 w-80 sm:w-96" aria-describedby={undefined}>
             <div className="h-16 flex items-center px-4 border-b border-border">
               <SheetHeader className="p-0">
                 <SheetTitle className="text-base">Menu</SheetTitle>

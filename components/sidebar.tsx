@@ -141,7 +141,7 @@ export function Sidebar({ className }: SidebarProps) {
                 <Menu className="h-5 w-5" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="p-0">
+            <SheetContent side="left" className="p-0" aria-describedby={undefined}>
               <div className="flex h-16 items-center px-6 border-b border-border">
                 <div className="flex items-center space-x-3">
                   <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
