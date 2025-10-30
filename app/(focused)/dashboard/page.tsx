@@ -22,6 +22,7 @@ if (!user) redirect("/auth/login");
 	]);
 
 const userName = profile?.full_name || user.email?.split("@")[0] || "Membre";
+const teamName = profile?.team || "Équipe SPP";
 	// const teamName = equipe?.equipe_nom ?? null;
 	// const allocated = equipe?.calendriers_alloues ?? 0;
 	// const distributed = personal?.totalCalendarsDistributed ?? 0;
@@ -42,7 +43,7 @@ backgroundImage={
 "https://npyfregghvnmqxwgkfea.supabase.co/storage/v1/object/public/landing_page/esprit_pompiers.jpeg"
 }
 title={`Bienvenue, ${userName}`}
-subtitle="Équipe SPP"
+subtitle={teamName}
 overlayOpacity="none"
 objectPosition="center"
 className="rounded-none w-screen"
