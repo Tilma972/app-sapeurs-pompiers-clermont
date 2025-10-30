@@ -5,10 +5,12 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Play } from "lucide-react";
 import { StartTourneeButton } from "@/components/start-tournee-button";
-import { getEquipesRanking } from "@/lib/supabase/equipes";
-import { getActiveTourneeWithTransactions, getUserHistory } from "@/lib/supabase/tournee";
+import { getEquipesRanking, getAllEquipesStats } from "@/lib/supabase/equipes";
+import { getActiveTourneeWithTransactions, getUserHistory, getUserPersonalStats } from "@/lib/supabase/tournee";
 import { FocusedContainer } from "@/components/layouts/focused/focused-container";
 import { TeamsLeaderboardProgress, type Team } from "@/components/charts/teams-leaderboard-progress";
+import { KpiCard } from "@/components/kpi-card";
+import { getCurrentUserProfile } from "@/lib/supabase/profile";
 
 export default async function CalendriersPage() {
   const supabase = await createClient();
@@ -20,14 +22,19 @@ export default async function CalendriersPage() {
   // 1) Récupération des données
   // Attendu (à adapter): chaque item du ranking doit fournir id, name,
   // goal_total (objectif calendriers), achieved (distribués), amount_collected (montant €)
-  const ranking = await getEquipesRanking();
+  const [ranking, tourneeData, userHistory, personalStats, profile] = await Promise.all([
+    getEquipesRanking(),
+    getActiveTourneeWithTransactions(),
+    getUserHistory(),
+    getUserPersonalStats(),
+    getCurrentUserProfile(),
+  ]);
   
   // Vérification s'il y a une tournée active
-  const tourneeData = await getActiveTourneeWithTransactions();
   const hasActiveTournee = tourneeData && tourneeData.tournee;
 
   // 2) Mapping vers l'API du composant (objectif déduit via progression)
-  const teams: Team[] = (ranking ?? []).map((r) => {
+  let teams: Team[] = (ranking ?? []).map((r) => {
     const achieved = Number(r.calendriers_distribues ?? 0)
     const pct = Number(r.progression_pourcentage ?? 0)
     const goalFromPct = pct > 0 ? Math.ceil(achieved / (pct / 100)) : null
@@ -41,8 +48,37 @@ export default async function CalendriersPage() {
     }
   });
 
-  // 3) Historique personnel (3 dernières tournées)
-  const userHistory = await getUserHistory();
+  // Fallback: si aucun ranking disponible, utiliser les stats d'équipes pour peupler la liste
+  if (teams.length === 0) {
+    const allStats = await getAllEquipesStats();
+    teams = (allStats ?? []).map((s) => ({
+      id: s.equipe_id || s.equipe_nom || Math.random().toString(36).slice(2),
+      name: s.equipe_nom || "Équipe",
+      goalTotal: Number(s.calendriers_alloues ?? Math.max(50, Number(s.calendriers_distribues || 0))),
+      achieved: Number(s.calendriers_distribues || 0),
+      amountCollected: Number(s.montant_collecte || 0),
+    }));
+  }
+
+  // 3) Historique personnel (3 dernières tournées) — déjà récupéré en parallèle
+
+  // 4) KPIs utilisateur (global)
+  const totalCalendars = personalStats?.totalCalendarsDistributed ?? 0;
+  const totalAmount = personalStats?.totalAmountCollected ?? 0;
+  const averagePerCalendar = totalCalendars > 0 ? totalAmount / totalCalendars : 0;
+
+  // Rang de l'utilisateur dans son équipe (par montant collecté)
+  let teamRank: number | null = null;
+  if (profile?.team_id) {
+    const { data: teamMembers } = await supabase
+      .from('profiles_with_equipe_view')
+      .select('id, montant_collecte')
+      .eq('equipe_id', profile.team_id)
+      .order('montant_collecte', { ascending: false });
+    const members = (teamMembers || []) as Array<{ id: string; montant_collecte: number | null }>;
+    const index = members.findIndex((m) => m.id === user.id);
+    teamRank = index >= 0 ? index + 1 : null;
+  }
 
   return (
     <FocusedContainer>
@@ -52,6 +88,14 @@ export default async function CalendriersPage() {
           <p className="text-sm text-muted-foreground">
             Suivi en temps réel des objectifs et du classement des équipes
           </p>
+        </section>
+
+        {/* KPIs utilisateur global */}
+        <section className="grid grid-cols-2 gap-3">
+          <KpiCard title="Total calendriers" value={new Intl.NumberFormat("fr-FR").format(totalCalendars)} />
+          <KpiCard title="Montant total" value={new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR", minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(totalAmount)} />
+          <KpiCard title="Rang équipe" value={teamRank ? `${teamRank}${teamRank === 1 ? "er" : "e"}` : "-"} />
+          <KpiCard title="Moyenne/calendrier" value={new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR", minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(averagePerCalendar)} />
         </section>
 
         {/* Carte d'action pour continuer/démarrer une tournée */}
