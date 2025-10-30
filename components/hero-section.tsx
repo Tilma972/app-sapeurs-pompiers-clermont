@@ -35,7 +35,7 @@ export function HeroSection({
   return (
     <div
       className={cn(
-        "relative h-[200px] sm:h-[240px] overflow-hidden",
+        "relative h-[240px] sm:h-[240px] overflow-hidden",
         rounded ? "rounded-none" : "rounded-xl",
         className
       )}
