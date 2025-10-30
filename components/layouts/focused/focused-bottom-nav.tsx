@@ -30,7 +30,7 @@ export function FocusedBottomNav() {
         <div className="grid grid-cols-4 h-16 items-center gap-2">
           <NavItem href="/dashboard" label="Dashboard" icon={LayoutDashboard} active={isActive("/dashboard")} />
           <NavItem href="/calendriers" label="Calendriers" icon={CalendarDays} active={isActive("/calendriers")} />
-          <NavItem href="/ma-tournee" label="Ma tournée" icon={Home} active={isActive("/ma-tournee")} />
+          <NavItem href="/ma-tournee" label="Tournée" icon={Home} active={isActive("/ma-tournee")} />
           <NavItem href="/dashboard/profil" label="Profil" icon={User} active={isActive("/dashboard/profil")} />
         </div>
       </div>
