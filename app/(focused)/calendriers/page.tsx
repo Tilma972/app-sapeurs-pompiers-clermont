@@ -6,7 +6,7 @@ import Link from "next/link";
 import { Play } from "lucide-react";
 import { StartTourneeButton } from "@/components/start-tournee-button";
 import { getEquipesRanking } from "@/lib/supabase/equipes";
-import { getActiveTourneeWithTransactions } from "@/lib/supabase/tournee";
+import { getActiveTourneeWithTransactions, getUserHistory } from "@/lib/supabase/tournee";
 import { FocusedContainer } from "@/components/layouts/focused/focused-container";
 import { TeamsLeaderboardProgress, type Team } from "@/components/charts/teams-leaderboard-progress";
 
@@ -26,25 +26,23 @@ export default async function CalendriersPage() {
   const tourneeData = await getActiveTourneeWithTransactions();
   const hasActiveTournee = tourneeData && tourneeData.tournee;
 
-  // 2) Mapping vers l'API du composant
-  const teams: Team[] = (ranking ?? []).map((r) => ({
-    id: String(r.rang), // Utilise le rang comme ID unique
-    name: r.equipe_nom ?? "Équipe",
-    goalTotal: 50, // Objectif standard, à adapter selon vos besoins
-    achieved: Number(r.calendriers_distribues ?? 0),
-    amountCollected: Number(r.montant_collecte ?? 0),
-  }));
+  // 2) Mapping vers l'API du composant (objectif déduit via progression)
+  const teams: Team[] = (ranking ?? []).map((r) => {
+    const achieved = Number(r.calendriers_distribues ?? 0)
+    const pct = Number(r.progression_pourcentage ?? 0)
+    const goalFromPct = pct > 0 ? Math.ceil(achieved / (pct / 100)) : null
+    const goalTotal = goalFromPct ?? Math.max(50, achieved) // fallback lisible
+    return {
+      id: String(r.rang),
+      name: r.equipe_nom ?? "Équipe",
+      goalTotal,
+      achieved,
+      amountCollected: Number(r.montant_collecte ?? 0),
+    }
+  });
 
-  // 3) Fallback démo (si aucune donnée)
-  const demoIfEmpty: Team[] = [
-    { id: "a", name: "Équipe Alpha", goalTotal: 50, achieved: 48, amountCollected: 1560 },
-    { id: "b", name: "Équipe Beta", goalTotal: 60, achieved: 45, amountCollected: 1420 },
-    { id: "c", name: "Équipe Gamma", goalTotal: 40, achieved: 28, amountCollected: 980 },
-    { id: "d", name: "Équipe Delta", goalTotal: 55, achieved: 33, amountCollected: 1200 },
-    { id: "e", name: "Équipe Epsilon", goalTotal: 45, achieved: 18, amountCollected: 720 },
-  ];
-
-  const data = teams.length > 0 ? teams : demoIfEmpty;
+  // 3) Historique personnel (3 dernières tournées)
+  const userHistory = await getUserHistory();
 
   return (
     <FocusedContainer>
@@ -100,8 +98,28 @@ export default async function CalendriersPage() {
           </div>
         </div>
 
+        {/* Historique de la tournée (collapsible) */}
+        <details className="rounded-lg border bg-card p-4">
+          <summary className="cursor-pointer select-none font-medium">Historique de la tournée</summary>
+          <div className="mt-3 space-y-2 text-sm">
+            {userHistory.length === 0 && (
+              <div className="text-muted-foreground">Aucune tournée terminée récemment.</div>
+            )}
+            {userHistory.map((h) => (
+              <div key={h.id} className="flex items-center justify-between">
+                <span className="text-foreground/90">
+                  {new Date(h.date).toLocaleDateString("fr-FR")}
+                </span>
+                <span className="text-muted-foreground">
+                  {h.calendarsDistributed} calendriers · {new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR", minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(h.amountCollected)}
+                </span>
+              </div>
+            ))}
+          </div>
+        </details>
+
         {/* Classement des équipes (barres horizontales + toggle Calendriers/€) */}
-        <TeamsLeaderboardProgress teams={data} className="shadow-sm" />
+        <TeamsLeaderboardProgress teams={teams} className="shadow-sm" />
       </div>
     </FocusedContainer>
   );
