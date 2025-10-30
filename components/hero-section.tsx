@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Image from "next/image";
 import * as React from "react";
@@ -10,7 +10,7 @@ interface HeroSectionProps {
   subtitle?: string;
   children?: React.ReactNode;
   className?: string;
-  overlayOpacity?: "light" | "medium" | "heavy";
+  overlayOpacity?: "none" | "light" | "medium" | "heavy";
   rounded?: boolean;
   objectPosition?: string; // e.g. "center" | "center 40%"
 }
@@ -21,21 +21,22 @@ export function HeroSection({
   subtitle,
   children,
   className,
-  overlayOpacity = "medium",
+  overlayOpacity = "none",
   rounded = true,
   objectPosition = "center",
 }: HeroSectionProps) {
   const overlayClasses = {
-    light: "from-black/40 via-black/50 to-background",
-    medium: "from-black/60 via-black/70 to-background",
-    heavy: "from-black/70 via-black/80 to-background",
+    none: "",
+    light: "from-transparent via-black/10 to-black/40",
+    medium: "from-transparent via-black/20 to-black/50",
+    heavy: "from-black/30 via-black/50 to-black/70",
   } as const;
 
   return (
     <div
       className={cn(
-        "relative h-[220px] sm:h-[320px] overflow-hidden",
-        rounded ? "rounded-xl" : "rounded-none",
+        "relative h-[200px] sm:h-[240px] overflow-hidden",
+        rounded ? "rounded-none" : "rounded-xl",
         className
       )}
     >
@@ -52,17 +53,31 @@ export function HeroSection({
           sizes="100vw"
           style={{ objectPosition }}
         />
-        {/* Dark gradient overlay */}
-        <div
-          className={cn("absolute inset-0 bg-gradient-to-b", overlayClasses[overlayOpacity])}
-        />
+        {/* Dark gradient overlay (render only if requested) */}
+        {overlayOpacity !== "none" && (
+          <div
+            className={cn("absolute inset-0 bg-gradient-to-b", overlayClasses[overlayOpacity])}
+          />
+        )}
       </div>
 
       {/* Content */}
-      <div className="relative h-full flex flex-col justify-end p-5">
+      <div className="relative h-full flex flex-col justify-end p-4 pb-6">
         <div>
-          <h1 className="text-white text-2xl sm:text-3xl font-bold drop-shadow md:leading-tight">{title}</h1>
-          {subtitle && <p className="text-white/85 text-sm sm:text-base mt-1 drop-shadow">{subtitle}</p>}
+          <h1
+            className="text-white text-3xl sm:text-4xl font-bold drop-shadow-lg"
+            style={{ textShadow: "0 4px 8px rgba(0,0,0,0.8)", WebkitTextStroke: "0px transparent" }}
+          >
+            {title}
+          </h1>
+          {subtitle && (
+            <p
+              className="text-white/95 text-base sm:text-lg mt-2"
+              style={{ textShadow: "0 1px 4px rgba(0,0,0,0.8)" }}
+            >
+              {subtitle}
+            </p>
+          )}
         </div>
         {children && <div className="mt-4">{children}</div>}
       </div>

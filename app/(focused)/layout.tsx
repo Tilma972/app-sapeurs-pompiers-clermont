@@ -1,4 +1,4 @@
-import { FocusedAppBar } from "@/components/layouts/focused/focused-app-bar"
+﻿import { FocusedAppBar } from "@/components/layouts/focused/focused-app-bar"
 import { FocusedBottomNav } from "@/components/layouts/focused/focused-bottom-nav"
 import { createClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
@@ -21,7 +21,7 @@ export default async function FocusedLayout({
       redirect('/?pending=1')
     }
   }
-  
+
   const initials = user?.user_metadata?.full_name
     ?.split(' ')
     .map((n: string) => n[0])
@@ -29,7 +29,7 @@ export default async function FocusedLayout({
     .toUpperCase() || 'SP'
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen flex flex-col">
       <FocusedAppBar
         user={{
           avatar_url: (user?.user_metadata as { avatar_url?: string } | undefined)?.avatar_url,
@@ -38,7 +38,7 @@ export default async function FocusedLayout({
           email: user?.email ?? undefined,
         }}
       />
-      <main className="pt-14 pb-20 sm:pb-6">
+      <main className="flex-1 pb-20 sm:pb-6 overflow-x-hidden">
         {children}
       </main>
       <FocusedBottomNav />
