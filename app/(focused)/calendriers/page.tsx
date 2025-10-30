@@ -1,9 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { Play } from "lucide-react";
+import { Play, Medal } from "lucide-react";
 import { StartTourneeButton } from "@/components/start-tournee-button";
 import { getEquipesRanking, getAllEquipesStats } from "@/lib/supabase/equipes";
 import { getActiveTourneeWithTransactions, getUserHistory, getUserPersonalStats } from "@/lib/supabase/tournee";
@@ -80,13 +79,28 @@ export default async function CalendriersPage() {
     teamRank = index >= 0 ? index + 1 : null;
   }
 
+  // Affichage du rang avec médaille pour 1/2/3
+  const rankValue = (() => {
+    if (!teamRank) return "-";
+    const suffix = teamRank === 1 ? "er" : "e";
+    if (teamRank === 1 || teamRank === 2 || teamRank === 3) {
+      const color = teamRank === 1 ? "text-amber-400" : teamRank === 2 ? "text-zinc-300" : "text-orange-500";
+      return (
+        <span className="inline-flex items-center gap-2">
+          <Medal className={`h-5 w-5 ${color}`} />
+          {`${teamRank}${suffix}`}
+        </span>
+      );
+    }
+    return `${teamRank}${suffix}`;
+  })();
+
   return (
     <FocusedContainer>
       <div className="space-y-6">
-        <section className="space-y-2">
-          <h1 className="text-2xl font-semibold">Calendriers</h1>
+        <section className="space-y-1">
           <p className="text-sm text-muted-foreground">
-            Suivi en temps réel des objectifs et du classement des équipes
+            Suivi de ton activité en cours: calendriers distribués, montants collectés, rang dans l’équipe et moyenne par calendrier.
           </p>
         </section>
 
@@ -94,43 +108,22 @@ export default async function CalendriersPage() {
         <section className="grid grid-cols-2 gap-3">
           <KpiCard title="Total calendriers" value={new Intl.NumberFormat("fr-FR").format(totalCalendars)} />
           <KpiCard title="Montant total" value={new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR", minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(totalAmount)} />
-          <KpiCard title="Rang équipe" value={teamRank ? `${teamRank}${teamRank === 1 ? "er" : "e"}` : "-"} />
+          <KpiCard title="Rang équipe" value={rankValue} />
           <KpiCard title="Moyenne/calendrier" value={new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR", minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(averagePerCalendar)} />
         </section>
 
-        {/* Carte d'action pour continuer/démarrer une tournée */}
-        {hasActiveTournee && (
-          <Card>
-            <CardContent className="pt-6">
-              <Link href="/ma-tournee">
-                <Button className="w-full h-10 sm:h-12 text-sm sm:text-base font-semibold">
-                  <Play className="h-4 w-4 mr-2" />
-                  Continuer ma tournée
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
-        )}
-
-        {!hasActiveTournee && (
-          <Card>
-            <CardHeader className="pb-3 sm:pb-4">
-              <div className="flex items-center gap-4">
-                <div className="w-9 h-9 sm:w-12 sm:h-12 bg-primary rounded-xl flex items-center justify-center text-primary-foreground">
-                  <Play className="h-5 w-5 sm:h-6 sm:w-6" />
-                </div>
-                <div>
-                  <CardTitle className="text-base sm:text-lg">Prêt pour une nouvelle tournée ?</CardTitle>
-                  <CardDescription>
-                    Bonjour, {user.email?.split("@")[0]}
-                  </CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <StartTourneeButton />
-            </CardContent>
-          </Card>
+        {/* Bouton d'action simple (sans carte) */}
+        {hasActiveTournee ? (
+          <Link href="/ma-tournee">
+            <Button className="w-full h-10 sm:h-12 text-sm sm:text-base font-semibold">
+              <Play className="h-4 w-4 mr-2" />
+              Continuer ma tournée
+            </Button>
+          </Link>
+        ) : (
+          <div>
+            <StartTourneeButton />
+          </div>
         )}
 
         {/* Visual separator with visible label and optional explanatory text */}
