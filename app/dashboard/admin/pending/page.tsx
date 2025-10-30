@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { toast } from 'react-hot-toast'
@@ -25,7 +25,7 @@ export default function AdminPendingUsersPage() {
   const [roleDraft, setRoleDraft] = useState<Record<string, string>>({})
   const [teamDraft, setTeamDraft] = useState<Record<string, string>>({})
 
-  async function load() {
+  const load = useCallback(async () => {
     setLoading(true)
     try {
       const res = await fetch('/api/admin/pending/list', { cache: 'no-store' })
@@ -45,13 +45,11 @@ export default function AdminPendingUsersPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [supabase])
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     load()
-    // We intentionally don't include `load` to avoid re-creating it each render.
-  }, [])
+  }, [load])
 
   async function approve(id: string) {
     const payload = {
@@ -71,7 +69,7 @@ export default function AdminPendingUsersPage() {
 
   async function reject(id: string) {
     if (!confirm('Rejeter cet utilisateur ? Cette action est définitive.')) return
-    const res = await fetch('/api/admin/pending/reject', { method: 'POST', body: JSON.stringify({ id }) })
+  const res = await fetch('/api/admin/pending/reject', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) })
     if (!res.ok) {
       const { error } = await res.json().catch(() => ({ error: 'Erreur' }))
       toast.error(error)
