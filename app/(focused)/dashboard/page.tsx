@@ -16,9 +16,10 @@ const supabase = await createClient();
 const { data: { user } } = await supabase.auth.getUser();
 if (!user) redirect("/auth/login");
 
-	const [profile, globalStats] = await Promise.all([
+	const [profile, globalStats, approvedPhotosCountRes] = await Promise.all([
 		getCurrentUserProfile(),
 		getGlobalStats(),
+		supabase.from('gallery_photos').select('*', { count: 'exact', head: true }).eq('status', 'approved')
 	]);
 
 const userName = profile?.full_name || user.email?.split("@")[0] || "Membre";
@@ -30,7 +31,7 @@ const teamName = profile?.team || "Équipe SPP";
 
 // Placeholders for future integrations
 const annoncesCount = undefined;
-const photosCount = undefined;
+const photosCount = approvedPhotosCountRes.count ?? 0;
 const eventsCount = undefined;
 const offersCount = undefined;
 const profileComplete = Boolean(profile?.full_name);
