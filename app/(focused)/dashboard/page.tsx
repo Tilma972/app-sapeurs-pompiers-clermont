@@ -42,6 +42,7 @@ backgroundImage={
 "https://npyfregghvnmqxwgkfea.supabase.co/storage/v1/object/public/landing_page/esprit_pompiers.jpeg"
 }
 title={`Bienvenue, ${userName}`}
+subtitle="Équipe SPP"
 overlayOpacity="none"
 objectPosition="center"
 className="rounded-none w-screen"

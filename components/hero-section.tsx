@@ -63,17 +63,19 @@ export function HeroSection({
 
       {/* Content */}
       <div className="relative h-full flex flex-col justify-end p-4 pb-6">
-        <div>
+        <div className="max-w-[95%] sm:max-w-[85%] md:max-w-[70%]">
           <h1
-            className="text-white text-3xl sm:text-4xl font-bold drop-shadow-lg"
-            style={{ textShadow: "0 4px 8px rgba(0,0,0,0.8)", WebkitTextStroke: "0px transparent" }}
+            className="text-white font-semibold leading-tight truncate whitespace-nowrap drop-shadow-lg text-[clamp(1.25rem,6vw,1.75rem)]"
+            style={{ textShadow: "0 4px 10px rgba(0,0,0,0.9)" }}
+            title={title}
           >
             {title}
           </h1>
           {subtitle && (
             <p
-              className="text-white/95 text-base sm:text-lg mt-2"
-              style={{ textShadow: "0 1px 4px rgba(0,0,0,0.8)" }}
+              className="text-white/95 text-sm sm:text-base mt-1 font-normal"
+              style={{ textShadow: "0 1px 4px rgba(0,0,0,0.7)" }}
+              title={subtitle}
             >
               {subtitle}
             </p>
