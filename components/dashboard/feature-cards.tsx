@@ -11,6 +11,13 @@ export function FeatureCardsGrid(props: {
 }) {
   const features: Feature[] = [
     {
+      title: "Tournées & Distribution",
+      description: "Calendriers distribués",
+      iconKey: "calendar",
+      href: "/calendriers",
+      gradient: "from-sky-500 to-blue-600",
+    },
+    {
       title: "Petites Annonces",
       description: "Publiez et consultez entre membres",
       iconKey: "shopping-bag",

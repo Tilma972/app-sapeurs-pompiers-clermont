@@ -1,5 +1,4 @@
 ﻿import { redirect } from "next/navigation";
-import { FeatureCard } from "@/components/feature-card";
 import { createClient } from "@/lib/supabase/server";
 import { FocusedContainer } from "@/components/layouts/focused/focused-container";
 import FeatureCardsGrid from "@/components/dashboard/feature-cards";
@@ -8,7 +7,7 @@ import { getCurrentUserProfile } from "@/lib/supabase/profile";
 // import { getUserEquipeInfo } from "@/lib/supabase/equipes";
 import HeroSection from "@/components/hero-section";
 // import { Card } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
+// import { Separator } from "@/components/ui/separator";
 // import { Badge } from "@/components/ui/badge";
 
 export default async function DashboardPage() {
@@ -49,20 +48,6 @@ className="rounded-none w-screen"
 {/* Contenu principal avec padding */}
 <FocusedContainer>
 <div className="space-y-5 pt-6">
-																				<section className="space-y-2">
-																					<FeatureCard
-																						feature={{
-																							title: "Tournées & Distribution",
-																							description: "Calendriers distribués",
-																							iconKey: "calendar",
-																							href: "/calendriers",
-																							gradient: "from-sky-500 to-blue-600",
-																						}}
-																					/>
-																				</section>
-
-<Separator className="my-2" />
-
 <FeatureCardsGrid
 annoncesCount={annoncesCount}
 photosCount={photosCount}
