@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { LogOut, Menu, Settings, User as UserIcon } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
@@ -27,8 +27,25 @@ interface FocusedAppBarProps {
   }
 }
 
-export function FocusedAppBar({ title = "Ma Tournée", user }: FocusedAppBarProps) {
+export function FocusedAppBar({ title, user }: FocusedAppBarProps) {
   const router = useRouter()
+  const pathname = usePathname()
+
+  const getPageTitle = () => {
+    if (title) return title
+    // Titre dynamique basé sur la route
+    if (pathname === "/dashboard" || pathname === "/dashboard/") return "Tableau de bord"
+    if (pathname?.startsWith("/ma-tournee")) return "Ma Tournée"
+    if (pathname?.startsWith("/calendriers")) return "Calendriers"
+    if (pathname?.startsWith("/dashboard/annonces")) return "Petites Annonces"
+    if (pathname?.startsWith("/dashboard/galerie")) return "Galerie SP"
+    if (pathname?.startsWith("/dashboard/associative")) return "Événements"
+    if (pathname?.startsWith("/dashboard/mon-compte")) return "Mon Compte"
+    if (pathname?.startsWith("/dashboard/profil")) return "Mon Profil"
+    if (pathname?.startsWith("/dashboard/parametres")) return "Paramètres"
+    if (pathname?.startsWith("/dashboard/partenaires")) return "Partenaires"
+    return "Amicale SP"
+  }
 
   const onLogout = async () => {
     const supabase = createClient()
@@ -57,7 +74,7 @@ export function FocusedAppBar({ title = "Ma Tournée", user }: FocusedAppBarProp
         </Sheet>
 
         <h1 className="text-base font-semibold truncate max-w-[60%] text-center">
-          {title}
+          {getPageTitle()}
         </h1>
 
         <DropdownMenu>

@@ -1,4 +1,6 @@
 ﻿import { redirect } from "next/navigation";
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { FocusedContainer } from "@/components/layouts/focused/focused-container";
 import FeatureCardsGrid from "@/components/dashboard/feature-cards";
@@ -51,25 +53,29 @@ className="rounded-none w-screen"
 {/* Contenu principal avec padding */}
 <FocusedContainer>
 <div className="space-y-5 pt-6">
-<section className="space-y-3">
-<div className="flex items-center justify-between">
-<h2 className="text-lg font-semibold">Tournées & Distribution</h2>
-{teamName && (
-<Badge variant="secondary" className="bg-secondary/80">{teamName}</Badge>
-)}
-</div>
-<Card className="p-4 bg-card/95 backdrop-blur-sm border-border/60">
-<div className="flex items-center justify-between text-sm">
-<span className="font-medium">Calendriers distribués</span>
-<span className="text-muted-foreground">
-{distributed.toLocaleString("fr-FR")} / {allocated.toLocaleString("fr-FR")} ({pct}%)
-</span>
-</div>
-<div className="mt-2">
-<Progress value={pct} />
-</div>
-</Card>
-</section>
+										<section className="space-y-2">
+											<Link href="/calendriers" className="block group">
+												<Card className="p-4 bg-card/95 backdrop-blur-sm border-border/60 transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5">
+													<div className="flex items-center justify-between mb-3">
+														<h2 className="text-lg font-semibold group-hover:text-primary transition-colors">Tournées & Distribution</h2>
+														{teamName && (
+															<Badge variant="secondary" className="bg-secondary/80">{teamName}</Badge>
+														)}
+													</div>
+													<div className="flex items-center justify-between text-sm mb-2">
+														<span className="font-medium text-muted-foreground">Calendriers distribués</span>
+														<span className="text-muted-foreground">
+															{distributed.toLocaleString("fr-FR")} / {allocated.toLocaleString("fr-FR")} ({pct}%)
+														</span>
+													</div>
+													<Progress value={pct} className="h-2" />
+													<div className="flex items-center justify-end mt-2 text-xs text-muted-foreground group-hover:text-primary transition-colors">
+														<span>Voir le détail</span>
+														<ArrowRight className="h-3 w-3 ml-1 transition-transform group-hover:translate-x-0.5" />
+													</div>
+												</Card>
+											</Link>
+										</section>
 
 <Separator className="my-2" />
 
