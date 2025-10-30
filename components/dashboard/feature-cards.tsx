@@ -8,6 +8,7 @@ export function FeatureCardsGrid(props: {
   eventsCount?: number;
   offersCount?: number;
   profileComplete?: boolean;
+  globalCalendarsDistributed?: number;
 }) {
   const features: Feature[] = [
     {
@@ -16,6 +17,11 @@ export function FeatureCardsGrid(props: {
       iconKey: "calendar",
       href: "/calendriers",
       gradient: "from-sky-500 to-blue-600",
+      badges: [
+        typeof props.globalCalendarsDistributed === "number"
+          ? `${props.globalCalendarsDistributed.toLocaleString("fr-FR")} distribués`
+          : "Bientôt",
+      ],
     },
     {
       title: "Petites Annonces",

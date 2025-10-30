@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { FocusedContainer } from "@/components/layouts/focused/focused-container";
 import FeatureCardsGrid from "@/components/dashboard/feature-cards";
 import { getCurrentUserProfile } from "@/lib/supabase/profile";
+import { getGlobalStats } from "@/lib/supabase/tournee";
 // import { getUserPersonalStats } from "@/lib/supabase/tournee";
 // import { getUserEquipeInfo } from "@/lib/supabase/equipes";
 import HeroSection from "@/components/hero-section";
@@ -15,8 +16,9 @@ const supabase = await createClient();
 const { data: { user } } = await supabase.auth.getUser();
 if (!user) redirect("/auth/login");
 
-	const [profile] = await Promise.all([
+	const [profile, globalStats] = await Promise.all([
 		getCurrentUserProfile(),
+		getGlobalStats(),
 	]);
 
 const userName = profile?.full_name || user.email?.split("@")[0] || "Membre";
@@ -54,6 +56,7 @@ photosCount={photosCount}
 eventsCount={eventsCount}
 offersCount={offersCount}
 profileComplete={profileComplete}
+globalCalendarsDistributed={globalStats?.total_calendriers_distribues}
 />
 </div>
 </FocusedContainer>
