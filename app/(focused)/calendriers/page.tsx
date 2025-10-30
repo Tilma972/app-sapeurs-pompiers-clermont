@@ -98,7 +98,7 @@ export default async function CalendriersPage() {
   return (
     <FocusedContainer>
       <div className="space-y-6">
-        <section className="space-y-2">
+        <section className="space-y-2 mt-1 sm:mt-2">
           <div className="text-sm text-muted-foreground mb-2 text-center">Suivi de ton activité en cours.</div>
         </section>
 
@@ -112,14 +112,16 @@ export default async function CalendriersPage() {
 
         {/* Bouton d'action simple (sans carte) */}
         {hasActiveTournee ? (
-          <Link href="/ma-tournee">
-            <Button className="w-full h-10 sm:h-12 text-sm sm:text-base font-semibold">
-              <Play className="h-4 w-4 mr-2" />
-              Continuer ma tournée
-            </Button>
-          </Link>
+          <div className="mt-2 sm:mt-4">
+            <Link href="/ma-tournee">
+              <Button className="w-full h-10 sm:h-12 text-sm sm:text-base font-semibold">
+                <Play className="h-4 w-4 mr-2" />
+                Continuer ma tournée
+              </Button>
+            </Link>
+          </div>
         ) : (
-          <div className="py-2">
+          <div className="mt-2 sm:mt-4">
             <StartTourneeButton />
           </div>
         )}
