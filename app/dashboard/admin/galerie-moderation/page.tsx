@@ -9,21 +9,33 @@ export default async function GalleryModerationPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/auth/login");
 
-  const { data: profile } = await supabase
+  const { data: profile, error: profileErr } = await supabase
     .from('profiles')
     .select('role')
     .eq('id', user.id)
-    .single();
+    .maybeSingle();
 
-  if (!profile || !['admin', 'moderateur'].includes(profile.role as string)) {
+  if (profileErr || !profile || !['admin', 'moderateur'].includes((profile as { role?: string } | null)?.role || '')) {
     redirect('/dashboard');
   }
 
-  const { data: flaggedPhotos } = await supabase
+  const { data: flaggedPhotos, error: photosErr } = await supabase
     .from('gallery_photos')
     .select(`*, profiles:user_id (full_name, email)`)
     .eq('status', 'flagged')
     .order('reports_count', { ascending: false });
+
+  if (photosErr) {
+    // If fetching flagged photos fails due to RLS or other issues, show empty list instead of crashing
+    return (
+      <div className="space-y-6 p-4">
+        <div>
+          <h1 className="text-2xl font-bold">Modération Galerie</h1>
+          <p className="text-muted-foreground">Erreur de chargement des photos signalées</p>
+        </div>
+      </div>
+    );
+  }
 
   // Fetch bans for the authors of these photos to enable Unban action
   const userIds = Array.from(new Set((flaggedPhotos || []).map(p => p.user_id))).filter(Boolean) as string[];
