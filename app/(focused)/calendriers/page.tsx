@@ -98,10 +98,8 @@ export default async function CalendriersPage() {
   return (
     <FocusedContainer>
       <div className="space-y-6">
-        <section className="space-y-1">
-          <p className="text-sm text-muted-foreground">
-            Suivi de ton activité en cours: calendriers distribués, montants collectés, rang dans l’équipe et moyenne par calendrier.
-          </p>
+        <section className="space-y-2">
+          <div className="text-sm text-muted-foreground mb-2 text-center">Suivi de ton activité en cours.</div>
         </section>
 
         {/* KPIs utilisateur global */}
@@ -121,7 +119,7 @@ export default async function CalendriersPage() {
             </Button>
           </Link>
         ) : (
-          <div>
+          <div className="py-2">
             <StartTourneeButton />
           </div>
         )}
