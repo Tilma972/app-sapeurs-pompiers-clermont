@@ -37,14 +37,14 @@ export default async function DashboardPreviewPage() {
 
   return (
     <>
-      {/* Full-width hero outside the constrained FocusedContainer */}
-      <div className="w-full -mt-10">
+      {/* Full-width hero outside the constrained FocusedContainer, using full-bleed wrapper */}
+      <div className="relative left-1/2 -translate-x-1/2 -mx-[50vw] w-screen -mt-10">
         <HeroSection
           backgroundImage={
             "https://npyfregghvnmqxwgkfea.supabase.co/storage/v1/object/public/landing_page/esprit_pompiers.jpeg"
           }
           title={`Bienvenue, ${userName}`}
-          subtitle={teamName ? `Équipe ${teamName}` : undefined}
+          subtitle={teamName ?? undefined}
           overlayOpacity="medium"
           rounded={false}
           objectPosition="center"
