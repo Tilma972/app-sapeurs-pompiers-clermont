@@ -39,7 +39,7 @@ export function FeatureCardsGrid(props: {
       title: "Galerie SP",
       description: "Partagez les moments forts du centre",
       iconKey: "camera",
-      href: "/dashboard/galerie",
+      href: "/galerie",
       gradient: "from-amber-500 to-orange-600",
       badges: [
         typeof props.photosCount === "number"
