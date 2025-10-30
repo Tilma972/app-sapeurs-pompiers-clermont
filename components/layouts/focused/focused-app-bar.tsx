@@ -2,9 +2,11 @@
 
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { ChevronLeft, LogOut, Settings, User as UserIcon } from "lucide-react"
+import { LogOut, Menu, Settings, User as UserIcon } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
+import MobileNav from "@/components/mobile-nav"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -37,9 +39,22 @@ export function FocusedAppBar({ title = "Ma Tournée", user }: FocusedAppBarProp
   return (
     <header className="sticky top-0 z-50 bg-background/95 border-b border-border backdrop-blur supports-[backdrop-filter]:bg-background/60 pt-safe">
       <div className="flex items-center justify-between h-16 px-4">
-        <Button variant="ghost" size="icon" onClick={() => router.back()} aria-label="Retour">
-          <ChevronLeft />
-        </Button>
+        {/* Hamburger menu for navigation */}
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button variant="ghost" size="icon" aria-label="Ouvrir le menu">
+              <Menu />
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="left" className="p-0 w-80 sm:w-96">
+            <div className="h-16 flex items-center px-4 border-b border-border">
+              <SheetHeader className="p-0">
+                <SheetTitle className="text-base">Menu</SheetTitle>
+              </SheetHeader>
+            </div>
+            <MobileNav />
+          </SheetContent>
+        </Sheet>
 
         <h1 className="text-base font-semibold truncate max-w-[60%] text-center">
           {title}
