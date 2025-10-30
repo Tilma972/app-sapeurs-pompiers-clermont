@@ -36,23 +36,20 @@ export default async function DashboardPreviewPage() {
   const profileComplete = Boolean(profile?.full_name);
 
   return (
-    <>
-      {/* Full-width hero outside the constrained FocusedContainer, using full-bleed wrapper */}
-      <div className="relative left-1/2 -translate-x-1/2 -mx-[50vw] w-screen -mt-10">
-        <HeroSection
-          backgroundImage={
-            "https://npyfregghvnmqxwgkfea.supabase.co/storage/v1/object/public/landing_page/esprit_pompiers.jpeg"
-          }
-          title={`Bienvenue, ${userName}`}
-          subtitle={teamName ?? undefined}
-          overlayOpacity="medium"
-          rounded={false}
-          objectPosition="center"
-        />
-      </div>
+    <FocusedContainer>
+      <div className="space-y-5">
+        {/* Hero à largeur contenue, centré, et avec espacement réduit sous l'AppBar */}
+        <div className="-mt-10">
+          <HeroSection
+            backgroundImage={
+              "https://npyfregghvnmqxwgkfea.supabase.co/storage/v1/object/public/landing_page/esprit_pompiers.jpeg"
+            }
+            title={`Bienvenue, ${userName}`}
+            overlayOpacity="medium"
+            objectPosition="center"
+          />
+        </div>
 
-      <FocusedContainer>
-        <div className="space-y-5">
         <section className="space-y-3">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold">Tournées & Distribution</h2>
@@ -82,8 +79,7 @@ export default async function DashboardPreviewPage() {
           offersCount={offersCount}
           profileComplete={profileComplete}
         />
-        </div>
-      </FocusedContainer>
-    </>
+      </div>
+    </FocusedContainer>
   );
 }
