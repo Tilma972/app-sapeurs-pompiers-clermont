@@ -5,6 +5,7 @@
 DROP POLICY IF EXISTS "Users can upload photos" ON storage.objects;
 DROP POLICY IF EXISTS "Public can view photos" ON storage.objects;
 DROP POLICY IF EXISTS "Users can delete own photos" ON storage.objects;
+DROP POLICY IF EXISTS "Admins can delete gallery photos" ON storage.objects;
 
 -- Allow authenticated users to upload into their own folder (userId/...)
 CREATE POLICY "Users can upload photos"
@@ -28,4 +29,17 @@ TO authenticated
 USING (
   bucket_id = 'gallery'
   AND auth.uid()::text = (storage.foldername(name))[1]
+);
+
+-- Allow admins/moderators to delete any file in the 'gallery' bucket
+CREATE POLICY "Admins can delete gallery photos"
+ON storage.objects FOR DELETE
+TO authenticated
+USING (
+  bucket_id = 'gallery'
+  AND EXISTS (
+    SELECT 1 FROM public.profiles
+    WHERE profiles.id = auth.uid()
+      AND profiles.role IN ('admin','moderateur')
+  )
 );

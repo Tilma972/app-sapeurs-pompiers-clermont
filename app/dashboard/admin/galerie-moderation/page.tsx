@@ -25,6 +25,17 @@ export default async function GalleryModerationPage() {
     .eq('status', 'flagged')
     .order('reports_count', { ascending: false });
 
+  // Fetch bans for the authors of these photos to enable Unban action
+  const userIds = Array.from(new Set((flaggedPhotos || []).map(p => p.user_id))).filter(Boolean) as string[];
+  let bannedUserIds: string[] = [];
+  if (userIds.length > 0) {
+    const { data: bans } = await supabase
+      .from('gallery_bans')
+      .select('user_id')
+      .in('user_id', userIds);
+    bannedUserIds = (bans || []).map(b => b.user_id as string);
+  }
+
   return (
     <div className="space-y-6 p-4">
       <div>
@@ -34,7 +45,7 @@ export default async function GalleryModerationPage() {
         </p>
       </div>
 
-      <ModerationList photos={flaggedPhotos || []} />
+      <ModerationList photos={flaggedPhotos || []} bannedUserIds={bannedUserIds} />
     </div>
   );
 }

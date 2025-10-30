@@ -14,7 +14,7 @@ interface Photo {
   profiles?: { full_name?: string | null; email?: string | null } | null;
 }
 
-export default function ModerationList({ photos }: { photos: Photo[] }) {
+export default function ModerationList({ photos, bannedUserIds = [] }: { photos: Photo[]; bannedUserIds?: string[] }) {
   const act = async (endpoint: string, payload: Record<string, unknown>, success: string) => {
     const res = await fetch(endpoint, {
       method: "POST",
@@ -36,6 +36,7 @@ export default function ModerationList({ photos }: { photos: Photo[] }) {
     if (!reason) return;
     return act("/api/admin/gallery/ban", { user_id, reason }, "Utilisateur banni");
   };
+  const unban = (user_id: string) => act("/api/admin/gallery/unban", { user_id }, "Utilisateur débanni");
 
   if (photos.length === 0) return <div className="text-sm text-muted-foreground">Aucune photo en modération.</div>;
 
@@ -60,7 +61,11 @@ export default function ModerationList({ photos }: { photos: Photo[] }) {
                 <button onClick={() => approve(p.id)} className="px-3 py-1 rounded bg-green-600 text-white text-sm">Valider</button>
                 <button onClick={() => reject(p.id)} className="px-3 py-1 rounded bg-yellow-600 text-white text-sm">Confirmer</button>
                 <button onClick={() => remove(p.id)} className="px-3 py-1 rounded bg-red-600 text-white text-sm">Supprimer</button>
-                <button onClick={() => ban(p.user_id)} className="px-3 py-1 rounded border text-sm">Bannir</button>
+                {bannedUserIds.includes(p.user_id) ? (
+                  <button onClick={() => unban(p.user_id)} className="px-3 py-1 rounded border text-sm">Débannir</button>
+                ) : (
+                  <button onClick={() => ban(p.user_id)} className="px-3 py-1 rounded border text-sm">Bannir</button>
+                )}
               </div>
             </div>
           </div>
