@@ -7,51 +7,46 @@
 @layer base {
   :root {
     /* === LIGHT MODE - Projet 2 (Couleurs pompiers authentiques) === */
-    --background: 0 0% 100%;
-    --foreground: 30 25% 12%; /* Texte sombre amélioré */
+    /* Background beige crème du logo */
+    --background: 30 40% 98%; /* #FEF9F3 */
+    --foreground: 15 40% 15%; /* #2C1E1D - Brun foncé */
     
     --card: 0 0% 100%;
-    --card-foreground: 30 20% 20%;
+    --card-foreground: 15 40% 15%;
     
     --popover: 0 0% 100%;
-    --popover-foreground: 30 20% 20%;
+    --popover-foreground: 15 40% 15%;
     
-    /* Rouge pompier principal */
-    --primary: 5 64% 51%; /* #C44539 */
+    /* Rouge pompier principal #C44539 */
+    --primary: 5 64% 51%;
     --primary-foreground: 0 0% 100%;
     
-    /* Turquoise/Teal d'accentuation */
-    --secondary: 180 30% 90%;
-    --secondary-foreground: 180 30% 20%;
+    /* Turquoise/Teal d'accentuation #7DAFA8 */
+    --secondary: 173 27% 59%;
+    --secondary-foreground: 0 0% 100%;
     
-    --muted: 30 15% 92%; /* Beige crème */
-    --muted-foreground: 30 25% 28%;
+    /* Beige crème pour surfaces */
+    --muted: 30 40% 96%;
+    --muted-foreground: 15 25% 35%;
     
-    /* Orange accent */
-    --accent: 11 73% 54%; /* #D85A3C */
+    /* Orange accent #D85A3C */
+    --accent: 11 69% 53%;
     --accent-foreground: 0 0% 100%;
     
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
     
-    --border: 30 20% 90%;
-    --input: 30 20% 95%;
-    --ring: 5 64% 51%; /* Rouge pompier */
+    --border: 30 20% 85%;
+    --input: 30 30% 94%;
+    --ring: 5 64% 51%;
     
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
+    --chart-1: 5 64% 51%;
+    --chart-2: 173 27% 59%;
+    --chart-3: 11 69% 53%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
     
     --radius: 0.625rem;
-    
-    /* Couleurs personnalisées pompiers - Projet 2 */
-    --color-primary: #C44539;
-    --color-accent-orange: #D85A3C;
-    --color-accent-turquoise: #7DAFA8;
-    --color-text-dark: #2C1E1D;
-    --color-background-light: #FEF9F3;
   }
 
   .dark {
@@ -109,11 +104,51 @@
   
   body {
     font-family: var(--font-roboto), 'Roboto', sans-serif;
-    @apply bg-background text-foreground antialiased transition-colors duration-300;
+    @apply antialiased transition-colors duration-300;
+  }
+  
+  /* Light mode : fond beige crème */
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+  }
+  
+  /* Dark mode : fond brun foncé */
+  .dark body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
   }
   
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-montserrat), 'Montserrat', sans-serif;
+  }
+}
+
+@layer utilities {
+  /* Couleurs pompiers directes */
+  .text-pompier-red {
+    color: #C44539;
+  }
+  .bg-pompier-red {
+    background-color: #C44539;
+  }
+  .text-pompier-orange {
+    color: #D85A3C;
+  }
+  .bg-pompier-orange {
+    background-color: #D85A3C;
+  }
+  .text-pompier-turquoise {
+    color: #7DAFA8;
+  }
+  .bg-pompier-turquoise {
+    background-color: #7DAFA8;
+  }
+  .bg-pompier-beige {
+    background-color: #FEF9F3;
+  }
+  .text-pompier-dark {
+    color: #2C1E1D;
   }
 }
 
