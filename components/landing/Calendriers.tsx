@@ -19,7 +19,7 @@ export function Calendrier() {
   });
 
   return (
-    <section className="py-12 md:py-24 bg-gray-50 dark:bg-[#5C3A38] transition-colors" id="calendrier">
+    <section className="py-12 md:py-24 bg-brandCream dark:bg-darkSurface transition-colors" id="calendrier">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12">
           {/* Image */}
@@ -52,11 +52,11 @@ export function Calendrier() {
             initial="hidden"
             animate={rightInView ? "visible" : "hidden"}
           >
-            <span className="font-bold text-primary dark:text-accent-orange text-sm">NOTRE PRODUIT PHARE</span>
-            <h2 className="mt-2 text-2xl md:text-4xl font-montserrat font-bold text-text-dark dark:text-dark-text">
+            <span className="font-bold text-primary dark:text-brandOrange text-sm">NOTRE PRODUIT PHARE</span>
+            <h2 className="mt-2 text-2xl md:text-4xl font-montserrat font-bold text-brandBrown dark:text-darkText">
               Le Calendrier 2025 est arrivé !
             </h2>
-            <p className="mt-3 md:mt-4 text-base md:text-lg text-text-dark/80 dark:text-dark-text/90">
+            <p className="mt-3 md:mt-4 text-base md:text-lg text-brandBrown/80 dark:text-darkText/90">
               Plus qu&apos;une tradition, notre calendrier annuel est la principale source de 
               financement de nos actions. Chaque contribution lors de la tournée des calendriers 
               est un soutien direct à notre Amicale.
@@ -67,7 +67,7 @@ export function Calendrier() {
             >
               <Link
                 href="#"
-                className="mt-6 md:mt-8 inline-flex items-center justify-center px-6 py-3 font-medium text-white bg-accent-orange rounded-lg hover:bg-opacity-90 transition-all shadow-lg hover:shadow-xl group"
+                className="mt-6 md:mt-8 inline-flex items-center justify-center px-6 py-3 font-medium text-white bg-brandOrange rounded-lg hover:bg-brandOrange/90 transition-all shadow-lg hover:shadow-xl group"
               >
                 Pré-commander en ligne
                 <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" size={20} />

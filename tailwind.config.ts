@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss";
+import tailwindcssAnimate from "tailwindcss-animate";
 
 export default {
   darkMode: ["class"],
@@ -13,6 +14,16 @@ export default {
       colors: {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
+        // Brand aliases for consistent usage without bracket notation
+        brandBrown: "#4A2E2C",
+        brandCream: "#FEF9F3",
+        brandRed: "#C44539",
+        brandOrange: "#D85A3C",
+        brandTurquoise: "#7DAFA8",
+        darkBg: "#2C1E1D",
+        darkSurface: "#5C3A38",
+        darkText: "#F5DCC8",
+        darkBorder: "#5C3A38",
         card: {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
@@ -59,5 +70,5 @@ export default {
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [tailwindcssAnimate],
 } satisfies Config;

@@ -38,7 +38,7 @@ export function Missions() {
   });
 
   return (
-    <section className="py-12 md:py-24 bg-background-light dark:bg-[#2C1E1D] transition-colors" id="actions">
+    <section className="py-12 md:py-24 bg-brandCream dark:bg-darkBg transition-colors" id="actions">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
           ref={titleRef}
@@ -47,10 +47,10 @@ export function Missions() {
           initial="hidden"
           animate={titleInView ? "visible" : "hidden"}
         >
-          <h2 className="text-2xl md:text-4xl font-[family-name:var(--font-montserrat)] font-bold text-[#4A2E2C] dark:text-dark-text">
+          <h2 className="text-2xl md:text-4xl font-[family-name:var(--font-montserrat)] font-bold text-brandBrown dark:text-darkText">
             Nos missions au cœur de l&apos;Amicale
           </h2>
-          <p className="mt-4 max-w-2xl mx-auto text-lg text-[#4A2E2C]/80 dark:text-dark-text/90">
+          <p className="mt-4 max-w-2xl mx-auto text-lg text-brandBrown/80 dark:text-darkText/90">
             Au-delà des interventions, nous renforçons les liens et soutenons nos membres.
           </p>
         </motion.div>
@@ -67,22 +67,22 @@ export function Missions() {
             return (
               <motion.div
                 key={index}
-                className="bg-white dark:bg-[#5C3A38] p-6 md:p-8 rounded-lg shadow-md hover:shadow-xl transition-all group cursor-pointer"
+                className="bg-white dark:bg-darkSurface p-6 md:p-8 rounded-lg shadow-md hover:shadow-xl transition-all group cursor-pointer"
                 variants={staggerItem}
                 whileHover={{ y: -8, scale: 1.02 }}
                 transition={{ type: "spring", stiffness: 300, damping: 20 }}
               >
                 <motion.div
-                  className="flex items-center justify-center h-12 w-12 md:h-16 md:w-16 rounded-full bg-primary/10 dark:bg-accent-orange/20 mb-4 md:mb-6"
+                  className="flex items-center justify-center h-12 w-12 md:h-16 md:w-16 rounded-full bg-primary/10 dark:bg-brandOrange/20 mb-4 md:mb-6"
                   whileHover={{ rotate: 360 }}
                   transition={{ duration: 0.6 }}
                 >
-                  <Icon className="text-3xl text-primary dark:text-accent-orange" size={28} />
+                  <Icon className="text-3xl text-primary dark:text-brandOrange" size={28} />
                 </motion.div>
-                <h3 className="text-lg md:text-xl font-[family-name:var(--font-montserrat)] font-bold text-[#4A2E2C] dark:text-dark-text mb-2 group-hover:text-primary dark:group-hover:text-accent-orange transition-colors">
+                <h3 className="text-lg md:text-xl font-[family-name:var(--font-montserrat)] font-bold text-brandBrown dark:text-darkText mb-2 group-hover:text-primary dark:group-hover:text-brandOrange transition-colors">
                   {mission.title}
                 </h3>
-                <p className="text-sm md:text-base text-[#4A2E2C]/80 dark:text-dark-text/80">{mission.description}</p>
+                <p className="text-sm md:text-base text-brandBrown/80 dark:text-darkText/80">{mission.description}</p>
               </motion.div>
             );
           })}
