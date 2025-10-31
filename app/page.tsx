@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { HeroSimple } from "@/components/landing/hero-simple";
 import { Missions } from "@/components/landing/Missions";
-import { Calendriers } from "@/components/landing/Calendriers";
+import { Calendrier } from "@/components/landing/Calendriers";
 import { PreventionSection } from "@/components/landing/prevention-section";
 import { TestimonialsSection } from "@/components/landing/testimonials-section";
 import { NewsSection } from "@/components/landing/news-section";
@@ -50,7 +50,7 @@ export default async function Home({ searchParams }: { searchParams?: Promise<{ 
               <Missions />
 
             {/* Section Boutique */}
-            <Calendriers />
+            <Calendrier />
             
             {/* Prévention: numéros d'urgence */}
             <PreventionSection />
