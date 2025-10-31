@@ -102,6 +102,7 @@ export const slideInRight: Variants = {
   }
 };
 
+
 // Hover effect pour les cards
 export const cardHover = {
   rest: { 

@@ -5,7 +5,7 @@ import Link from "next/link";
 import * as React from "react";
 import { motion, useReducedMotion, AnimatePresence } from "framer-motion";
 import { Heart, ChevronDown } from "lucide-react";
-import { fadeInUp, scaleIn } from "@/lib/animation";
+import { fadeInUp, scaleIn } from "@/lib/animations";
 import { HeroSlide, heroSlides as defaultSlides } from "@/components/landing/hero-slides";
 
 type HeroProps = {

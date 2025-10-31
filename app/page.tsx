@@ -9,7 +9,7 @@ import { ContactSection } from "@/components/landing/contact-section";
 import { PartnersSection } from "@/components/landing/partners-section";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { LandingHeaderWrapper } from "@/components/landing/landing-header-wrapper";
-import { OperationsStatsSection } from "@/components/landing/operations-stats-section";
+import { Stats } from "@/components/landing/Stats";
 import { SectorMapSection } from "@/components/landing/sector-map-section";
 
 export default async function Home({ searchParams }: { searchParams?: Promise<{ pending?: string }> }) {
@@ -41,7 +41,7 @@ export default async function Home({ searchParams }: { searchParams?: Promise<{ 
           {/* Contenu principal */}
           <main className="relative">
               {/* Statistiques opérationnelles sous le hero */}
-              <OperationsStatsSection />
+              <Stats />
 
              {/* Carte secteur opérationnel */}
              <SectorMapSection />
