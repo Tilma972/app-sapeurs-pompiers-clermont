@@ -1,79 +1,124 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Roboto:wght@400;500;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    /* Charte graphique inspirée du logo : Rouge pompier + Teal + Beige */
+    /* === LIGHT MODE - Projet 2 (Couleurs pompiers authentiques) === */
     --background: 0 0% 100%;
-  /* Increase contrast: darker foreground text */
-  --foreground: 30 25% 12%;
+    --foreground: 30 25% 12%; /* Texte sombre amélioré */
+    
     --card: 0 0% 100%;
     --card-foreground: 30 20% 20%;
+    
     --popover: 0 0% 100%;
     --popover-foreground: 30 20% 20%;
-    --primary: 8 70% 45%; /* Rouge pompier #C63320 */
+    
+    /* Rouge pompier principal */
+    --primary: 5 64% 51%; /* #C44539 */
     --primary-foreground: 0 0% 100%;
-    --secondary: 180 30% 90%; /* Teal clair */
+    
+    /* Turquoise/Teal d'accentuation */
+    --secondary: 180 30% 90%;
     --secondary-foreground: 180 30% 20%;
-  /* Muted surface slightly darker; text slightly darker for better contrast */
-  --muted: 30 15% 92%; /* Beige crème du logo, un peu moins clair */
-  --muted-foreground: 30 25% 28%;
-    --accent: 170 50% 40%; /* Teal #33988A */
+    
+    --muted: 30 15% 92%; /* Beige crème */
+    --muted-foreground: 30 25% 28%;
+    
+    /* Orange accent */
+    --accent: 11 73% 54%; /* #D85A3C */
     --accent-foreground: 0 0% 100%;
+    
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
+    
     --border: 30 20% 90%;
     --input: 30 20% 95%;
-    --ring: 8 70% 45%; /* Rouge pompier #C63320 */
+    --ring: 5 64% 51%; /* Rouge pompier */
+    
     --chart-1: 12 76% 61%;
     --chart-2: 173 58% 39%;
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
-    --radius: 0.5rem;
+    
+    --radius: 0.625rem;
+    
+    /* Couleurs personnalisées pompiers - Projet 2 */
+    --color-primary: #C44539;
+    --color-accent-orange: #D85A3C;
+    --color-accent-turquoise: #7DAFA8;
+    --color-text-dark: #2C1E1D;
+    --color-background-light: #FEF9F3;
   }
+
   .dark {
-    /* Thème sombre cohérent avec le logo */
+    /* === DARK MODE - Projet 1 optimisé === */
     --background: 30 20% 8%;
-  /* Increase contrast: slightly brighter text in dark mode */
-  --foreground: 30 18% 96%;
+    --foreground: 30 18% 96%; /* Texte clair amélioré */
+    
     --card: 30 20% 10%;
     --card-foreground: 30 20% 95%;
+    
     --popover: 30 20% 10%;
     --popover-foreground: 30 20% 95%;
-    --primary: 8 70% 55%; /* Rouge pompier #C63320 plus clair */
+    
+    /* Rouge pompier adapté dark mode */
+    --primary: 8 70% 55%;
     --primary-foreground: 30 20% 8%;
+    
     --secondary: 180 30% 20%;
     --secondary-foreground: 180 30% 90%;
-  --muted: 30 15% 14%;
-  --muted-foreground: 30 22% 78%;
-    --accent: 170 50% 35%; /* Teal #33988A plus clair */
+    
+    --muted: 30 15% 14%;
+    --muted-foreground: 30 22% 78%;
+    
+    /* Teal adapté dark mode */
+    --accent: 170 50% 35%;
     --accent-foreground: 30 20% 95%;
+    
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
+    
     --border: 215 25% 27%;
     --input: 215 25% 27%;
     --ring: 217 91% 60%;
+    
     --chart-1: 220 70% 50%;
     --chart-2: 160 60% 45%;
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
+    
+    /* Couleurs dark personnalisées */
+    --color-dark-bg: #2C1E1D;
+    --color-dark-surface: #5C3A38;
+    --color-dark-text: #F5DCC8;
+    --color-dark-border: #5C3A38;
+    --color-background-light: #2C1E1D;
+    --color-text-dark: #F5DCC8;
   }
 }
 
 @layer base {
   * {
-    @apply border-border;
+    @apply border-border outline-ring/50;
   }
+  
   body {
-    @apply bg-background text-foreground;
+    font-family: var(--font-roboto), 'Roboto', sans-serif;
+    @apply bg-background text-foreground antialiased transition-colors duration-300;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-montserrat), 'Montserrat', sans-serif;
   }
 }
 
 @layer components {
-  /* iOS/Android safe-area helpers */
+  /* === iOS/Android safe-area helpers === */
   .pt-safe {
     padding-top: max(env(safe-area-inset-top), 0px);
   }
@@ -94,7 +139,8 @@
     padding-top: max(env(safe-area-inset-top), 0px);
     padding-bottom: max(env(safe-area-inset-bottom), 0px);
   }
-  /* Glassmorphism Effects - Ma signature créative */
+
+  /* === Glassmorphism Effects - Projet 1 === */
   .glass-card {
     @apply bg-card/80 backdrop-blur-xl border border-white/20 shadow-xl;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
@@ -110,7 +156,7 @@
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
   }
   
-  /* Animations personnalisées */
+  /* === Animations personnalisées === */
   .animate-float {
     animation: float 6s ease-in-out infinite;
   }
@@ -119,7 +165,7 @@
     animation: glow 2s ease-in-out infinite alternate;
   }
   
-  /* Gradients personnalisés */
+  /* === Gradients personnalisés === */
   .gradient-text {
     @apply bg-gradient-to-r from-primary via-blue-600 to-red-600 bg-clip-text text-transparent;
   }
@@ -134,74 +180,14 @@
     @apply bg-background rounded-[calc(0.75rem-2px)];
   }
   
-  /* Premium Icons - Style sophistiqué */
+  /* === Premium Icons - Style sophistiqué === */
   .glass-icon {
-    @apply bg-white/10 backdrop-blur-sm border border-white/20;
+    @apply bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg p-3;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-  }
-  
-  .glass-icon:hover {
-    @apply bg-white/20 border-white/30;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
-  }
-  
-  .gradient-icon {
-    @apply bg-gradient-to-br from-primary/20 via-primary/10 to-transparent;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 4px 16px rgba(59, 130, 246, 0.1);
-  }
-  
-  .gradient-icon:hover {
-    @apply from-primary/30 via-primary/20 to-transparent;
-    box-shadow: 0 8px 32px rgba(59, 130, 246, 0.2);
-  }
-  
-  .minimal-icon {
-    @apply bg-slate-100/50 dark:bg-slate-800/50;
-    border: 1px solid rgba(148, 163, 184, 0.2);
-  }
-  
-  .minimal-icon:hover {
-    @apply bg-slate-200/70 dark:bg-slate-700/70;
-    border-color: rgba(148, 163, 184, 0.3);
-  }
-  
-  .glow-icon {
-    @apply bg-primary/10 border border-primary/20;
-    box-shadow: 0 0 20px rgba(59, 130, 246, 0.2);
-  }
-  
-  .glow-icon:hover {
-    @apply bg-primary/20 border-primary/30;
-    box-shadow: 0 0 30px rgba(59, 130, 246, 0.4);
-  }
-  
-  /* Icônes avec couleurs exactes du logo */
-  .icon-shield {
-    color: #C63320; /* Rouge pompier exact */
-  }
-  
-  .icon-heart {
-    color: #C63320; /* Rouge pompier exact */
-  }
-  
-  .icon-users {
-    color: #33988A; /* Teal exact */
-  }
-  
-  .icon-zap {
-    color: #C63320; /* Rouge pompier pour l'énergie */
-  }
-  
-  .icon-target {
-    color: #33988A; /* Teal pour la précision */
-  }
-  
-  .icon-award {
-    color: #C63320; /* Rouge pompier pour l'excellence */
   }
 }
 
+/* === Keyframes animations === */
 @keyframes float {
   0%, 100% {
     transform: translateY(0px);
@@ -213,32 +199,33 @@
 
 @keyframes glow {
   from {
-    box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+    box-shadow: 0 0 10px rgba(198, 69, 57, 0.5);
   }
   to {
-    box-shadow: 0 0 30px rgba(59, 130, 246, 0.8);
+    box-shadow: 0 0 20px rgba(198, 69, 57, 0.8);
   }
 }
 
-/* Ken Burns Effect - Hero Carousel */
-@keyframes kenburns-zoom {
-  0% { 
-    transform: scale(1); 
+/* === Animation Ken Burns pour Hero - Projet 2 === */
+@keyframes ken-burns {
+  0% {
+    transform: scale(1) translate(0, 0);
   }
-  100% { 
-    transform: scale(1.1); 
+  50% {
+    transform: scale(1.1) translate(-2%, -2%);
+  }
+  100% {
+    transform: scale(1.2) translate(-4%, -4%);
   }
 }
 
-.kenburns-image {
-  animation: kenburns-zoom 15s ease-out infinite;
-  transform-origin: center center;
+.animate-ken-burns {
+  animation: ken-burns 20s ease-in-out infinite;
 }
 
-/* Hero Carousel Styles */
+/* === Hero Carousel Styles === */
 .hero-carousel {
   position: relative;
-  /* Avoid fixed viewport height on mobile */
   min-height: 100dvh;
   overflow: hidden;
 }
@@ -270,7 +257,6 @@
   position: relative;
   z-index: 2;
   text-align: center;
-  /* Use Tailwind utilities for predictable sizing */
   @apply max-w-4xl px-4;
 }
 
@@ -279,7 +265,7 @@
   bottom: 2rem;
   left: 50%;
   transform: translateX(-50%);
-  z-index: 3;
+  z-index: 50;
   display: flex;
   gap: 0.75rem;
 }
@@ -298,7 +284,7 @@
   transform: scale(1.2);
 }
 
-/* Fix scrollbar rouge */
+/* === Scrollbar personnalisée === */
 ::-webkit-scrollbar {
   width: 8px;
 }
@@ -316,38 +302,7 @@
   background: hsl(var(--foreground));
 }
 
-/* Fix pour Firefox */
 :root {
   scrollbar-width: thin;
   scrollbar-color: hsl(var(--muted-foreground)) hsl(var(--background));
-}
-
-/* Z-index pour navigation dots et couches hero */
-.hero-dots {
-  z-index: 50;
-}
-
-.hero-content {
-  z-index: 20;
-}
-
-.hero-overlay {
-  z-index: 10;
-}
-
-/* Animation Ken Burns pour les images du hero */
-@keyframes ken-burns {
-  0% {
-    transform: scale(1) translate(0, 0);
-  }
-  50% {
-    transform: scale(1.1) translate(-2%, -2%);
-  }
-  100% {
-    transform: scale(1.2) translate(-4%, -4%);
-  }
-}
-
-.animate-ken-burns {
-  animation: ken-burns 20s ease-in-out infinite;
 }
