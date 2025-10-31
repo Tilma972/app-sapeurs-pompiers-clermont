@@ -35,7 +35,7 @@ export function Calendrier() {
               transition={{ type: "spring", stiffness: 300 }}
             >
               <Image
-                src="/images/calendrier-2025.jpg"
+                src="https://npyfregghvnmqxwgkfea.supabase.co/storage/v1/object/public/landing_page/couverture_cal_2026%20.webp"
                 alt="Calendrier des sapeurs-pompiers 2025"
                 width={600}
                 height={800}
