@@ -36,7 +36,7 @@ export function Calendrier() {
             >
               <Image
                 src="https://npyfregghvnmqxwgkfea.supabase.co/storage/v1/object/public/landing_page/couverture_cal_2026%20.webp"
-                alt="Calendrier des sapeurs-pompiers 2025"
+                alt="Calendrier des sapeurs-pompiers 2026"
                 width={600}
                 height={800}
                 className="rounded-lg shadow-2xl w-full"
