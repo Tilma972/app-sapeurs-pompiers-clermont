@@ -54,7 +54,7 @@ export function Calendrier() {
           >
             <span className="font-bold text-primary dark:text-brandOrange text-sm">NOTRE PRODUIT PHARE</span>
             <h2 className="mt-2 text-2xl md:text-4xl font-montserrat font-bold text-brandBrown dark:text-darkText">
-              Le Calendrier 2025 est arrivé !
+              Le Calendrier 2026 est arrivé !
             </h2>
             <p className="mt-3 md:mt-4 text-base md:text-lg text-brandBrown/80 dark:text-darkText/90">
               Plus qu&apos;une tradition, notre calendrier annuel est la principale source de 
