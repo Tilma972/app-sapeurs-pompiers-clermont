@@ -1,0 +1,23 @@
+[
+  { "name": "Clermont-l'Hérault", "code": "34079", "population": 9200 },
+  { "name": "Aspiran", "code": "", "population": 2845 },
+  { "name": "Brignac", "code": "34041", "population": 680 },
+  { "name": "Canet", "code": "34051", "population": 3420 },
+  { "name": "Ceyras", "code": "34076", "population": 1150 },
+  { "name": "Fontès", "code": "", "population": 1580 },
+  { "name": "Lacoste", "code": "34124", "population": 420 },
+  { "name": "Le Bosc", "code": "", "population": 890 },
+  { "name": "Liausson", "code": "34137", "population": 310 },
+  { "name": "Mérifons", "code": "34156", "population": 520 },
+  { "name": "Mourèze", "code": "34175", "population": 180 },
+  { "name": "Nébian", "code": "34180", "population": 1680 },
+  { "name": "Octon", "code": "34186", "population": 420 },
+  { "name": "Paulhan", "code": "", "population": 3850 },
+  { "name": "Péret", "code": "34197", "population": 1240 },
+  { "name": "Salasc", "code": "34292", "population": 280 },
+  { "name": "Saint-André-de-Sangonis", "code": "", "population": 5200 },
+  { "name": "Saint-Félix-de-Lodez", "code": "34254", "population": 380 },
+  { "name": "Usclas-d'Hérault", "code": "", "population": 620 },
+  { "name": "Valmascle", "code": "34323", "population": 450 },
+  { "name": "Villeneuvette", "code": "34338", "population": 190 }
+]

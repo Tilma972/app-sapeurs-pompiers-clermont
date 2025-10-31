@@ -1,0 +1,149 @@
+[
+  {
+    "name": "Clermont-l'Hérault",
+    "code": "34079",
+    "population": 9372,
+    "lat": 43.6323,
+    "lon": 3.4017
+  },
+  {
+    "name": "Aspiran",
+    "code": "34013",
+    "population": 1682,
+    "lat": 43.5654,
+    "lon": 3.4499
+  },
+  {
+    "name": "Brignac",
+    "code": "34041",
+    "population": 971,
+    "lat": 43.6228,
+    "lon": 3.4704
+  },
+  {
+    "name": "Canet",
+    "code": "34051",
+    "population": 3600,
+    "lat": 43.5992,
+    "lon": 3.4821
+  },
+  {
+    "name": "Ceyras",
+    "code": "34076",
+    "population": 1389,
+    "lat": 43.6512,
+    "lon": 3.4628
+  },
+  {
+    "name": "Fontès",
+    "code": "34103",
+    "population": 1059,
+    "lat": 43.5414,
+    "lon": 3.3881
+  },
+  {
+    "name": "Lacoste",
+    "code": "34124",
+    "population": 312,
+    "lat": 43.6557,
+    "lon": 3.4211
+  },
+  {
+    "name": "Le Bosc",
+    "code": "34036",
+    "population": 1406,
+    "lat": 43.6985,
+    "lon": 3.3896
+  },
+  {
+    "name": "Liausson",
+    "code": "34137",
+    "population": 153,
+    "lat": 43.6384,
+    "lon": 3.3604
+  },
+  {
+    "name": "Mérifons",
+    "code": "34156",
+    "population": 57,
+    "lat": 43.6361,
+    "lon": 3.2849
+  },
+  {
+    "name": "Mourèze",
+    "code": "34175",
+    "population": 190,
+    "lat": 43.6177,
+    "lon": 3.3476
+  },
+  {
+    "name": "Nébian",
+    "code": "34180",
+    "population": 1573,
+    "lat": 43.5999,
+    "lon": 3.4357
+  },
+  {
+    "name": "Octon",
+    "code": "34186",
+    "population": 520,
+    "lat": 43.6588,
+    "lon": 3.2936
+  },
+  {
+    "name": "Paulhan",
+    "code": "34194",
+    "population": 4022,
+    "lat": 43.5378,
+    "lon": 3.4599
+  },
+  {
+    "name": "Péret",
+    "code": "34197",
+    "population": 1131,
+    "lat": 43.5763,
+    "lon": 3.4016
+  },
+  {
+    "name": "Salasc",
+    "code": "34292",
+    "population": 342,
+    "lat": 43.6249,
+    "lon": 3.3088
+  },
+  {
+    "name": "Saint-André-de-Sangonis",
+    "code": "34239",
+    "population": 6364,
+    "lat": 43.6492,
+    "lon": 3.5056
+  },
+  {
+    "name": "Saint-Félix-de-Lodez",
+    "code": "34254",
+    "population": 1142,
+    "lat": 43.6595,
+    "lon": 3.4682
+  },
+  {
+    "name": "Usclas-d'Hérault",
+    "code": "34315",
+    "population": 438,
+    "lat": 43.522,
+    "lon": 3.4667
+  },
+  {
+    "name": "Valmascle",
+    "code": "34323",
+    "population": 51,
+    "lat": 43.5999,
+    "lon": 3.3003
+  },
+  {
+    "name": "Villeneuvette",
+    "code": "34338",
+    "population": 66,
+    "lat": 43.6107,
+    "lon": 3.3977
+  }
+]

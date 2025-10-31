@@ -1,0 +1,23 @@
+[
+  { "name": "Arboras", "code": "34011" },
+  { "name": "Brignac", "code": "34041" },
+  { "name": "Cabrières", "code": "34045" },
+  { "name": "Canet", "code": "34051" },
+  { "name": "Ceyras", "code": "34076" },
+  { "name": "Clermont-l'Hérault", "code": "34079" },
+  { "name": "Jonquières", "code": "34122" },
+  { "name": "Lacoste", "code": "34124" },
+  { "name": "Liausson", "code": "34137" },
+  { "name": "Lieuran-Cabrières", "code": "34138" },
+  { "name": "Mérifons", "code": "34156" },
+  { "name": "Mourèze", "code": "34175" },
+  { "name": "Nébian", "code": "34180" },
+  { "name": "Octon", "code": "34186" },
+  { "name": "Péret", "code": "34197" },
+  { "name": "Saint-Félix-de-Lodez", "code": "34254" },
+  { "name": "Saint-Guiraud", "code": "34262" },
+  { "name": "Saint-Saturnin-de-Lucian", "code": "34287" },
+  { "name": "Salasc", "code": "34292" },
+  { "name": "Valmascle", "code": "34323" },
+  { "name": "Villeneuvette", "code": "34338" }
+]

@@ -10,7 +10,7 @@ import { PartnersSection } from "@/components/landing/partners-section";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { LandingHeaderWrapper } from "@/components/landing/landing-header-wrapper";
 import { Stats } from "@/components/landing/Stats";
-import { SectorMapSection } from "@/components/landing/sector-map-section";
+import { Communes } from "@/components/landing/Communes";
 
 export default async function Home({ searchParams }: { searchParams?: Promise<{ pending?: string }> }) {
   // Vérification intelligente de l'authentification
@@ -44,7 +44,7 @@ export default async function Home({ searchParams }: { searchParams?: Promise<{ 
               <Stats />
 
              {/* Carte secteur opérationnel */}
-             <SectorMapSection />
+             <Communes />
 
               {/* Actions (ultra-compactes) */}
               <ActionsSection />

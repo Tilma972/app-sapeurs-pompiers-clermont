@@ -94,6 +94,18 @@ If you wish to just develop locally and not deploy to Vercel, [follow the steps 
 
 > Check out [the docs for Local Development](https://supabase.com/docs/guides/getting-started/local-development) to also run Supabase locally.
 
+## Communes data: CSV → JSON → UI
+
+- Source of truth: `Nomdelacommune-CodeINSEE.csv` (root).
+- Generated file: `data/communes-21.json` (consumed by `components/landing/Communes.tsx`).
+- Sync script: converts the CSV to the JSON used by the UI.
+
+Run the sync when the CSV changes: `npm run sync:communes`.
+
+Notes:
+- Only the 21 communes present in the CSV are rendered in the UI (Paulhan is excluded if not in the CSV).
+- Populations are enriched from `data/insee-communes.json` when available; the total inhabitants shown on the section is computed dynamically from these values.
+
 ## Feedback and issues
 
 Please file feedback and issues over on the [Supabase GitHub org](https://github.com/supabase/supabase/issues/new/choose).

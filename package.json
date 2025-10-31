@@ -6,6 +6,7 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc -p tsconfig.json --noEmit",
+    "sync:communes": "node tools/communes-from-csv.mjs",
     "clean": "rmdir /s /q .next 2>nul || rm -rf .next"
   },
   "dependencies": {
