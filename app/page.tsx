@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { HeroSimple } from "@/components/landing/hero-simple";
-import { ActionsSection } from "@/components/landing/actions-section";
-import { ShopSection } from "@/components/landing/shop-section";
+import { Missions } from "@/components/landing/Missions";
+import { Calendriers } from "@/components/landing/Calendriers";
 import { PreventionSection } from "@/components/landing/prevention-section";
 import { TestimonialsSection } from "@/components/landing/testimonials-section";
 import { NewsSection } from "@/components/landing/news-section";
@@ -46,11 +46,11 @@ export default async function Home({ searchParams }: { searchParams?: Promise<{ 
              {/* Carte secteur opérationnel */}
              <Communes />
 
-              {/* Actions (ultra-compactes) */}
-              <ActionsSection />
-            
+              {/* Missions */}
+              <Missions />
+
             {/* Section Boutique */}
-            <ShopSection />
+            <Calendriers />
             
             {/* Prévention: numéros d'urgence */}
             <PreventionSection />
