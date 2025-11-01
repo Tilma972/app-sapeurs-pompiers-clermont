@@ -66,7 +66,7 @@ export function Calendrier() {
               whileTap={{ scale: 0.95 }}
             >
               <Link
-                href="#"
+                href="/boutique"
                 className="mt-6 md:mt-8 inline-flex items-center justify-center px-6 py-3 font-medium text-white bg-brandOrange rounded-lg hover:bg-brandOrange/90 transition-all shadow-lg hover:shadow-xl group"
               >
                 Pré-commander en ligne
