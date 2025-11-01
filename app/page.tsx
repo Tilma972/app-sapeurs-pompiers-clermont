@@ -6,7 +6,7 @@ import { PreventionSection } from "@/components/landing/prevention-section";
 import { TestimonialsSection } from "@/components/landing/testimonials-section";
 import { NewsSection } from "@/components/landing/news-section";
 import { ContactSection } from "@/components/landing/contact-section";
-import { PartnersSection } from "@/components/landing/partners-section";
+import { Partenaires } from "@/components/landing/Partenaires";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { LandingHeaderWrapper } from "@/components/landing/landing-header-wrapper";
 import { Stats } from "@/components/landing/Stats";
@@ -62,7 +62,7 @@ export default async function Home({ searchParams }: { searchParams?: Promise<{ 
             <NewsSection />
             
             {/* Section Partenaires */}
-            <PartnersSection />
+            <Partenaires />
             
             {/* Contact minimal */}
             <ContactSection />
