@@ -2,40 +2,49 @@
 
 import { motion } from "framer-motion";
 import { PremiumIcon } from "@/components/landing/premium-icon";
-import { Mail, Phone, ExternalLink, MapPin, Clock } from "lucide-react";
+import { Mail, Phone, ExternalLink, MapPin, Clock, HeartHandshake } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
+import { fadeInUp, staggerContainer } from "@/lib/animations";
 
 // Version minimale: email + téléphone + CTA + lien SDIS
 
 export function ContactSection() {
   return (
-    <section className="py-12 px-4">
+    <section className="py-12 px-4" id="contact">
       <div className="container max-w-6xl mx-auto">
         <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          viewport={{ once: true }}
+          variants={staggerContainer}
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, amount: 0.2 }}
           className="text-center mb-12"
         >
           <div className="flex justify-center mb-4">
             <PremiumIcon icon={Mail} variant="gradient" size="lg" />
           </div>
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">Contact</h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Nous sommes là pour vous accompagner
-          </p>
+          <motion.h2
+            variants={fadeInUp}
+            className="text-3xl md:text-4xl font-bold mb-4"
+          >
+            Contact & Dons
+          </motion.h2>
+          <motion.p
+            variants={fadeInUp}
+            className="text-lg text-muted-foreground max-w-2xl mx-auto"
+          >
+            Une question, une idée, l’envie de soutenir nos actions ? Écrivez-nous ou contribuez librement.
+          </motion.p>
         </motion.div>
 
         {/* Grille de contact moderne */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.1 }}
+            variants={fadeInUp}
+            initial="hidden"
+            whileInView="visible"
             viewport={{ once: true }}
           >
             <Card className="p-6 h-full hover:shadow-lg transition-all duration-300 hover:scale-105">
@@ -53,9 +62,9 @@ export function ContactSection() {
           </motion.div>
 
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
+            variants={fadeInUp}
+            initial="hidden"
+            whileInView="visible"
             viewport={{ once: true }}
           >
             <Card className="p-6 h-full hover:shadow-lg transition-all duration-300 hover:scale-105">
@@ -76,9 +85,9 @@ export function ContactSection() {
           </motion.div>
 
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3 }}
+            variants={fadeInUp}
+            initial="hidden"
+            whileInView="visible"
             viewport={{ once: true }}
             className="md:col-span-2 lg:col-span-1"
           >
@@ -98,11 +107,17 @@ export function ContactSection() {
         </div>
 
         {/* CTA principal */}
-        <div className="text-center mb-8">
+        <div className="text-center mb-8 flex flex-col sm:flex-row items-center justify-center gap-3">
           <Button size="lg" className="px-8 py-4 text-lg" asChild>
-            <Link href="/contact">
+            <a href="mailto:contact@amicale-sp-clermont.fr">
               <Mail className="mr-2 h-5 w-5" />
               Envoyer un message
+            </a>
+          </Button>
+          <Button size="lg" variant="outline" className="px-8 py-4 text-lg" asChild>
+            <Link href="/boutique">
+              <HeartHandshake className="mr-2 h-5 w-5" />
+              Faire un don / calendrier
             </Link>
           </Button>
         </div>
