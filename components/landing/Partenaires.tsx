@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { partners as partenairesSource } from '@/data/partners';
 import { Handshake, Award, Star, TrendingUp, Heart } from 'lucide-react';
-import { motion, useAnimation } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
 
 interface Partner {
@@ -42,26 +42,7 @@ export function Partenaires() {
     bronze: { bg: 'bg-gradient-to-br from-orange-200 to-orange-400', border: 'border-orange-400', text: 'text-orange-700', icon: '🥉' },
   };
 
-  // Infinite carousel animation
-  const controls = useAnimation();
-  
-  useEffect(() => {
-    const animation = controls.start({
-      x: [0, -100 * partenaires.length],
-      transition: {
-        x: {
-          repeat: Infinity,
-          repeatType: "loop",
-          duration: 20,
-          ease: "linear",
-        },
-      },
-    });
-    
-    return () => {
-      animation.then(ctrl => ctrl.stop());
-    };
-  }, [controls, partenaires.length]);
+  // Défilement géré en CSS (animate-marquee) pour fluidité et pause au survol desktop
 
   return (
     <section className="py-12 md:py-24 bg-brandCream dark:bg-darkBg transition-colors overflow-hidden" id="partenaires">
@@ -118,19 +99,13 @@ export function Partenaires() {
           <h3 className="text-xl md:text-2xl font-montserrat font-bold text-center text-brandBrown dark:text-darkText mb-8">
             Ils nous font confiance
           </h3>
-          <div className="relative">
+          <div className="relative group overflow-hidden">
             {/* Gradient overlays */}
             <div className="absolute left-0 top-0 bottom-0 w-24 bg-gradient-to-r from-brandCream dark:from-darkBg to-transparent z-10" />
             <div className="absolute right-0 top-0 bottom-0 w-24 bg-gradient-to-l from-brandCream dark:from-darkBg to-transparent z-10" />
-            
-            <motion.div
-              className="flex gap-8 md:gap-12"
-              animate={controls}
-              onHoverStart={() => controls.stop()}
-              onHoverEnd={() => controls.start({
-                x: [-100 * partenaires.length],
-                transition: { x: { repeat: Infinity, repeatType: "loop", duration: 20, ease: "linear" } },
-              })}
+
+            <div
+              className="flex w-max gap-8 md:gap-12 animate-marquee motion-reduce:animate-none [animation-play-state:running] group-hover:[animation-play-state:paused]"
             >
               {/* Duplicate for seamless loop */}
               {[...partenaires, ...partenaires].map((partner, idx) => {
@@ -144,9 +119,9 @@ export function Partenaires() {
                     whileHover={{ scale: 1.05 }}
                   >
                     <a
-                      href={partner.website}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                      href={partner.website && partner.website !== '#' ? partner.website : undefined}
+                      target={partner.website && partner.website !== '#' ? "_blank" : undefined}
+                      rel={partner.website && partner.website !== '#' ? "noopener noreferrer" : undefined}
                       className="block cursor-pointer"
                       title={`Visiter le site de ${partner.name}`}
                     >
@@ -184,7 +159,7 @@ export function Partenaires() {
                   </motion.div>
                 );
               })}
-            </motion.div>
+            </div>
           </div>
         </div>
 

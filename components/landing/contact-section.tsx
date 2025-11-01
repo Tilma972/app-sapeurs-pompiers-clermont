@@ -1,12 +1,10 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { PremiumIcon } from "@/components/landing/premium-icon";
-import { Mail, Phone, ExternalLink, MapPin, Clock, HeartHandshake } from "lucide-react";
+import { Mail, Phone, ExternalLink, MapPin, Clock } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import Link from "next/link";
+// import Link from "next/link";
 import { fadeInUp, staggerContainer } from "@/lib/animations";
 
 // Version minimale: email + téléphone + CTA + lien SDIS
@@ -20,22 +18,19 @@ export function ContactSection() {
           initial="hidden"
           whileInView="show"
           viewport={{ once: true, amount: 0.2 }}
-          className="text-center mb-12"
+          className="text-center mb-8"
         >
-          <div className="flex justify-center mb-4">
-            <PremiumIcon icon={Mail} variant="gradient" size="lg" />
-          </div>
           <motion.h2
             variants={fadeInUp}
-            className="text-3xl md:text-4xl font-bold mb-4"
+            className="text-3xl md:text-4xl font-bold mb-2"
           >
-            Contact & Dons
+            Contact
           </motion.h2>
           <motion.p
             variants={fadeInUp}
-            className="text-lg text-muted-foreground max-w-2xl mx-auto"
+            className="text-base text-muted-foreground max-w-2xl mx-auto"
           >
-            Une question, une idée, l’envie de soutenir nos actions ? Écrivez-nous ou contribuez librement.
+            Une question ou une demande d’information ? Écrivez-nous ou appelez-nous.
           </motion.p>
         </motion.div>
 
@@ -47,16 +42,15 @@ export function ContactSection() {
             whileInView="visible"
             viewport={{ once: true }}
           >
-            <Card className="p-6 h-full hover:shadow-lg transition-all duration-300 hover:scale-105">
+            <Card className="p-6 h-full hover:shadow-lg transition-all duration-300">
               <div className="text-center">
                 <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Mail className="h-6 w-6 text-primary" />
                 </div>
                 <h3 className="font-semibold text-lg mb-2">Email</h3>
                 <a href="mailto:contact@amicale-sp-clermont.fr" className="text-primary hover:underline font-medium">
-                  contact@amicale-sp-clermont.fr
+                  contact@pompiers34800.com
                 </a>
-                <Badge variant="secondary" className="mt-2">Réponse sous 48h</Badge>
               </div>
             </Card>
           </motion.div>
@@ -67,7 +61,7 @@ export function ContactSection() {
             whileInView="visible"
             viewport={{ once: true }}
           >
-            <Card className="p-6 h-full hover:shadow-lg transition-all duration-300 hover:scale-105">
+            <Card className="p-6 h-full hover:shadow-lg transition-all duration-300">
               <div className="text-center">
                 <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Phone className="h-6 w-6 text-primary" />
@@ -91,7 +85,7 @@ export function ContactSection() {
             viewport={{ once: true }}
             className="md:col-span-2 lg:col-span-1"
           >
-            <Card className="p-6 h-full hover:shadow-lg transition-all duration-300 hover:scale-105">
+            <Card className="p-6 h-full hover:shadow-lg transition-all duration-300">
               <div className="text-center">
                 <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
                   <MapPin className="h-6 w-6 text-primary" />
@@ -107,18 +101,12 @@ export function ContactSection() {
         </div>
 
         {/* CTA principal */}
-        <div className="text-center mb-8 flex flex-col sm:flex-row items-center justify-center gap-3">
+        <div className="text-center mb-8">
           <Button size="lg" className="px-8 py-4 text-lg" asChild>
             <a href="mailto:contact@amicale-sp-clermont.fr">
               <Mail className="mr-2 h-5 w-5" />
               Envoyer un message
             </a>
-          </Button>
-          <Button size="lg" variant="outline" className="px-8 py-4 text-lg" asChild>
-            <Link href="/boutique">
-              <HeartHandshake className="mr-2 h-5 w-5" />
-              Faire un don / calendrier
-            </Link>
           </Button>
         </div>
 
