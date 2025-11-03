@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { listMyPhotos } from "@/lib/supabase/gallery";
-import { FocusedContainer } from "@/components/layouts/focused/focused-container";
+import { PwaContainer } from "@/components/layouts/focused/pwa-container";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 
@@ -13,7 +13,7 @@ export default async function MesPhotosPage() {
   if (!user) redirect("/auth/login");
   const photos = await listMyPhotos();
   return (
-    <FocusedContainer>
+  <PwaContainer>
       <div className="space-y-4">
         <section className="space-y-1 mt-1 sm:mt-2">
           <p className="text-sm text-muted-foreground">Vos photos publiées.</p>
@@ -37,6 +37,6 @@ export default async function MesPhotosPage() {
           )}
         </div>
       </div>
-    </FocusedContainer>
+  </PwaContainer>
   );
 }

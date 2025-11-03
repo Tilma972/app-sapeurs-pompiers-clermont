@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { listPhotos, type GalleryCategory } from "@/lib/supabase/gallery";
-import { FocusedContainer } from "@/components/layouts/focused/focused-container";
+import { PwaContainer } from "@/components/layouts/focused/pwa-container";
 import { Badge } from "@/components/ui/badge";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
@@ -30,7 +30,7 @@ export default async function GalerieFocusedPage({
   const photos = await listPhotos({ category: catParam === "all" ? undefined : catParam, limit: 48 });
 
   return (
-    <FocusedContainer>
+  <PwaContainer>
       <div className="space-y-4">
         {/* Intro */}
         <section className="space-y-1 mt-1 sm:mt-2">
@@ -93,6 +93,6 @@ export default async function GalerieFocusedPage({
           +
         </Link>
       </div>
-    </FocusedContainer>
+  </PwaContainer>
   );
 }

@@ -20,7 +20,7 @@ function NavItem({ href, label, icon: Icon, active }: { href: string; label: str
   )
 }
 
-export function FocusedBottomNav() {
+export function PwaBottomNav() {
   const pathname = usePathname()
   const isActive = (p: string) => pathname === p
 

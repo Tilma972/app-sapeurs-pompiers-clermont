@@ -2,11 +2,11 @@
 
 import type { ReactNode } from "react"
 
-interface FocusedContainerProps {
+interface PwaContainerProps {
   children: ReactNode
 }
 
-export function FocusedContainer({ children }: FocusedContainerProps) {
+export function PwaContainer({ children }: PwaContainerProps) {
   return (
     <div className="bg-background">
       {/* Reduced vertical padding globally to bring page content closer to the AppBar */}

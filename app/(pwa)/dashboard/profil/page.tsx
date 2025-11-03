@@ -7,7 +7,7 @@ import { getCurrentUserProfile } from "@/lib/supabase/profile";
 import { ProfileWithTeamId } from "@/lib/types/profile";
 import { ProfileForm } from "@/components/profile-form";
 import { User, Shield, Building } from "lucide-react";
-import { FocusedContainer } from "@/components/layouts/focused/focused-container";
+import { PwaContainer } from "@/components/layouts/focused/pwa-container";
 
 export default async function ProfilPage() {
   const supabase = await createClient();
@@ -25,7 +25,7 @@ export default async function ProfilPage() {
     .order('ordre_affichage', { ascending: true });
 
   return (
-    <FocusedContainer>
+  <PwaContainer>
       {/* Informations actuelles */}
       <Card>
         <CardHeader>
@@ -107,6 +107,6 @@ export default async function ProfilPage() {
           <ProfileForm profile={profile} teamOptions={(teams as Array<{ id: string; nom: string }>) || []} />
         </CardContent>
       </Card>
-    </FocusedContainer>
+  </PwaContainer>
   );
 }

@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import { FocusedContainer } from "@/components/layouts/focused/focused-container";
+import { PwaContainer } from "@/components/layouts/focused/pwa-container";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { KpiCard } from "@/components/kpi-card";
 import { getUserPersonalStats, getUserHistory, getLastCompletedTourneeSummary } from "@/lib/supabase/tournee";
@@ -20,7 +20,7 @@ export default async function RapportsPage() {
   const numberFr = new Intl.NumberFormat("fr-FR");
 
   return (
-    <FocusedContainer>
+  <PwaContainer>
       <div className="space-y-4">
         <div className="flex items-end justify-between">
           <div>
@@ -106,6 +106,6 @@ export default async function RapportsPage() {
           </CardContent>
         </Card>
       </div>
-    </FocusedContainer>
+  </PwaContainer>
   );
 }

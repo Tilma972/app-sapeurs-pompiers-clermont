@@ -1,5 +1,5 @@
-﻿import { FocusedAppBar } from "@/components/layouts/focused/focused-app-bar"
-import { FocusedBottomNav } from "@/components/layouts/focused/focused-bottom-nav"
+﻿import { PwaAppBar } from "@/components/layouts/focused/pwa-app-bar"
+import { PwaBottomNav } from "@/components/layouts/focused/pwa-bottom-nav"
 import { createClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
 
@@ -30,7 +30,7 @@ export default async function FocusedLayout({
 
   return (
     <div className="min-h-screen flex flex-col">
-      <FocusedAppBar
+  <PwaAppBar
         user={{
           avatar_url: (user?.user_metadata as { avatar_url?: string } | undefined)?.avatar_url,
           initials,
@@ -41,7 +41,7 @@ export default async function FocusedLayout({
       <main className="flex-1 pb-20 sm:pb-6 overflow-x-hidden">
         {children}
       </main>
-      <FocusedBottomNav />
+  <PwaBottomNav />
     </div>
   )
 }

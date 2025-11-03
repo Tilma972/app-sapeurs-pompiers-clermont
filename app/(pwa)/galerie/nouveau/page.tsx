@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { FocusedContainer } from "@/components/layouts/focused/focused-container";
+import { PwaContainer } from "@/components/layouts/focused/pwa-container";
 import GalleryUploadForm from "@/components/gallery/upload-form";
 
 export default async function NouveauFocusedPage() {
@@ -9,11 +9,11 @@ export default async function NouveauFocusedPage() {
   if (!user) redirect("/auth/login");
 
   return (
-    <FocusedContainer>
+  <PwaContainer>
       <div className="max-w-md mx-auto p-2 sm:p-4 space-y-4">
         <h1 className="text-xl font-semibold">Ajouter des photos</h1>
         <GalleryUploadForm />
       </div>
-    </FocusedContainer>
+  </PwaContainer>
   );
 }

@@ -1,5 +1,5 @@
 import { getPhotoById } from "@/lib/supabase/gallery";
-import { FocusedContainer } from "@/components/layouts/focused/focused-container";
+import { PwaContainer } from "@/components/layouts/focused/pwa-container";
 import Link from "next/link";
 import Image from "next/image";
 import ReportButton from "@/components/gallery/report-button";
@@ -13,7 +13,7 @@ export default async function FocusedPhotoDetail({ params }: { params: Promise<{
   const { id } = await params;
   const photo = await getPhotoById(id);
   return (
-    <FocusedContainer>
+  <PwaContainer>
       {!photo ? (
         <div className="p-4 text-sm text-muted-foreground">Photo introuvable.</div>
       ) : (
@@ -40,6 +40,6 @@ export default async function FocusedPhotoDetail({ params }: { params: Promise<{
           </div>
         </div>
       )}
-    </FocusedContainer>
+  </PwaContainer>
   );
 }

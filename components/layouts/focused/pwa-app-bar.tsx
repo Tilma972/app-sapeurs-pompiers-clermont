@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { createClient } from "@/lib/supabase/client"
 
-interface FocusedAppBarProps {
+interface PwaAppBarProps {
   title?: string
   user: {
     avatar_url?: string
@@ -27,7 +27,7 @@ interface FocusedAppBarProps {
   }
 }
 
-export function FocusedAppBar({ title, user }: FocusedAppBarProps) {
+export function PwaAppBar({ title, user }: PwaAppBarProps) {
   const router = useRouter()
   const pathname = usePathname()
 

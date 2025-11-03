@@ -1,4 +1,4 @@
-import { FocusedContainer } from "@/components/layouts/focused/focused-container"
+import { PwaContainer } from "@/components/layouts/focused/pwa-container"
 import { TourneeStatusCard } from "@/components/tournee/tournee-status-card"
 import { Button } from "@/components/ui/button"
 import { createClient } from "@/lib/supabase/server"
@@ -22,13 +22,13 @@ export default async function MaTourneePage() {
   if (!tourneeData || !tourneeData.tournee) {
     return (
       <>
-        <FocusedContainer>
+  <PwaContainer>
           <TourneeStatusCard status="inactive" count={0} amount={0} />
           <div className="grid grid-cols-1 gap-4">
             <Button size="lg" disabled className="h-24 text-lg">PAIEMENT CARTE</Button>
             <Button size="lg" disabled variant="outline" className="h-24 text-lg">DON AVEC REÇU</Button>
           </div>
-        </FocusedContainer>
+  </PwaContainer>
       </>
     )
   }
@@ -40,7 +40,7 @@ export default async function MaTourneePage() {
 
   return (
     <>
-      <FocusedContainer>
+  <PwaContainer>
         <TourneeStatusCard 
           status="active"
           startTime={startTime}
@@ -68,10 +68,10 @@ export default async function MaTourneePage() {
             }
           />
         </div>
-      </FocusedContainer>
+  </PwaContainer>
 
       {/* Clôture intégrée au contenu */}
-      <FocusedContainer>
+  <PwaContainer>
         <TourneeClotureModal
           trigger={
             <Button size="lg" variant="destructive" className="w-full h-14 text-lg">
@@ -81,7 +81,7 @@ export default async function MaTourneePage() {
           tourneeData={{ tournee, transactions, summary }}
           tourneeSummary={summary}
         />
-      </FocusedContainer>
+  </PwaContainer>
     </>
   )
 }
