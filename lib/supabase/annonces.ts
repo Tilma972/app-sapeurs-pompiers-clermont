@@ -38,12 +38,13 @@ export interface AnnonceFormData {
 }
 
 /**
- * Récupère toutes les annonces actives
+ * Récupère toutes les annonces actives avec pagination
  */
 export async function getAnnonces(options?: {
   categorie?: string
   search?: string
   limit?: number
+  offset?: number
 }) {
   const supabase = createClient()
   
@@ -57,7 +58,7 @@ export async function getAnnonces(options?: {
         equipe,
         avatar_url
       )
-    `)
+    `, { count: 'exact' })
     .in("statut", ["active", "reservee"])
     .order("created_at", { ascending: false })
 
@@ -69,18 +70,23 @@ export async function getAnnonces(options?: {
     query = query.or(`titre.ilike.%${options.search}%,description.ilike.%${options.search}%`)
   }
 
-  if (options?.limit) {
-    query = query.limit(options.limit)
-  }
+  // Pagination
+  const limit = options?.limit || 20
+  const offset = options?.offset || 0
+  query = query.range(offset, offset + limit - 1)
 
-  const { data, error } = await query
+  const { data, error, count } = await query
 
   if (error) {
     console.error("Erreur lors de la récupération des annonces:", error)
     throw error
   }
 
-  return data as Annonce[]
+  return {
+    data: data as Annonce[],
+    count: count || 0,
+    hasMore: count ? offset + limit < count : false
+  }
 }
 
 /**
@@ -146,6 +152,26 @@ export async function createAnnonce(formData: AnnonceFormData) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error("Non authentifié")
 
+  // Validation côté serveur
+  if (!formData.titre || formData.titre.length < 5) {
+    throw new Error("Le titre doit contenir au moins 5 caractères")
+  }
+  if (!formData.description || formData.description.length < 20) {
+    throw new Error("La description doit contenir au moins 20 caractères")
+  }
+  if (!formData.prix || formData.prix <= 0) {
+    throw new Error("Le prix doit être supérieur à 0")
+  }
+  if (!formData.categorie) {
+    throw new Error("La catégorie est obligatoire")
+  }
+  if (!formData.photos || formData.photos.length === 0) {
+    throw new Error("Au moins une photo est requise")
+  }
+  if (formData.photos.length > 5) {
+    throw new Error("Maximum 5 photos autorisées")
+  }
+
   const { data, error } = await supabase
     .from("annonces")
     .insert({
@@ -168,6 +194,25 @@ export async function createAnnonce(formData: AnnonceFormData) {
  */
 export async function updateAnnonce(id: string, formData: Partial<AnnonceFormData>) {
   const supabase = createClient()
+
+  // Validation côté serveur
+  if (formData.titre !== undefined && formData.titre.length < 5) {
+    throw new Error("Le titre doit contenir au moins 5 caractères")
+  }
+  if (formData.description !== undefined && formData.description.length < 20) {
+    throw new Error("La description doit contenir au moins 20 caractères")
+  }
+  if (formData.prix !== undefined && formData.prix <= 0) {
+    throw new Error("Le prix doit être supérieur à 0")
+  }
+  if (formData.photos !== undefined) {
+    if (formData.photos.length === 0) {
+      throw new Error("Au moins une photo est requise")
+    }
+    if (formData.photos.length > 5) {
+      throw new Error("Maximum 5 photos autorisées")
+    }
+  }
 
   const { data, error } = await supabase
     .from("annonces")
@@ -320,17 +365,79 @@ export async function isFavorited(annonceId: string) {
 }
 
 /**
- * Upload une photo d'annonce
+ * Compresse une image avant upload
+ */
+async function compressImage(file: File, maxWidth: number = 1200, quality: number = 0.85): Promise<File> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.readAsDataURL(file)
+    reader.onload = (event) => {
+      const img = new Image()
+      img.src = event.target?.result as string
+      img.onload = () => {
+        const canvas = document.createElement('canvas')
+        let width = img.width
+        let height = img.height
+
+        // Redimensionner si nécessaire
+        if (width > maxWidth) {
+          height = (height * maxWidth) / width
+          width = maxWidth
+        }
+
+        canvas.width = width
+        canvas.height = height
+
+        const ctx = canvas.getContext('2d')
+        ctx?.drawImage(img, 0, 0, width, height)
+
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              const compressedFile = new File([blob], file.name, {
+                type: 'image/jpeg',
+                lastModified: Date.now(),
+              })
+              resolve(compressedFile)
+            } else {
+              reject(new Error('Échec de la compression'))
+            }
+          },
+          'image/jpeg',
+          quality
+        )
+      }
+      img.onerror = reject
+    }
+    reader.onerror = reject
+  })
+}
+
+/**
+ * Upload une photo d'annonce (avec compression automatique)
  */
 export async function uploadAnnoncePhoto(file: File, userId: string) {
   const supabase = createClient()
 
-  const fileExt = file.name.split('.').pop()
+  // Valider le type de fichier
+  if (!file.type.startsWith('image/')) {
+    throw new Error('Le fichier doit être une image')
+  }
+
+  // Valider la taille (10 Mo max avant compression)
+  if (file.size > 10 * 1024 * 1024) {
+    throw new Error('L\'image est trop volumineuse (max 10 Mo)')
+  }
+
+  // Compresser l'image
+  const compressedFile = await compressImage(file)
+
+  const fileExt = 'jpg' // Toujours en JPEG après compression
   const fileName = `${userId}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
 
   const { data, error } = await supabase.storage
     .from("annonces")
-    .upload(fileName, file, {
+    .upload(fileName, compressedFile, {
       cacheControl: "3600",
       upsert: false
     })

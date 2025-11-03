@@ -68,19 +68,28 @@ export default function AnnoncesPage() {
   const [favorites, setFavorites] = useState<Set<string>>(new Set())
   const [annonces, setAnnonces] = useState<Annonce[]>([])
   const [loading, setLoading] = useState(true)
+  const [page, setPage] = useState(0)
+  const [hasMore, setHasMore] = useState(true)
+  const ITEMS_PER_PAGE = 20
 
   useEffect(() => {
-    loadAnnonces()
+    setPage(0)
+    setAnnonces([])
+    loadAnnonces(0)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedCategory, searchQuery])
 
-  const loadAnnonces = async () => {
+  const loadAnnonces = async (pageToLoad: number) => {
     try {
       setLoading(true)
-      const data = await getAnnonces({
+      const result = await getAnnonces({
         categorie: selectedCategory !== "Tous" ? selectedCategory : undefined,
         search: searchQuery || undefined,
+        limit: ITEMS_PER_PAGE,
+        offset: pageToLoad * ITEMS_PER_PAGE,
       })
+      
+      const data = result.data
       
       const transformedData: Annonce[] = data.map(item => ({
         id: item.id,
@@ -105,13 +114,27 @@ export default function AnnoncesPage() {
         localisation: item.localisation,
       }))
       
-      setAnnonces(transformedData)
+      if (pageToLoad === 0) {
+        setAnnonces(transformedData)
+      } else {
+        setAnnonces(prev => [...prev, ...transformedData])
+      }
+      
+      setHasMore(result.hasMore)
     } catch (error) {
       console.error("Erreur lors du chargement des annonces:", error)
-      setAnnonces([])
+      if (pageToLoad === 0) {
+        setAnnonces([])
+      }
     } finally {
       setLoading(false)
     }
+  }
+
+  const loadMore = () => {
+    const nextPage = page + 1
+    setPage(nextPage)
+    loadAnnonces(nextPage)
   }
 
   const toggleFavorite = async (id: string) => {
@@ -123,11 +146,18 @@ export default function AnnoncesPage() {
           newFavorites.delete(id)
           return newFavorites
         })
+        // Mettre à jour le compteur localement
+        setAnnonces(prev => prev.map(a => 
+          a.id === id ? { ...a, favoris: Math.max(0, a.favoris - 1) } : a
+        ))
       } else {
         await addToFavorites(id)
         setFavorites(prev => new Set(prev).add(id))
+        // Mettre à jour le compteur localement
+        setAnnonces(prev => prev.map(a => 
+          a.id === id ? { ...a, favoris: a.favoris + 1 } : a
+        ))
       }
-      loadAnnonces()
     } catch (error) {
       console.error("Erreur lors de la gestion des favoris:", error)
     }
@@ -137,13 +167,14 @@ export default function AnnoncesPage() {
     <>
       <div className="sticky top-[64px] z-10 bg-background px-4 py-3 border-b">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
           <Input
             type="search"
             placeholder="Que recherchez-vous ?"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10"
+            aria-label="Rechercher une annonce"
           />
         </div>
       </div>
@@ -154,8 +185,9 @@ export default function AnnoncesPage() {
           size="sm"
           className="flex-1"
           onClick={() => router.push("/annonces/nouvelle")}
+          aria-label="Publier une nouvelle annonce"
         >
-          <Plus className="h-4 w-4 mr-2" />
+          <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
           Publier
         </Button>
         <Button
@@ -163,8 +195,9 @@ export default function AnnoncesPage() {
           size="sm"
           className="flex-1"
           onClick={() => router.push("/annonces/mes-annonces")}
+          aria-label="Voir mes annonces"
         >
-          <User className="h-4 w-4 mr-2" />
+          <User className="h-4 w-4 mr-2" aria-hidden="true" />
           Mes annonces
         </Button>
       </div>
@@ -238,8 +271,9 @@ export default function AnnoncesPage() {
                         e.stopPropagation()
                         toggleFavorite(annonce.id)
                       }}
+                      aria-label={favorites.has(annonce.id) ? "Retirer des favoris" : "Ajouter aux favoris"}
                     >
-                      <Heart className={`h-4 w-4 ${favorites.has(annonce.id) ? "fill-white" : ""}`} />
+                      <Heart className={`h-4 w-4 ${favorites.has(annonce.id) ? "fill-white" : ""}`} aria-hidden="true" />
                     </Button>
                     <div className="absolute bottom-2 right-2 bg-black/70 text-white px-2 py-1 rounded text-xs font-semibold">
                       {new Intl.NumberFormat("fr-FR", {
@@ -345,6 +379,19 @@ export default function AnnoncesPage() {
                 </Card>
               )
             })}
+          </div>
+        )}
+
+        {/* Bouton Charger plus */}
+        {!loading && hasMore && annonces.length > 0 && (
+          <div className="flex justify-center py-6">
+            <Button
+              variant="outline"
+              onClick={loadMore}
+              aria-label="Charger plus d'annonces"
+            >
+              Charger plus
+            </Button>
           </div>
         )}
 
