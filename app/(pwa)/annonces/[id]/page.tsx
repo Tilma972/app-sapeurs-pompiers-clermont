@@ -1,6 +1,6 @@
 "use client"
 
-import { use, useState } from "react"
+import { use, useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
 import { ArrowLeft, Heart, Share2, Star, MapPin, Clock, Phone, Mail, MessageCircle, Eye, AlertCircle } from "lucide-react"
@@ -9,8 +9,8 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { getAnnonceById, addToFavorites, removeFromFavorites } from "@/lib/supabase/annonces"
 
-// Types
 interface Annonce {
   id: string
   titre: string
@@ -36,7 +36,8 @@ interface Annonce {
   localisation?: string
 }
 
-// Mock data (identique à la page liste)
+// Mock data supprimé - maintenant on utilise Supabase
+/*
 const mockAnnonces: Annonce[] = [
   {
     id: "1",
@@ -88,6 +89,7 @@ const mockAnnonces: Annonce[] = [
     localisation: "Caserne de Paris",
   },
 ]
+*/
 
 const formatDate = (dateStr: string) => {
   const date = new Date(dateStr)
@@ -115,12 +117,80 @@ export default function AnnonceDetailPage({ params }: { params: Promise<{ id: st
   const router = useRouter()
   const [selectedPhoto, setSelectedPhoto] = useState(0)
   const [isFavorite, setIsFavorite] = useState(false)
+  const [annonce, setAnnonce] = useState<Annonce | null>(null)
+  const [loading, setLoading] = useState(true)
 
-  // Unwrap params avec React.use()
   const { id } = use(params)
 
-  // Récupérer l'annonce (mock pour l'instant)
-  const annonce = mockAnnonces.find(a => a.id === id)
+  useEffect(() => {
+    loadAnnonce()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id])
+
+  const loadAnnonce = async () => {
+    try {
+      setLoading(true)
+      const data = await getAnnonceById(id)
+      
+      // Transformer pour correspondre à l'interface
+      const transformedData: Annonce = {
+        id: data.id,
+        titre: data.titre,
+        description: data.description,
+        prix: data.prix,
+        categorie: data.categorie,
+        photos: data.photos.length > 0 ? data.photos : ["https://images.unsplash.com/photo-1584438784894-089d6a62b8fa?w=800&h=800&fit=crop"],
+        vendeur: {
+          nom: data.profiles ? `${data.profiles.first_name} ${data.profiles.last_name?.charAt(0)}.` : "Utilisateur",
+          equipe: data.profiles?.equipe || "Non renseigné",
+          avatar: data.profiles?.avatar_url,
+          note: 5.0,
+          annoncesActives: 3,
+        },
+        date_creation: data.created_at,
+        statut: data.statut as "active" | "vendue" | "reservee",
+        vues: data.vues,
+        favoris: data.favoris,
+        contact: {
+          telephone: data.telephone,
+          email: "",
+        },
+        localisation: data.localisation,
+      }
+      
+      setAnnonce(transformedData)
+    } catch (error) {
+      console.error("Erreur lors du chargement de l'annonce:", error)
+      setAnnonce(null)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const toggleFavorite = async () => {
+    try {
+      if (isFavorite) {
+        await removeFromFavorites(id)
+        setIsFavorite(false)
+      } else {
+        await addToFavorites(id)
+        setIsFavorite(true)
+      }
+    } catch (error) {
+      console.error("Erreur lors de la gestion des favoris:", error)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center space-y-3">
+          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="text-muted-foreground">Chargement...</p>
+        </div>
+      </div>
+    )
+  }
 
   if (!annonce) {
     return (
@@ -155,7 +225,7 @@ export default function AnnonceDetailPage({ params }: { params: Promise<{ id: st
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => setIsFavorite(!isFavorite)}
+              onClick={toggleFavorite}
             >
               <Heart className={`h-5 w-5 ${isFavorite ? "fill-red-500 text-red-500" : ""}`} />
             </Button>

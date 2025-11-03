@@ -12,6 +12,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { AlertCircle } from "lucide-react"
+import { createAnnonce, uploadAnnoncePhoto } from "@/lib/supabase/annonces"
+import { createClient } from "@/lib/supabase/client"
 
 const categories = [
   "Équipement",
@@ -27,7 +29,8 @@ const categories = [
 export default function NouvelleAnnoncePage() {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [photos, setPhotos] = useState<string[]>([])
+  const [photoFiles, setPhotoFiles] = useState<File[]>([])
+  const [photosPreviews, setPhotosPreviews] = useState<string[]>([])
   const [formData, setFormData] = useState({
     titre: "",
     description: "",
@@ -42,23 +45,27 @@ export default function NouvelleAnnoncePage() {
     if (!files) return
 
     // Limiter à 5 photos
-    if (photos.length + files.length > 5) {
+    if (photoFiles.length + files.length > 5) {
       alert("Vous ne pouvez ajouter que 5 photos maximum")
       return
     }
 
-    // Convertir les fichiers en URLs
-    Array.from(files).forEach(file => {
+    const newFiles = Array.from(files)
+    setPhotoFiles(prev => [...prev, ...newFiles])
+
+    // Créer les previews
+    newFiles.forEach(file => {
       const reader = new FileReader()
       reader.onloadend = () => {
-        setPhotos(prev => [...prev, reader.result as string])
+        setPhotosPreviews(prev => [...prev, reader.result as string])
       }
       reader.readAsDataURL(file)
     })
   }
 
   const removePhoto = (index: number) => {
-    setPhotos(prev => prev.filter((_, i) => i !== index))
+    setPhotoFiles(prev => prev.filter((_, i) => i !== index))
+    setPhotosPreviews(prev => prev.filter((_, i) => i !== index))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -66,18 +73,48 @@ export default function NouvelleAnnoncePage() {
     setIsSubmitting(true)
 
     // Validation basique
-    if (!formData.titre || !formData.prix || !formData.categorie || photos.length === 0) {
+    if (!formData.titre || !formData.prix || !formData.categorie || photoFiles.length === 0) {
       alert("Veuillez remplir tous les champs obligatoires et ajouter au moins une photo")
       setIsSubmitting(false)
       return
     }
 
-    // Simulation d'envoi (à remplacer par appel API/Supabase)
-    setTimeout(() => {
-      console.log("Annonce créée:", { ...formData, photos })
+    try {
+      // 1. Récupérer l'utilisateur
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      
+      if (!user) {
+        alert("Vous devez être connecté pour publier une annonce")
+        setIsSubmitting(false)
+        return
+      }
+
+      // 2. Upload des photos
+      const photoUrls: string[] = []
+      for (const photo of photoFiles) {
+        const url = await uploadAnnoncePhoto(photo, user.id)
+        photoUrls.push(url)
+      }
+
+      // 3. Créer l'annonce
+      await createAnnonce({
+        titre: formData.titre,
+        description: formData.description,
+        prix: parseFloat(formData.prix),
+        categorie: formData.categorie,
+        photos: photoUrls,
+        localisation: formData.localisation || undefined,
+        telephone: formData.telephone || undefined,
+      })
+
+      // 4. Rediriger vers mes annonces
+      router.push("/annonces/mes-annonces")
+    } catch (error) {
+      console.error("Erreur lors de la création de l'annonce:", error)
+      alert("Erreur lors de la création de l'annonce. Veuillez réessayer.")
       setIsSubmitting(false)
-      router.push("/annonces")
-    }, 1500)
+    }
   }
 
   return (
@@ -104,7 +141,7 @@ export default function NouvelleAnnoncePage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-3 gap-3">
-              {photos.map((photo, index) => (
+              {photosPreviews.map((photo, index) => (
                 <div key={index} className="relative aspect-square rounded-lg overflow-hidden border">
                   <Image
                     src={photo}
@@ -127,7 +164,7 @@ export default function NouvelleAnnoncePage() {
                 </div>
               ))}
               
-              {photos.length < 5 && (
+              {photosPreviews.length < 5 && (
                 <label className="aspect-square rounded-lg border-2 border-dashed border-muted-foreground/25 hover:border-muted-foreground/50 transition-colors cursor-pointer flex flex-col items-center justify-center gap-2">
                   <Upload className="h-6 w-6 text-muted-foreground" />
                   <span className="text-xs text-muted-foreground text-center px-2">
