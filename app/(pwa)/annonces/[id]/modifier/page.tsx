@@ -12,6 +12,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { AlertCircle } from "lucide-react"
+import { getAnnonceById, updateAnnonce, uploadAnnoncePhoto } from "@/lib/supabase/annonces"
+import { createClient } from "@/lib/supabase/client"
 
 const categories = [
   "Équipement",
@@ -24,21 +26,6 @@ const categories = [
   "Divers",
 ]
 
-// Mock data pour récupérer l'annonce existante
-const mockAnnonce = {
-  id: "1",
-  titre: "Casque F1 en excellent état",
-  description: "Casque F1 Gallet en excellent état. Peu utilisé, acheté il y a 2 ans. Toutes les normes OK. Idéal pour intervention ou collection.",
-  prix: "120",
-  categorie: "Équipement",
-  localisation: "Caserne de Lyon",
-  telephone: "06.12.34.56.78",
-  photos: [
-    "https://images.unsplash.com/photo-1557683304-673a23048d34?w=400&h=300&fit=crop",
-    "https://images.unsplash.com/photo-1584438784894-089d6a62b8fa?w=400&h=300&fit=crop",
-  ]
-}
-
 export default function ModifierAnnoncePage({
   params,
 }: {
@@ -48,7 +35,9 @@ export default function ModifierAnnoncePage({
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
-  const [photos, setPhotos] = useState<string[]>([])
+  const [existingPhotos, setExistingPhotos] = useState<string[]>([])
+  const [newPhotoFiles, setNewPhotoFiles] = useState<File[]>([])
+  const [newPhotosPreviews, setNewPhotosPreviews] = useState<string[]>([])
   const [formData, setFormData] = useState({
     titre: "",
     description: "",
@@ -58,64 +47,116 @@ export default function ModifierAnnoncePage({
     telephone: "",
   })
 
-  // Simuler le chargement des données
+  // Charger les données de l'annonce
   useEffect(() => {
-    // En prod, on ferait un fetch vers Supabase ici
-    setTimeout(() => {
-      setFormData({
-        titre: mockAnnonce.titre,
-        description: mockAnnonce.description,
-        prix: mockAnnonce.prix,
-        categorie: mockAnnonce.categorie,
-        localisation: mockAnnonce.localisation,
-        telephone: mockAnnonce.telephone,
-      })
-      setPhotos(mockAnnonce.photos)
-      setIsLoading(false)
-    }, 500)
-  }, [id])
+    const loadAnnonce = async () => {
+      try {
+        const annonce = await getAnnonceById(id)
+        
+        setFormData({
+          titre: annonce.titre,
+          description: annonce.description,
+          prix: annonce.prix.toString(),
+          categorie: annonce.categorie,
+          localisation: annonce.localisation || "",
+          telephone: annonce.telephone || "",
+        })
+        setExistingPhotos(annonce.photos)
+        setIsLoading(false)
+      } catch (error) {
+        console.error("Erreur lors du chargement de l'annonce:", error)
+        alert("Erreur lors du chargement de l'annonce")
+        router.push("/annonces/mes-annonces")
+      }
+    }
+
+    loadAnnonce()
+  }, [id, router])
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files
     if (!files) return
 
+    const totalPhotos = existingPhotos.length + newPhotoFiles.length
+    
     // Limiter à 5 photos
-    if (photos.length + files.length > 5) {
-      alert("Vous ne pouvez ajouter que 5 photos maximum")
+    if (totalPhotos + files.length > 5) {
+      alert("Vous ne pouvez avoir que 5 photos maximum au total")
       return
     }
 
-    // Convertir les fichiers en URLs
-    Array.from(files).forEach(file => {
+    const newFiles = Array.from(files)
+    setNewPhotoFiles(prev => [...prev, ...newFiles])
+
+    // Créer les previews
+    newFiles.forEach(file => {
       const reader = new FileReader()
       reader.onloadend = () => {
-        setPhotos(prev => [...prev, reader.result as string])
+        setNewPhotosPreviews(prev => [...prev, reader.result as string])
       }
       reader.readAsDataURL(file)
     })
   }
 
-  const removePhoto = (index: number) => {
-    setPhotos(prev => prev.filter((_, i) => i !== index))
+  const removeExistingPhoto = (index: number) => {
+    setExistingPhotos(prev => prev.filter((_, i) => i !== index))
+  }
+
+  const removeNewPhoto = (index: number) => {
+    setNewPhotoFiles(prev => prev.filter((_, i) => i !== index))
+    setNewPhotosPreviews(prev => prev.filter((_, i) => i !== index))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
 
+    const totalPhotos = existingPhotos.length + newPhotoFiles.length
+    
     // Validation basique
-    if (!formData.titre || !formData.prix || !formData.categorie || photos.length === 0) {
-      alert("Veuillez remplir tous les champs obligatoires et ajouter au moins une photo")
+    if (!formData.titre || !formData.prix || !formData.categorie || totalPhotos === 0) {
+      alert("Veuillez remplir tous les champs obligatoires et avoir au moins une photo")
       setIsSubmitting(false)
       return
     }
 
-    // Simulation d'envoi (à remplacer par appel API/Supabase)
-    setTimeout(() => {
-      console.log("Annonce modifiée:", { id, ...formData, photos })
-      setIsSubmitting(false)
+    try {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      
+      if (!user) {
+        alert("Vous devez être connecté pour modifier une annonce")
+        setIsSubmitting(false)
+        return
+      }
+
+      // Upload les nouvelles photos
+      const newPhotoUrls: string[] = []
+      for (const photo of newPhotoFiles) {
+        const url = await uploadAnnoncePhoto(photo, user.id)
+        newPhotoUrls.push(url)
+      }
+
+      // Combiner les photos existantes et nouvelles
+      const allPhotos = [...existingPhotos, ...newPhotoUrls]
+
+      // Mettre à jour l'annonce
+      await updateAnnonce(id, {
+        titre: formData.titre,
+        description: formData.description,
+        prix: parseFloat(formData.prix),
+        categorie: formData.categorie,
+        photos: allPhotos,
+        localisation: formData.localisation || undefined,
+        telephone: formData.telephone || undefined,
+      })
+
       router.push("/annonces/mes-annonces")
-    }, 1500)
+    } catch (error) {
+      console.error("Erreur lors de la modification de l'annonce:", error)
+      alert("Erreur lors de la modification de l'annonce. Veuillez réessayer.")
+      setIsSubmitting(false)
+    }
   }
 
   if (isLoading) {
@@ -153,8 +194,9 @@ export default function ModifierAnnoncePage({
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-3 gap-3">
-              {photos.map((photo, index) => (
-                <div key={index} className="relative aspect-square rounded-lg overflow-hidden border">
+              {/* Photos existantes */}
+              {existingPhotos.map((photo, index) => (
+                <div key={`existing-${index}`} className="relative aspect-square rounded-lg overflow-hidden border">
                   <Image
                     src={photo}
                     alt={`Photo ${index + 1}`}
@@ -163,7 +205,7 @@ export default function ModifierAnnoncePage({
                   />
                   <button
                     type="button"
-                    onClick={() => removePhoto(index)}
+                    onClick={() => removeExistingPhoto(index)}
                     className="absolute top-1 right-1 bg-black/70 text-white rounded-full p-1 hover:bg-black"
                   >
                     <X className="h-3 w-3" />
@@ -176,7 +218,29 @@ export default function ModifierAnnoncePage({
                 </div>
               ))}
               
-              {photos.length < 5 && (
+              {/* Nouvelles photos */}
+              {newPhotosPreviews.map((photo, index) => (
+                <div key={`new-${index}`} className="relative aspect-square rounded-lg overflow-hidden border border-green-500">
+                  <Image
+                    src={photo}
+                    alt={`Nouvelle photo ${index + 1}`}
+                    fill
+                    className="object-cover"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeNewPhoto(index)}
+                    className="absolute top-1 right-1 bg-black/70 text-white rounded-full p-1 hover:bg-black"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                  <div className="absolute bottom-1 left-1 bg-green-500 text-white text-[10px] px-2 py-0.5 rounded">
+                    Nouveau
+                  </div>
+                </div>
+              ))}
+              
+              {(existingPhotos.length + newPhotosPreviews.length) < 5 && (
                 <label className="aspect-square rounded-lg border-2 border-dashed border-muted-foreground/25 hover:border-muted-foreground/50 transition-colors cursor-pointer flex flex-col items-center justify-center gap-2">
                   <Upload className="h-6 w-6 text-muted-foreground" />
                   <span className="text-xs text-muted-foreground text-center px-2">

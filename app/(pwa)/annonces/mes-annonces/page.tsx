@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
 import { Plus, Edit, Trash2, Eye, EyeOff, MoreVertical } from "lucide-react"
@@ -22,6 +22,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { getMyAnnonces, updateAnnonceStatut, deleteAnnonce } from "@/lib/supabase/annonces"
 
 interface Annonce {
   id: string
@@ -29,64 +30,12 @@ interface Annonce {
   prix: number
   photo: string
   categorie: string
-  statut: "active" | "desactivee" | "vendue"
+  statut: "active" | "desactivee" | "vendue" | "reservee"
   datePublication: string
   vues: number
   favoris: number
   messages: number
 }
-
-// Données mockées
-const mockAnnonces: Annonce[] = [
-  {
-    id: "1",
-    titre: "Casque F1 en excellent état",
-    prix: 120,
-    photo: "https://images.unsplash.com/photo-1557683304-673a23048d34?w=400&h=300&fit=crop",
-    categorie: "Équipement",
-    statut: "active",
-    datePublication: "2024-10-28",
-    vues: 87,
-    favoris: 12,
-    messages: 5,
-  },
-  {
-    id: "2",
-    titre: "Lampe torche LED puissante",
-    prix: 45,
-    photo: "https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?w=400&h=300&fit=crop",
-    categorie: "Équipement",
-    statut: "active",
-    datePublication: "2024-10-25",
-    vues: 45,
-    favoris: 7,
-    messages: 3,
-  },
-  {
-    id: "3",
-    titre: "Chaussures intervention T42",
-    prix: 80,
-    photo: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&h=300&fit=crop",
-    categorie: "Vêtements",
-    statut: "desactivee",
-    datePublication: "2024-10-20",
-    vues: 32,
-    favoris: 4,
-    messages: 1,
-  },
-  {
-    id: "4",
-    titre: "Gants cuir taille L",
-    prix: 25,
-    photo: "https://images.unsplash.com/photo-1588850561407-ed78c282e89b?w=400&h=300&fit=crop",
-    categorie: "Vêtements",
-    statut: "vendue",
-    datePublication: "2024-10-15",
-    vues: 156,
-    favoris: 18,
-    messages: 12,
-  },
-]
 
 const getStatutBadge = (statut: string) => {
   switch (statut) {
@@ -96,6 +45,8 @@ const getStatutBadge = (statut: string) => {
       return <Badge variant="secondary">Désactivée</Badge>
     case "vendue":
       return <Badge variant="outline">Vendue</Badge>
+    case "reservee":
+      return <Badge className="bg-orange-500">Réservée</Badge>
     default:
       return null
   }
@@ -116,34 +67,82 @@ const formatDate = (dateString: string) => {
 
 export default function MesAnnoncesPage() {
   const router = useRouter()
-  const [annonces, setAnnonces] = useState(mockAnnonces)
+  const [annonces, setAnnonces] = useState<Annonce[]>([])
+  const [isLoading, setIsLoading] = useState(true)
   const [deleteDialog, setDeleteDialog] = useState<string | null>(null)
   const [selectedTab, setSelectedTab] = useState("all")
 
-  const handleDelete = (id: string) => {
-    setAnnonces(prev => prev.filter(a => a.id !== id))
-    setDeleteDialog(null)
+  useEffect(() => {
+    loadAnnonces()
+  }, [])
+
+  const loadAnnonces = async () => {
+    try {
+      const data = await getMyAnnonces()
+      const transformedData: Annonce[] = data.map(item => ({
+        id: item.id,
+        titre: item.titre,
+        prix: item.prix,
+        photo: item.photos[0] || "",
+        categorie: item.categorie,
+        statut: item.statut,
+        datePublication: item.created_at,
+        vues: item.vues,
+        favoris: item.favoris,
+        messages: 0, // À implémenter avec système de messagerie
+      }))
+      setAnnonces(transformedData)
+      setIsLoading(false)
+    } catch (error) {
+      console.error("Erreur lors du chargement des annonces:", error)
+      setIsLoading(false)
+    }
   }
 
-  const handleToggleStatut = (id: string) => {
-    setAnnonces(prev => prev.map(a => {
-      if (a.id === id) {
-        return {
-          ...a,
-          statut: a.statut === "active" ? "desactivee" : "active"
-        } as Annonce
-      }
-      return a
-    }))
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteAnnonce(id)
+      setAnnonces(prev => prev.filter(a => a.id !== id))
+      setDeleteDialog(null)
+    } catch (error) {
+      console.error("Erreur lors de la suppression:", error)
+      alert("Erreur lors de la suppression de l'annonce")
+    }
   }
 
-  const handleMarquerVendue = (id: string) => {
-    setAnnonces(prev => prev.map(a => {
-      if (a.id === id) {
-        return { ...a, statut: "vendue" } as Annonce
-      }
-      return a
-    }))
+  const handleToggleStatut = async (id: string) => {
+    const annonce = annonces.find(a => a.id === id)
+    if (!annonce) return
+
+    const newStatut = annonce.statut === "active" ? "desactivee" : "active"
+    
+    try {
+      await updateAnnonceStatut(id, newStatut)
+      setAnnonces(prev => prev.map(a => {
+        if (a.id === id) {
+          return { ...a, statut: newStatut }
+        }
+        return a
+      }))
+    } catch (error) {
+      console.error("Erreur lors du changement de statut:", error)
+      alert("Erreur lors du changement de statut")
+    }
+  }
+
+  const handleMarquerVendue = async (id: string) => {
+    try {
+      await updateAnnonceStatut(id, "vendue")
+      setAnnonces(prev => prev.map(a => {
+        if (a.id === id) {
+          return { ...a, statut: "vendue" as const }
+        }
+        return a
+      }))
+    } catch (error) {
+      console.error("Erreur lors du marquage comme vendue:", error)
+      alert("Erreur lors du marquage comme vendue")
+    }
   }
 
   const filteredAnnonces = annonces.filter(a => {
@@ -159,6 +158,17 @@ export default function MesAnnoncesPage() {
     active: annonces.filter(a => a.statut === "active").length,
     inactive: annonces.filter(a => a.statut === "desactivee").length,
     sold: annonces.filter(a => a.statut === "vendue").length,
+  }
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Chargement de vos annonces...</p>
+        </div>
+      </div>
+    )
   }
 
   return (
