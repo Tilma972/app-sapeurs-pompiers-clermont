@@ -3,7 +3,7 @@ import { PwaBottomNav } from "@/components/layouts/pwa/pwa-bottom-nav"
 import { createClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
 
-export default async function FocusedLayout({
+export default async function PwaLayout({
   children,
 }: {
   children: React.ReactNode

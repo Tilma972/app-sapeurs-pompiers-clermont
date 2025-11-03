@@ -6,7 +6,7 @@ import { Play, Medal } from "lucide-react";
 import { StartTourneeButton } from "@/components/start-tournee-button";
 import { getEquipesRanking, getAllEquipesStats } from "@/lib/supabase/equipes";
 import { getActiveTourneeWithTransactions, getUserHistory, getUserPersonalStats } from "@/lib/supabase/tournee";
-import { FocusedContainer } from "@/components/layouts/focused/focused-container";
+import { PwaContainer } from "@/components/layouts/pwa/pwa-container";
 import { TeamsLeaderboardProgress, type Team } from "@/components/charts/teams-leaderboard-progress";
 import { KpiCard } from "@/components/kpi-card";
 import { getCurrentUserProfile } from "@/lib/supabase/profile";
@@ -96,7 +96,7 @@ export default async function CalendriersPage() {
   })();
 
   return (
-    <FocusedContainer>
+    <PwaContainer>
       <div className="space-y-6">
         <section className="space-y-2 mt-1 sm:mt-2">
           <div className="text-sm text-muted-foreground mb-2 text-center">Suivi de ton activité en cours.</div>
@@ -158,6 +158,6 @@ export default async function CalendriersPage() {
         {/* Classement des équipes (barres horizontales + toggle Calendriers/€) */}
         <TeamsLeaderboardProgress teams={teams} className="shadow-sm" />
       </div>
-    </FocusedContainer>
+    </PwaContainer>
   );
 }

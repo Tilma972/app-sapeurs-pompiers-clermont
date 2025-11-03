@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { PwaContainer } from "@/components/layouts/pwa/pwa-container";
 import GalleryUploadForm from "@/components/gallery/upload-form";
 
-export default async function NouveauFocusedPage() {
+export default async function NouveauPwaPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/auth/login");
