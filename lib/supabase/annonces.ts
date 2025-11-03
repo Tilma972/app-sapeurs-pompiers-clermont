@@ -296,6 +296,7 @@ export async function getMyFavorites() {
     throw error
   }
 
+  // @ts-expect-error - Supabase typing issue with nested relations
   return data.map(item => item.annonces).filter(Boolean) as Annonce[]
 }
 
