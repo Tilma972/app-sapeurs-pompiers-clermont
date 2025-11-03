@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Search, SlidersHorizontal, Heart, Plus, Star, MapPin, Clock, Phone, Mail, MessageCircle, User } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -197,6 +198,7 @@ const getStatutBadge = (statut: string) => {
 }
 
 export default function AnnoncesPage() {
+  const router = useRouter()
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("Tous")
   const [favorites, setFavorites] = useState<Set<string>>(new Set())
@@ -235,6 +237,28 @@ export default function AnnoncesPage() {
             className="pl-10"
           />
         </div>
+      </div>
+
+      {/* Boutons d'action */}
+      <div className="flex gap-2 px-4 py-3 border-b">
+        <Button
+          variant="default"
+          size="sm"
+          className="flex-1"
+          onClick={() => router.push("/annonces/nouvelle")}
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Publier
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          className="flex-1"
+          onClick={() => router.push("/annonces/mes-annonces")}
+        >
+          <User className="h-4 w-4 mr-2" />
+          Mes annonces
+        </Button>
       </div>
 
       {/* Filtres */}
@@ -281,7 +305,11 @@ export default function AnnoncesPage() {
           {filteredAnnonces.map((annonce) => {
             const statutBadge = getStatutBadge(annonce.statut)
             return (
-              <Card key={annonce.id} className="overflow-hidden group cursor-pointer hover:shadow-lg transition-shadow">
+              <Card 
+                key={annonce.id} 
+                className="overflow-hidden group cursor-pointer hover:shadow-lg transition-shadow"
+                onClick={() => router.push(`/annonces/${annonce.id}`)}
+              >
                 <div className="relative aspect-square">
                   <Image
                     src={annonce.photos[0]}
