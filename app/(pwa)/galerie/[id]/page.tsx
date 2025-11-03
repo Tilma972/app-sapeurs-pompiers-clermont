@@ -1,5 +1,5 @@
 import { getPhotoById } from "@/lib/supabase/gallery";
-import { PwaContainer } from "@/components/layouts/focused/pwa-container";
+import { PwaContainer } from "@/components/layouts/pwa/pwa-container";
 import Link from "next/link";
 import Image from "next/image";
 import ReportButton from "@/components/gallery/report-button";

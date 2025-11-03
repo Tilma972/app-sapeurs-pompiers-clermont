@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { PwaContainer } from "@/components/layouts/focused/pwa-container";
+import { PwaContainer } from "@/components/layouts/pwa/pwa-container";
 import GalleryUploadForm from "@/components/gallery/upload-form";
 
 export default async function NouveauFocusedPage() {

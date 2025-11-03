@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { listMyPhotos } from "@/lib/supabase/gallery";
-import { PwaContainer } from "@/components/layouts/focused/pwa-container";
+import { PwaContainer } from "@/components/layouts/pwa/pwa-container";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 

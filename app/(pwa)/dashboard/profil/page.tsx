@@ -7,7 +7,7 @@ import { getCurrentUserProfile } from "@/lib/supabase/profile";
 import { ProfileWithTeamId } from "@/lib/types/profile";
 import { ProfileForm } from "@/components/profile-form";
 import { User, Shield, Building } from "lucide-react";
-import { PwaContainer } from "@/components/layouts/focused/pwa-container";
+import { PwaContainer } from "@/components/layouts/pwa/pwa-container";
 
 export default async function ProfilPage() {
   const supabase = await createClient();

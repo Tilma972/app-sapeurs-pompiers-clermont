@@ -1,6 +1,6 @@
 ﻿import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { FocusedContainer } from "@/components/layouts/focused/focused-container";
+import { PwaContainer } from "@/components/layouts/pwa/pwa-container";
 import FeatureCardsGrid from "@/components/dashboard/feature-cards";
 import { getCurrentUserProfile } from "@/lib/supabase/profile";
 import { getGlobalStats } from "@/lib/supabase/tournee";
@@ -51,7 +51,7 @@ className="rounded-none w-screen"
 />
 
 {/* Contenu principal avec padding */}
-<FocusedContainer>
+<PwaContainer>
 <div className="space-y-5 pt-6">
 <FeatureCardsGrid
 annoncesCount={annoncesCount}
@@ -62,7 +62,7 @@ profileComplete={profileComplete}
 globalCalendarsDistributed={globalStats?.total_calendriers_distribues}
 />
 </div>
-</FocusedContainer>
+</PwaContainer>
 </div>
 );
 }

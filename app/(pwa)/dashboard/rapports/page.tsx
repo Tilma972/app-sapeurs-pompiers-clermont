@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import { PwaContainer } from "@/components/layouts/focused/pwa-container";
+import { PwaContainer } from "@/components/layouts/pwa/pwa-container";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { KpiCard } from "@/components/kpi-card";
 import { getUserPersonalStats, getUserHistory, getLastCompletedTourneeSummary } from "@/lib/supabase/tournee";

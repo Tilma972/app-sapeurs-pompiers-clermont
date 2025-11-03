@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { listPhotos, type GalleryCategory } from "@/lib/supabase/gallery";
-import { PwaContainer } from "@/components/layouts/focused/pwa-container";
+import { PwaContainer } from "@/components/layouts/pwa/pwa-container";
 import { Badge } from "@/components/ui/badge";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
@@ -17,7 +17,7 @@ const categories: { value: "all" | GalleryCategory; label: string }[] = [
 
 export const dynamic = "force-dynamic";
 
-export default async function GalerieFocusedPage({
+export default async function GaleriePwaPage({
   searchParams,
 }: {
   searchParams: Promise<{ category?: GalleryCategory | "all" }>;

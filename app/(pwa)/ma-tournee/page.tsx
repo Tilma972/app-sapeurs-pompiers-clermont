@@ -1,4 +1,4 @@
-import { PwaContainer } from "@/components/layouts/focused/pwa-container"
+import { PwaContainer } from "@/components/layouts/pwa/pwa-container"
 import { TourneeStatusCard } from "@/components/tournee/tournee-status-card"
 import { Button } from "@/components/ui/button"
 import { createClient } from "@/lib/supabase/server"

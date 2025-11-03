@@ -1,5 +1,5 @@
-﻿import { PwaAppBar } from "@/components/layouts/focused/pwa-app-bar"
-import { PwaBottomNav } from "@/components/layouts/focused/pwa-bottom-nav"
+﻿import { PwaAppBar } from "@/components/layouts/pwa/pwa-app-bar"
+import { PwaBottomNav } from "@/components/layouts/pwa/pwa-bottom-nav"
 import { createClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
 
