@@ -19,6 +19,7 @@ import { Separator } from "@/components/ui/separator";
 import { PwaContainer } from "@/components/layouts/pwa/pwa-container";
 import { VoiceRecorder } from "@/components/idees/voice-recorder";
 import { createClient } from "@/lib/supabase/client";
+import { createIdeaAction } from "@/app/actions/ideas";
 import toast from "react-hot-toast";
 
 type ProcessStep =
@@ -144,18 +145,86 @@ export default function EnregistrerIdeePage() {
 
       // Étape 2 : Transcription
       setStep("transcribing");
-      const transcriptionText = await transcribeAudio(url);
-      setTranscription(transcriptionText);
-      toast.success("Transcription terminée");
+      let transcriptionText = "";
+      const transcriptionStartTime = Date.now();
+      try {
+        transcriptionText = await transcribeAudio(url);
+        setTranscription(transcriptionText);
+        
+        // Logging succès pour monitoring
+        console.info("✅ Transcription succeeded:", {
+          duration: `${Date.now() - transcriptionStartTime}ms`,
+          audioDuration: duration,
+          transcriptionLength: transcriptionText.length,
+          timestamp: new Date().toISOString(),
+        });
+        
+        toast.success("Transcription terminée");
+      } catch (transcriptionError) {
+        // Logging erreur structuré pour monitoring
+        console.error("❌ Transcription failed:", {
+          audioDuration: duration,
+          audioUrl: url,
+          duration: `${Date.now() - transcriptionStartTime}ms`,
+          error: transcriptionError instanceof Error 
+            ? transcriptionError.message 
+            : String(transcriptionError),
+          timestamp: new Date().toISOString(),
+        });
+        
+        toast.error("Transcription impossible. Vous pouvez saisir manuellement.");
+        // Fallback : passer en mode édition manuelle
+        setTranscription("[Transcription échouée - Saisie manuelle requise]");
+        setStep("preview");
+        return;
+      }
 
       // Étape 3 : Analyse IA
       setStep("analyzing");
-      const analysis = await analyzeIdea(transcriptionText);
-      setAIAnalysis(analysis);
+      let analysis: AIAnalysisResult;
+      const analysisStartTime = Date.now();
+      try {
+        analysis = await analyzeIdea(transcriptionText);
+        setAIAnalysis(analysis);
+        
+        // Logging succès pour monitoring
+        console.info("✅ Analysis succeeded:", {
+          duration: `${Date.now() - analysisStartTime}ms`,
+          transcriptionLength: transcriptionText.length,
+          categoriesFound: analysis.categories.length,
+          tagsFound: analysis.tags.length,
+          inappropriate: analysis.inapropriate,
+          timestamp: new Date().toISOString(),
+        });
+      } catch (analysisError) {
+        // Logging erreur structuré pour monitoring
+        console.error("❌ Analysis failed:", {
+          transcriptionLength: transcriptionText.length,
+          duration: `${Date.now() - analysisStartTime}ms`,
+          error: analysisError instanceof Error 
+            ? analysisError.message 
+            : String(analysisError),
+          timestamp: new Date().toISOString(),
+        });
+        
+        toast.error("Analyse IA impossible. Remplissez manuellement.");
+        // Fallback : valeurs par défaut
+        setAIAnalysis({
+          title: "",
+          description: transcriptionText,
+          categories: [],
+          tags: [],
+          inapropriate: false,
+        });
+        setDescription(transcriptionText);
+        setStep("preview");
+        return;
+      }
 
       // Vérifier modération
       if (analysis.inapropriate) {
-        toast.error("Contenu inapproprié détecté");
+        toast.error("Contenu inapproprié détecté : " + (analysis.moderationReason || "Non spécifié"));
+        setStep("recording");
         return;
       }
 
@@ -208,14 +277,8 @@ export default function EnregistrerIdeePage() {
     setStep("publishing");
 
     try {
-      const supabase = createClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) throw new Error("Non authentifié");
-
-      const { error } = await supabase.from("ideas").insert({
-        user_id: user.id,
+      // Utiliser la Server Action avec validation serveur
+      await createIdeaAction({
         title: title.trim(),
         description: description.trim(),
         categories: selectedCategories,
@@ -227,13 +290,12 @@ export default function EnregistrerIdeePage() {
         status: "published",
       });
 
-      if (error) throw error;
-
       toast.success("Idée publiée !");
       router.push("/idees");
     } catch (error) {
       console.error("Erreur publication:", error);
-      toast.error("Impossible de publier l'idée");
+      const errorMessage = error instanceof Error ? error.message : "Impossible de publier l'idée";
+      toast.error(errorMessage);
       setStep("preview");
     }
   };

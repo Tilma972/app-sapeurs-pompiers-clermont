@@ -18,7 +18,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PwaContainer } from "@/components/layouts/pwa/pwa-container";
 import toast from "react-hot-toast";
-import { createIdea } from "@/lib/supabase/ideas";
+import { createIdeaAction } from "@/app/actions/ideas";
 import type { IdeaCategory } from "@/lib/types/ideas.types";
 
 const CATEGORIES: IdeaCategory[] = [
@@ -100,8 +100,9 @@ export default function NouvelleIdeePage() {
     try {
       setLoading(true);
 
-      await createIdea({
-        titre: titre.trim(),
+      // Appel Server Action avec validation serveur
+      await createIdeaAction({
+        title: titre.trim(),
         description: description.trim(),
         categories: selectedCategories,
         tags: tags,
@@ -118,7 +119,8 @@ export default function NouvelleIdeePage() {
       router.refresh();
     } catch (error) {
       console.error("Erreur création idée:", error);
-      toast.error("Impossible de créer l'idée. Réessayez.");
+      const errorMessage = error instanceof Error ? error.message : "Impossible de créer l'idée";
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
