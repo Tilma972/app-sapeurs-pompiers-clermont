@@ -365,56 +365,8 @@ export async function isFavorited(annonceId: string) {
 }
 
 /**
- * Compresse une image avant upload
- */
-async function compressImage(file: File, maxWidth: number = 1200, quality: number = 0.85): Promise<File> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.readAsDataURL(file)
-    reader.onload = (event) => {
-      const img = new Image()
-      img.src = event.target?.result as string
-      img.onload = () => {
-        const canvas = document.createElement('canvas')
-        let width = img.width
-        let height = img.height
-
-        // Redimensionner si nécessaire
-        if (width > maxWidth) {
-          height = (height * maxWidth) / width
-          width = maxWidth
-        }
-
-        canvas.width = width
-        canvas.height = height
-
-        const ctx = canvas.getContext('2d')
-        ctx?.drawImage(img, 0, 0, width, height)
-
-        canvas.toBlob(
-          (blob) => {
-            if (blob) {
-              const compressedFile = new File([blob], file.name, {
-                type: 'image/jpeg',
-                lastModified: Date.now(),
-              })
-              resolve(compressedFile)
-            } else {
-              reject(new Error('Échec de la compression'))
-            }
-          },
-          'image/jpeg',
-          quality
-        )
-      }
-      img.onerror = reject
-    }
-    reader.onerror = reject
-  })
-}
-
-/**
- * Upload une photo d'annonce (avec compression automatique)
+ * Upload une photo d'annonce
+ * Note: La compression doit être faite côté client avant d'appeler cette fonction
  */
 export async function uploadAnnoncePhoto(file: File, userId: string) {
   const supabase = createClient()
@@ -424,20 +376,17 @@ export async function uploadAnnoncePhoto(file: File, userId: string) {
     throw new Error('Le fichier doit être une image')
   }
 
-  // Valider la taille (10 Mo max avant compression)
-  if (file.size > 10 * 1024 * 1024) {
-    throw new Error('L\'image est trop volumineuse (max 10 Mo)')
+  // Valider la taille (5 Mo max)
+  if (file.size > 5 * 1024 * 1024) {
+    throw new Error('L\'image est trop volumineuse (max 5 Mo)')
   }
 
-  // Compresser l'image
-  const compressedFile = await compressImage(file)
-
-  const fileExt = 'jpg' // Toujours en JPEG après compression
+  const fileExt = file.name.split('.').pop() || 'jpg'
   const fileName = `${userId}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
 
   const { data, error } = await supabase.storage
     .from("annonces")
-    .upload(fileName, compressedFile, {
+    .upload(fileName, file, {
       cacheControl: "3600",
       upsert: false
     })

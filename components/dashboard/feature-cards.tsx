@@ -27,7 +27,7 @@ export function FeatureCardsGrid(props: {
       title: "Petites Annonces",
       description: "Publiez et consultez entre membres",
       iconKey: "shopping-bag",
-      href: "/dashboard/annonces",
+      href: "/annonces",
       gradient: "from-green-500 to-emerald-600",
       badges: [
         typeof props.annoncesCount === "number"

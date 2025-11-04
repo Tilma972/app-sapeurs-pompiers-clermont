@@ -44,16 +44,24 @@ Toutes les images utilisent `next/image` avec :
 
 ### Compression automatique avant upload
 
-**Fonction `compressImage()` dans `lib/supabase/annonces.ts`:**
+**Fonction `compressImage()` dans `lib/utils/image-compression.ts`:**
+- ✅ Fonction client-side utilisant Canvas API
 - ✅ Redimensionnement à 1200px max de largeur
 - ✅ Compression JPEG à 85% de qualité
 - ✅ Conversion automatique en `.jpg`
 - ✅ Réduction moyenne : 60-80% de taille
+- ✅ Indicateur visuel de compression (spinner)
+
+**Intégration dans les pages:**
+- ✅ `app/(pwa)/annonces/nouvelle/page.tsx` - Compression avant upload
+- ✅ `app/(pwa)/annonces/[id]/modifier/page.tsx` - Compression des nouvelles photos
+- ✅ Feedback utilisateur pendant la compression
+- ✅ Gestion d'erreurs robuste
 
 **Validation avant upload:**
 - ✅ Type de fichier (images uniquement)
-- ✅ Taille max : 10 Mo avant compression
-- ✅ Environ 500 Ko - 1 Mo après compression
+- ✅ Taille max : 5 Mo après compression
+- ✅ Environ 500 Ko - 1 Mo en moyenne après compression
 
 ---
 

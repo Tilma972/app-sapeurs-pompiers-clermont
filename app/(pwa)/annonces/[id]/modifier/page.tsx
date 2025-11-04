@@ -3,7 +3,7 @@
 import { use, useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
-import { ArrowLeft, Upload, X } from "lucide-react"
+import { ArrowLeft, Upload, X, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -14,6 +14,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { AlertCircle } from "lucide-react"
 import { getAnnonceById, updateAnnonce, uploadAnnoncePhoto } from "@/lib/supabase/annonces"
 import { createClient } from "@/lib/supabase/client"
+import { compressImage } from "@/lib/utils/image-compression"
 
 const categories = [
   "Équipement",
@@ -35,6 +36,7 @@ export default function ModifierAnnoncePage({
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
+  const [isCompressing, setIsCompressing] = useState(false)
   const [existingPhotos, setExistingPhotos] = useState<string[]>([])
   const [newPhotoFiles, setNewPhotoFiles] = useState<File[]>([])
   const [newPhotosPreviews, setNewPhotosPreviews] = useState<string[]>([])
@@ -73,7 +75,7 @@ export default function ModifierAnnoncePage({
     loadAnnonce()
   }, [id, router])
 
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files
     if (!files) return
 
@@ -85,17 +87,47 @@ export default function ModifierAnnoncePage({
       return
     }
 
-    const newFiles = Array.from(files)
-    setNewPhotoFiles(prev => [...prev, ...newFiles])
+    setIsCompressing(true)
 
-    // Créer les previews
-    newFiles.forEach(file => {
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        setNewPhotosPreviews(prev => [...prev, reader.result as string])
+    try {
+      const newFiles = Array.from(files)
+      
+      // Compresser chaque image
+      const compressedFiles: File[] = []
+      const previews: string[] = []
+      
+      for (const file of newFiles) {
+        // Vérifier que c'est une image
+        if (!file.type.startsWith('image/')) {
+          alert(`Le fichier ${file.name} n'est pas une image`)
+          continue
+        }
+
+        // Compresser l'image
+        const compressedFile = await compressImage(file, 1200, 0.85)
+        compressedFiles.push(compressedFile)
+        
+        // Créer le preview
+        const reader = new FileReader()
+        const previewPromise = new Promise<string>((resolve) => {
+          reader.onloadend = () => resolve(reader.result as string)
+          reader.readAsDataURL(compressedFile)
+        })
+        
+        const preview = await previewPromise
+        previews.push(preview)
       }
-      reader.readAsDataURL(file)
-    })
+      
+      // Mettre à jour les états
+      setNewPhotoFiles(prev => [...prev, ...compressedFiles])
+      setNewPhotosPreviews(prev => [...prev, ...previews])
+      
+    } catch (error) {
+      console.error("Erreur lors de la compression:", error)
+      alert("Erreur lors du traitement des images. Veuillez réessayer.")
+    } finally {
+      setIsCompressing(false)
+    }
   }
 
   const removeExistingPhoto = (index: number) => {
@@ -241,23 +273,35 @@ export default function ModifierAnnoncePage({
               ))}
               
               {(existingPhotos.length + newPhotosPreviews.length) < 5 && (
-                <label className="aspect-square rounded-lg border-2 border-dashed border-muted-foreground/25 hover:border-muted-foreground/50 transition-colors cursor-pointer flex flex-col items-center justify-center gap-2">
-                  <Upload className="h-6 w-6 text-muted-foreground" />
-                  <span className="text-xs text-muted-foreground text-center px-2">
-                    Ajouter
-                  </span>
+                <label className={`aspect-square rounded-lg border-2 border-dashed border-muted-foreground/25 hover:border-muted-foreground/50 transition-colors cursor-pointer flex flex-col items-center justify-center gap-2 ${isCompressing ? 'opacity-50 cursor-wait' : ''}`}>
+                  {isCompressing ? (
+                    <>
+                      <Loader2 className="h-6 w-6 text-muted-foreground animate-spin" />
+                      <span className="text-xs text-muted-foreground text-center px-2">
+                        Compression...
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="h-6 w-6 text-muted-foreground" />
+                      <span className="text-xs text-muted-foreground text-center px-2">
+                        Ajouter
+                      </span>
+                    </>
+                  )}
                   <input
                     type="file"
                     accept="image/*"
                     multiple
                     onChange={handlePhotoUpload}
                     className="hidden"
+                    disabled={isCompressing}
                   />
                 </label>
               )}
             </div>
             <p className="text-xs text-muted-foreground">
-              Ajoutez jusqu&apos;à 5 photos. La première sera la photo principale.
+              Ajoutez jusqu&apos;à 5 photos. La première sera la photo principale. Les nouvelles images seront automatiquement compressées.
             </p>
           </CardContent>
         </Card>
