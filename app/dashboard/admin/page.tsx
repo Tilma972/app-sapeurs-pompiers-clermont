@@ -5,6 +5,7 @@ import { AdminStatCard } from "@/components/admin/admin-stat-card"
 import { getGlobalStats } from "@/lib/supabase/tournee"
 import Link from "next/link"
 import { AlertTriangle, Users, UsersRound, Layers3, Calendar, Euro, Receipt, FileWarning, ChevronRight } from "lucide-react"
+import { formatNumber, formatCurrency } from "@/lib/formatters"
 
 export const dynamic = 'force-dynamic'
 
@@ -34,15 +35,12 @@ export default async function AdminDashboardPage() {
       .not('receipt_number','is', null).eq('receipt_sent', false),
   ])
 
-  const numberFr = new Intl.NumberFormat('fr-FR')
-  const currencyFr = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' })
-
   const stats = [
     { title: 'Inscriptions en attente', value: pendingProfiles.count || 0, icon: <Users className="h-4 w-4" /> },
     { title: 'Utilisateurs actifs', value: activeProfiles.count || 0, icon: <UsersRound className="h-4 w-4" /> },
     { title: 'Équipes actives', value: activeTeams.count || 0, icon: <Layers3 className="h-4 w-4" /> },
-    { title: 'Calendriers vendus', value: numberFr.format(global.total_calendriers_distribues), icon: <Calendar className="h-4 w-4" /> },
-    { title: 'Montant collecté', value: currencyFr.format(global.total_montant_collecte), icon: <Euro className="h-4 w-4" /> },
+    { title: 'Calendriers vendus', value: formatNumber(global.total_calendriers_distribues), icon: <Calendar className="h-4 w-4" /> },
+    { title: 'Montant collecté', value: formatCurrency(global.total_montant_collecte), icon: <Euro className="h-4 w-4" /> },
     { title: 'Chèques à déposer', value: chequesPending.count || 0, icon: <FileWarning className="h-4 w-4" /> },
     { title: 'Tournées actives', value: global.total_tournees_actives, icon: <Layers3 className="h-4 w-4" /> },
     { title: 'Reçus à envoyer', value: receiptsToSend.count || 0, icon: <Receipt className="h-4 w-4" /> },

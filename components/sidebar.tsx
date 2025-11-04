@@ -28,10 +28,10 @@ const navigation = [
   { name: "Petites Annonces", href: "/annonces", icon: ShoppingBag },
   { name: "Boîte à Idées", href: "/idees", icon: Lightbulb },
   { name: "Galerie SP", href: "/galerie", icon: Camera },
-  { name: "Événements", href: "/dashboard/associative", icon: Calendar },
-  { name: "Mon Compte", href: "/dashboard/mon-compte", icon: Wallet },
-  { name: "Paramètres", href: "/dashboard/parametres", icon: Sliders },
-  { name: "Partenaires & Avantages", href: "/dashboard/partenaires", icon: Gift },
+  { name: "Événements", href: "/associative", icon: Calendar },
+  { name: "Mon Compte", href: "/mon-compte", icon: Wallet },
+  { name: "Paramètres", href: "/parametres", icon: Sliders },
+  { name: "Partenaires & Avantages", href: "/partenaires", icon: Gift },
   { name: "Mon Profil", href: "/dashboard/profil", icon: User },
 ];
 

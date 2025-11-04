@@ -10,6 +10,7 @@ import { PwaContainer } from "@/components/layouts/pwa/pwa-container";
 import { TeamsLeaderboardProgress, type Team } from "@/components/charts/teams-leaderboard-progress";
 import { KpiCard } from "@/components/kpi-card";
 import { getCurrentUserProfile } from "@/lib/supabase/profile";
+import { formatNumber, formatCurrencyRounded } from "@/lib/formatters";
 
 export default async function CalendriersPage() {
   const supabase = await createClient();
@@ -104,10 +105,10 @@ export default async function CalendriersPage() {
 
         {/* KPIs utilisateur global */}
         <section className="grid grid-cols-2 gap-3">
-          <KpiCard title="Total calendriers" value={new Intl.NumberFormat("fr-FR").format(totalCalendars)} />
-          <KpiCard title="Montant total" value={new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR", minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(totalAmount)} />
+          <KpiCard title="Total calendriers" value={formatNumber(totalCalendars)} />
+          <KpiCard title="Montant total" value={formatCurrencyRounded(totalAmount)} />
           <KpiCard title="Rang équipe" value={rankValue} />
-          <KpiCard title="Moyenne/calendrier" value={new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR", minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(averagePerCalendar)} />
+          <KpiCard title="Moyenne/calendrier" value={formatCurrencyRounded(averagePerCalendar)} />
         </section>
 
         {/* Bouton d'action simple (sans carte) */}
@@ -148,7 +149,7 @@ export default async function CalendriersPage() {
                   {new Date(h.date).toLocaleDateString("fr-FR")}
                 </span>
                 <span className="text-muted-foreground">
-                  {h.calendarsDistributed} calendriers · {new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR", minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(h.amountCollected)}
+                  {h.calendarsDistributed} calendriers · {formatCurrencyRounded(h.amountCollected)}
                 </span>
               </div>
             ))}
