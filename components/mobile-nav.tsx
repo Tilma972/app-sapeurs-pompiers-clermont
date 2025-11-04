@@ -82,6 +82,7 @@ export function MobileNav() {
               { name: "Inscriptions en attente", href: "/dashboard/admin/pending", icon: User },
               { name: "Utilisateurs", href: "/dashboard/admin/users", icon: Users },
               { name: "Équipes", href: "/dashboard/admin/equipes", icon: Calendar },
+              { name: "Avantages", href: "/dashboard/admin/avantages", icon: Gift },
               { name: "Chèques", href: "/dashboard/admin/cheques", icon: Wallet },
               { name: "Reçus fiscaux", href: "/dashboard/admin/receipts", icon: Gift },
             ].map((item) => {

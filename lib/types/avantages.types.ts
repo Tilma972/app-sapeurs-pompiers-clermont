@@ -136,7 +136,7 @@ export interface PartnerFormData {
 export interface OfferFormData {
   partner_id: string;
   titre: string;
-  description: string;
+  description?: string;
   type_avantage: OfferType;
   reduction_pourcentage?: number;
   reduction_montant?: number;

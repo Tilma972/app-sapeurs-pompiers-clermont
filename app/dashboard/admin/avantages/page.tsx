@@ -97,12 +97,20 @@ export default function AdminAvantagesPage() {
               Gérez les partenaires et leurs offres
             </p>
           </div>
-          <Link href="/dashboard/admin/avantages/nouveau">
-            <Button size="lg">
-              <Plus className="h-4 w-4 mr-2" />
-              Nouveau partenaire
-            </Button>
-          </Link>
+          <div className="flex gap-2">
+            <Link href="/dashboard/admin/avantages/offres/nouvelle">
+              <Button size="lg" variant="outline">
+                <Plus className="h-4 w-4 mr-2" />
+                Nouvelle offre
+              </Button>
+            </Link>
+            <Link href="/dashboard/admin/avantages/nouveau">
+              <Button size="lg">
+                <Plus className="h-4 w-4 mr-2" />
+                Nouveau partenaire
+              </Button>
+            </Link>
+          </div>
         </div>
 
         {/* Stats */}
