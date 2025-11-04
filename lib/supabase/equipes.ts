@@ -1,6 +1,7 @@
 import { createClient } from "./server";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { EquipeSettings, EquipeDetails, EquipeWithSettings } from "@/lib/types";
+import { DatabaseError, logError } from "@/lib/utils/error-handling";
 
 // Types pour les équipes
 export type EquipeStats = {
@@ -277,22 +278,30 @@ export async function getEquipeSettingsFromProfile(
   supabase: SupabaseClient,
   userId: string
 ): Promise<{ settings: EquipeSettings | null; teamId: string | null }> {
-  const { data: profile, error } = await supabase
-    .from('profiles')
-    .select('team_id, equipes(pourcentage_minimum_pot, pourcentage_recommande_pot)')
-    .eq('id', userId)
-    .single();
+  try {
+    const { data: profile, error } = await supabase
+      .from('profiles')
+      .select('team_id, equipes(pourcentage_minimum_pot, pourcentage_recommande_pot)')
+      .eq('id', userId)
+      .single();
 
-  if (error) {
-    console.error('Error fetching equipe settings from profile:', error);
+    if (error) {
+      throw new DatabaseError('Failed to fetch equipe settings from profile', error);
+    }
+
+    const eqRaw = (profile as unknown as { team_id?: string | null; equipes?: EquipeSettings | EquipeSettings[] })?.equipes;
+    const settings: EquipeSettings | null = Array.isArray(eqRaw) ? eqRaw[0] || null : eqRaw || null;
+    const teamId = (profile as unknown as { team_id?: string | null })?.team_id || null;
+
+    return { settings, teamId };
+  } catch (error) {
+    logError(error, {
+      component: 'getEquipeSettingsFromProfile',
+      action: 'fetch',
+      userId,
+    });
     return { settings: null, teamId: null };
   }
-
-  const eqRaw = (profile as unknown as { team_id?: string | null; equipes?: EquipeSettings | EquipeSettings[] })?.equipes;
-  const settings: EquipeSettings | null = Array.isArray(eqRaw) ? eqRaw[0] || null : eqRaw || null;
-  const teamId = (profile as unknown as { team_id?: string | null })?.team_id || null;
-
-  return { settings, teamId };
 }
 
 /**
@@ -302,18 +311,26 @@ export async function getEquipeDetails(
   supabase: SupabaseClient,
   equipeId: string
 ): Promise<EquipeDetails | null> {
-  const { data, error } = await supabase
-    .from('equipes')
-    .select('id, nom, enable_retribution, pourcentage_minimum_pot, pourcentage_recommande_pot, mode_transparence')
-    .eq('id', equipeId)
-    .single();
+  try {
+    const { data, error } = await supabase
+      .from('equipes')
+      .select('id, nom, enable_retribution, pourcentage_minimum_pot, pourcentage_recommande_pot, mode_transparence')
+      .eq('id', equipeId)
+      .single();
 
-  if (error) {
-    console.error('Error fetching equipe details:', error);
+    if (error) {
+      throw new DatabaseError('Failed to fetch equipe details', error);
+    }
+
+    return data as EquipeDetails;
+  } catch (error) {
+    logError(error, {
+      component: 'getEquipeDetails',
+      action: 'fetch',
+      metadata: { equipeId },
+    });
     return null;
   }
-
-  return data as EquipeDetails;
 }
 
 /**
@@ -323,17 +340,25 @@ export async function getEquipeWithSettingsFromProfile(
   supabase: SupabaseClient,
   userId: string
 ): Promise<EquipeWithSettings | null> {
-  const { data: profile, error } = await supabase
-    .from('profiles')
-    .select('team_id, equipes(id, nom, mode_transparence, pourcentage_minimum_pot, pourcentage_recommande_pot)')
-    .eq('id', userId)
-    .single();
+  try {
+    const { data: profile, error } = await supabase
+      .from('profiles')
+      .select('team_id, equipes(id, nom, mode_transparence, pourcentage_minimum_pot, pourcentage_recommande_pot)')
+      .eq('id', userId)
+      .single();
 
-  if (error) {
-    console.error('Error fetching equipe with settings from profile:', error);
+    if (error) {
+      throw new DatabaseError('Failed to fetch equipe with settings from profile', error);
+    }
+
+    const eqRaw = (profile as unknown as { equipes?: EquipeWithSettings | EquipeWithSettings[] })?.equipes;
+    return Array.isArray(eqRaw) ? eqRaw[0] || null : eqRaw || null;
+  } catch (error) {
+    logError(error, {
+      component: 'getEquipeWithSettingsFromProfile',
+      action: 'fetch',
+      userId,
+    });
     return null;
   }
-
-  const eqRaw = (profile as unknown as { equipes?: EquipeWithSettings | EquipeWithSettings[] })?.equipes;
-  return Array.isArray(eqRaw) ? eqRaw[0] || null : eqRaw || null;
 }

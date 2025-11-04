@@ -5,6 +5,7 @@
 
 import { SupabaseClient } from "@supabase/supabase-js";
 import { CompteSolde, MouvementRetribution, PotEquipe } from "@/lib/types";
+import { DatabaseError, logError } from "@/lib/utils/error-handling";
 
 /**
  * Récupère les soldes et préférences d'un compte utilisateur
@@ -13,18 +14,26 @@ export async function getUserCompte(
   supabase: SupabaseClient,
   userId: string
 ): Promise<CompteSolde | null> {
-  const { data, error } = await supabase
-    .from('comptes_sp')
-    .select('solde_disponible, total_retributions, pourcentage_pot_equipe_defaut')
-    .eq('user_id', userId)
-    .single();
+  try {
+    const { data, error } = await supabase
+      .from('comptes_sp')
+      .select('solde_disponible, total_retributions, pourcentage_pot_equipe_defaut')
+      .eq('user_id', userId)
+      .single();
 
-  if (error) {
-    console.error('Error fetching user compte:', error);
+    if (error) {
+      throw new DatabaseError('Failed to fetch user compte', error);
+    }
+
+    return data as CompteSolde;
+  } catch (error) {
+    logError(error, {
+      component: 'getUserCompte',
+      action: 'fetch',
+      userId,
+    });
     return null;
   }
-
-  return data as CompteSolde;
 }
 
 /**
@@ -34,18 +43,26 @@ export async function getUserPreference(
   supabase: SupabaseClient,
   userId: string
 ): Promise<number | null> {
-  const { data, error } = await supabase
-    .from('comptes_sp')
-    .select('pourcentage_pot_equipe_defaut')
-    .eq('user_id', userId)
-    .single();
+  try {
+    const { data, error } = await supabase
+      .from('comptes_sp')
+      .select('pourcentage_pot_equipe_defaut')
+      .eq('user_id', userId)
+      .single();
 
-  if (error) {
-    console.error('Error fetching user preference:', error);
+    if (error) {
+      throw new DatabaseError('Failed to fetch user preference', error);
+    }
+
+    return data?.pourcentage_pot_equipe_defaut ?? null;
+  } catch (error) {
+    logError(error, {
+      component: 'getUserPreference',
+      action: 'fetch',
+      userId,
+    });
     return null;
   }
-
-  return data?.pourcentage_pot_equipe_defaut ?? null;
 }
 
 /**
@@ -55,18 +72,26 @@ export async function getPotEquipe(
   supabase: SupabaseClient,
   equipeId: string
 ): Promise<PotEquipe | null> {
-  const { data, error } = await supabase
-    .from('pots_equipe')
-    .select('solde_disponible')
-    .eq('equipe_id', equipeId)
-    .single();
+  try {
+    const { data, error } = await supabase
+      .from('pots_equipe')
+      .select('solde_disponible')
+      .eq('equipe_id', equipeId)
+      .single();
 
-  if (error) {
-    console.error('Error fetching pot equipe:', error);
+    if (error) {
+      throw new DatabaseError('Failed to fetch pot equipe', error);
+    }
+
+    return data as PotEquipe;
+  } catch (error) {
+    logError(error, {
+      component: 'getPotEquipe',
+      action: 'fetch',
+      metadata: { equipeId },
+    });
     return null;
   }
-
-  return data as PotEquipe;
 }
 
 /**
@@ -77,19 +102,28 @@ export async function getMouvementsRetribution(
   userId: string,
   limit: number = 5
 ): Promise<MouvementRetribution[]> {
-  const { data, error } = await supabase
-    .from('mouvements_retribution')
-    .select('created_at, montant_total_collecte, montant_compte_perso')
-    .eq('user_id', userId)
-    .order('created_at', { ascending: false })
-    .limit(limit);
+  try {
+    const { data, error } = await supabase
+      .from('mouvements_retribution')
+      .select('created_at, montant_total_collecte, montant_compte_perso')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(limit);
 
-  if (error) {
-    console.error('Error fetching mouvements:', error);
+    if (error) {
+      throw new DatabaseError('Failed to fetch mouvements', error);
+    }
+
+    return data as MouvementRetribution[];
+  } catch (error) {
+    logError(error, {
+      component: 'getMouvementsRetribution',
+      action: 'fetch',
+      userId,
+      metadata: { limit },
+    });
     return [];
   }
-
-  return data as MouvementRetribution[];
 }
 
 /**
@@ -100,15 +134,24 @@ export async function updateUserPreference(
   userId: string,
   pourcentage: number
 ): Promise<boolean> {
-  const { error } = await supabase
-    .from('comptes_sp')
-    .update({ pourcentage_pot_equipe_defaut: pourcentage })
-    .eq('user_id', userId);
+  try {
+    const { error } = await supabase
+      .from('comptes_sp')
+      .update({ pourcentage_pot_equipe_defaut: pourcentage })
+      .eq('user_id', userId);
 
-  if (error) {
-    console.error('Error updating preference:', error);
+    if (error) {
+      throw new DatabaseError('Failed to update preference', error);
+    }
+
+    return true;
+  } catch (error) {
+    logError(error, {
+      component: 'updateUserPreference',
+      action: 'update',
+      userId,
+      metadata: { pourcentage },
+    });
     return false;
   }
-
-  return true;
 }
