@@ -6,19 +6,18 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
-import { Plus, Lightbulb, Loader2 } from "lucide-react";
+import { Lightbulb, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PwaContainer } from "@/components/layouts/pwa/pwa-container";
 import { IdeaCard } from "@/components/idees/idea-card";
 import { IdeaFilters } from "@/components/idees/idea-filters";
+import { CreateIdeaFab } from "@/components/idees/create-idea-fab";
 import { getIdeas } from "@/lib/supabase/ideas";
 import type { IdeaWithAuthor } from "@/lib/types/ideas.types";
 
 type SortValue = "recent" | "popular" | "trending";
 
 export default function IdeesPage() {
-  const router = useRouter();
   const [ideas, setIdeas] = useState<IdeaWithAuthor[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -73,34 +72,12 @@ export default function IdeesPage() {
 
   return (
     <PwaContainer>
-      <div className="space-y-6">
+      <div className="space-y-6 pb-20">
         {/* Header */}
         <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Lightbulb className="h-6 w-6 text-primary" />
-              <h1 className="text-2xl font-bold">Boîte à Idées</h1>
-            </div>
-            
-            <div className="flex gap-2">
-              <Button
-                onClick={() => router.push("/idees/nouvelle")}
-                size="sm"
-                variant="outline"
-                className="flex items-center gap-1.5"
-              >
-                <Plus className="h-4 w-4" />
-                <span className="hidden sm:inline">Texte</span>
-              </Button>
-              <Button
-                onClick={() => router.push("/idees/enregistrer")}
-                size="sm"
-                className="flex items-center gap-1.5"
-              >
-                <Plus className="h-4 w-4" />
-                <span className="hidden sm:inline">Vocal</span>
-              </Button>
-            </div>
+          <div className="flex items-center gap-2">
+            <Lightbulb className="h-6 w-6 text-primary" />
+            <h1 className="text-2xl font-bold">Boîte à Idées</h1>
           </div>
           <p className="text-sm text-muted-foreground">
             Partagez vos idées pour améliorer notre caserne
@@ -134,13 +111,9 @@ export default function IdeesPage() {
               <p className="text-sm text-muted-foreground max-w-sm">
                 {searchQuery || selectedCategories.length > 0
                   ? "Essayez de modifier vos filtres"
-                  : "Soyez le premier à partager une idée !"}
+                  : "Soyez le premier à partager une idée ! Utilisez le bouton + en bas à droite."}
               </p>
             </div>
-            <Button onClick={() => router.push("/idees/nouvelle")}>
-              <Plus className="h-4 w-4 mr-2" />
-              Créer une idée
-            </Button>
           </div>
         ) : (
           <>
@@ -182,14 +155,8 @@ export default function IdeesPage() {
         )}
       </div>
 
-      {/* FAB mobile pour créer une idée */}
-      <Button
-        onClick={() => router.push("/idees/nouvelle")}
-        size="lg"
-        className="fixed bottom-20 right-4 sm:hidden rounded-full w-14 h-14 shadow-lg z-10"
-      >
-        <Plus className="h-6 w-6" />
-      </Button>
+      {/* Floating Action Button pour créer une idée */}
+      <CreateIdeaFab />
     </PwaContainer>
   );
 }
