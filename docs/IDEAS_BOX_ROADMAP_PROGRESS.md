@@ -2,7 +2,7 @@
 
 **Dernière mise à jour:** 7 novembre 2025
 **Durée totale:** 3 semaines (15 jours ouvrés)
-**Progression actuelle:** 50% (Jours 1-5 + 8-9 terminés)
+**Progression actuelle:** 70% (Jours 1-9 terminés)
 
 ---
 
@@ -88,44 +88,55 @@
 
 ## 📅 SEMAINE 2 : Vocal IA + Commentaires
 
-### 🔄 JOUR 6-8 : Enregistrement Vocal + API IA (À VENIR)
+### ✅ JOUR 6-7 : Enregistrement Vocal + IA (TERMINÉ)
 
-**À créer :**
-- [ ] Composant VoiceRecorder : `components/idees/voice-recorder.tsx`
-  - MediaRecorder API
-  - Boutons Start/Stop
-  - Timer (mm:ss)
-  - Waveform animation (optionnel)
-  - Export blob audio
+**Livrables :**
+- ✅ Composant VoiceRecorder : `components/idees/voice-recorder.tsx`
+  - MediaRecorder API avec permissions
+  - Boutons Start/Stop/Pause/Reprendre
+  - Timer formaté mm:ss
+  - **Waveform animée 40 barres** (Web Audio API)
+  - Durée max 5 minutes
+  - Preview audio player
+  - Export blob + durée
 
-- [ ] Page Enregistrer : `app/(pwa)/idees/enregistrer/page.tsx`
-  - VoiceRecorder
-  - Upload → Supabase Storage
-  - Loading "Transcription..."
-  - Affichage résultat IA
-  - Édition possible
+- ✅ Page Enregistrer : `app/(pwa)/idees/enregistrer/page.tsx`
+  - VoiceRecorder intégré
+  - Upload automatique → Supabase Storage
+  - **Stepper visuel 4 étapes** (Upload → Transcribe → Analyze → Edit)
+  - Affichage transcription complète
+  - Affichage suggestions IA
+  - Formulaire édition pré-rempli
   - Actions : [Annuler] [Publier]
 
-- [ ] API Transcription : `app/api/transcribe/route.ts`
-  - Download audio depuis Supabase
-  - Appel OpenAI Whisper
-  - Return transcription
+- ✅ API Transcription : `app/api/transcribe/route.ts`
+  - Download audio depuis URL Supabase
+  - Appel **OpenAI Whisper** (whisper-1)
+  - Langue forcée : français
+  - Return transcription texte
 
-- [ ] API Analyse : `app/api/analyze-idea/route.ts`
-  - Appel Claude Sonnet 4
-  - Prompt structuré
-  - Return JSON : titre, catégories, tags, modération
+- ✅ API Analyse : `app/api/analyze-idea/route.ts`
+  - Appel **Claude Sonnet 4** (claude-sonnet-4-20250514)
+  - Prompt expert sapeurs-pompiers
+  - Return JSON : titre, description, catégories, tags
+  - **Modération automatique** (détection contenu inapproprié)
 
-**Variables d'environnement à ajouter :**
+- ✅ Intégration page feed : Bouton "Vocal" ajouté
+
+**Dépendances installées :**
+```bash
+npm install openai @anthropic-ai/sdk
+```
+
+**Variables env configurées :**
 ```env
 OPENAI_API_KEY=sk-...
 ANTHROPIC_API_KEY=sk-ant-...
 ```
 
-**Risques :**
-- ⚠️ Formats audio navigateurs (prévoir fallback)
-- ⚠️ Taille fichiers (limiter à 10MB)
-- ⚠️ Coûts API (budget ~$20/mois estimé)
+**Coûts estimés :** ~$1.80/mois pour 100 idées vocales
+
+**Documentation :** `docs/SESSION_SUMMARY_DAYS_6-7.md`
 
 ---
 
