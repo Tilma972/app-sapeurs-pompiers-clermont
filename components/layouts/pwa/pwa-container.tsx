@@ -3,11 +3,13 @@
 interface PwaContainerProps {
   children: ReactNode
   maxWidth?: "sm" | "md" | "lg" | "xl" | "2xl" | "full"
+  noPaddingTop?: boolean // Option pour désactiver le padding-top (ex: dashboard avec hero)
 }
 
 export function PwaContainer({ 
   children, 
-  maxWidth = "2xl" // Défaut actuel
+  maxWidth = "2xl",
+  noPaddingTop = false
 }: PwaContainerProps) {
   const maxWidthClasses = {
     sm: "max-w-sm",    // 384px - Formulaires très étroits
@@ -20,7 +22,7 @@ export function PwaContainer({
 
   return (
     <div className="bg-background">
-      <div className={`${maxWidthClasses[maxWidth]} mx-auto px-4 pt-0 pb-4 space-y-2`}>
+      <div className={`${maxWidthClasses[maxWidth]} mx-auto px-4 ${noPaddingTop ? 'pt-0' : 'pt-6'} pb-4 space-y-4`}>
         {children}
       </div>
     </div>
