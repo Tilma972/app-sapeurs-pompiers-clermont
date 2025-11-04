@@ -1,7 +1,8 @@
 # 🎯 Roadmap Boîte à Idées - Progression
 
-**Dernière mise à jour:** 4 novembre 2025
+**Dernière mise à jour:** 7 novembre 2025
 **Durée totale:** 3 semaines (15 jours ouvrés)
+**Progression actuelle:** 50% (Jours 1-5 + 8-9 terminés)
 
 ---
 
@@ -30,62 +31,58 @@
 
 ---
 
-### 🔄 JOUR 3-4 : Feed + Création Texte (EN COURS)
+### ✅ JOUR 3-4 : Feed + Création Texte (TERMINÉ)
 
-**À créer :**
-- [ ] Page Feed : `app/(pwa)/idees/page.tsx`
-  - Liste idées avec pagination
+**Livrables :**
+- ✅ Page Feed : `app/(pwa)/idees/page.tsx`
+  - Liste idées avec pagination "Load more"
   - Filtres par catégorie (chips)
   - Barre recherche
   - Tri : récent / populaire / trending
   - FAB "Nouvelle idée"
 
-- [ ] Composants Feed :
-  - [ ] `components/idees/idea-card.tsx` - Card dans le feed
-  - [ ] `components/idees/idea-filters.tsx` - Filtres catégories
-  - [ ] `components/idees/ideas-list.tsx` - Liste avec loading
+- ✅ Composants Feed :
+  - ✅ `components/idees/idea-card.tsx` - Card dans le feed
+  - ✅ `components/idees/idea-filters.tsx` - Filtres catégories
 
-- [ ] Page Création : `app/(pwa)/idees/nouvelle/page.tsx`
+- ✅ Page Création : `app/(pwa)/idees/nouvelle/page.tsx`
   - Formulaire : titre + description
-  - Sélecteur catégories (multi-select)
+  - Sélecteur catégories (multi-select avec Checkbox)
   - Input tags (chips)
-  - Toggle anonymat
-  - Preview live
+  - Toggle anonymat (Radix Switch)
+  - Preview live (Tabs)
   - Actions : [Brouillon] [Publier]
 
-- [ ] Composants Création :
-  - [ ] `components/idees/idea-form.tsx` - Formulaire réutilisable
-  - [ ] `components/idees/category-selector.tsx` - Multi-select catégories
-  - [ ] `components/idees/tag-input.tsx` - Input chips tags
-  - [ ] `components/idees/idea-preview.tsx` - Preview en live
-
-**Priorités :**
-1. Feed fonctionnel avec données mock
-2. Création idée texte complète
-3. Navigation fluide
-4. Responsive mobile
+**Optimisations :**
+- Validation côté client
+- Toasts pour feedback
+- États de chargement
+- Responsive mobile-first
 
 ---
 
-### 🔄 JOUR 5 : Détail Idée + Votes (À VENIR)
+### ✅ JOUR 5 : Détail Idée + Votes (TERMINÉ)
 
-**À créer :**
-- [ ] Page Détail : `app/(pwa)/idees/[id]/page.tsx`
-  - Affichage complet idée
-  - Auteur (ou "Anonyme")
+**Livrables :**
+- ✅ Page Détail : `app/(pwa)/idees/[id]/page.tsx`
+  - Affichage complet idée (SSR)
+  - Auteur avec avatar (ou "Anonyme")
   - Boutons vote UP/DOWN
-  - Section commentaires (preview)
-  - Bouton partage
-  - Actions admin
+  - Section commentaires
+  - Bouton partage (Web Share API)
+  - Actions admin/propriétaire
 
-- [ ] Composants Votes :
-  - [ ] `components/idees/idea-vote-buttons.tsx` - UP/DOWN avec état
-  - [ ] `components/idees/vote-stats.tsx` - Stats votes
+- ✅ Composants Votes :
+  - ✅ `components/idees/idea-vote-buttons.tsx` - UP/DOWN avec optimistic UI
+  - ✅ `components/idees/comment-preview.tsx` - Preview 3 commentaires
+  - ✅ `components/idees/share-button.tsx` - Partage natif
 
-- [ ] Page Modification : `app/(pwa)/idees/[id]/modifier/page.tsx`
-  - Réutilise IdeaForm
-  - Load données existantes
-  - Save changes
+**Fonctionnalités implémentées :**
+- Système de vote avec toggle (même vote = remove, autre = change)
+- Rate limiting 50 votes/24h
+- Optimistic UI pour feedback instantané
+- Rollback automatique si erreur
+- Lecteur audio pour idées vocales
 
 ---
 
@@ -132,27 +129,46 @@ ANTHROPIC_API_KEY=sk-ant-...
 
 ---
 
-### 🔄 JOUR 9-10 : Commentaires + UI Polish (À VENIR)
+### ✅ JOUR 8-9 : Système Commentaires CRUD (TERMINÉ)
 
-**À créer :**
-- [ ] Composant CommentSection : `components/idees/comment-section.tsx`
-  - Liste commentaires
+**Livrables :**
+- ✅ Composant CommentCard : `components/idees/comment-card.tsx`
+  - Affichage avec avatar et métadonnées
+  - Édition inline avec textarea
+  - Menu actions contextuelles (Modifier/Supprimer/Signaler)
+  - Validation 2000 caractères
+  - Badge pour commentaires signalés
+
+- ✅ Composant CommentForm : `components/idees/comment-form.tsx`
   - Formulaire ajout
-  - Avatar + nom auteur
-  - Date relative
-  - Actions : Modifier / Supprimer (own)
+  - Compteur caractères dynamique
+  - Validation temps réel
+  - États de chargement
 
-- [ ] Server Actions commentaires : `app/actions/idea-comments.ts`
-  - createCommentAction
-  - updateCommentAction
-  - deleteCommentAction
+- ✅ Composant CommentSection : `components/idees/comment-section.tsx`
+  - Liste complète avec collapse/expand
+  - Gestion state local optimiste
+  - État vide encourageant
+  - Intégration formulaire
 
-**UI/UX Polish :**
-- [ ] Loading states partout
-- [ ] Error handling (toast)
-- [ ] Animations (framer-motion)
-- [ ] Responsive mobile
-- [ ] Accessibility (ARIA)
+- ✅ Server Actions : `app/actions/comments.ts`
+  - createCommentAction (avec revalidation)
+  - updateCommentAction (ownership check)
+  - deleteCommentAction (owner OU admin)
+  - flagCommentAction (pas son propre commentaire)
+
+- ✅ Intégration : `app/(pwa)/idees/[id]/page.tsx`
+  - Remplacement CommentPreview par CommentSection
+  - Binding Server Actions
+  - Permissions admin/owner
+
+**Système de permissions :**
+- Créer : authentifié
+- Modifier : propriétaire uniquement
+- Supprimer : propriétaire OU admin
+- Signaler : authentifié (sauf le sien)
+
+**Documentation :** `docs/IDEAS_BOX_COMMENTS_SYSTEM.md`
 
 ---
 

@@ -13,11 +13,17 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { PwaContainer } from "@/components/layouts/pwa/pwa-container";
 import { IdeaVoteButtons } from "@/components/idees/idea-vote-buttons";
-import { CommentPreview } from "@/components/idees/comment-preview";
+import { CommentSection } from "@/components/idees/comment-section";
 import { ShareButton } from "@/components/idees/share-button";
 import { getIdeaById } from "@/lib/supabase/ideas";
 import { getIdeaComments } from "@/lib/supabase/idea-comments";
 import { createClient } from "@/lib/supabase/server";
+import {
+  createCommentAction,
+  updateCommentAction,
+  deleteCommentAction,
+  flagCommentAction,
+} from "@/app/actions/comments";
 
 interface PageProps {
   params: {
@@ -235,10 +241,27 @@ export default async function IdeaDetailPage({ params }: PageProps) {
 
         {/* Section commentaires */}
         <div id="commentaires">
-          <CommentPreview
-            comments={comments}
-            totalCount={idea.comments_count}
+          <CommentSection
             ideaId={idea.id}
+            initialComments={comments}
+            currentUserId={user?.id}
+            isAdmin={isAdmin}
+            onCreateComment={async (content: string) => {
+              "use server";
+              await createCommentAction(idea.id, content);
+            }}
+            onUpdateComment={async (commentId: string, content: string) => {
+              "use server";
+              await updateCommentAction(commentId, content, idea.id);
+            }}
+            onDeleteComment={async (commentId: string) => {
+              "use server";
+              await deleteCommentAction(commentId, idea.id);
+            }}
+            onFlagComment={async (commentId: string) => {
+              "use server";
+              await flagCommentAction(commentId, idea.id);
+            }}
           />
         </div>
       </div>
