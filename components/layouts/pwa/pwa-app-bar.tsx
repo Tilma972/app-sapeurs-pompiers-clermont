@@ -37,7 +37,7 @@ export function PwaAppBar({ title, user }: PwaAppBarProps) {
     if (pathname === "/dashboard" || pathname === "/dashboard/") return "Tableau de bord"
     if (pathname?.startsWith("/ma-tournee")) return "Ma Tournée"
     if (pathname?.startsWith("/calendriers")) return "Calendriers"
-    if (pathname?.startsWith("/dashboard/annonces")) return "Petites Annonces"
+    if (pathname?.startsWith("/annonces")) return "Petites Annonces"
     if (pathname?.startsWith("/galerie")) return "Galerie SP"
     if (pathname?.startsWith("/dashboard/associative")) return "Événements"
     if (pathname?.startsWith("/mon-compte")) return "Mon Compte"

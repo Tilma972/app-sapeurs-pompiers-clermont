@@ -12,7 +12,7 @@ import { LogoutButton } from "@/components/logout-button";
 const navigation = [
   { name: "Tableau de bord", href: "/dashboard", icon: Home },
   { name: "Tournées & Calendriers", href: "/calendriers", icon: Calendar },
-  { name: "Petites Annonces", href: "/dashboard/annonces", icon: ShoppingBag },
+  { name: "Petites Annonces", href: "/annonces", icon: ShoppingBag },
   { name: "Galerie SP", href: "/dashboard/galerie", icon: Camera },
   { name: "Événements", href: "/dashboard/associative", icon: Calendar },
   { name: "Mon Compte", href: "/dashboard/mon-compte", icon: Wallet },
