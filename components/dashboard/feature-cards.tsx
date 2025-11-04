@@ -64,7 +64,7 @@ export function FeatureCardsGrid(props: {
       title: "Événements",
       description: "Annonces et vie associative",
       iconKey: "calendar",
-      href: "/dashboard/associative",
+      href: "/associative",
       gradient: "from-rose-500 to-red-600",
       badges: [
         typeof props.eventsCount === "number"
@@ -76,7 +76,7 @@ export function FeatureCardsGrid(props: {
       title: "Mon Compte SP",
       description: "Portefeuille et demandes de paiement",
       iconKey: "wallet",
-      href: "/dashboard/mon-compte",
+      href: "/mon-compte",
       gradient: "from-slate-500 to-gray-600",
       badges: [props.profileComplete ? "Profil complet" : "Profil incomplet"],
     },
@@ -84,7 +84,7 @@ export function FeatureCardsGrid(props: {
       title: "Partenaires & Avantages",
       description: "Catalogue d'offres locales",
       iconKey: "gift",
-      href: "/dashboard/partenaires",
+      href: "/partenaires",
       gradient: "from-purple-500 to-fuchsia-600",
       badges: [
         typeof props.offersCount === "number"
