@@ -4,13 +4,13 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { Card, CardHeader, CardTitle, CardDescription, CardFooter, CardAction } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowRight, Calendar, ShoppingBag, Camera, Wallet, Gift } from "lucide-react";
+import { ArrowRight, Calendar, ShoppingBag, Camera, Wallet, Gift, Lightbulb } from "lucide-react";
 import * as React from "react";
 
 export type Feature = {
   title: string;
   description: string;
-  iconKey: "calendar" | "shopping-bag" | "camera" | "wallet" | "gift";
+  iconKey: "calendar" | "shopping-bag" | "camera" | "wallet" | "gift" | "lightbulb";
   href: string;
   gradient: string; // e.g. "from-green-500 to-emerald-600"
   stats?: string;
@@ -24,6 +24,7 @@ const iconMap: Record<Feature["iconKey"], React.ComponentType<React.SVGProps<SVG
   "camera": Camera,
   "wallet": Wallet,
   "gift": Gift,
+  "lightbulb": Lightbulb,
 };
 
 export function FeatureCard({ feature }: { feature: Feature }) {

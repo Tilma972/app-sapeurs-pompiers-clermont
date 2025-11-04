@@ -9,6 +9,7 @@ export function FeatureCardsGrid(props: {
   offersCount?: number;
   profileComplete?: boolean;
   globalCalendarsDistributed?: number;
+  ideasCount?: number;
 }) {
   const features: Feature[] = [
     {
@@ -33,6 +34,18 @@ export function FeatureCardsGrid(props: {
         typeof props.annoncesCount === "number"
           ? `${props.annoncesCount} annonces`
           : "Bientôt",
+      ],
+    },
+    {
+      title: "Boîte à Idées",
+      description: "Partagez vos idées et suggestions",
+      iconKey: "lightbulb",
+      href: "/idees",
+      gradient: "from-yellow-500 to-amber-600",
+      badges: [
+        typeof props.ideasCount === "number"
+          ? `${props.ideasCount} idées`
+          : "Nouveau",
       ],
     },
     {

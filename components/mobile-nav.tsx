@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Calendar, Camera, Gift, Home, ShoppingBag, Sliders, User, Users, Wallet } from "lucide-react";
+import { Calendar, Camera, Gift, Home, ShoppingBag, Sliders, User, Users, Wallet, Lightbulb } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { LogoutButton } from "@/components/logout-button";
 
@@ -13,6 +13,7 @@ const navigation = [
   { name: "Tableau de bord", href: "/dashboard", icon: Home },
   { name: "Tournées & Calendriers", href: "/calendriers", icon: Calendar },
   { name: "Petites Annonces", href: "/annonces", icon: ShoppingBag },
+  { name: "Boîte à Idées", href: "/idees", icon: Lightbulb },
   { name: "Galerie SP", href: "/dashboard/galerie", icon: Camera },
   { name: "Événements", href: "/dashboard/associative", icon: Calendar },
   { name: "Mon Compte", href: "/dashboard/mon-compte", icon: Wallet },

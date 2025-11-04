@@ -14,6 +14,7 @@ import {
   Gift,
   Wallet,
   Sliders,
+  Lightbulb,
 } from "lucide-react";
 import { LogoutButton } from "@/components/logout-button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -25,7 +26,8 @@ const navigation = [
   { name: "Tableau de bord", href: "/dashboard", icon: Home },
   { name: "Tournées & Calendriers", href: "/calendriers", icon: Calendar },
   { name: "Petites Annonces", href: "/annonces", icon: ShoppingBag },
-  { name: "Galerie SP", href: "/dashboard/galerie", icon: Camera },
+  { name: "Boîte à Idées", href: "/idees", icon: Lightbulb },
+  { name: "Galerie SP", href: "/galerie", icon: Camera },
   { name: "Événements", href: "/dashboard/associative", icon: Calendar },
   { name: "Mon Compte", href: "/dashboard/mon-compte", icon: Wallet },
   { name: "Paramètres", href: "/dashboard/parametres", icon: Sliders },

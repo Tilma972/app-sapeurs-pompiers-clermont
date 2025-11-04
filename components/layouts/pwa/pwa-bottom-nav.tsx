@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { CalendarDays, Home, User, LayoutDashboard } from "lucide-react"
+import { CalendarDays, Home, User, LayoutDashboard, Lightbulb } from "lucide-react"
 import type { ElementType } from "react"
 
 function NavItem({ href, label, icon: Icon, active }: { href: string; label: string; icon: ElementType; active: boolean }) {
@@ -22,14 +22,15 @@ function NavItem({ href, label, icon: Icon, active }: { href: string; label: str
 
 export function PwaBottomNav() {
   const pathname = usePathname()
-  const isActive = (p: string) => pathname === p
+  const isActive = (p: string) => pathname === p || pathname?.startsWith(p + "/")
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sm:hidden pb-safe">
       <div className="mx-auto max-w-2xl px-4">
-        <div className="grid grid-cols-4 h-16 items-center gap-2">
+        <div className="grid grid-cols-5 h-16 items-center gap-1">
           <NavItem href="/dashboard" label="Dashboard" icon={LayoutDashboard} active={isActive("/dashboard")} />
           <NavItem href="/calendriers" label="Calendriers" icon={CalendarDays} active={isActive("/calendriers")} />
+          <NavItem href="/idees" label="Idées" icon={Lightbulb} active={isActive("/idees")} />
           <NavItem href="/ma-tournee" label="Tournée" icon={Home} active={isActive("/ma-tournee")} />
           <NavItem href="/dashboard/profil" label="Profil" icon={User} active={isActive("/dashboard/profil")} />
         </div>
