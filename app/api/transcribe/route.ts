@@ -5,10 +5,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
 
-// Initialiser le client OpenAI
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// Fonction pour obtenir le client OpenAI (lazy initialization)
+function getOpenAIClient() {
+  return new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+  });
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -33,7 +35,8 @@ export async function POST(request: NextRequest) {
       type: audioBlob.type,
     });
 
-    // Appeler Whisper API pour transcription
+    // Initialiser le client et appeler Whisper API pour transcription
+    const openai = getOpenAIClient();
     const transcription = await openai.audio.transcriptions.create({
       file: audioFile,
       model: "whisper-1",

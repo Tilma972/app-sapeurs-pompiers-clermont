@@ -26,9 +26,9 @@ import {
 } from "@/app/actions/comments";
 
 interface PageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 const formatDate = (dateStr: string) => {
@@ -53,7 +53,7 @@ const getAuthorName = (idea: Awaited<ReturnType<typeof getIdeaById>>["idea"]) =>
 };
 
 export default async function IdeaDetailPage({ params }: PageProps) {
-  const { id } = params;
+  const { id } = await params;
 
   // Récupérer l'idée
   const { idea, userVote } = await getIdeaById(id);

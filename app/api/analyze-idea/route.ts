@@ -5,10 +5,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 
-// Initialiser le client Anthropic
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
+// Fonction pour obtenir le client Anthropic (lazy initialization)
+function getAnthropicClient() {
+  return new Anthropic({
+    apiKey: process.env.ANTHROPIC_API_KEY,
+  });
+}
 
 const CATEGORIES = [
   "Équipement",
@@ -66,7 +68,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Appeler Claude Sonnet 4
+    // Initialiser le client et appeler Claude Sonnet 4
+    const anthropic = getAnthropicClient();
     const message = await anthropic.messages.create({
       model: "claude-sonnet-4-20250514",
       max_tokens: 2000,
