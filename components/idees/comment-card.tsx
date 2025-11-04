@@ -6,7 +6,7 @@
 
 import { useState } from "react";
 import { MoreVertical, Edit, Trash2, Flag, Loader2 } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -50,13 +50,17 @@ const formatDate = (dateStr: string) => {
 };
 
 const getAuthorInitials = (author: IdeaCommentWithAuthor["author"]) => {
-  if (!author || !author.prenom || !author.nom) return "?";
-  return `${author.prenom[0]}${author.nom[0]}`.toUpperCase();
+  if (!author || !author.full_name) return "?";
+  const names = author.full_name.split(" ");
+  if (names.length >= 2) {
+    return `${names[0][0]}${names[names.length - 1][0]}`.toUpperCase();
+  }
+  return author.full_name.slice(0, 2).toUpperCase();
 };
 
 const getAuthorName = (author: IdeaCommentWithAuthor["author"]) => {
   if (!author) return "Utilisateur";
-  return `${author.prenom || ""} ${author.nom || ""}`.trim() || "Utilisateur";
+  return author.full_name || "Utilisateur";
 };
 
 export function CommentCard({
@@ -137,9 +141,6 @@ export function CommentCard({
       <CardContent className="p-4">
         <div className="flex items-start gap-3">
           <Avatar className="h-8 w-8 flex-shrink-0">
-            {comment.author?.avatar_url && (
-              <AvatarImage src={comment.author.avatar_url} alt={authorName} />
-            )}
             <AvatarFallback className="text-xs">
               {authorInitials}
             </AvatarFallback>

@@ -25,9 +25,8 @@ export async function getIdeas(filters?: IdeaFilters) {
       *,
       author:profiles!user_id (
         id,
-        nom,
-        prenom,
-        avatar_url
+        full_name,
+        role
       )
     `, { count: 'exact' })
     .is('deleted_at', null);

@@ -6,7 +6,7 @@ import Link from "next/link";
 import { Clock, MessageCircle, ThumbsUp, User } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import type { IdeaWithAuthor } from "@/lib/types/ideas.types";
 
 interface IdeaCardProps {
@@ -33,14 +33,18 @@ const truncateText = (text: string, maxLength: number = 150) => {
 };
 
 const getAuthorInitials = (author: IdeaWithAuthor["author"]) => {
-  if (!author || !author.prenom || !author.nom) return "?";
-  return `${author.prenom[0]}${author.nom[0]}`.toUpperCase();
+  if (!author || !author.full_name) return "?";
+  const names = author.full_name.split(" ");
+  if (names.length >= 2) {
+    return `${names[0][0]}${names[names.length - 1][0]}`.toUpperCase();
+  }
+  return author.full_name.slice(0, 2).toUpperCase();
 };
 
 const getAuthorName = (idea: IdeaWithAuthor) => {
   if (idea.anonyme) return "Anonyme";
   if (!idea.author) return "Utilisateur";
-  return `${idea.author.prenom || ""} ${idea.author.nom || ""}`.trim() || "Utilisateur";
+  return idea.author.full_name || "Utilisateur";
 };
 
 export function IdeaCard({ idea }: IdeaCardProps) {
@@ -55,9 +59,6 @@ export function IdeaCard({ idea }: IdeaCardProps) {
           <div className="flex items-start justify-between gap-2">
             <div className="flex items-center gap-2 min-w-0 flex-1">
               <Avatar className="h-8 w-8 flex-shrink-0">
-                {!idea.anonyme && idea.author?.avatar_url && (
-                  <AvatarImage src={idea.author.avatar_url} alt={authorName} />
-                )}
                 <AvatarFallback className="text-xs bg-primary/10">
                   {idea.anonyme ? <User className="h-4 w-4" /> : authorInitials}
                 </AvatarFallback>

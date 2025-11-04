@@ -18,9 +18,8 @@ export async function getIdeaComments(ideaId: string) {
       *,
       author:profiles!user_id (
         id,
-        nom,
-        prenom,
-        avatar_url
+        full_name,
+        role
       )
     `)
     .eq('idea_id', ideaId)
@@ -67,9 +66,8 @@ export async function createComment(ideaId: string, content: string) {
       *,
       author:profiles!user_id (
         id,
-        nom,
-        prenom,
-        avatar_url
+        full_name,
+        role
       )
     `)
     .single();
@@ -125,9 +123,8 @@ export async function updateComment(commentId: string, content: string) {
       *,
       author:profiles!user_id (
         id,
-        nom,
-        prenom,
-        avatar_url
+        full_name,
+        role
       )
     `)
     .single();

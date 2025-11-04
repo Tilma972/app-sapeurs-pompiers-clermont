@@ -6,7 +6,7 @@
 
 import Link from "next/link";
 import { MessageCircle, ChevronRight } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import type { IdeaCommentWithAuthor } from "@/lib/types/ideas.types";
@@ -38,13 +38,17 @@ const formatDate = (dateStr: string) => {
 };
 
 const getAuthorInitials = (author: IdeaCommentWithAuthor["author"]) => {
-  if (!author || !author.prenom || !author.nom) return "?";
-  return `${author.prenom[0]}${author.nom[0]}`.toUpperCase();
+  if (!author || !author.full_name) return "?";
+  const names = author.full_name.split(" ");
+  if (names.length >= 2) {
+    return `${names[0][0]}${names[names.length - 1][0]}`.toUpperCase();
+  }
+  return author.full_name.slice(0, 2).toUpperCase();
 };
 
 const getAuthorName = (author: IdeaCommentWithAuthor["author"]) => {
   if (!author) return "Utilisateur";
-  return `${author.prenom || ""} ${author.nom || ""}`.trim() || "Utilisateur";
+  return author.full_name || "Utilisateur";
 };
 
 export function CommentPreview({ comments, totalCount, ideaId }: CommentPreviewProps) {
@@ -94,12 +98,6 @@ export function CommentPreview({ comments, totalCount, ideaId }: CommentPreviewP
             <CardContent className="p-4 space-y-2">
               <div className="flex items-start gap-3">
                 <Avatar className="h-8 w-8 flex-shrink-0">
-                  {comment.author?.avatar_url && (
-                    <AvatarImage
-                      src={comment.author.avatar_url}
-                      alt={getAuthorName(comment.author)}
-                    />
-                  )}
                   <AvatarFallback className="text-xs">
                     {getAuthorInitials(comment.author)}
                   </AvatarFallback>

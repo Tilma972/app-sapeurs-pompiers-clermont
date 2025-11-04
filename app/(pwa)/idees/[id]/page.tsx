@@ -8,7 +8,7 @@ import Link from "next/link";
 import { ArrowLeft, Clock, Eye, Mic, Edit, Archive, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { PwaContainer } from "@/components/layouts/pwa/pwa-container";
@@ -41,15 +41,19 @@ const formatDate = (dateStr: string) => {
   });
 };
 
-const getAuthorInitials = (prenom?: string | null, nom?: string | null) => {
-  if (!prenom || !nom) return "?";
-  return `${prenom[0]}${nom[0]}`.toUpperCase();
+const getAuthorInitials = (full_name?: string | null) => {
+  if (!full_name) return "?";
+  const names = full_name.split(" ");
+  if (names.length >= 2) {
+    return `${names[0][0]}${names[names.length - 1][0]}`.toUpperCase();
+  }
+  return full_name.slice(0, 2).toUpperCase();
 };
 
 const getAuthorName = (idea: Awaited<ReturnType<typeof getIdeaById>>["idea"]) => {
   if (idea.anonyme) return "Anonyme";
   if (!idea.author) return "Utilisateur";
-  return `${idea.author.prenom || ""} ${idea.author.nom || ""}`.trim() || "Utilisateur";
+  return idea.author.full_name || "Utilisateur";
 };
 
 export default async function IdeaDetailPage({ params }: PageProps) {
@@ -84,7 +88,7 @@ export default async function IdeaDetailPage({ params }: PageProps) {
   }
 
   const authorName = getAuthorName(idea);
-  const authorInitials = idea.anonyme ? "?" : getAuthorInitials(idea.author?.prenom, idea.author?.nom);
+  const authorInitials = idea.anonyme ? "?" : getAuthorInitials(idea.author?.full_name);
 
   return (
     <PwaContainer>
@@ -109,9 +113,6 @@ export default async function IdeaDetailPage({ params }: PageProps) {
             <div className="flex items-start justify-between gap-4">
               <div className="flex items-start gap-3 flex-1 min-w-0">
                 <Avatar className="h-10 w-10 flex-shrink-0">
-                  {!idea.anonyme && idea.author?.avatar_url && (
-                    <AvatarImage src={idea.author.avatar_url} alt={authorName} />
-                  )}
                   <AvatarFallback className="text-sm">
                     {authorInitials}
                   </AvatarFallback>
