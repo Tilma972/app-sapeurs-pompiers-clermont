@@ -101,16 +101,21 @@ export default function AvantagesPage() {
   }, [allOffers, filters]);
 
   return (
-    <div className="container mx-auto px-4 py-6 max-w-7xl">
-      {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-center gap-3 mb-2">
-          <Gift className="h-8 w-8 text-primary" />
-          <h1 className="text-3xl font-bold">Avantages Partenaires</h1>
+    <div className="min-h-screen bg-background pb-20">
+      {/* Header compact */}
+      <div className="px-4 py-4">
+        <div className="flex items-center gap-2 mb-1">
+          <Gift className="h-6 w-6 text-primary" />
+          <h1 className="text-2xl font-bold">Avantages Partenaires</h1>
         </div>
-        <p className="text-muted-foreground">
+        <p className="text-sm text-muted-foreground">
           Profitez d&apos;offres exclusives chez nos partenaires locaux
         </p>
+      </div>
+
+      {/* Filters */}
+      <div className="px-4 mb-4">
+        <OfferFilters onFilterChange={setFilters} />
       </div>
 
       {/* Featured Carousel */}
@@ -118,32 +123,26 @@ export default function AvantagesPage() {
         <FeaturedCarousel partners={featuredPartners} />
       )}
 
-      {/* Filters */}
-      <OfferFilters onFilterChange={setFilters} />
+      {/* Section All Offers */}
+      <div className="px-4">
+        <h2 className="text-lg font-bold mb-3">Toutes les offres</h2>
 
-      {/* Results count */}
-      <div className="mb-4">
-        <p className="text-sm text-muted-foreground">
-          {filteredOffers.length} {filteredOffers.length > 1 ? 'offres disponibles' : 'offre disponible'}
-        </p>
+        {/* Offers List (vertical, compact) */}
+        {filteredOffers.length > 0 ? (
+          <div className="flex flex-col gap-3">
+            {filteredOffers.map((offer) => (
+              <OfferCard key={offer.id} offer={offer} />
+            ))}
+          </div>
+        ) : (
+          <Alert>
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              Aucune offre ne correspond à vos critères de recherche.
+            </AlertDescription>
+          </Alert>
+        )}
       </div>
-
-      {/* Offers Grid */}
-      {filteredOffers.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredOffers.map((offer) => (
-            <OfferCard key={offer.id} offer={offer} />
-          ))}
-        </div>
-      ) : (
-        <Alert>
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            Aucune offre ne correspond à vos critères de recherche.
-            Essayez de modifier les filtres.
-          </AlertDescription>
-        </Alert>
-      )}
     </div>
   );
 }
