@@ -1,4 +1,6 @@
 import { createClient } from "./server";
+import { SupabaseClient } from "@supabase/supabase-js";
+import { EquipeSettings, EquipeDetails, EquipeWithSettings } from "@/lib/types";
 
 // Types pour les équipes
 export type EquipeStats = {
@@ -266,4 +268,72 @@ export async function getTeamsSummaryNew(): Promise<{
     totalAmountCollected: equipe.totalAmountCollected,
     totalCalendarsDistributed: equipe.totalCalendarsDistributed
   }));
+}
+
+/**
+ * Récupère les paramètres d'équipe (min/recommandé) depuis un profile
+ */
+export async function getEquipeSettingsFromProfile(
+  supabase: SupabaseClient,
+  userId: string
+): Promise<{ settings: EquipeSettings | null; teamId: string | null }> {
+  const { data: profile, error } = await supabase
+    .from('profiles')
+    .select('team_id, equipes(pourcentage_minimum_pot, pourcentage_recommande_pot)')
+    .eq('id', userId)
+    .single();
+
+  if (error) {
+    console.error('Error fetching equipe settings from profile:', error);
+    return { settings: null, teamId: null };
+  }
+
+  const eqRaw = (profile as unknown as { team_id?: string | null; equipes?: EquipeSettings | EquipeSettings[] })?.equipes;
+  const settings: EquipeSettings | null = Array.isArray(eqRaw) ? eqRaw[0] || null : eqRaw || null;
+  const teamId = (profile as unknown as { team_id?: string | null })?.team_id || null;
+
+  return { settings, teamId };
+}
+
+/**
+ * Récupère les détails complets d'une équipe
+ */
+export async function getEquipeDetails(
+  supabase: SupabaseClient,
+  equipeId: string
+): Promise<EquipeDetails | null> {
+  const { data, error } = await supabase
+    .from('equipes')
+    .select('id, nom, enable_retribution, pourcentage_minimum_pot, pourcentage_recommande_pot, mode_transparence')
+    .eq('id', equipeId)
+    .single();
+
+  if (error) {
+    console.error('Error fetching equipe details:', error);
+    return null;
+  }
+
+  return data as EquipeDetails;
+}
+
+/**
+ * Récupère les infos d'équipe avec settings depuis un profile (variante complète)
+ */
+export async function getEquipeWithSettingsFromProfile(
+  supabase: SupabaseClient,
+  userId: string
+): Promise<EquipeWithSettings | null> {
+  const { data: profile, error } = await supabase
+    .from('profiles')
+    .select('team_id, equipes(id, nom, mode_transparence, pourcentage_minimum_pot, pourcentage_recommande_pot)')
+    .eq('id', userId)
+    .single();
+
+  if (error) {
+    console.error('Error fetching equipe with settings from profile:', error);
+    return null;
+  }
+
+  const eqRaw = (profile as unknown as { equipes?: EquipeWithSettings | EquipeWithSettings[] })?.equipes;
+  return Array.isArray(eqRaw) ? eqRaw[0] || null : eqRaw || null;
 }

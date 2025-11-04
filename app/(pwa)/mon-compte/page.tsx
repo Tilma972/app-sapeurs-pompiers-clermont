@@ -7,49 +7,32 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { PwaContainer } from "@/components/layouts/pwa/pwa-container";
 import { formatCurrency, formatDateLong } from "@/lib/formatters";
-import { EquipeWithSettings, ProfileWithTeam, PotEquipe, MouvementRetribution } from "@/lib/types";
+import { getUserCompte, getPotEquipe, getMouvementsRetribution } from "@/lib/supabase/compte";
+import { getEquipeWithSettingsFromProfile } from "@/lib/supabase/equipes";
 
 export default async function MonComptePage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/auth/login");
 
-  // Soldes personnels
-  const { data: compte } = await supabase
-    .from('comptes_sp')
-    .select('solde_disponible, total_retributions, pourcentage_pot_equipe_defaut')
-    .eq('user_id', user.id)
-    .single();
+  // Récupération des données via les helpers
+  const [compte, eqWithSettings, mouvements] = await Promise.all([
+    getUserCompte(supabase, user.id),
+    getEquipeWithSettingsFromProfile(supabase, user.id),
+    getMouvementsRetribution(supabase, user.id, 5),
+  ]);
 
-  // Paramètres d'équipe (min/reco + infos utiles)
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('team_id, equipes(id, nom, mode_transparence, pourcentage_minimum_pot, pourcentage_recommande_pot)')
-    .eq('id', user.id)
-    .single();
-  const eqRaw = (profile as unknown as { equipes?: EquipeWithSettings | EquipeWithSettings[] })?.equipes;
-  const eqObj: EquipeWithSettings | undefined = Array.isArray(eqRaw) ? eqRaw[0] : eqRaw;
-  const recommandationEquipe = eqObj?.pourcentage_recommande_pot ?? 30;
+  const recommandationEquipe = eqWithSettings?.pourcentage_recommande_pot ?? 30;
 
   // Pot d'équipe (si équipe présente)
-  const prof = profile as unknown as ProfileWithTeam;
-  let potEquipe: PotEquipe | null = null;
-  if (prof?.team_id) {
-    const { data: pot } = await supabase
-      .from('pots_equipe')
-      .select('solde_disponible')
-      .eq('equipe_id', prof.team_id)
-      .single();
-    potEquipe = pot || null;
-  }
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('team_id')
+    .eq('id', user.id)
+    .single();
 
-  // Derniers mouvements
-  const { data: mouvements } = await supabase
-    .from('mouvements_retribution')
-    .select('created_at, montant_total_collecte, montant_compte_perso')
-    .eq('user_id', user.id)
-    .order('created_at', { ascending: false })
-    .limit(5) as { data: MouvementRetribution[] | null };
+  const teamId = (profile as unknown as { team_id?: string | null })?.team_id;
+  const potEquipe = teamId ? await getPotEquipe(supabase, teamId) : null;
 
   return (
     <PwaContainer>
@@ -100,7 +83,7 @@ export default async function MonComptePage() {
                 <div className="text-sm text-muted-foreground">👥 Pot d&apos;équipe</div>
                 <div className="text-2xl font-bold">{formatCurrency(potEquipe.solde_disponible)}</div>
               </div>
-              <div className="text-xs text-muted-foreground">Transparence: {eqObj?.mode_transparence || '—'}</div>
+              <div className="text-xs text-muted-foreground">Transparence: {eqWithSettings?.mode_transparence || '—'}</div>
             </summary>
             <div className="p-4 border-t text-sm text-muted-foreground">
               Détails des contributions disponibles selon le mode de transparence de l&apos;équipe.

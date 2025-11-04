@@ -5,7 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { RetributionPreferencesCard } from "@/components/retribution-preferences-card";
 import { EquipeSettingsForm } from "@/components/admin/equipe-settings-form";
 import { PwaContainer } from "@/components/layouts/pwa/pwa-container";
-import { EquipeSettings, EquipeDetails, ProfileWithTeam } from "@/lib/types";
+import { getUserPreference } from "@/lib/supabase/compte";
+import { getEquipeSettingsFromProfile, getEquipeDetails } from "@/lib/supabase/equipes";
 
 export default async function ParametresPage() {
   const supabase = await createClient();
@@ -15,36 +16,22 @@ export default async function ParametresPage() {
   // Rôle utilisateur
   const { data: profile } = await supabase
     .from('profiles')
-    .select('role, team_id, equipes(pourcentage_minimum_pot, pourcentage_recommande_pot)')
+    .select('role, team_id')
     .eq('id', user.id)
     .single();
 
-  // Compte + préférence
-  const { data: compte } = await supabase
-    .from('comptes_sp')
-    .select('pourcentage_pot_equipe_defaut')
-    .eq('user_id', user.id)
-    .single();
+  // Récupération des données via les helpers
+  const [userPreference, { settings, teamId }] = await Promise.all([
+    getUserPreference(supabase, user.id),
+    getEquipeSettingsFromProfile(supabase, user.id),
+  ]);
 
-  const eqRaw = (profile as unknown as { equipes?: EquipeSettings | EquipeSettings[] })?.equipes;
-  const eqObj: EquipeSettings | undefined = Array.isArray(eqRaw) ? eqRaw[0] : eqRaw;
-  const minimumEquipe = eqObj?.pourcentage_minimum_pot ?? 0;
-  const recommandationEquipe = eqObj?.pourcentage_recommande_pot ?? 30;
+  const minimumEquipe = settings?.pourcentage_minimum_pot ?? 0;
+  const recommandationEquipe = settings?.pourcentage_recommande_pot ?? 30;
 
-  // Charger les réglages complets d'équipe si nécessaire
-  let equipeDetails: EquipeDetails | null = null;
-
-  const prof = profile as unknown as ProfileWithTeam;
-  if (prof?.team_id) {
-    const { data: equipe } = await supabase
-      .from('equipes')
-      .select('id, nom, enable_retribution, pourcentage_minimum_pot, pourcentage_recommande_pot, mode_transparence')
-      .eq('id', prof.team_id)
-      .single();
-    equipeDetails = equipe || null;
-  }
-
+  // Charger les réglages complets d'équipe si nécessaire (chef/admin uniquement)
   const isChefOrAdmin = profile?.role === 'admin' || profile?.role === 'chef';
+  const equipeDetails = (isChefOrAdmin && teamId) ? await getEquipeDetails(supabase, teamId) : null;
 
   return (
     <PwaContainer>
@@ -67,7 +54,7 @@ export default async function ParametresPage() {
               <h2 className="text-lg font-semibold">Répartition de mes 30%</h2>
             </div>
             <RetributionPreferencesCard
-              currentPreference={compte?.pourcentage_pot_equipe_defaut ?? null}
+              currentPreference={userPreference}
               minimumEquipe={minimumEquipe}
               recommandationEquipe={recommandationEquipe}
             />
