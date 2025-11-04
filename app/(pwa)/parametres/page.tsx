@@ -7,6 +7,7 @@ import { EquipeSettingsForm } from "@/components/admin/equipe-settings-form";
 import { PwaContainer } from "@/components/layouts/pwa/pwa-container";
 import { getUserPreference } from "@/lib/supabase/compte";
 import { getEquipeSettingsFromProfile, getEquipeDetails } from "@/lib/supabase/equipes";
+import { RETRIBUTION_CONFIG, canManageTeam } from "@/lib/config";
 
 export default async function ParametresPage() {
   const supabase = await createClient();
@@ -26,11 +27,11 @@ export default async function ParametresPage() {
     getEquipeSettingsFromProfile(supabase, user.id),
   ]);
 
-  const minimumEquipe = settings?.pourcentage_minimum_pot ?? 0;
-  const recommandationEquipe = settings?.pourcentage_recommande_pot ?? 30;
+  const minimumEquipe = settings?.pourcentage_minimum_pot ?? RETRIBUTION_CONFIG.MINIMUM_POT_EQUIPE_DEFAULT;
+  const recommandationEquipe = settings?.pourcentage_recommande_pot ?? RETRIBUTION_CONFIG.RECOMMANDE_POT_EQUIPE_DEFAULT;
 
   // Charger les réglages complets d'équipe si nécessaire (chef/admin uniquement)
-  const isChefOrAdmin = profile?.role === 'admin' || profile?.role === 'chef';
+  const isChefOrAdmin = canManageTeam(profile?.role);
   const equipeDetails = (isChefOrAdmin && teamId) ? await getEquipeDetails(supabase, teamId) : null;
 
   return (

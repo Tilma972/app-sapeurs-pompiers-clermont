@@ -9,6 +9,7 @@ import { PwaContainer } from "@/components/layouts/pwa/pwa-container";
 import { formatCurrency, formatDateLong } from "@/lib/formatters";
 import { getUserCompte, getPotEquipe, getMouvementsRetribution } from "@/lib/supabase/compte";
 import { getEquipeWithSettingsFromProfile } from "@/lib/supabase/equipes";
+import { RETRIBUTION_CONFIG, PAGINATION_CONFIG } from "@/lib/config";
 
 export default async function MonComptePage() {
   const supabase = await createClient();
@@ -19,10 +20,10 @@ export default async function MonComptePage() {
   const [compte, eqWithSettings, mouvements] = await Promise.all([
     getUserCompte(supabase, user.id),
     getEquipeWithSettingsFromProfile(supabase, user.id),
-    getMouvementsRetribution(supabase, user.id, 5),
+    getMouvementsRetribution(supabase, user.id, PAGINATION_CONFIG.MOUVEMENTS_RETRIBUTION_LIMIT),
   ]);
 
-  const recommandationEquipe = eqWithSettings?.pourcentage_recommande_pot ?? 30;
+  const recommandationEquipe = eqWithSettings?.pourcentage_recommande_pot ?? RETRIBUTION_CONFIG.RECOMMANDE_POT_EQUIPE_DEFAULT;
 
   // Pot d'équipe (si équipe présente)
   const { data: profile } = await supabase

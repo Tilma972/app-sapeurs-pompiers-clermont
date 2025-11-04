@@ -11,6 +11,7 @@ import { TeamsLeaderboardProgress, type Team } from "@/components/charts/teams-l
 import { KpiCard } from "@/components/kpi-card";
 import { getCurrentUserProfile } from "@/lib/supabase/profile";
 import { formatNumber, formatCurrencyRounded } from "@/lib/formatters";
+import { CALENDRIER_CONFIG, STATS_CONFIG } from "@/lib/config";
 
 export default async function CalendriersPage() {
   const supabase = await createClient();
@@ -35,16 +36,16 @@ export default async function CalendriersPage() {
 
   // 2) Mapping vers l'API du composant (objectif déduit via progression)
   let teams: Team[] = (ranking ?? []).map((r) => {
-    const achieved = Number(r.calendriers_distribues ?? 0)
-    const pct = Number(r.progression_pourcentage ?? 0)
+    const achieved = Number(r.calendriers_distribues ?? STATS_CONFIG.COUNTER_DEFAULT)
+    const pct = Number(r.progression_pourcentage ?? STATS_CONFIG.PROGRESSION_DEFAULT)
     const goalFromPct = pct > 0 ? Math.ceil(achieved / (pct / 100)) : null
-    const goalTotal = goalFromPct ?? Math.max(50, achieved) // fallback lisible
+    const goalTotal = goalFromPct ?? Math.max(CALENDRIER_CONFIG.OBJECTIF_DEFAULT_CALENDRIERS, achieved)
     return {
       id: String(r.rang),
       name: r.equipe_nom ?? "Équipe",
       goalTotal,
       achieved,
-      amountCollected: Number(r.montant_collecte ?? 0),
+      amountCollected: Number(r.montant_collecte ?? STATS_CONFIG.AMOUNT_DEFAULT),
     }
   });
 
@@ -63,9 +64,9 @@ export default async function CalendriersPage() {
   // 3) Historique personnel (3 dernières tournées) — déjà récupéré en parallèle
 
   // 4) KPIs utilisateur (global)
-  const totalCalendars = personalStats?.totalCalendarsDistributed ?? 0;
-  const totalAmount = personalStats?.totalAmountCollected ?? 0;
-  const averagePerCalendar = totalCalendars > 0 ? totalAmount / totalCalendars : 0;
+  const totalCalendars = personalStats?.totalCalendarsDistributed ?? STATS_CONFIG.COUNTER_DEFAULT;
+  const totalAmount = personalStats?.totalAmountCollected ?? STATS_CONFIG.AMOUNT_DEFAULT;
+  const averagePerCalendar = totalCalendars > 0 ? totalAmount / totalCalendars : STATS_CONFIG.AMOUNT_DEFAULT;
 
   // Rang de l'utilisateur dans son équipe (par montant collecté)
   let teamRank: number | null = null;
