@@ -97,7 +97,7 @@ export default function AdminAvantagesPage() {
               Gérez les partenaires et leurs offres
             </p>
           </div>
-          <Link href="/admin/avantages/nouveau">
+          <Link href="/dashboard/admin/avantages/nouveau">
             <Button size="lg">
               <Plus className="h-4 w-4 mr-2" />
               Nouveau partenaire
@@ -172,7 +172,7 @@ export default function AdminAvantagesPage() {
                 {search ? 'Aucun partenaire trouvé' : 'Aucun partenaire pour le moment'}
               </p>
               {!search && (
-                <Link href="/admin/avantages/nouveau">
+                <Link href="/dashboard/admin/avantages/nouveau">
                   <Button className="mt-4">
                     <Plus className="h-4 w-4 mr-2" />
                     Créer le premier partenaire
@@ -226,7 +226,7 @@ export default function AdminAvantagesPage() {
                               Voir les offres
                             </DropdownMenuItem>
                           </Link>
-                          <Link href={`/admin/avantages/${partner.id}/modifier`}>
+                          <Link href={`/dashboard/admin/avantages/${partner.id}/modifier`}>
                             <DropdownMenuItem>
                               <Edit className="h-4 w-4 mr-2" />
                               Modifier

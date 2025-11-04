@@ -118,7 +118,7 @@ export function PartnerForm({ partner, onSuccess, onCancel }: PartnerFormProps) 
       if (result.success) {
         toast.success(partner ? 'Partenaire mis à jour avec succès !' : 'Partenaire créé avec succès !');
         onSuccess?.();
-        router.push('/admin/avantages');
+        router.push('/dashboard/admin/avantages');
       } else {
         toast.error(result.error || 'Erreur lors de l\'enregistrement');
       }

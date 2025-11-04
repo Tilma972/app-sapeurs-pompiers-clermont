@@ -48,7 +48,7 @@ export default async function PartnerEditPage({ params }: PartnerEditPageProps) 
     <div className="container py-8 max-w-4xl">
       {/* Header */}
       <div className="mb-6 flex items-center gap-4">
-        <Link href="/admin/avantages">
+        <Link href="/dashboard/admin/avantages">
           <Button variant="ghost" size="icon">
             <ArrowLeft className="h-5 w-5" />
           </Button>

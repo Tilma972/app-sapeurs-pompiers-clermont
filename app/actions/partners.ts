@@ -23,7 +23,7 @@ export async function createPartnerAction(formData: PartnerFormData) {
       return { success: false, error: error.message };
     }
 
-    revalidatePath('/admin/avantages');
+    revalidatePath('/dashboard/admin/avantages');
     revalidatePath('/avantages');
 
     return { success: true, data };
@@ -48,9 +48,9 @@ export async function updatePartnerAction(id: string, formData: Partial<PartnerF
       return { success: false, error: error.message };
     }
 
-    revalidatePath('/admin/avantages');
+    revalidatePath('/dashboard/admin/avantages');
     revalidatePath('/avantages');
-    revalidatePath(`/admin/avantages/${id}/modifier`);
+    revalidatePath(`/dashboard/admin/avantages/${id}/modifier`);
 
     return { success: true, data };
   } catch (error) {
@@ -72,7 +72,7 @@ export async function deletePartnerAction(id: string) {
       return { success: false, error: error.message };
     }
 
-    revalidatePath('/admin/avantages');
+    revalidatePath('/dashboard/admin/avantages');
     revalidatePath('/avantages');
 
     return { success: true };

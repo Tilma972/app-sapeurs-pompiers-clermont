@@ -12,7 +12,7 @@ export default function NouveauPartnerPage() {
     <div className="container mx-auto px-4 py-8 max-w-4xl">
       {/* Header */}
       <div className="mb-8">
-        <Link href="/admin/avantages">
+        <Link href="/dashboard/admin/avantages">
           <Button variant="ghost" size="sm" className="mb-4">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Retour à la liste
