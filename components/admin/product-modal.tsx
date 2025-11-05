@@ -155,6 +155,7 @@ export function ProductModal({ isOpen, onClose, product, onSuccess }: ProductMod
               onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
               placeholder="Description du produit..."
               rows={3}
+              className="bg-background text-foreground"
             />
           </div>
 

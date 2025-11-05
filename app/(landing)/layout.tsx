@@ -13,7 +13,7 @@ export default async function LandingLayout({
   return (
     <>
       <LandingHeaderWrapper user={user} />
-      <main className="pt-20 md:pt-24">
+      <main className="pt-14 md:pt-16">
         {children}
       </main>
       <LandingFooter />

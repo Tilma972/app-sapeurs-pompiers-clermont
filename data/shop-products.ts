@@ -18,7 +18,7 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
     category: 'Calendriers',
     description: "L'incontournable calendrier de nos sapeurs-pompiers. Un soutien direct à nos actions.",
     price: 10.00,
-    image: 'https://npyfregghvnmqxwgkfea.supabase.co/storage/v1/object/public/landing_page/calendrier_preview.png',
+    image: 'https://npyfregghvnmqxwgkfea.supabase.co/storage/v1/object/public/landing_page/couverture_cal_2026%20.webp',
     badge: {
       text: 'PRÉCOMMANDE',
       variant: 'preorder'

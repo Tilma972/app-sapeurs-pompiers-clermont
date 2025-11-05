@@ -37,17 +37,18 @@ export function ProductCard({ product }: { product: ShopProduct }) {
       transition={{ duration: 0.3 }}
     >
       <Card className="group overflow-hidden flex flex-col h-full hover:shadow-lg transition-shadow duration-200">
-        <div className="relative h-40 sm:h-48 overflow-hidden bg-muted/30">
+        <div className="relative h-40 sm:h-48 overflow-hidden bg-muted/30 flex items-center justify-center">
           <Image
             src={product.image}
             alt={product.name}
             fill
-            className="object-cover group-hover:scale-105 transition-transform duration-300"
+            className="object-contain group-hover:scale-105 transition-transform duration-300"
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            priority={false}
           />
           {product.badge && (
             <Badge 
-              className={`absolute top-2 left-2 text-xs ${badgeVariants[product.badge.variant]}`}
+              className={`absolute bottom-2 left-2 text-xs z-10 font-semibold shadow-lg ${badgeVariants[product.badge.variant]}`}
             >
               {product.badge.text}
             </Badge>
