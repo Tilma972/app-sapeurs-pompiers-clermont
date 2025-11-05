@@ -59,8 +59,9 @@ const getTypeLabel = (type: string) => {
 
 export function NewsSection() {
   return (
-    <section id="actualites" className="py-12">
-      <div className="container mx-auto px-4">
+    <section id="actualites" className="py-12 w-full">
+      <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
+        <div className="max-w-[1920px] mx-auto">
         <div className="text-center mb-6">
           <div className="flex justify-center mb-2">
             <PremiumIcon icon={Calendar} variant="gradient" size="md" className="icon-target" />
@@ -98,6 +99,7 @@ export function NewsSection() {
               <p className="text-sm text-muted-foreground">{item.description}</p>
             </motion.article>
           ))}
+        </div>
         </div>
       </div>
     </section>

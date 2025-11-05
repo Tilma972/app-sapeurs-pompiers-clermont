@@ -18,11 +18,11 @@ export function Stats() {
   });
 
   return (
-    <section className="py-8 md:py-12 bg-gray-50 dark:bg-[#5C3A38] transition-colors">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+    <section className="py-8 md:py-12 bg-gray-50 dark:bg-[#5C3A38] transition-colors w-full">
+      <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
         <motion.div
           ref={ref}
-          className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 text-center"
+          className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 text-center max-w-[1920px] mx-auto"
           variants={staggerContainer}
           initial="hidden"
           animate={inView ? "visible" : "hidden"}

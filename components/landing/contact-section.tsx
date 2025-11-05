@@ -46,8 +46,9 @@ export function ContactSection() {
   };
 
   return (
-    <section id="contact" className="py-12 md:py-20 bg-white dark:bg-darkBg transition-colors">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+    <section id="contact" className="py-12 md:py-20 bg-white dark:bg-darkBg transition-colors w-full">
+      <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
+        <div className="max-w-[1920px] mx-auto">
         <motion.div
           ref={titleRef}
           className="text-center mb-8 md:mb-16"
@@ -272,6 +273,7 @@ export function ContactSection() {
               </ul>
             </div>
           </motion.div>
+        </div>
         </div>
       </div>
     </section>

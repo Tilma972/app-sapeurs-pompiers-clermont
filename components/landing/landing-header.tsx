@@ -10,13 +10,11 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const navigation = [
-  { name: "Accueil", href: "#hero" },
-  { name: "Actions", href: "#actions" },
-  { name: "Boutique", href: "#boutique" },
-  { name: "Témoignages", href: "#temoignages" },
-  { name: "Prévention", href: "#prevention" },
-  { name: "Actualités", href: "#actualites" },
-  { name: "Contact", href: "#contact" },
+  { name: "Accueil", href: "/" },
+  { name: "À Propos", href: "/#actions" },
+  { name: "Boutique", href: "/boutique" },
+  { name: "Devenir Partenaire", href: "/devenir-partenaire" },
+  { name: "Contact", href: "/#contact" },
 ];
 
 type MinimalUser = { id: string } | null;
@@ -33,10 +31,10 @@ export function LandingHeader({ user }: LandingHeaderProps) {
       initial={{ y: -100, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.6 }}
-      className="fixed top-0 left-0 right-0 z-50 glass-header"
+      className="fixed top-0 left-0 right-0 z-50 glass-header w-full"
     >
-      <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
+      <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
+        <div className="flex items-center justify-between h-16 max-w-[1920px] mx-auto">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-3 group">
             <div className="relative w-10 h-10">

@@ -45,8 +45,9 @@ export function Partenaires() {
   // Défilement géré en CSS (animate-marquee) pour fluidité et pause au survol desktop
 
   return (
-    <section className="py-12 md:py-24 bg-brandCream dark:bg-darkBg transition-colors overflow-hidden" id="partenaires">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+    <section className="py-12 md:py-24 bg-brandCream dark:bg-darkBg transition-colors overflow-hidden w-full" id="partenaires">
+      <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
+        <div className="max-w-[1920px] mx-auto">
         
         {/* Header avec stats d'impact */}
         <motion.div
@@ -176,7 +177,7 @@ export function Partenaires() {
           </p>
           <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
             <Link
-              href="/dashboard/partenaires"
+              href="/devenir-partenaire"
               className="inline-flex items-center gap-2 px-6 py-3 bg-primary dark:bg-brandOrange text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all"
             >
               <Handshake className="w-5 h-5" />
@@ -184,6 +185,7 @@ export function Partenaires() {
             </Link>
           </motion.div>
         </motion.div>
+        </div>
       </div>
     </section>
   );

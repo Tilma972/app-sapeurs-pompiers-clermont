@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Montserrat, Roboto } from "next/font/google";
+import { Geist } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "react-hot-toast";
 import "./globals.css";
@@ -11,8 +11,8 @@ const defaultUrl = process.env.VERCEL_URL
 
 export const metadata: Metadata = {
   metadataBase: new URL(defaultUrl),
-  title: "Amicale des Sapeurs-Pompiers de Clermont l'Hérault",
-  description: "L'Amicale des Sapeurs-Pompiers de Clermont l'Hérault œuvre chaque jour pour la cohésion et le soutien de nos héros du quotidien.",
+  title: "Amicale SP – Tableau de bord",
+  description: "Application Amicale des Sapeurs-Pompiers – gestion des tournées, calendriers et statistiques.",
 };
 
 export const viewport: Viewport = {
@@ -21,19 +21,10 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-// Fonts du Projet 2 (meilleur responsive)
-const montserrat = Montserrat({
-  variable: "--font-montserrat",
+const geistSans = Geist({
+  variable: "--font-geist-sans",
   display: "swap",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-});
-
-const roboto = Roboto({
-  variable: "--font-roboto",
-  display: "swap",
-  subsets: ["latin"],
-  weight: ["400", "500", "700"],
 });
 
 export default function RootLayout({
@@ -42,13 +33,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="fr" suppressHydrationWarning className="scroll-smooth overflow-x-clip">
+    <html lang="fr" suppressHydrationWarning className="overflow-x-clip">
       <body
         className={[
           "min-h-dvh w-full overflow-x-hidden bg-background text-foreground antialiased",
           "touch-pan-y",
-          montserrat.variable,
-          roboto.variable,
+          geistSans.variable,
         ].join(" ")}
       >
         <ThemeProvider
@@ -64,11 +54,22 @@ export default function RootLayout({
             Aller au contenu
           </a>
 
-          <main id="content" className="w-full">
+          <header className="w-full">
+            {/* Header global optionnel */}
+          </header>
+
+          <main
+            id="content"
+            className="w-full"
+          >
             {children}
           </main>
 
-          <Toaster position="top-right" />
+          <footer className="w-full">
+            {/* Footer optionnel */}
+          </footer>
+
+          <Toaster position="bottom-center" />
           {process.env.NODE_ENV === "development" ? <OverflowDebugger /> : null}
         </ThemeProvider>
       </body>

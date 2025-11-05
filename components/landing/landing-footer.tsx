@@ -29,8 +29,9 @@ const footerLinks = {
 
 export function LandingFooter() {
   return (
-    <footer className="bg-slate-900 text-white">
-      <div className="container mx-auto px-4 py-10">
+    <footer className="bg-slate-900 text-white w-full">
+      <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 py-10">
+        <div className="max-w-[1920px] mx-auto">
         {/* Barre d'actions supprimée sur demande */}
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
@@ -196,6 +197,7 @@ export function LandingFooter() {
             </Link>
           </div>
         </motion.div>
+        </div>
       </div>
     </footer>
   );

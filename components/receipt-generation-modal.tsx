@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useTransition } from "react"
-import type { ReactNode } from "react"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
@@ -10,7 +9,13 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { generateReceiptAction } from "@/app/actions/generate-receipt"
 import toast from "react-hot-toast"
 
-export function ReceiptGenerationModal({ tourneeId, trigger }: { tourneeId: string; trigger?: ReactNode }) {
+export function ReceiptGenerationModal({ 
+  tourneeId, 
+  trigger 
+}: { 
+  tourneeId: string
+  trigger?: React.ReactNode 
+}) {
   const [open, setOpen] = useState(false)
   const [amount, setAmount] = useState<string>("")
   const [paymentMethod, setPaymentMethod] = useState<"especes" | "cheque">("especes")
@@ -66,9 +71,9 @@ export function ReceiptGenerationModal({ tourneeId, trigger }: { tourneeId: stri
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        {trigger ?? <Button variant="secondary">📄 Reçu fiscal</Button>}
+        {trigger || <Button variant="secondary">📄 Reçu fiscal</Button>}
       </DialogTrigger>
-  <DialogContent className="w-full max-w-[min(100vw-2rem,40rem)] px-4 sm:px-6 bg-card text-foreground border border-border rounded-lg">
+      <DialogContent className="sm:max-w-lg bg-card text-foreground border border-border rounded-lg">
         <DialogHeader>
           <DialogTitle className="text-lg font-semibold tracking-tight">Générer un reçu fiscal</DialogTitle>
         </DialogHeader>

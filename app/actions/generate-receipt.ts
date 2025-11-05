@@ -141,7 +141,7 @@ export async function generateReceiptAction(input: GenerateReceiptInput) {
         .update({ receipt_sent: true })
         .eq("id", tx.id)
 
-  revalidatePath("/ma-tournee")
+      revalidatePath("/dashboard/ma-tournee")
       return { success: true, receiptNumber }
     }
 

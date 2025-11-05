@@ -52,8 +52,8 @@ export function HeroSimple({ loggedIn = false }: { loggedIn?: boolean }) {
 
           {/* Contenu aligné à gauche sur desktop */}
           <div className="relative z-10 h-full">
-            <div className="container mx-auto h-full px-4 md:px-8 lg:px-12">
-              <div className="flex h-full items-center md:justify-start justify-center">
+            <div className="w-full h-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
+              <div className="flex h-full items-center md:justify-start justify-center max-w-[1920px] mx-auto">
                 <div className="max-w-3xl text-white text-center md:text-left">
               <motion.div
                 initial={{ opacity: 0, y: 60 }}

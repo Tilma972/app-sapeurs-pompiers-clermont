@@ -303,8 +303,9 @@ export function Communes() {
 
   return (
     <>
-      <section className="py-12 md:py-16 bg-gradient-to-b from-white to-[#FEF9F3] dark:from-[#2C1E1D] dark:to-[#5C3A38] transition-colors" id="communes">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-5xl">
+      <section className="py-12 md:py-16 bg-gradient-to-b from-white to-[#FEF9F3] dark:from-[#2C1E1D] dark:to-[#5C3A38] transition-colors w-full" id="communes">
+        <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
+          <div className="max-w-5xl mx-auto">
           {/* En-tête */}
           <div className="text-center mb-6 md:mb-8">
             <h2 className="text-2xl md:text-3xl font-[family-name:var(--font-montserrat)] font-bold text-[#4A2E2C] dark:text-[#F5DCC8] mb-2">
@@ -367,6 +368,7 @@ export function Communes() {
                 <strong className="text-[#C44539] dark:text-[#D85A3C] font-bold">24/7</strong> disponible
               </span>
             </div>
+          </div>
           </div>
         </div>
       </section>

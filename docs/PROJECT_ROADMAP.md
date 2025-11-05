@@ -14,16 +14,14 @@ Objectif: cadrer l'architecture, la sécurité et la livraison incrémentale des
 - Entités:
   - tournees, support_transactions, donation_intents, tournee_summary (vue), profiles (team)
 
-2) Petites Annonces (/annonces)
+2) Petites Annonces (/dashboard/annonces)
 - But: Mini-leboncoin interne
-- MVP: ✅ IMPLEMENTED
+- MVP:
   - CRUD annonces (titre, description, prix, catégorie, photos[])
-  - Upload photos avec compression client-side (via Supabase Storage)
-  - Favoris, pagination (20 items), filtrage par catégorie
-  - Validation serveur + client, compteur de vues
-  - PWA-first avec app bar et navigation mobile
+  - Messagerie simple (contact par email ou commentaire interne minimal)
+  - Upload photos (via Supabase Storage) + modération basique (signalement)
 - Entités:
-  - annonces, annonces_photos, annonces_favoris, annonces_views
+  - classifieds, classified_images, classified_flags, classified_comments
 
 3) Galerie SP (/dashboard/galerie)
 - But: Instagram privé caserne

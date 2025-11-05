@@ -19,8 +19,9 @@ export function Calendrier() {
   });
 
   return (
-    <section className="py-12 md:py-24 bg-brandCream dark:bg-darkSurface transition-colors" id="calendrier">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+    <section className="py-12 md:py-24 bg-brandCream dark:bg-darkSurface transition-colors w-full" id="calendrier">
+      <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
+        <div className="max-w-[1920px] mx-auto">
         <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12">
           {/* Image */}
           <motion.div
@@ -74,6 +75,7 @@ export function Calendrier() {
               </Link>
             </motion.div>
           </motion.div>
+        </div>
         </div>
       </div>
     </section>

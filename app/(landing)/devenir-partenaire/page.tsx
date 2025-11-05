@@ -15,9 +15,9 @@ import { PrimaryCta } from "@/components/landing/primary-cta";
 
 export default function DevenirPartenairePage() {
   return (
-    <main className="py-12">
+    <div className="py-8">
       {/* Bouton retour */}
-      <div className="container max-w-6xl mx-auto px-4 mb-3">
+      <div className="container max-w-6xl mx-auto px-4 mb-6">
         <Button variant="ghost" size="sm" asChild className="gap-2">
           <Link href="/">
             <ArrowLeft className="h-4 w-4" /> Retour à l&apos;accueil
@@ -306,8 +306,6 @@ export default function DevenirPartenairePage() {
           </div>
         </motion.div>
       </section>
-    </main>
+    </div>
   );
 }
-
-

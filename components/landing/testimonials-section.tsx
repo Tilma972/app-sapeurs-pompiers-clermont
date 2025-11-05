@@ -31,8 +31,9 @@ const testimonials = [
 
 export function TestimonialsSection() {
   return (
-    <section id="temoignages" className="py-12">
-      <div className="container mx-auto px-4">
+    <section id="temoignages" className="py-12 w-full">
+      <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
+        <div className="max-w-[1920px] mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -68,6 +69,7 @@ export function TestimonialsSection() {
               </div>
             </UnifiedCard>
           ))}
+        </div>
         </div>
       </div>
     </section>

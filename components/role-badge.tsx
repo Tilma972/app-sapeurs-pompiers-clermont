@@ -27,23 +27,13 @@ export function RoleBadge() {
   if (!role && !isChef) return null;
 
   return (
-    <div className="flex flex-wrap items-center gap-2 min-w-0">
+    <div className="flex flex-wrap gap-2 min-w-0">
       {role && (
-        <Badge
-          variant="outline"
-          className="inline-flex max-w-full items-center gap-1 px-2 py-0.5 text-xs"
-        >
-          <span className="truncate">Rôle: {role}</span>
+        <Badge variant="outline" className="max-w-[70vw] sm:max-w-none truncate">
+          Rôle: {role}
         </Badge>
       )}
-      {isChef && (
-        <Badge
-          variant="secondary"
-          className="inline-flex max-w-full items-center gap-1 px-2 py-0.5 text-xs"
-        >
-          <span className="truncate">Chef d&apos;équipe</span>
-        </Badge>
-      )}
+      {isChef && <Badge variant="secondary">Chef d&apos;équipe</Badge>}
     </div>
   );
 }
