@@ -10,7 +10,11 @@ import { CompleteIdentityForm } from "@/components/profile/complete-identity-for
 import { User, Shield, Building } from "lucide-react";
 import { PwaContainer } from "@/components/layouts/pwa/pwa-container";
 
-export default async function ProfilPage() {
+export default async function ProfilPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ identity_required?: string }>
+}) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/auth/login");
@@ -25,8 +29,27 @@ export default async function ProfilPage() {
     .eq('actif', true)
     .order('ordre_affichage', { ascending: true });
 
+  const params = await searchParams;
+  const showIdentityAlert = params.identity_required === "true";
+
   return (
   <PwaContainer>
+      {/* Alerte si redirigé par le middleware */}
+      {showIdentityAlert && !profile.identity_verified && (
+        <Card className="border-orange-500 bg-orange-50 dark:bg-orange-950/20">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-orange-700 dark:text-orange-400">
+              <Shield className="h-5 w-5" />
+              🔒 Vérification d&apos;identité requise
+            </CardTitle>
+            <CardDescription className="text-orange-600 dark:text-orange-300">
+              Pour accéder à l&apos;application Amicale, vous devez compléter votre identité et attendre la validation d&apos;un administrateur.
+              Cela permet de protéger les données internes de la caserne et de réserver les avantages aux vrais amicalistes.
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      )}
+
       {/* NOUVEAU : Formulaire d'identité - Priorité #1 */}
       <CompleteIdentityForm profile={profile} />
       {/* Informations actuelles */}

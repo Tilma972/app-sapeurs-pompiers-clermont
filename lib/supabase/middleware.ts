@@ -48,7 +48,11 @@ export async function updateSession(request: NextRequest) {
   const user = data?.claims;
 
   // Gestion intelligente des routes publiques vs privées
-  const isPrivateRoute = request.nextUrl.pathname.startsWith("/dashboard");
+  const isPrivateRoute = 
+    request.nextUrl.pathname.startsWith("/dashboard") ||
+    request.nextUrl.pathname.startsWith("/(pwa)") ||
+    request.nextUrl.pathname.includes("/ma-tournee") ||
+    request.nextUrl.pathname.includes("/avantages");
 
   // Redirection automatique pour un utilisateur connecté qui visite la racine
   if (user && request.nextUrl.pathname === "/") {
@@ -60,11 +64,32 @@ export async function updateSession(request: NextRequest) {
     }
   }
 
-  // Protection des routes privées
+  // Protection des routes privées - Étape 1 : Authentification
   if (isPrivateRoute && !user) {
     const url = request.nextUrl.clone();
     url.pathname = "/auth/login";
     return NextResponse.redirect(url);
+  }
+
+  // Protection des routes privées - Étape 2 : Vérification d'identité
+  if (isPrivateRoute && user) {
+    // Récupérer le profil avec les champs d'identité
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('identity_verified, first_name, last_name')
+      .eq('id', user.sub)
+      .single();
+
+    // Autoriser l'accès à la page profil pour compléter l'identité
+    const isProfilePage = request.nextUrl.pathname.includes("/profil");
+    
+    // Si identité non vérifiée ET pas sur la page profil → rediriger
+    if (profile && !profile.identity_verified && !isProfilePage) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/dashboard/profil";
+      url.searchParams.set("identity_required", "true");
+      return NextResponse.redirect(url);
+    }
   }
 
   // Forcer l'absence de cache pour les routes privées (dashboard)
