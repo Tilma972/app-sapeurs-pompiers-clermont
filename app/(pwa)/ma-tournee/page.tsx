@@ -21,15 +21,17 @@ export default async function MaTourneePage() {
   // Pas de tournée active
   if (!tourneeData || !tourneeData.tournee) {
     return (
-      <>
-  <PwaContainer>
-          <TourneeStatusCard status="inactive" count={0} amount={0} />
-          <div className="grid grid-cols-1 gap-4">
-            <Button size="lg" disabled className="h-24 text-lg">PAIEMENT CARTE</Button>
-            <Button size="lg" disabled variant="outline" className="h-24 text-lg">DON AVEC REÇU</Button>
-          </div>
-  </PwaContainer>
-      </>
+      <PwaContainer>
+        <TourneeStatusCard status="inactive" count={0} amount={0} />
+        <div className="grid grid-cols-1 gap-3 sm:gap-4 mt-4">
+          <Button size="lg" disabled className="h-20 sm:h-24 text-base sm:text-lg w-full">
+            💳 PAIEMENT CARTE
+          </Button>
+          <Button size="lg" disabled variant="outline" className="h-20 sm:h-24 text-base sm:text-lg w-full">
+            🧾 DON AVEC REÇU
+          </Button>
+        </div>
+      </PwaContainer>
     )
   }
 
@@ -40,7 +42,7 @@ export default async function MaTourneePage() {
 
   return (
     <>
-  <PwaContainer>
+      <PwaContainer>
         <TourneeStatusCard 
           status="active"
           startTime={startTime}
@@ -49,39 +51,43 @@ export default async function MaTourneePage() {
           amount={Math.round(amount)}
         />
 
-        {/* Gros boutons tactiles alimentés par les modales existantes */}
-        <div className="grid grid-cols-1 gap-4">
+        {/* Gros boutons tactiles - Layout optimisé */}
+        <div className="grid grid-cols-1 gap-3 sm:gap-4 mt-4">
           <PaymentCardModal 
             tourneeId={tournee.id}
             trigger={
-              <Button size="lg" className="h-24 text-lg">
-                PAIEMENT CARTE
+              <Button size="lg" className="h-20 sm:h-24 text-base sm:text-lg w-full">
+                💳 PAIEMENT CARTE
               </Button>
             }
           />
           <ReceiptGenerationModal 
             tourneeId={tournee.id}
             trigger={
-              <Button size="lg" variant="outline" className="h-24 text-lg">
-                DON AVEC REÇU
+              <Button size="lg" variant="outline" className="h-20 sm:h-24 text-base sm:text-lg w-full">
+                🧾 DON AVEC REÇU
               </Button>
             }
           />
         </div>
-  </PwaContainer>
+      </PwaContainer>
 
-      {/* Clôture intégrée au contenu */}
-  <PwaContainer>
+      {/* Clôture - Séparation visuelle claire */}
+      <PwaContainer>
         <TourneeClotureModal
           trigger={
-            <Button size="lg" variant="destructive" className="w-full h-14 text-lg">
+            <Button 
+              size="lg" 
+              variant="destructive" 
+              className="w-full h-12 sm:h-14 text-base sm:text-lg font-semibold"
+            >
               🏁 CLÔTURER MA TOURNÉE
             </Button>
           }
           tourneeData={{ tournee, transactions, summary }}
           tourneeSummary={summary}
         />
-  </PwaContainer>
+      </PwaContainer>
     </>
   )
 }

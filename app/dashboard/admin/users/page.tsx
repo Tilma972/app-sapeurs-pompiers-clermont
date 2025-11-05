@@ -7,11 +7,19 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { toast } from 'react-hot-toast'
-import { Plus, Shield, RefreshCcw } from 'lucide-react'
+import { Plus, Shield, RefreshCcw, CheckCircle2, AlertCircle, Clock } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
+import { verifyUserIdentity } from '@/app/actions/profile/complete-identity'
 
 type UserRow = {
   id: string
   full_name: string | null
+  display_name: string | null
+  first_name: string | null
+  last_name: string | null
+  identity_verified: boolean | null
+  verification_date: string | null
+  verification_method: string | null
   role: string | null
   team_id: string | null
   team_name: string | null
@@ -161,6 +169,8 @@ export default function AdminUsersPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Nom</TableHead>
+                <TableHead>Identité</TableHead>
+                <TableHead>Statut</TableHead>
                 <TableHead>Rôle</TableHead>
                 <TableHead>Équipe</TableHead>
                 <TableHead>Créé le</TableHead>
@@ -168,9 +178,47 @@ export default function AdminUsersPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filtered.map(u => (
+              {filtered.map(u => {
+                const hasIdentity = u.first_name && u.last_name
+                const isVerified = u.identity_verified
+                return (
                 <TableRow key={u.id}>
-                  <TableCell className="font-medium">{u.full_name || '—'}</TableCell>
+                  <TableCell className="font-medium">
+                    <div>{u.display_name || u.full_name || '—'}</div>
+                    {hasIdentity && (
+                      <div className="text-xs text-muted-foreground">
+                        {u.first_name} {u.last_name}
+                      </div>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {hasIdentity ? (
+                      <Badge variant="outline" className="text-xs">
+                        <CheckCircle2 className="h-3 w-3 mr-1 text-green-600" />
+                        Fournie
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline" className="text-xs">
+                        <AlertCircle className="h-3 w-3 mr-1 text-orange-500" />
+                        Manquante
+                      </Badge>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {isVerified ? (
+                      <Badge variant="default" className="text-xs bg-green-600">
+                        <CheckCircle2 className="h-3 w-3 mr-1" />
+                        Vérifiée
+                      </Badge>
+                    ) : hasIdentity ? (
+                      <Badge variant="secondary" className="text-xs">
+                        <Clock className="h-3 w-3 mr-1" />
+                        En attente
+                      </Badge>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">—</span>
+                    )}
+                  </TableCell>
                   <TableCell>
                     <select
                       className="border rounded px-2 py-1 text-sm"
@@ -197,13 +245,38 @@ export default function AdminUsersPage() {
                   </TableCell>
                   <TableCell>{u.created_at ? new Date(u.created_at).toLocaleDateString('fr-FR') : '—'}</TableCell>
                   <TableCell className="text-right">
-                    <Button variant="outline" size="sm" onClick={() => onResetPassword(u.id)}>Reset MDP</Button>
+                    <div className="flex items-center justify-end gap-2">
+                      {hasIdentity && !isVerified && (
+                        <Button 
+                          variant="default" 
+                          size="sm"
+                          onClick={async () => {
+                            try {
+                              const result = await verifyUserIdentity(u.id)
+                              if (result.success) {
+                                toast.success('Identité vérifiée')
+                                load()
+                              } else {
+                                toast.error(result.error || 'Erreur')
+                              }
+                            } catch {
+                              toast.error('Erreur lors de la vérification')
+                            }
+                          }}
+                        >
+                          <CheckCircle2 className="h-3 w-3 mr-1" />
+                          Vérifier
+                        </Button>
+                      )}
+                      <Button variant="outline" size="sm" onClick={() => onResetPassword(u.id)}>Reset MDP</Button>
+                    </div>
                   </TableCell>
                 </TableRow>
-              ))}
+                )
+              })}
               {filtered.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center text-sm text-muted-foreground">Aucun utilisateur</TableCell>
+                  <TableCell colSpan={7} className="text-center text-sm text-muted-foreground">Aucun utilisateur</TableCell>
                 </TableRow>
               )}
             </TableBody>

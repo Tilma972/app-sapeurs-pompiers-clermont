@@ -46,31 +46,33 @@ CREATE INDEX IF NOT EXISTS idx_profiles_last_name ON profiles(last_name) WHERE l
 CREATE INDEX IF NOT EXISTS idx_profiles_identity_verified ON profiles(identity_verified) WHERE identity_verified = true;
 
 -- Vue pour faciliter les requêtes admin
+-- Note: Basée sur database.types.ts généré le 2025-01-05
 CREATE OR REPLACE VIEW profiles_with_identity AS
 SELECT 
-  id,
-  email,
-  full_name,
-  display_name,
-  first_name,
-  last_name,
+  p.id,
+  p.full_name,
+  p.display_name,
+  p.first_name,
+  p.last_name,
+  p.role,
+  p.team_id,
+  p.is_active,
+  p.created_at,
+  p.updated_at,
   COALESCE(
-    display_name,
-    full_name,
-    NULLIF(TRIM(CONCAT(first_name, ' ', last_name)), '')
+    p.display_name,
+    p.full_name,
+    NULLIF(TRIM(CONCAT(p.first_name, ' ', p.last_name)), '')
   ) as computed_display_name,
   CASE 
-    WHEN first_name IS NOT NULL AND last_name IS NOT NULL 
-    THEN CONCAT(first_name, ' ', last_name)
+    WHEN p.first_name IS NOT NULL AND p.last_name IS NOT NULL 
+    THEN CONCAT(p.first_name, ' ', p.last_name)
     ELSE NULL
   END as legal_name,
-  identity_verified,
-  verification_date,
-  verification_method,
-  role,
-  is_active,
-  created_at
-FROM profiles;
+  p.identity_verified,
+  p.verification_date,
+  p.verification_method
+FROM profiles p;
 
 COMMENT ON VIEW profiles_with_identity IS 'Vue facilitant l''accès aux différents noms (display_name, legal_name) avec fallbacks automatiques';
 

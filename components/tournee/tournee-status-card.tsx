@@ -34,39 +34,41 @@ export function TourneeStatusCard({
 
   return (
     <Card className="bg-card border border-border">
-      <CardContent className="py-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-primary-foreground">
+      <CardContent className="py-6 px-4 sm:px-6">
+        {/* Header avec responsive flex-wrap */}
+        <div className="flex items-start gap-3 flex-wrap">
+          <div className="flex items-center gap-3 flex-1 min-w-0">
+            <div className="w-12 h-12 shrink-0 rounded-full bg-primary flex items-center justify-center text-primary-foreground">
               <Flame size={24} />
             </div>
-            <div>
-              <h2 className="text-xl font-bold">
+            <div className="min-w-0 flex-1">
+              <h2 className="text-lg sm:text-xl font-bold truncate">
                 TOURNÉE ACTIVE
               </h2>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-xs sm:text-sm text-muted-foreground truncate">
                 ⏱️ Démarrée à {startTime}
               </p>
             </div>
           </div>
           
           {secteur && (
-            <Badge variant="secondary">
+            <Badge variant="secondary" className="shrink-0 text-xs sm:text-sm">
               📍 {secteur}
             </Badge>
           )}
         </div>
         
-        <div className="grid grid-cols-2 gap-4 mt-4">
-          <div className="bg-muted rounded-lg p-3">
-            <p className="text-sm text-muted-foreground">Calendriers</p>
-            <p className="text-2xl font-bold">{nf.format(count)}</p>
+        {/* Stats grid avec meilleure gestion responsive */}
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 mt-4">
+          <div className="bg-muted rounded-lg p-3 min-w-0">
+            <p className="text-xs sm:text-sm text-muted-foreground truncate">Calendriers</p>
+            <p className="text-xl sm:text-2xl font-bold truncate">{nf.format(count)}</p>
           </div>
-          <div className="bg-muted rounded-lg p-3">
-            <p className="text-sm text-muted-foreground">Montant</p>
-            <p className="text-2xl font-bold text-primary">{currency.format(amount)}</p>
+          <div className="bg-muted rounded-lg p-3 min-w-0">
+            <p className="text-xs sm:text-sm text-muted-foreground truncate">Montant</p>
+            <p className="text-xl sm:text-2xl font-bold text-primary truncate">{currency.format(amount)}</p>
             {count > 0 && (
-              <p className="text-xs text-muted-foreground mt-1">~{nf.format(average)} €/cal</p>
+              <p className="text-xs text-muted-foreground mt-1 truncate">~{nf.format(average)} €/cal</p>
             )}
           </div>
         </div>

@@ -10,8 +10,7 @@ import { Badge } from "@/components/ui/badge"
 import { Shield, AlertCircle, CheckCircle2, Loader2 } from "lucide-react"
 import { 
   hasCompleteIdentity, 
-  hasVerifiedIdentity, 
-  getVerificationStatus,
+  hasVerifiedIdentity,
   formatVerificationDate,
   getVerificationMethodLabel,
   type Profile 
@@ -32,7 +31,6 @@ export function CompleteIdentityForm({ profile, onSuccess }: CompleteIdentityFor
     display_name: profile.display_name || profile.full_name || "",
   })
 
-  const verificationStatus = getVerificationStatus(profile)
   const isVerified = hasVerifiedIdentity(profile)
   const isComplete = hasCompleteIdentity(profile)
 

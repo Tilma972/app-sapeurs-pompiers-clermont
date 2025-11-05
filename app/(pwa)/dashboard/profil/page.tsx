@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { getCurrentUserProfile } from "@/lib/supabase/profile";
 import { ProfileWithTeamId } from "@/lib/types/profile";
 import { ProfileForm } from "@/components/profile-form";
+import { CompleteIdentityForm } from "@/components/profile/complete-identity-form";
 import { User, Shield, Building } from "lucide-react";
 import { PwaContainer } from "@/components/layouts/pwa/pwa-container";
 
@@ -26,6 +27,8 @@ export default async function ProfilPage() {
 
   return (
   <PwaContainer>
+      {/* NOUVEAU : Formulaire d'identité - Priorité #1 */}
+      <CompleteIdentityForm profile={profile} />
       {/* Informations actuelles */}
       <Card>
         <CardHeader>
@@ -66,11 +69,10 @@ export default async function ProfilPage() {
                 {(() => {
                   const teamId = (profile as ProfileWithTeamId).team_id
                   const teamName = teamId ? (teams as Array<{ id: string; nom: string }> | undefined)?.find((t) => t.id === teamId)?.nom : undefined
-                  const label = teamName || profile.team || undefined
-                  return label ? (
+                  return teamName ? (
                     <Badge variant="outline" className="px-2 py-0.5">
                       <Building className="h-3 w-3 mr-1" />
-                      {label}
+                      {teamName}
                     </Badge>
                   ) : (
                     <span className="text-muted-foreground italic">Non renseigné</span>

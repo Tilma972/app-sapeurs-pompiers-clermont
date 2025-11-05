@@ -9,23 +9,24 @@
 
 export type Profile = {
   id: string;
-  email?: string | null;
   
   // LEGACY - Compatibilité existante
-  full_name?: string | null;
+  full_name: string;
   
   // NOUVEAU - Système d'identité
-  display_name?: string | null;      // Nom d'affichage (pseudo)
-  first_name?: string | null;        // Prénom légal
-  last_name?: string | null;         // Nom légal
-  identity_verified?: boolean;       // Statut vérification
-  verification_date?: string | null; // Date vérification
-  verification_method?: string | null; // Méthode: 'admin', 'document', 'email', 'legacy'
+  display_name: string | null;      // Nom d'affichage (pseudo)
+  first_name: string | null;        // Prénom légal
+  last_name: string | null;         // Nom légal
+  identity_verified: boolean | null; // Statut vérification
+  verification_date: string | null; // Date vérification
+  verification_method: string | null; // Méthode: 'admin', 'document', 'email', 'legacy'
   
-  // Autres champs
-  role?: string | null;
-  is_active?: boolean;
-  [key: string]: any;
+  // Autres champs de la base
+  role: string;
+  is_active: boolean;
+  team_id: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 /**
