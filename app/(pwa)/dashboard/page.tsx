@@ -23,9 +23,19 @@ if (!user) redirect("/auth/login");
 		supabase.from('ideas').select('*', { count: 'exact', head: true }).is('deleted_at', null)
 	]);
 
+	// Récupérer le nom de l'équipe si team_id existe
+	let teamName = "Équipe SPP"; // Fallback par défaut
+	if (profile?.team_id) {
+		const { data: equipe } = await supabase
+			.from('equipes')
+			.select('nom')
+			.eq('id', profile.team_id)
+			.single();
+		
+		teamName = equipe?.nom || "Équipe SPP";
+	}
+
 const userName = profile?.full_name || user.email?.split("@")[0] || "Membre";
-const teamName = "Équipe SPP"; // TODO: Récupérer le nom de l'équipe depuis team_id
-	// const teamName = equipe?.equipe_nom ?? null;
 	// const allocated = equipe?.calendriers_alloues ?? 0;
 	// const distributed = personal?.totalCalendarsDistributed ?? 0;
 	// const pct = allocated > 0 ? Math.min(100, Math.round((distributed / allocated) * 100)) : 0;
