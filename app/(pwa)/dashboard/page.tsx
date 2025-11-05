@@ -24,7 +24,7 @@ if (!user) redirect("/auth/login");
 	]);
 
 const userName = profile?.full_name || user.email?.split("@")[0] || "Membre";
-const teamName = profile?.team || "Équipe SPP";
+const teamName = "Équipe SPP"; // TODO: Récupérer le nom de l'équipe depuis team_id
 	// const teamName = equipe?.equipe_nom ?? null;
 	// const allocated = equipe?.calendriers_alloues ?? 0;
 	// const distributed = personal?.totalCalendarsDistributed ?? 0;
