@@ -98,6 +98,12 @@ export default function AdminAvantagesPage() {
             </p>
           </div>
           <div className="flex gap-2">
+            <Link href="/dashboard/admin/avantages/offres">
+              <Button size="lg" variant="outline">
+                <Eye className="h-4 w-4 mr-2" />
+                Voir toutes les offres
+              </Button>
+            </Link>
             <Link href="/dashboard/admin/avantages/offres/nouvelle">
               <Button size="lg" variant="outline">
                 <Plus className="h-4 w-4 mr-2" />
@@ -231,13 +237,19 @@ export default function AdminAvantagesPage() {
                           <Link href={`/avantages?partner=${partner.id}`}>
                             <DropdownMenuItem>
                               <Eye className="h-4 w-4 mr-2" />
-                              Voir les offres
+                              Voir les offres (public)
+                            </DropdownMenuItem>
+                          </Link>
+                          <Link href={`/dashboard/admin/avantages/offres/nouvelle?partnerId=${partner.id}`}>
+                            <DropdownMenuItem>
+                              <Plus className="h-4 w-4 mr-2" />
+                              Ajouter une offre
                             </DropdownMenuItem>
                           </Link>
                           <Link href={`/dashboard/admin/avantages/${partner.id}/modifier`}>
                             <DropdownMenuItem>
                               <Edit className="h-4 w-4 mr-2" />
-                              Modifier
+                              Modifier le partenaire
                             </DropdownMenuItem>
                           </Link>
                           <DropdownMenuItem
