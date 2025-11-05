@@ -15,11 +15,21 @@ import {
   Wallet,
   Sliders,
   Users,
+  ChevronDown,
+  LayoutDashboard,
+  Image as ImageIcon,
+  Megaphone,
+  FileText,
 } from "lucide-react";
 import { LogoutButton } from "@/components/logout-button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Menu } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 
 const navigation = [
   { name: "Tableau de bord", href: "/dashboard", icon: Home },
@@ -33,16 +43,28 @@ const navigation = [
   { name: "Mon Profil", href: "/dashboard/profil", icon: User },
 ];
 
-const adminNavigation = [
-  { name: "Vue d'ensemble", href: "/dashboard/admin", icon: Home },
-  { name: "Inscriptions en attente", href: "/dashboard/admin/pending", icon: User },
-  { name: "Utilisateurs", href: "/dashboard/admin/users", icon: Users },
-  { name: "Produits", href: "/dashboard/produits", icon: ShoppingBag },
-  { name: "Équipes", href: "/dashboard/admin/equipes", icon: Calendar },
-  { name: "Avantages", href: "/dashboard/admin/avantages", icon: Gift },
-  { name: "Chèques", href: "/dashboard/admin/cheques", icon: Wallet },
-  { name: "Reçus fiscaux", href: "/dashboard/admin/receipts", icon: Gift },
-];
+const adminNavigation = {
+  general: [
+    { name: "Vue d'ensemble", href: "/dashboard/admin", icon: LayoutDashboard },
+    { name: "Inscriptions en attente", href: "/dashboard/admin/pending", icon: User },
+    { name: "Utilisateurs", href: "/dashboard/admin/users", icon: Users },
+  ],
+  boutique: [
+    { name: "Produits", href: "/dashboard/produits", icon: ShoppingBag },
+    { name: "Commandes", href: "/dashboard/admin/commandes", icon: FileText },
+  ],
+  landingPage: [
+    { name: "Partenaires", href: "/dashboard/admin/partenaires", icon: Gift },
+    { name: "Galerie Photos", href: "/dashboard/admin/galerie-landing", icon: ImageIcon },
+    { name: "Annonces", href: "/dashboard/admin/annonces-landing", icon: Megaphone },
+  ],
+  organisation: [
+    { name: "Équipes", href: "/dashboard/admin/equipes", icon: Calendar },
+    { name: "Avantages", href: "/dashboard/admin/avantages", icon: Gift },
+    { name: "Chèques", href: "/dashboard/admin/cheques", icon: Wallet },
+    { name: "Reçus fiscaux", href: "/dashboard/admin/receipts", icon: FileText },
+  ],
+};
 
 interface SidebarProps {
   className?: string;
@@ -105,25 +127,154 @@ export function Sidebar({ className }: SidebarProps) {
           <div className="px-2 mb-3 text-xs uppercase tracking-wide text-muted-foreground font-semibold">
             Administration
           </div>
-          {adminNavigation.map((item) => {
-            const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
-            return (
-              <Link key={item.name} href={item.href}>
-                <Button
-                  variant={isActive ? "secondary" : "ghost"}
-                  className={cn(
-                    "w-full justify-start h-10 px-3 transition-colors",
-                    isActive
-                      ? "bg-accent text-accent-foreground hover:bg-accent/90"
-                      : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-                  )}
-                >
-                  <item.icon className="mr-3 h-4 w-4" />
-                  {item.name}
-                </Button>
-              </Link>
-            );
-          })}
+
+          {/* Général */}
+          <Collapsible defaultOpen className="space-y-1">
+            <CollapsibleTrigger asChild>
+              <Button
+                variant="ghost"
+                className="w-full justify-between h-10 px-3 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+              >
+                <div className="flex items-center">
+                  <LayoutDashboard className="mr-3 h-4 w-4" />
+                  <span>Général</span>
+                </div>
+                <ChevronDown className="h-4 w-4 transition-transform duration-200" />
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="space-y-1 pl-6">
+              {adminNavigation.general.map((item) => {
+                const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+                return (
+                  <Link key={item.name} href={item.href}>
+                    <Button
+                      variant={isActive ? "secondary" : "ghost"}
+                      className={cn(
+                        "w-full justify-start h-9 px-3 transition-colors text-sm",
+                        isActive
+                          ? "bg-accent text-accent-foreground hover:bg-accent/90"
+                          : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                      )}
+                    >
+                      <item.icon className="mr-3 h-3.5 w-3.5" />
+                      {item.name}
+                    </Button>
+                  </Link>
+                );
+              })}
+            </CollapsibleContent>
+          </Collapsible>
+
+          {/* Boutique */}
+          <Collapsible className="space-y-1">
+            <CollapsibleTrigger asChild>
+              <Button
+                variant="ghost"
+                className="w-full justify-between h-10 px-3 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+              >
+                <div className="flex items-center">
+                  <ShoppingBag className="mr-3 h-4 w-4" />
+                  <span>Boutique</span>
+                </div>
+                <ChevronDown className="h-4 w-4 transition-transform duration-200" />
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="space-y-1 pl-6">
+              {adminNavigation.boutique.map((item) => {
+                const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+                return (
+                  <Link key={item.name} href={item.href}>
+                    <Button
+                      variant={isActive ? "secondary" : "ghost"}
+                      className={cn(
+                        "w-full justify-start h-9 px-3 transition-colors text-sm",
+                        isActive
+                          ? "bg-accent text-accent-foreground hover:bg-accent/90"
+                          : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                      )}
+                    >
+                      <item.icon className="mr-3 h-3.5 w-3.5" />
+                      {item.name}
+                    </Button>
+                  </Link>
+                );
+              })}
+            </CollapsibleContent>
+          </Collapsible>
+
+          {/* Landing Page */}
+          <Collapsible className="space-y-1">
+            <CollapsibleTrigger asChild>
+              <Button
+                variant="ghost"
+                className="w-full justify-between h-10 px-3 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+              >
+                <div className="flex items-center">
+                  <Home className="mr-3 h-4 w-4" />
+                  <span>Page d&apos;accueil</span>
+                </div>
+                <ChevronDown className="h-4 w-4 transition-transform duration-200" />
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="space-y-1 pl-6">
+              {adminNavigation.landingPage.map((item) => {
+                const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+                return (
+                  <Link key={item.name} href={item.href}>
+                    <Button
+                      variant={isActive ? "secondary" : "ghost"}
+                      className={cn(
+                        "w-full justify-start h-9 px-3 transition-colors text-sm",
+                        isActive
+                          ? "bg-accent text-accent-foreground hover:bg-accent/90"
+                          : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                      )}
+                    >
+                      <item.icon className="mr-3 h-3.5 w-3.5" />
+                      {item.name}
+                    </Button>
+                  </Link>
+                );
+              })}
+            </CollapsibleContent>
+          </Collapsible>
+
+          {/* Organisation */}
+          <Collapsible className="space-y-1">
+            <CollapsibleTrigger asChild>
+              <Button
+                variant="ghost"
+                className="w-full justify-between h-10 px-3 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+              >
+                <div className="flex items-center">
+                  <Users className="mr-3 h-4 w-4" />
+                  <span>Organisation</span>
+                </div>
+                <ChevronDown className="h-4 w-4 transition-transform duration-200" />
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="space-y-1 pl-6">
+              {adminNavigation.organisation.map((item) => {
+                const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+                return (
+                  <Link key={item.name} href={item.href}>
+                    <Button
+                      variant={isActive ? "secondary" : "ghost"}
+                      className={cn(
+                        "w-full justify-start h-9 px-3 transition-colors text-sm",
+                        isActive
+                          ? "bg-accent text-accent-foreground hover:bg-accent/90"
+                          : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                      )}
+                    >
+                      <item.icon className="mr-3 h-3.5 w-3.5" />
+                      {item.name}
+                    </Button>
+                  </Link>
+                );
+              })}
+            </CollapsibleContent>
+          </Collapsible>
         </div>
       )}
     </nav>

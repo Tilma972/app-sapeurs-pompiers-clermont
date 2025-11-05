@@ -14,6 +14,13 @@ export default async function Home({ searchParams }: { searchParams?: Promise<{ 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   const params = (await searchParams) || {};
+  
+  // Récupérer les partenaires sponsors depuis la base de données
+  const { data: partners } = await supabase
+    .from("landing_partners")
+    .select("*")
+    .order("name");
+
   return (
     <div className="min-h-screen">
       {params?.pending === '1' && (
@@ -32,7 +39,7 @@ export default async function Home({ searchParams }: { searchParams?: Promise<{ 
         <PreventionSection />
         <TestimonialsSection />
         <NewsSection />
-        <Partenaires />
+        <Partenaires partners={partners || []} />
         <ContactSection />
       </main>
     </div>

@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { partners as partenairesSource } from '@/data/partners';
 import { Handshake, Award, Star, TrendingUp, Heart } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
@@ -15,26 +14,17 @@ interface Partner {
   tier: 'platinum' | 'gold' | 'bronze';
   sector: string;
   since: number;
-  testimonial?: string;
   website?: string;
 }
 
-export function Partenaires() {
+interface PartenairesProps {
+  partners: Partner[];
+}
+
+export function Partenaires({ partners: partenaires }: PartenairesProps) {
   const [headerRef, headerInView] = useInView({ triggerOnce: true, threshold: 0.3 });
   const [statsRef, statsInView] = useInView({ triggerOnce: true, threshold: 0.3 });
   const [hoveredPartner, setHoveredPartner] = useState<number | null>(null);
-
-  // Source de vérité: partners-section.tsx (logos + URLs)
-  // Map vers le schéma local (tier/sector/since par défaut pour l'affichage)
-  const partenaires: Partner[] = partenairesSource.map((p, idx) => ({
-    id: p.id,
-    name: p.name,
-    logo: p.logo,
-    tier: idx % 3 === 0 ? 'platinum' : idx % 3 === 1 ? 'gold' : 'bronze',
-    sector: 'Local',
-    since: 2020 + (idx % 5),
-    website: p.website,
-  }));
 
   const tierColors = {
     platinum: { bg: 'bg-gradient-to-br from-slate-200 to-slate-400', border: 'border-slate-400', text: 'text-slate-700', icon: '💎' },
@@ -126,19 +116,20 @@ export function Partenaires() {
                       className="block cursor-pointer"
                       title={`Visiter le site de ${partner.name}`}
                     >
-                      <div className={`relative bg-white dark:bg-darkSurface rounded-xl p-6 shadow-md border-2 ${tier.border} min-w-[200px] transition-all hover:shadow-xl`}>
+                      <div className={`relative bg-white dark:bg-darkSurface rounded-xl p-4 shadow-md border-2 ${tier.border} min-w-[200px] h-[140px] flex items-center justify-center transition-all hover:shadow-xl`}>
                         {/* Tier badge */}
                         <div className={`absolute -top-3 -right-3 w-10 h-10 ${tier.bg} rounded-full flex items-center justify-center text-xl shadow-lg`}>
                           {tier.icon}
                         </div>
                         
-                        <Image
-                          src={partner.logo}
-                          alt={`Logo ${partner.name}`}
-                          width={140}
-                          height={70}
-                          className="h-16 w-auto mx-auto grayscale group-hover:grayscale-0 transition-all duration-300"
-                        />
+                        <div className="relative w-full h-full flex items-center justify-center">
+                          <Image
+                            src={partner.logo}
+                            alt={`Logo ${partner.name}`}
+                            fill
+                            className="object-contain p-2 grayscale group-hover:grayscale-0 transition-all duration-300"
+                          />
+                        </div>
                         
                         {/* Hover tooltip */}
                         {hoveredPartner === partner.id && (
