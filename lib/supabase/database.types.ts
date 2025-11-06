@@ -366,6 +366,47 @@ export type Database = {
         }
         Relationships: []
       }
+      gallery_comments: {
+        Row: {
+          content: string
+          created_at: string
+          deleted_at: string | null
+          id: string
+          is_flagged: boolean | null
+          photo_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          is_flagged?: boolean | null
+          photo_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          is_flagged?: boolean | null
+          photo_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gallery_comments_photo_id_fkey"
+            columns: ["photo_id"]
+            isOneToOne: false
+            referencedRelation: "gallery_photos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gallery_likes: {
         Row: {
           created_at: string
@@ -1947,6 +1988,10 @@ export type Database = {
       }
       recalculate_idea_votes_count: {
         Args: { target_idea_id: string }
+        Returns: undefined
+      }
+      recalculate_photo_comments_count: {
+        Args: { target_photo_id: string }
         Returns: undefined
       }
     }
