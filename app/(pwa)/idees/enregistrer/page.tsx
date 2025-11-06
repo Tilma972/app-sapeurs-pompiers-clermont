@@ -76,9 +76,10 @@ export default function EnregistrerIdeePage() {
     } = await supabase.auth.getUser();
     if (!user) throw new Error("Non authentifié");
 
-    // Générer un nom unique
+    // Générer un nom unique avec dossier user_id (requis par RLS)
     const timestamp = Date.now();
-    const filename = `${user.id}_${timestamp}.webm`;
+    const randomId = Math.random().toString(36).substring(2, 15);
+    const filename = `${user.id}/${timestamp}_${randomId}.webm`;
 
     const { data, error } = await supabase.storage
       .from("idea-audios")
@@ -87,7 +88,10 @@ export default function EnregistrerIdeePage() {
         upsert: false,
       });
 
-    if (error) throw error;
+    if (error) {
+      console.error("Upload error:", error);
+      throw new Error(`Erreur upload: ${error.message}`);
+    }
 
     // Récupérer l'URL publique
     const {
