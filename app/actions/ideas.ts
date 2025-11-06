@@ -161,7 +161,7 @@ export async function createIdeaAction(data: CreateIdeaInput) {
     // 3. Sanitize les données (prevent XSS)
     const sanitizedData = {
       user_id: user.id,
-      title: data.title.trim(),
+      titre: data.title.trim(), // ✅ CORRECTION: "titre" (colonne DB en français)
       description: data.description.trim(),
       categories: data.categories,
       tags: data.tags.map((t) => t.trim()),
@@ -230,7 +230,7 @@ export async function updateIdeaAction(ideaId: string, data: UpdateIdeaInput) {
       if (data.title.trim().length < 3 || data.title.length > 200) {
         throw new Error("Titre invalide (3-200 caractères)");
       }
-      updateData.title = data.title.trim();
+      updateData.titre = data.title.trim(); // ✅ CORRECTION: "titre"
     }
 
     if (data.description !== undefined) {
