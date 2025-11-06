@@ -98,8 +98,8 @@ export function PhotoCardWithLike({ photo, initialLiked }: PhotoCardWithLikeProp
           </div>
         )}
 
-        {/* Bouton like (visible au hover) */}
-        <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+        {/* Bouton like (visible au hover sur desktop, toujours visible sur mobile) */}
+        <div className="absolute bottom-2 right-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity z-10">
           <LikeButton
             photoId={photo.id}
             initialLiked={liked}
@@ -111,7 +111,14 @@ export function PhotoCardWithLike({ photo, initialLiked }: PhotoCardWithLikeProp
 
       {/* Titre et description */}
       <div className="px-2 py-2">
-        <div className="text-sm font-medium line-clamp-2">{photo.title}</div>
+        <div className="flex items-center justify-between gap-2">
+          <div className="text-sm font-medium line-clamp-2 flex-1">{photo.title}</div>
+          {/* Indicateur de likes (toujours visible) */}
+          <div className="flex items-center gap-1 text-xs text-muted-foreground shrink-0">
+            <Heart className={`w-3.5 h-3.5 ${liked ? "fill-red-500 text-red-500" : ""}`} />
+            <span>{photo.likes_count}</span>
+          </div>
+        </div>
         {photo.description && (
           <div className="mt-0.5 text-xs text-muted-foreground line-clamp-1">
             {photo.description}
