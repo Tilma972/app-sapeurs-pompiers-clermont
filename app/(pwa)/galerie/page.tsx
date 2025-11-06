@@ -1,10 +1,9 @@
 import Link from "next/link";
-import Image from "next/image";
-import { listPhotos, type GalleryCategory } from "@/lib/supabase/gallery";
+import { listPhotos, getUserLikedPhotos, type GalleryCategory } from "@/lib/supabase/gallery";
 import { PwaContainer } from "@/components/layouts/pwa/pwa-container";
-import { Badge } from "@/components/ui/badge";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
+import { PhotoCardWithLike } from "@/components/gallery/photo-card-with-like";
 
 const categories: { value: "all" | GalleryCategory; label: string }[] = [
   { value: "all", label: "Toutes" },
@@ -28,6 +27,10 @@ export default async function GaleriePwaPage({
   const { category } = await searchParams;
   const catParam = (category || "all") as "all" | GalleryCategory;
   const photos = await listPhotos({ category: catParam === "all" ? undefined : catParam, limit: 48 });
+  
+  // Récupérer les likes de l'utilisateur
+  const photoIds = photos.map((p) => p.id);
+  const likedPhotoIds = await getUserLikedPhotos(photoIds);
 
   return (
   <PwaContainer>
@@ -59,27 +62,11 @@ export default async function GaleriePwaPage({
         {/* Masonry grid */}
         <div className="columns-2 md:columns-3 gap-3 [column-fill:_balance] pb-4">
           {photos.map((p) => (
-            <Link
+            <PhotoCardWithLike
               key={p.id}
-              href={`/galerie/${p.id}`}
-              className="mb-3 block break-inside-avoid rounded-lg overflow-hidden border bg-card"
-              style={{ breakInside: "avoid" }}
-            >
-              <div className="relative w-full aspect-[4/3] bg-muted">
-                <Image src={p.thumbnail_url || p.image_url} alt={p.title} fill sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw" style={{ objectFit: "cover" }} />
-                <div className="absolute top-2 left-2">
-                  <Badge variant="outline" className="bg-background/80 backdrop-blur text-foreground">
-                    {p.category}
-                  </Badge>
-                </div>
-              </div>
-              <div className="px-2 py-2">
-                <div className="text-sm font-medium line-clamp-2">{p.title}</div>
-                {p.description && (
-                  <div className="mt-0.5 text-xs text-muted-foreground line-clamp-1">{p.description}</div>
-                )}
-              </div>
-            </Link>
+              photo={p}
+              initialLiked={likedPhotoIds.includes(p.id)}
+            />
           ))}
 
           {photos.length === 0 && (

@@ -6,7 +6,10 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "clean": "rmdir /s /q .next 2>nul || rm -rf .next"
+    "clean": "rmdir /s /q .next 2>nul || rm -rf .next",
+    "supabase": "npx supabase",
+    "db:push": "npx supabase db push --db-url $DATABASE_URL",
+    "db:types": "npx supabase gen types typescript --db-url $DATABASE_URL > lib/supabase/database.types.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.68.0",

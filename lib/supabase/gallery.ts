@@ -88,3 +88,69 @@ export async function createPhoto(input: {
   if (error) return { error: error.message };
   return { id: data.id };
 }
+
+/**
+ * Toggle like sur une photo (like si pas liké, unlike sinon)
+ */
+export async function toggleLike(photoId: string): Promise<{ liked: boolean; count: number }> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("not_authenticated");
+
+  // Vérifier si like existe déjà
+  const { data: existing } = await supabase
+    .from("gallery_likes")
+    .select("photo_id")
+    .eq("photo_id", photoId)
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (existing) {
+    // Supprimer le like (unlike)
+    const { error: deleteError } = await supabase
+      .from("gallery_likes")
+      .delete()
+      .eq("photo_id", photoId)
+      .eq("user_id", user.id);
+    
+    if (deleteError) throw deleteError;
+  } else {
+    // Ajouter le like
+    const { error: insertError } = await supabase
+      .from("gallery_likes")
+      .insert({ photo_id: photoId, user_id: user.id });
+    
+    if (insertError) throw insertError;
+  }
+
+  // Récupérer le nouveau compteur depuis la photo
+  const { data: photo } = await supabase
+    .from("gallery_photos")
+    .select("likes_count")
+    .eq("id", photoId)
+    .single();
+
+  return {
+    liked: !existing, // Si existing était présent, maintenant il est supprimé (liked=false)
+    count: photo?.likes_count || 0,
+  };
+}
+
+/**
+ * Récupérer les IDs des photos likées par l'utilisateur connecté
+ */
+export async function getUserLikedPhotos(photoIds: string[]): Promise<string[]> {
+  if (photoIds.length === 0) return [];
+  
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return [];
+
+  const { data } = await supabase
+    .from("gallery_likes")
+    .select("photo_id")
+    .eq("user_id", user.id)
+    .in("photo_id", photoIds);
+
+  return (data || []).map(like => like.photo_id);
+}
