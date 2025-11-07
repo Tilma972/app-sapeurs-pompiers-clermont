@@ -405,6 +405,27 @@ export type Database = {
             referencedRelation: "gallery_photos"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "gallery_comments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gallery_comments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_with_equipe_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gallery_comments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_with_identity"
+            referencedColumns: ["id"]
+          },
         ]
       }
       gallery_likes: {
