@@ -1,136 +1,185 @@
 /**
- * Composant LikeButton - Bouton like présentationnel avec animation Framer Motion
- * Version simplifiée : reçoit l'état via props, appelle un callback
+ * LikeButton - Bouton de like avec animations et gestion d'état optimisée
+ * Version production-ready avec React best practices 2025
  */
 
 "use client";
 
-import { Heart } from "lucide-react";
-import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { Heart, Loader2 } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import toast from "react-hot-toast";
 import { cn } from "@/lib/utils";
 
 interface LikeButtonProps {
-  liked: boolean;
-  onToggle: () => void | Promise<void>;
+  photoId: string;
+  initialLiked: boolean;
+  initialCount: number;
   variant?: "compact" | "overlay";
-  showCount?: boolean;
-  count?: number;
+  className?: string;
+  onLikeChange?: (liked: boolean, count: number) => void;
 }
 
 export function LikeButton({
-  liked,
-  onToggle,
+  photoId,
+  initialLiked,
+  initialCount,
   variant = "compact",
-  showCount = false,
-  count = 0,
+  className,
+  onLikeChange,
 }: LikeButtonProps) {
+  const [liked, setLiked] = useState(initialLiked);
+  const [count, setCount] = useState(initialCount);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [particles, setParticles] = useState<number[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleClick = async (e: React.MouseEvent) => {
+  // 🔥 AMÉLIORATION 2: Sync avec props initiales (fix sync galerie ↔ détail)
+  useEffect(() => {
+    setLiked(initialLiked);
+    setCount(initialCount);
+  }, [initialLiked, initialCount]);
+
+  // 🔥 AMÉLIORATION 1: useCallback pour éviter re-renders inutiles
+  const handleClick = useCallback(async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
 
-    if (!liked) {
+    if (isLoading) return;
+
+    const newLiked = !liked;
+    const previousLiked = liked;
+    const previousCount = count;
+
+    // Optimistic update
+    setLiked(newLiked);
+    setCount(count + (newLiked ? 1 : -1));
+
+    // Animation particules si nouveau like
+    if (newLiked && variant === "overlay") {
       setIsAnimating(true);
-      setTimeout(() => setIsAnimating(false), 600);
+      setParticles(Array.from({ length: 6 }, (_, i) => i));
+      setTimeout(() => {
+        setIsAnimating(false);
+        setParticles([]);
+      }, 600);
     }
 
-    await onToggle();
-  };
+    setIsLoading(true);
 
-  // Particules flottantes (effet Instagram)
-  const particles = Array.from({ length: 6 }, (_, i) => i);
+    try {
+      const res = await fetch("/api/gallery/like", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ photo_id: photoId }),
+      });
 
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || "Erreur lors du like");
+      }
+
+      const { liked: serverLiked, count: serverCount } = await res.json();
+
+      // Sync avec serveur
+      setLiked(serverLiked);
+      setCount(serverCount);
+
+      // Notifier le parent du changement
+      onLikeChange?.(serverLiked, serverCount);
+
+    } catch (error) {
+      // 🔥 AMÉLIORATION 3: Rollback complet en cas d'erreur
+      setLiked(previousLiked);
+      setCount(previousCount);
+      setIsAnimating(false);
+      setParticles([]);
+
+      const message = error instanceof Error ? error.message : "Erreur lors du like";
+      toast.error(message);
+
+      // Notifier le parent du rollback
+      onLikeChange?.(previousLiked, previousCount);
+
+    } finally {
+      setIsLoading(false);
+    }
+  }, [isLoading, liked, count, photoId, variant, onLikeChange]);
+
+  // Variant overlay (bouton flottant sur la photo avec particules)
   if (variant === "overlay") {
     return (
-      <div className="relative inline-block">
-        <motion.button
+      <div className={cn("relative inline-block", className)}>
+        <button
           onClick={handleClick}
-          whileTap={{ scale: 0.9 }}
+          disabled={isLoading}
           className={cn(
-            "p-2 rounded-full",
-            "backdrop-blur-md transition-colors duration-200",
-            "shadow-lg",
-            liked 
-              ? "bg-red-500/90 text-white" 
-              : "bg-white/90 text-gray-700 hover:bg-white"
+            "flex items-center gap-1.5 px-2.5 py-1.5 rounded-full",
+            "backdrop-blur-sm transition-all duration-200",
+            "shadow-lg disabled:opacity-50",
+            liked
+              ? "bg-red-500/90 text-white scale-105"
+              : "bg-white/90 text-gray-700 hover:bg-white hover:scale-105"
           )}
-          aria-label={liked ? "Unlike" : "Like"}
         >
-          <motion.div
-            animate={{ scale: isAnimating ? [1, 1.3, 1] : 1 }}
-            transition={{ duration: 0.3 }}
-          >
-            <Heart 
+          {/* 🔥 AMÉLIORATION 5: Indicateur de chargement visuel */}
+          {isLoading ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <Heart
               className={cn(
-                "w-5 h-5 transition-all duration-200",
-                liked && "fill-current"
+                "w-4 h-4 transition-all duration-200",
+                liked && "fill-current",
+                isAnimating && "scale-125"
               )}
             />
-          </motion.div>
-        </motion.button>
+          )}
+          <span className="text-xs font-semibold">{count}</span>
+        </button>
 
-        {/* Particules animées avec Framer Motion */}
-        <AnimatePresence>
-          {isAnimating && particles.map((i) => (
-            <motion.div
-              key={i}
-              className="absolute w-1.5 h-1.5 bg-red-500 rounded-full pointer-events-none"
-              initial={{ 
-                x: 0, 
-                y: 0, 
-                opacity: 1, 
-                scale: 0 
-              }}
-              animate={{
-                x: Math.cos((i * 60) * Math.PI / 180) * 30,
-                y: Math.sin((i * 60) * Math.PI / 180) * 30,
-                opacity: 0,
-                scale: 1.5
-              }}
-              exit={{ opacity: 0 }}
-              transition={{ 
-                duration: 0.6,
-                ease: "easeOut",
-                delay: i * 0.05
-              }}
-              style={{
-                left: '50%',
-                top: '50%',
-              }}
-            />
-          ))}
-        </AnimatePresence>
+        {/* Particules animées (style Instagram) */}
+        {particles.map((i) => (
+          <span
+            key={i}
+            className="absolute w-1.5 h-1.5 bg-red-500 rounded-full animate-ping pointer-events-none"
+            style={{
+              left: "50%",
+              top: "50%",
+              transform: `rotate(${i * 60}deg) translateY(-24px)`,
+              animationDelay: `${i * 50}ms`,
+              animationDuration: "600ms",
+              willChange: "transform, opacity",
+            }}
+          />
+        ))}
       </div>
     );
   }
 
-  // Variant compact
+  // Variant compact (pour page détail)
   return (
-    <motion.button
+    <button
       onClick={handleClick}
-      whileTap={{ scale: 0.95 }}
+      disabled={isLoading}
       className={cn(
-        "flex items-center gap-1 px-2 py-1 rounded-lg",
-        "border transition-all duration-200",
+        "flex items-center gap-1.5 px-3 py-1.5 rounded-lg",
+        "border transition-all duration-200 disabled:opacity-50",
         liked
           ? "bg-red-50 border-red-500 text-red-600"
-          : "bg-background border-border hover:border-red-300"
+          : "bg-background border-border hover:border-red-300",
+        className
       )}
     >
-      <motion.div
-        animate={{ scale: isAnimating ? [1, 1.2, 1] : 1 }}
-        transition={{ duration: 0.3 }}
-      >
-        <Heart 
+      {isLoading ? (
+        <Loader2 className="w-4 h-4 animate-spin" />
+      ) : (
+        <Heart
           className={cn(
             "w-4 h-4 transition-transform duration-200",
-            liked && "fill-current"
+            liked && "fill-current scale-110"
           )}
         />
-      </motion.div>
-      {showCount && <span className="text-xs font-medium">{count}</span>}
-    </motion.button>
+      )}
+      <span className="text-sm font-medium">{count}</span>
+    </button>
   );
 }
