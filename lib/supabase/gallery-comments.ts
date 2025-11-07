@@ -3,7 +3,7 @@
  * Fonctions CRUD pour les commentaires sur les photos
  */
 
-import { createClient } from "@/lib/supabase/client";
+import { createClient } from "@/lib/supabase/server";
 
 export interface GalleryCommentWithAuthor {
   id: string;
@@ -25,7 +25,7 @@ export interface GalleryCommentWithAuthor {
  * Récupère tous les commentaires d'une photo
  */
 export async function getPhotoComments(photoId: string): Promise<GalleryCommentWithAuthor[]> {
-  const supabase = createClient();
+  const supabase = await createClient();
   
   const { data, error } = await supabase
     .from('gallery_comments')
@@ -53,7 +53,7 @@ export async function getPhotoComments(photoId: string): Promise<GalleryCommentW
  * Crée un nouveau commentaire
  */
 export async function createPhotoComment(photoId: string, content: string): Promise<GalleryCommentWithAuthor> {
-  const supabase = createClient();
+  const supabase = await createClient();
   
   const { data: { user } } = await supabase.auth.getUser();
   
@@ -96,10 +96,10 @@ export async function createPhotoComment(photoId: string, content: string): Prom
 }
 
 /**
- * Met à jour un commentaire
+ * Met à jour un commentaire existant
  */
 export async function updatePhotoComment(commentId: string, content: string): Promise<GalleryCommentWithAuthor> {
-  const supabase = createClient();
+  const supabase = await createClient();
   
   const { data: { user } } = await supabase.auth.getUser();
   
@@ -156,7 +156,7 @@ export async function updatePhotoComment(commentId: string, content: string): Pr
  * Soft delete d'un commentaire
  */
 export async function deletePhotoComment(commentId: string): Promise<{ success: boolean }> {
-  const supabase = createClient();
+  const supabase = await createClient();
   
   const { data: { user } } = await supabase.auth.getUser();
   
@@ -194,7 +194,7 @@ export async function deletePhotoComment(commentId: string): Promise<{ success: 
  * Signale un commentaire (flag)
  */
 export async function flagPhotoComment(commentId: string): Promise<{ success: boolean }> {
-  const supabase = createClient();
+  const supabase = await createClient();
   
   const { data: { user } } = await supabase.auth.getUser();
   
@@ -219,7 +219,7 @@ export async function flagPhotoComment(commentId: string): Promise<{ success: bo
  * Récupère tous les commentaires d'un utilisateur
  */
 export async function getUserPhotoComments(userId?: string) {
-  const supabase = createClient();
+  const supabase = await createClient();
   
   let targetUserId = userId;
   
@@ -254,10 +254,10 @@ export async function getUserPhotoComments(userId?: string) {
 }
 
 /**
- * Récupère les commentaires récents (pour modération admin)
+ * Récupère les commentaires récents (pour admin dashboard)
  */
 export async function getRecentPhotoComments(limit: number = 20) {
-  const supabase = createClient();
+  const supabase = await createClient();
   
   const { data, error } = await supabase
     .from('gallery_comments')
@@ -286,10 +286,10 @@ export async function getRecentPhotoComments(limit: number = 20) {
 }
 
 /**
- * Récupère les commentaires signalés (pour modération admin)
+ * Récupère tous les commentaires flaggés (pour modération)
  */
 export async function getFlaggedPhotoComments() {
-  const supabase = createClient();
+  const supabase = await createClient();
   
   const { data, error } = await supabase
     .from('gallery_comments')
@@ -318,10 +318,10 @@ export async function getFlaggedPhotoComments() {
 }
 
 /**
- * Retire le flag d'un commentaire (admin)
+ * Retire le flag d'un commentaire
  */
 export async function unflagPhotoComment(commentId: string): Promise<{ success: boolean }> {
-  const supabase = createClient();
+  const supabase = await createClient();
   
   const { error } = await supabase
     .from('gallery_comments')
