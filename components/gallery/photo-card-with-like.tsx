@@ -7,6 +7,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { MessageCircle } from "lucide-react";
 import { PhotoWithInteractions } from "./photo-with-interactions";
 import { Badge } from "@/components/ui/badge";
 
@@ -19,6 +20,7 @@ interface PhotoCardWithLikeProps {
     description: string | null;
     category: string;
     likes_count: number;
+    comments_count: number;
   };
   initialLiked: boolean;
 }
@@ -58,7 +60,14 @@ export function PhotoCardWithLike({ photo, initialLiked }: PhotoCardWithLikeProp
 
       {/* Titre et description */}
       <div className="px-2 py-2">
-        <div className="text-sm font-medium line-clamp-2">{photo.title}</div>
+        <div className="flex items-center justify-between gap-2">
+          <div className="text-sm font-medium line-clamp-2 flex-1">{photo.title}</div>
+          {/* Compteur de commentaires */}
+          <div className="flex items-center gap-1 text-xs text-muted-foreground shrink-0">
+            <MessageCircle className="w-3.5 h-3.5" />
+            <span>{photo.comments_count}</span>
+          </div>
+        </div>
         {photo.description && (
           <div className="mt-0.5 text-xs text-muted-foreground line-clamp-1">
             {photo.description}
