@@ -35,13 +35,11 @@ export type Profile = {
  */
 export function getDisplayName(profile: Profile | null | undefined): string {
   if (!profile) return 'Utilisateur';
-  
-  return profile.display_name 
-    || profile.full_name 
-    || (profile.first_name && profile.last_name 
-        ? `${profile.first_name} ${profile.last_name}`.trim()
-        : '')
-    || 'Utilisateur';
+  // Priorité : prénom + nom > full_name (legacy) > email
+  if (profile.first_name && profile.last_name) {
+    return `${profile.first_name} ${profile.last_name}`;
+  }
+  return profile.full_name || 'Utilisateur';
 }
 
 /**

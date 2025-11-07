@@ -30,42 +30,13 @@ export async function completeIdentity(data: CompleteIdentityData) {
       last_name: data.last_name.trim(),
       display_name: data.display_name?.trim() || null,
       // Note: identity_verified sera mis à true par un admin
-    })
-    .eq("id", user.id)
+    // FICHIER SUPPRIMÉ : remplacé par update-profile.ts
 
-  if (error) {
-    console.error("Error completing identity:", error)
-    return { error: "Erreur lors de l'enregistrement de l'identité" }
-  }
 
-  // Revalider les pages concernées
-  revalidatePath("/dashboard/profil")
-  revalidatePath("/(pwa)/profil", "page")
-  revalidatePath("/(pwa)/avantages", "page")
-
-  return { success: true }
-}
-
-/**
- * Admin: Vérifier l'identité d'un utilisateur
- */
-export async function verifyUserIdentity(userId: string) {
-  const supabase = await createClient()
-  
-  const { data: { user } } = await supabase.auth.getUser()
   if (!user) {
-    return { error: "Non authentifié" }
-  }
-
-  // Vérifier que l'utilisateur est admin
   const { data: adminProfile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single()
 
-  if (!adminProfile || adminProfile.role !== "admin") {
-    return { error: "Non autorisé" }
+
   }
 
   // Vérifier l'identité
