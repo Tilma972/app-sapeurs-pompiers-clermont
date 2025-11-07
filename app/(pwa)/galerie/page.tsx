@@ -34,7 +34,7 @@ export default async function GaleriePwaPage({
 
   return (
   <PwaContainer>
-      <div className="space-y-4">
+      <div className="space-y-6 pb-20">
         {/* Intro */}
         <section className="space-y-1 mt-1 sm:mt-2">
           <p className="text-sm text-muted-foreground">Partage et souvenirs de la caserne.</p>
