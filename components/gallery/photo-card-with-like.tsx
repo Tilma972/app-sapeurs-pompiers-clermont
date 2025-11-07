@@ -7,10 +7,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Heart } from "lucide-react";
 import { PhotoWithInteractions } from "./photo-with-interactions";
 import { Badge } from "@/components/ui/badge";
-import { useState, useEffect, useCallback } from "react";
 
 interface PhotoCardWithLikeProps {
   photo: {
@@ -26,22 +24,6 @@ interface PhotoCardWithLikeProps {
 }
 
 export function PhotoCardWithLike({ photo, initialLiked }: PhotoCardWithLikeProps) {
-  // State local pour sync avec PhotoWithInteractions
-  const [liked, setLiked] = useState(initialLiked);
-  const [count, setCount] = useState(photo.likes_count);
-
-  // Sync avec props initiales
-  useEffect(() => {
-    setLiked(initialLiked);
-    setCount(photo.likes_count);
-  }, [initialLiked, photo.likes_count]);
-
-  // Callback pour recevoir les changements de PhotoWithInteractions
-  const handleLikeChange = useCallback((newLiked: boolean, newCount: number) => {
-    setLiked(newLiked);
-    setCount(newCount);
-  }, []);
-
   return (
     <Link
       href={`/galerie/${photo.id}`}
@@ -50,13 +32,12 @@ export function PhotoCardWithLike({ photo, initialLiked }: PhotoCardWithLikeProp
       {/* Image avec interactions (double-tap + like button) */}
       <PhotoWithInteractions
         photoId={photo.id}
-        initialLiked={liked}
-        initialCount={count}
+        initialLiked={initialLiked}
+        initialCount={photo.likes_count}
         enableDoubleTap={true}
         showLikeButton={true}
         likeButtonVariant="overlay"
         className="relative w-full aspect-[4/3] bg-muted cursor-pointer"
-        onLikeChange={handleLikeChange}
       >
         <Image
           src={photo.thumbnail_url || photo.image_url}
@@ -77,14 +58,7 @@ export function PhotoCardWithLike({ photo, initialLiked }: PhotoCardWithLikeProp
 
       {/* Titre et description */}
       <div className="px-2 py-2">
-        <div className="flex items-center justify-between gap-2">
-          <div className="text-sm font-medium line-clamp-2 flex-1">{photo.title}</div>
-          {/* Indicateur de likes (toujours visible) */}
-          <div className="flex items-center gap-1 text-xs text-muted-foreground shrink-0">
-            <Heart className={`w-3.5 h-3.5 ${liked ? "fill-red-500 text-red-500" : ""}`} />
-            <span>{count}</span>
-          </div>
-        </div>
+        <div className="text-sm font-medium line-clamp-2">{photo.title}</div>
         {photo.description && (
           <div className="mt-0.5 text-xs text-muted-foreground line-clamp-1">
             {photo.description}
