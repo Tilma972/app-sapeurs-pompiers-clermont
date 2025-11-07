@@ -39,12 +39,12 @@ export function PwaAppBar({ title, user }: PwaAppBarProps) {
     if (pathname?.startsWith("/calendriers")) return "Calendriers"
     if (pathname?.startsWith("/annonces")) return "Petites Annonces"
     if (pathname?.startsWith("/idees")) return "Boîte à Idées"
-    if (pathname?.startsWith("/galerie")) return "Galerie SP"
+    if (pathname?.startsWith("/galerie")) return "Galerie Photos"
     if (pathname?.startsWith("/dashboard/associative")) return "Événements"
     if (pathname?.startsWith("/mon-compte")) return "Mon Compte"
     if (pathname?.startsWith("/profil")) return "Mon Profil"
     if (pathname?.startsWith("/dashboard/parametres")) return "Paramètres"
-    if (pathname?.startsWith("/dashboard/partenaires")) return "Partenaires"
+    if (pathname?.startsWith("/partenaires")) return "Partenaires"
     return "Amicale SP"
   }
 

@@ -4,6 +4,7 @@ import { PwaContainer } from "@/components/layouts/pwa/pwa-container";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { PhotoCardWithLike } from "@/components/gallery/photo-card-with-like";
+import { ImageIcon } from "lucide-react";
 
 const categories: { value: "all" | GalleryCategory; label: string }[] = [
   { value: "all", label: "Toutes" },
@@ -35,10 +36,16 @@ export default async function GaleriePwaPage({
   return (
   <PwaContainer>
       <div className="space-y-6 pb-20">
-        {/* Intro */}
-        <section className="space-y-1 mt-1 sm:mt-2">
-          <p className="text-sm text-muted-foreground">Partage et souvenirs de la caserne.</p>
-        </section>
+        {/* Header */}
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <ImageIcon className="h-6 w-6 text-primary" />
+            <h1 className="text-2xl font-bold">Galerie Photos</h1>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Partage et souvenirs de la caserne
+          </p>
+        </div>
 
         {/* Filtres */}
         <div className="flex gap-2 overflow-x-auto pb-1">

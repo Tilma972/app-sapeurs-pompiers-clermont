@@ -49,7 +49,7 @@ export function FeatureCardsGrid(props: {
       ],
     },
     {
-      title: "Galerie SP",
+      title: "Galerie Photos",
       description: "Partagez les moments forts du centre",
       iconKey: "camera",
       href: "/galerie",
