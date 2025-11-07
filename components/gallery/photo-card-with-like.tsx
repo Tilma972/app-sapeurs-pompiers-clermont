@@ -10,7 +10,7 @@ import Link from "next/link";
 import { Heart } from "lucide-react";
 import { PhotoWithInteractions } from "./photo-with-interactions";
 import { Badge } from "@/components/ui/badge";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 interface PhotoCardWithLikeProps {
   photo: {
@@ -36,6 +36,12 @@ export function PhotoCardWithLike({ photo, initialLiked }: PhotoCardWithLikeProp
     setCount(photo.likes_count);
   }, [initialLiked, photo.likes_count]);
 
+  // Callback pour recevoir les changements de PhotoWithInteractions
+  const handleLikeChange = useCallback((newLiked: boolean, newCount: number) => {
+    setLiked(newLiked);
+    setCount(newCount);
+  }, []);
+
   return (
     <Link
       href={`/galerie/${photo.id}`}
@@ -50,6 +56,7 @@ export function PhotoCardWithLike({ photo, initialLiked }: PhotoCardWithLikeProp
         showLikeButton={true}
         likeButtonVariant="overlay"
         className="relative w-full aspect-[4/3] bg-muted cursor-pointer"
+        onLikeChange={handleLikeChange}
       >
         <Image
           src={photo.thumbnail_url || photo.image_url}

@@ -5,7 +5,7 @@ import { PwaContainer } from "@/components/layouts/pwa/pwa-container";
 import Link from "next/link";
 import Image from "next/image";
 import ReportButton from "@/components/gallery/report-button";
-import { LikeButton } from "@/components/gallery/like-button";
+import { Heart } from "lucide-react";
 import { CommentSection } from "@/components/idees/comment-section";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
@@ -22,16 +22,6 @@ export default async function FocusedPhotoDetail({ params }: { params: Promise<{
   
   // Récupérer les commentaires
   const comments = await getPhotoComments(id);
-  
-  // Vérifier si l'utilisateur a liké
-  const { data: likeData } = await supabase
-    .from("gallery_likes")
-    .select("photo_id")
-    .eq("photo_id", id)
-    .eq("user_id", user.id)
-    .maybeSingle();
-  
-  const initialLiked = !!likeData;
   
   // Vérifier si admin
   const { data: profile } = await supabase
@@ -68,14 +58,10 @@ export default async function FocusedPhotoDetail({ params }: { params: Promise<{
               <ReportButton photoId={photo.id} />
             </div>
             
-            {/* Bouton Like */}
-            <div className="mt-3">
-              <LikeButton
-                photoId={photo.id}
-                initialLiked={initialLiked}
-                initialCount={photo.likes_count}
-                variant="compact"
-              />
+            {/* Affichage du nombre de likes (lecture seule) */}
+            <div className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
+              <Heart className="w-4 h-4" />
+              <span>{photo.likes_count} {photo.likes_count > 1 ? 'likes' : 'like'}</span>
             </div>
           </div>
           

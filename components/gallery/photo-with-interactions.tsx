@@ -20,6 +20,7 @@ interface PhotoWithInteractionsProps {
   showLikeButton?: boolean;
   likeButtonVariant?: "compact" | "overlay";
   className?: string;
+  onLikeChange?: (liked: boolean, count: number) => void;
 }
 
 export function PhotoWithInteractions({
@@ -31,6 +32,7 @@ export function PhotoWithInteractions({
   showLikeButton = true,
   likeButtonVariant = "overlay",
   className = "",
+  onLikeChange,
 }: PhotoWithInteractionsProps) {
   const [showBigHeart, setShowBigHeart] = useState(false);
   const [lastTap, setLastTap] = useState(0);
@@ -55,7 +57,9 @@ export function PhotoWithInteractions({
   const handleLikeChange = useCallback((newLiked: boolean, newCount: number) => {
     setLiked(newLiked);
     setCount(newCount);
-  }, []);
+    // Notifier le parent (PhotoCardWithLike)
+    onLikeChange?.(newLiked, newCount);
+  }, [onLikeChange]);
 
   // 🔥 AMÉLIORATION 1: useCallback pour handleDoubleTap
   const handleDoubleTap = useCallback((e: React.MouseEvent) => {
@@ -98,6 +102,8 @@ export function PhotoWithInteractions({
           // Sync avec serveur
           setLiked(serverLiked);
           setCount(serverCount);
+          // Notifier le parent
+          onLikeChange?.(serverLiked, serverCount);
         })
         .catch((error) => {
           // 🔥 AMÉLIORATION 3: Rollback complet
@@ -110,7 +116,7 @@ export function PhotoWithInteractions({
     }
 
     setLastTap(now);
-  }, [enableDoubleTap, liked, count, lastTap, photoId]);
+  }, [enableDoubleTap, liked, count, lastTap, photoId, onLikeChange]);
 
   return (
     <div className={`relative ${className}`} onClick={handleDoubleTap}>
