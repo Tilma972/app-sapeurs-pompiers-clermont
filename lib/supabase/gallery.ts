@@ -105,6 +105,8 @@ export async function toggleLike(photoId: string): Promise<{ liked: boolean; cou
     .eq("user_id", user.id)
     .maybeSingle();
 
+  let newLikedState: boolean;
+
   if (existing) {
     // Supprimer le like (unlike)
     const { error: deleteError } = await supabase
@@ -114,6 +116,7 @@ export async function toggleLike(photoId: string): Promise<{ liked: boolean; cou
       .eq("user_id", user.id);
     
     if (deleteError) throw deleteError;
+    newLikedState = false;
   } else {
     // Ajouter le like
     const { error: insertError } = await supabase
@@ -121,18 +124,18 @@ export async function toggleLike(photoId: string): Promise<{ liked: boolean; cou
       .insert({ photo_id: photoId, user_id: user.id });
     
     if (insertError) throw insertError;
+    newLikedState = true;
   }
 
-  // Récupérer le nouveau compteur depuis la photo
-  const { data: photo } = await supabase
-    .from("gallery_photos")
-    .select("likes_count")
-    .eq("id", photoId)
-    .single();
+  // Compter directement les likes au lieu de lire likes_count (évite problème de timing avec trigger)
+  const { count } = await supabase
+    .from("gallery_likes")
+    .select("*", { count: "exact", head: true })
+    .eq("photo_id", photoId);
 
   return {
-    liked: !existing, // Si existing était présent, maintenant il est supprimé (liked=false)
-    count: photo?.likes_count || 0,
+    liked: newLikedState,
+    count: count || 0,
   };
 }
 
