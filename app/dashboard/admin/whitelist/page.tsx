@@ -188,7 +188,7 @@ export default function WhitelistPage() {
               </div>
               <div className="flex items-center gap-2">
                 <Badge variant={entry.used ? "secondary" : "default"}>
-                  {entry.used ? "Inscrit" : "En attente"}
+                  {entry.used ? "Inscrit" : "Autorisé"}
                 </Badge>
                 <Button
                   variant="ghost"
