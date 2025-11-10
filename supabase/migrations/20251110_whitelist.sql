@@ -49,17 +49,17 @@ declare
   entry record;
 begin
   -- Chercher une entrée non utilisée (email prioritaire)
-  select * into entry from whitelist
+  select * into entry from whitelist w
     where (
-      (email is not null and lower(email) = lower(p_email))
+      (w.email is not null and lower(w.email) = lower(p_email))
       or (
-        email is null
-        and lower(first_name) = lower(p_first_name)
-        and lower(last_name) = lower(p_last_name)
-        and used = false
+        w.email is null
+        and lower(w.first_name) = lower(p_first_name)
+        and lower(w.last_name) = lower(p_last_name)
+        and w.used = false
       )
     )
-    order by (email is not null) desc, added_at asc
+    order by (w.email is not null) desc, w.added_at asc
     limit 1
     for update;
 
@@ -69,8 +69,8 @@ begin
 
   -- Marquer comme utilisée et mettre à jour l'email si besoin
   update whitelist
-    set used = true, used_at = now(), email = coalesce(email, p_email)
-    where id = entry.id;
+    set used = true, used_at = now(), email = coalesce(whitelist.email, p_email)
+    where whitelist.id = entry.id;
 
   -- Log audit
   insert into whitelist_audit(action, whitelist_id, performed_by, details)
