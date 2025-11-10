@@ -40,11 +40,18 @@ export function SignUpForm({
     // Appel logique transactionnelle
     try {
       const { signUpAction } = await import("@/app/auth/sign-up/signUpAction");
+      
+      // Extraction robuste du prénom/nom depuis l'email
+      const emailLocalPart = email.split("@")[0];
+      const nameParts = emailLocalPart.split(".");
+      const firstName = nameParts[0] || emailLocalPart;
+      const lastName = nameParts[1] || "Utilisateur";
+      
       const result = await signUpAction({
         email,
         password,
-        firstName: email.split("@")[0].split(".")[0] || "",
-        lastName: email.split("@")[0].split(".")[1] || "",
+        firstName,
+        lastName,
       });
       if (result.error) {
         setError(result.error);
