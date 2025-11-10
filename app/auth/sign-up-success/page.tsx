@@ -7,22 +7,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { useEffect } from 'react';
-import { toast } from 'react-hot-toast';
 
 export default function Page() {
-  useEffect(() => {
-    // Tente d'informer les admins qu'une approbation est requise
-    fetch('/api/auth/notify-pending', { method: 'POST' })
-      .then(async (res) => {
-        if (!res.ok) return;
-        const json = await res.json().catch(() => null)
-        if (json?.notified) {
-          toast.success('Votre demande a été transmise aux administrateurs');
-        }
-      })
-      .catch(() => {})
-  }, [])
   return (
     <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
       <div className="w-full max-w-sm">
