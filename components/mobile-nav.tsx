@@ -79,7 +79,6 @@ export function MobileNav() {
             <div className="px-2 text-xs uppercase tracking-wide text-muted-foreground">Administration</div>
             {[
               { name: "Vue d'ensemble", href: "/dashboard/admin", icon: Home },
-              { name: "Inscriptions en attente", href: "/dashboard/admin/pending", icon: User },
               { name: "Liste blanche", href: "/dashboard/admin/whitelist", icon: UserCheck },
               { name: "Utilisateurs", href: "/dashboard/admin/users", icon: Users },
               { name: "Produits", href: "/dashboard/produits", icon: ShoppingBag },

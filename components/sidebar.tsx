@@ -47,7 +47,6 @@ const navigation = [
 const adminNavigation = {
   general: [
     { name: "Vue d'ensemble", href: "/dashboard/admin", icon: LayoutDashboard },
-    { name: "Inscriptions en attente", href: "/dashboard/admin/pending", icon: User },
     { name: "Liste blanche", href: "/dashboard/admin/whitelist", icon: UserCheck },
     { name: "Utilisateurs", href: "/dashboard/admin/users", icon: Users },
   ],

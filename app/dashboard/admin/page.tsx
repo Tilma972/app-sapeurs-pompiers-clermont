@@ -4,7 +4,7 @@ import { AdminPage, AdminContent, AdminSection } from "@/components/admin/admin-
 import { AdminStatCard } from "@/components/admin/admin-stat-card"
 import { getGlobalStats } from "@/lib/supabase/tournee"
 import Link from "next/link"
-import { AlertTriangle, Users, UsersRound, Layers3, Calendar, Euro, Receipt, FileWarning, ChevronRight } from "lucide-react"
+import { UsersRound, Layers3, Calendar, Euro, Receipt, FileWarning, ChevronRight } from "lucide-react"
 import { formatNumber, formatCurrency } from "@/lib/formatters"
 
 export const dynamic = 'force-dynamic'
@@ -22,8 +22,7 @@ export default async function AdminDashboardPage() {
   if (!me || !['admin','tresorier'].includes(me.role)) redirect('/dashboard')
 
   // Parallel queries
-  const [pendingProfiles, activeProfiles, activeTeams, global, chequesPending, receiptsToSend] = await Promise.all([
-    supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('is_active', false),
+  const [activeProfiles, activeTeams, global, chequesPending, receiptsToSend] = await Promise.all([
     supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('is_active', true),
     supabase.from('equipes').select('*', { count: 'exact', head: true }).eq('status', 'active'),
     getGlobalStats(),
@@ -36,7 +35,6 @@ export default async function AdminDashboardPage() {
   ])
 
   const stats = [
-    { title: 'Inscriptions en attente', value: pendingProfiles.count || 0, icon: <Users className="h-4 w-4" /> },
     { title: 'Utilisateurs actifs', value: activeProfiles.count || 0, icon: <UsersRound className="h-4 w-4" /> },
     { title: 'Équipes actives', value: activeTeams.count || 0, icon: <Layers3 className="h-4 w-4" /> },
     { title: 'Calendriers vendus', value: formatNumber(global.total_calendriers_distribues), icon: <Calendar className="h-4 w-4" /> },
@@ -47,7 +45,6 @@ export default async function AdminDashboardPage() {
   ]
 
   const alerts: Array<{ key: string; label: string; href: string; show: boolean; icon: React.ReactNode }> = [
-    { key: 'pending', label: `${pendingProfiles.count || 0} inscription(s) en attente`, href: '/dashboard/admin/pending', show: (pendingProfiles.count || 0) > 0, icon: <AlertTriangle className="h-4 w-4 text-amber-500" /> },
     { key: 'cheques', label: `${chequesPending.count || 0} chèque(s) à traiter`, href: '/dashboard/admin/cheques', show: (chequesPending.count || 0) > 0, icon: <FileWarning className="h-4 w-4 text-amber-500" /> },
     { key: 'receipts', label: `${receiptsToSend.count || 0} reçu(s) à envoyer`, href: '/dashboard/admin/receipts', show: (receiptsToSend.count || 0) > 0, icon: <Receipt className="h-4 w-4 text-amber-500" /> },
   ]
