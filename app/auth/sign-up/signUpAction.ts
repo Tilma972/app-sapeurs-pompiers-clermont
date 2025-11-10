@@ -13,22 +13,26 @@ export async function signUpAction({ email, password, firstName, lastName }: {
   const supabase = createClient()
 
   // Appel fonction SQL transactionnelle
-  const { data: whitelistEntry, error: whitelistError } = await supabase
+  const { data: whitelistData, error: whitelistError } = await supabase
     .rpc('claim_whitelist_entry', {
       p_first_name: firstName,
       p_last_name: lastName,
       p_email: email
     })
-    .single()
 
   if (whitelistError) {
-    if (whitelistError.message && whitelistError.message.includes('not_whitelisted')) {
-      return {
-        error: "Votre inscription n'est pas autorisée. Contactez l'administrateur pour être ajouté à la liste."
-      }
-    }
-    return { error: "Erreur lors de la vérification" }
+    console.error('Whitelist claim error:', whitelistError)
+    return { error: "Erreur lors de la vérification de la whitelist" }
   }
+
+  // Vérifier si une entrée a été trouvée
+  if (!whitelistData || whitelistData.length === 0) {
+    return {
+      error: "Votre inscription n'est pas autorisée. Contactez l'administrateur pour être ajouté à la liste."
+    }
+  }
+
+  const whitelistEntry = whitelistData[0]
 
   // Créer compte auth
   const { error: authError } = await supabase.auth.signUp({
@@ -45,12 +49,11 @@ export async function signUpAction({ email, password, firstName, lastName }: {
 
   if (authError) {
     // Rollback whitelist si signup échoue
-    const entry = whitelistEntry as { id: string }
-    if (entry && entry.id) {
+    if (whitelistEntry && whitelistEntry.id) {
       await supabase
         .from('whitelist')
         .update({ used: false, used_at: null })
-        .eq('id', entry.id)
+        .eq('id', whitelistEntry.id)
     }
     return { error: authError.message }
   }
