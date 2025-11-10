@@ -48,13 +48,32 @@ export async function POST(request: Request) {
     .select()
     .single()
 
-  // Log audit
-  if (!error && data) {
+  // Gestion erreur unique constraint (doublon)
+  if (error) {
+    const errObj = error as { code?: string; message?: string }
+    const pgCode = errObj.code
+    if (pgCode === '23505') {
+      return NextResponse.json({
+        error: 'Cette personne existe déjà dans la liste blanche'
+      }, { status: 409 })
+    }
+    return NextResponse.json({ error: errObj.message || 'Erreur inconnue' }, { status: 500 })
+  }
+
+  // Log audit enrichi
+  if (data) {
     await supabase.from('whitelist_audit').insert({
       action: 'add',
       whitelist_id: data.id,
       performed_by: user.id,
-      details: { ...validated }
+      details: {
+        first_name: validated.first_name,
+        last_name: validated.last_name,
+        email: validated.email || null,
+        notes: validated.notes || null,
+        timestamp: new Date().toISOString(),
+        ip: request.headers.get('x-forwarded-for') || 'unknown'
+      }
     })
   }
 

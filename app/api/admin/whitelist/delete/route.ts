@@ -32,18 +32,28 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Non autorisé' }, { status: 403 })
   }
 
-  // Vérifier que l'entrée n'est pas déjà utilisée
+  // Récupérer l'entrée complète
   const { data: entry } = await supabase
     .from('whitelist')
-    .select('used')
+    .select('*')
     .eq('id', validated.id)
     .single()
 
-  if (entry?.used) {
+  if (!entry) {
     return NextResponse.json(
-      { error: 'Impossible de supprimer une entrée déjà utilisée' },
-      { status: 400 }
+      { error: 'Entrée introuvable' },
+      { status: 404 }
     )
+  }
+
+  if (entry.used) {
+    return NextResponse.json({
+      error: 'Impossible de supprimer une entrée déjà utilisée',
+      entry: {
+        name: `${entry.first_name} ${entry.last_name}`,
+        used_at: entry.used_at
+      }
+    }, { status: 400 })
   }
 
   // Supprimer
@@ -52,13 +62,18 @@ export async function POST(request: Request) {
     .delete()
     .eq('id', validated.id)
 
-  // Log audit
+  // Log audit enrichi
   if (!error) {
     await supabase.from('whitelist_audit').insert({
       action: 'delete',
       whitelist_id: validated.id,
       performed_by: user.id,
-      details: {}
+      details: {
+        name: `${entry.first_name} ${entry.last_name}`,
+        email: entry.email,
+        timestamp: new Date().toISOString(),
+        ip: request.headers.get('x-forwarded-for') || 'unknown'
+      }
     })
   }
 
@@ -66,5 +81,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
-  return NextResponse.json({ success: true })
+  return NextResponse.json({
+    success: true,
+    deleted: {
+      name: `${entry.first_name} ${entry.last_name}`,
+      email: entry.email
+    }
+  })
 }
