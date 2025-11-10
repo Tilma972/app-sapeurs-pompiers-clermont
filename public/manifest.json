@@ -1,6 +1,6 @@
 {
   "name": "Amicale des Sapeurs-Pompiers de Clermont-l'Hérault",
-  "short_name": "Amicale SP",
+  "short_name": "Amicale ASPCH",
   "description": "Application de gestion pour l'Amicale des Sapeurs-Pompiers - Tournées, calendriers, dons fiscaux et services aux membres",
   "start_url": "/",
   "scope": "/",
@@ -39,6 +39,12 @@
     {
       "src": "/icons/icon-152x152.png",
       "sizes": "152x152",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-180x180.png",
+      "sizes": "180x180",
       "type": "image/png",
       "purpose": "any"
     },
