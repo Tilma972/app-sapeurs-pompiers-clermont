@@ -20,6 +20,7 @@ import {
   Image as ImageIcon,
   Megaphone,
   FileText,
+  UserCheck,
 } from "lucide-react";
 import { LogoutButton } from "@/components/logout-button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -47,6 +48,7 @@ const adminNavigation = {
   general: [
     { name: "Vue d'ensemble", href: "/dashboard/admin", icon: LayoutDashboard },
     { name: "Inscriptions en attente", href: "/dashboard/admin/pending", icon: User },
+    { name: "Liste blanche", href: "/dashboard/admin/whitelist", icon: UserCheck },
     { name: "Utilisateurs", href: "/dashboard/admin/users", icon: Users },
   ],
   boutique: [

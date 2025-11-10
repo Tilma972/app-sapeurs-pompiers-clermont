@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Calendar, Camera, Gift, Home, ShoppingBag, Sliders, User, Users, Wallet, Lightbulb } from "lucide-react";
+import { Calendar, Camera, Gift, Home, ShoppingBag, Sliders, User, Users, Wallet, Lightbulb, UserCheck } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { LogoutButton } from "@/components/logout-button";
 
@@ -80,6 +80,7 @@ export function MobileNav() {
             {[
               { name: "Vue d'ensemble", href: "/dashboard/admin", icon: Home },
               { name: "Inscriptions en attente", href: "/dashboard/admin/pending", icon: User },
+              { name: "Liste blanche", href: "/dashboard/admin/whitelist", icon: UserCheck },
               { name: "Utilisateurs", href: "/dashboard/admin/users", icon: Users },
               { name: "Produits", href: "/dashboard/produits", icon: ShoppingBag },
               { name: "Équipes", href: "/dashboard/admin/equipes", icon: Calendar },
