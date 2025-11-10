@@ -30,40 +30,26 @@ export async function completeIdentity(data: CompleteIdentityData) {
       last_name: data.last_name.trim(),
       display_name: data.display_name?.trim() || null,
       // Note: identity_verified sera mis à true par un admin
-    // FICHIER SUPPRIMÉ : remplacé par update-profile.ts
-
-
-  if (!user) {
-  const { data: adminProfile } = await supabase
-
-
-  }
-
-  // Vérifier l'identité
-  const { error } = await supabase
-    .from("profiles")
-    .update({
-      identity_verified: true,
-      verification_date: new Date().toISOString(),
-      verification_method: "admin",
     })
-    .eq("id", userId)
+    .eq("id", user.id)
 
   if (error) {
-    console.error("Error verifying identity:", error)
-    return { error: "Erreur lors de la vérification" }
+    console.error("Error completing identity:", error)
+    return { error: "Erreur lors de l'enregistrement de l'identité" }
   }
 
-  revalidatePath("/dashboard/admin/pending")
-  revalidatePath("/dashboard/admin/users")
+  // Revalider les pages concernées
+  revalidatePath("/dashboard/profil")
+  revalidatePath("/(pwa)/profil", "page")
+  revalidatePath("/(pwa)/avantages", "page")
 
   return { success: true }
 }
 
 /**
- * Admin: Révoquer la vérification d'identité
+ * Admin: Vérifier l'identité d'un utilisateur
  */
-export async function revokeIdentityVerification(userId: string) {
+export async function verifyUserIdentity(userId: string) {
   const supabase = await createClient()
   
   const { data: { user } } = await supabase.auth.getUser()
@@ -82,19 +68,19 @@ export async function revokeIdentityVerification(userId: string) {
     return { error: "Non autorisé" }
   }
 
-  // Révoquer la vérification
+  // Vérifier l'identité
   const { error } = await supabase
     .from("profiles")
     .update({
-      identity_verified: false,
-      verification_date: null,
-      verification_method: null,
+      identity_verified: true,
+      verification_date: new Date().toISOString(),
+      verification_method: "admin",
     })
     .eq("id", userId)
 
   if (error) {
-    console.error("Error revoking verification:", error)
-    return { error: "Erreur lors de la révocation" }
+    console.error("Error verifying identity:", error)
+    return { error: "Erreur lors de la vérification" }
   }
 
   revalidatePath("/dashboard/admin/pending")

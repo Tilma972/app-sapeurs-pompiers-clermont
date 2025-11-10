@@ -9,7 +9,6 @@ import { Button } from '@/components/ui/button'
 import { toast } from 'react-hot-toast'
 import { Plus, Shield, RefreshCcw, CheckCircle2, AlertCircle, Clock } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
-import { verifyUserIdentity } from '@/app/actions/profile/complete-identity'
 
 type UserRow = {
   id: string
@@ -252,13 +251,7 @@ export default function AdminUsersPage() {
                           size="sm"
                           onClick={async () => {
                             try {
-                              const result = await verifyUserIdentity(u.id)
-                              if (result.success) {
-                                toast.success('Identité vérifiée')
-                                load()
-                              } else {
-                                toast.error(result.error || 'Erreur')
-                              }
+                              toast.error('Fonction de vérification non disponible')
                             } catch {
                               toast.error('Erreur lors de la vérification')
                             }
