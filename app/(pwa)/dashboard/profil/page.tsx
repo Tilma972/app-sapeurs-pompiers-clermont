@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getCurrentUserProfile } from "@/lib/supabase/profile";
 import { UnifiedProfileForm } from "@/components/profile/unified-profile-form";
+import { AvatarUpload } from "@/components/profile/avatar-upload";
+import { Profile } from "@/lib/types/profile";
 import { User } from "lucide-react";
 import { PwaContainer } from "@/components/layouts/pwa/pwa-container";
 
@@ -23,6 +25,15 @@ export default async function ProfilPage() {
     .eq("actif", true)
     .order("ordre_affichage", { ascending: true });
 
+  // Générer les initiales
+  const initials = profile.first_name && profile.last_name
+    ? `${profile.first_name[0]}${profile.last_name[0]}`.toUpperCase()
+    : profile.full_name
+      ?.split(' ')
+      .map((n: string) => n[0])
+      .join('')
+      .toUpperCase() || 'SP'
+
   return (
     <PwaContainer>
       <div className="space-y-6 pb-20">
@@ -37,7 +48,24 @@ export default async function ProfilPage() {
           </p>
         </div>
 
-        {/* Formulaire unifié */}
+        {/* Avatar */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Photo de profil</CardTitle>
+            <CardDescription>
+              Ajoutez une photo pour personnaliser votre compte
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex justify-center py-6">
+            <AvatarUpload
+              currentAvatarUrl={(profile as Profile & { avatar_url?: string }).avatar_url}
+              initials={initials}
+              userId={user.id}
+            />
+          </CardContent>
+        </Card>
+
+        {/* Formulaire */}
         <Card>
           <CardHeader>
             <CardTitle>Informations personnelles</CardTitle>

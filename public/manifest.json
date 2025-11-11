@@ -78,7 +78,7 @@
       "name": "Ma Tournée",
       "short_name": "Tournée",
       "description": "Accéder à ma tournée en cours",
-      "url": "/dashboard/calendriers",
+      "url": "/ma-tournee",
       "icons": [
         {
           "src": "/icons/icon-96x96.png",
@@ -90,7 +90,7 @@
       "name": "Calendriers",
       "short_name": "Calendriers",
       "description": "Gestion des calendriers",
-      "url": "/dashboard/calendriers",
+      "url": "/calendriers",
       "icons": [
         {
           "src": "/icons/icon-96x96.png",
@@ -102,7 +102,7 @@
       "name": "Mon Compte",
       "short_name": "Compte",
       "description": "Gérer mon compte et mes rétributions",
-      "url": "/dashboard/mon-compte",
+      "url": "/mon-compte",
       "icons": [
         {
           "src": "/icons/icon-96x96.png",
