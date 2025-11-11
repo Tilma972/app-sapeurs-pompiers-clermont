@@ -341,18 +341,52 @@ export async function getEquipeWithSettingsFromProfile(
   userId: string
 ): Promise<EquipeWithSettings | null> {
   try {
-    const { data: profile, error } = await supabase
+    // 1. D'abord, récupérer le team_id du profil
+    const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('team_id, equipes(id, nom, mode_transparence, pourcentage_minimum_pot, pourcentage_recommande_pot)')
+      .select('team_id')
       .eq('id', userId)
       .single();
 
-    if (error) {
-      throw new DatabaseError('Failed to fetch equipe with settings from profile', error);
+    if (profileError) {
+      throw new DatabaseError('Failed to fetch profile team_id', profileError);
     }
 
-    const eqRaw = (profile as unknown as { equipes?: EquipeWithSettings | EquipeWithSettings[] })?.equipes;
-    return Array.isArray(eqRaw) ? eqRaw[0] || null : eqRaw || null;
+    // 2. Si pas d'équipe assignée, retourner null (cas légitime)
+    if (!profile?.team_id) {
+      return null;
+    }
+
+    // 3. Ensuite, fetch les détails de l'équipe
+    const { data: equipe, error: equipeError } = await supabase
+      .from('equipes')
+      .select('id, nom, mode_transparence, pourcentage_minimum_pot, pourcentage_recommande_pot')
+      .eq('id', profile.team_id)
+      .maybeSingle();
+
+    if (equipeError) {
+      // Si erreur RLS ou FK invalide → log mais ne crash pas
+      logError(new DatabaseError('Failed to fetch equipe details', equipeError), {
+        component: 'getEquipeWithSettingsFromProfile',
+        action: 'fetch_equipe',
+        userId,
+        metadata: { teamId: profile.team_id },
+      });
+      return null;
+    }
+
+    // Si l'équipe n'existe pas (FK cassée), retourner null
+    if (!equipe) {
+      logError(new DatabaseError('Equipe not found (broken FK?)', null), {
+        component: 'getEquipeWithSettingsFromProfile',
+        action: 'fetch_equipe',
+        userId,
+        metadata: { teamId: profile.team_id },
+      });
+      return null;
+    }
+
+    return equipe as EquipeWithSettings;
   } catch (error) {
     logError(error, {
       component: 'getEquipeWithSettingsFromProfile',

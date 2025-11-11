@@ -77,13 +77,14 @@ export async function getPotEquipe(
       .from('pots_equipe')
       .select('solde_disponible')
       .eq('equipe_id', equipeId)
-      .single();
+      .maybeSingle(); // ✅ Ne lève pas d'erreur si aucun résultat
 
     if (error) {
       throw new DatabaseError('Failed to fetch pot equipe', error);
     }
 
-    return data as PotEquipe;
+    // Retourner null si le pot n'existe pas encore (cas légitime)
+    return data ? (data as PotEquipe) : null;
   } catch (error) {
     logError(error, {
       component: 'getPotEquipe',

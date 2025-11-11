@@ -25,15 +25,10 @@ export default async function MonComptePage() {
 
   const recommandationEquipe = eqWithSettings?.pourcentage_recommande_pot ?? RETRIBUTION_CONFIG.RECOMMANDE_POT_EQUIPE_DEFAULT;
 
-  // Pot d'équipe (si équipe présente)
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('team_id')
-    .eq('id', user.id)
-    .single();
-
-  const teamId = (profile as unknown as { team_id?: string | null })?.team_id;
-  const potEquipe = teamId ? await getPotEquipe(supabase, teamId) : null;
+  // Pot d'équipe (uniquement si équipe existe)
+  const potEquipe = eqWithSettings?.id 
+    ? await getPotEquipe(supabase, eqWithSettings.id) 
+    : null;
 
   return (
     <PwaContainer>
@@ -58,6 +53,16 @@ export default async function MonComptePage() {
           </Alert>
         )}
 
+        {/* Si l'utilisateur n'a pas d'équipe */}
+        {!eqWithSettings && (
+          <Alert>
+            <AlertTitle>Pas encore d&apos;équipe</AlertTitle>
+            <AlertDescription>
+              Vous n&apos;êtes rattaché à aucune équipe. Contactez un administrateur pour rejoindre une équipe et bénéficier du pot collectif.
+            </AlertDescription>
+          </Alert>
+        )}
+
         <div className="grid gap-4 md:grid-cols-2">
           <Card>
             <CardContent className="pt-6">
@@ -76,15 +81,15 @@ export default async function MonComptePage() {
           </Card>
         </div>
 
-        {/* Pot d'équipe (collapsible) */}
-        {potEquipe && (
+        {/* Pot d'équipe (collapsible) - Affiché seulement si équipe ET pot existent */}
+        {eqWithSettings && potEquipe && (
           <details className="rounded-lg border bg-card">
             <summary className="cursor-pointer px-6 py-4 flex items-center justify-between">
               <div>
                 <div className="text-sm text-muted-foreground">👥 Pot d&apos;équipe</div>
                 <div className="text-2xl font-bold">{formatCurrency(potEquipe.solde_disponible)}</div>
               </div>
-              <div className="text-xs text-muted-foreground">Transparence: {eqWithSettings?.mode_transparence || '—'}</div>
+              <div className="text-xs text-muted-foreground">Transparence: {eqWithSettings.mode_transparence || '—'}</div>
             </summary>
             <div className="p-4 border-t text-sm text-muted-foreground">
               Détails des contributions disponibles selon le mode de transparence de l&apos;équipe.
