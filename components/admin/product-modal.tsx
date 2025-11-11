@@ -61,10 +61,10 @@ export function ProductModal({ isOpen, onClose, product, onSuccess }: ProductMod
 
     setIsUploading(true)
     try {
-      const formData = new FormData()
-      formData.append("file", file)
+      const uploadFormData = new FormData()
+      uploadFormData.append("file", file)
 
-      const result = await uploadProductImage(formData)
+      const result = await uploadProductImage(uploadFormData)
 
       if (result.error) {
         toast.error(result.error)
