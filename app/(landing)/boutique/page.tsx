@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server"
 import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { BoutiqueClient } from "./boutique-client"
+import { BoutiqueClient } from "@/app/(landing)/boutique/boutique-client"
 
 export const revalidate = 0 // Désactiver le cache pour toujours avoir les derniers produits
 
