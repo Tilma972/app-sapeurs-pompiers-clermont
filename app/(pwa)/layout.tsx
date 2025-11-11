@@ -2,6 +2,7 @@
 import { PwaBottomNav } from "@/components/layouts/pwa/pwa-bottom-nav"
 import { createClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
+import { getAvatarUrl } from "@/lib/utils/avatar"
 
 export default async function PwaLayout({
   children,
@@ -32,11 +33,14 @@ export default async function PwaLayout({
         .join('')
         .toUpperCase() || 'SP'
 
+    // Construire l'URL complète de l'avatar avec helper
+    const avatarUrl = getAvatarUrl(profile?.avatar_url)
+
     return (
       <div className="min-h-screen flex flex-col">
         <PwaAppBar
           user={{
-            avatar_url: profile?.avatar_url || undefined,
+            avatar_url: avatarUrl || undefined,
             initials,
             full_name: profile?.first_name && profile?.last_name 
               ? `${profile.first_name} ${profile.last_name}` 

@@ -6,6 +6,12 @@ import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Camera, Loader2, X } from "lucide-react"
 import { toast } from "react-hot-toast"
+import { 
+  getAvatarUrl, 
+  generateAvatarPath, 
+  getFileExtension, 
+  validateAvatarFile 
+} from "@/lib/utils/avatar"
 
 interface AvatarUploadProps {
   currentAvatarUrl?: string | null
@@ -24,16 +30,10 @@ export function AvatarUpload({ currentAvatarUrl, initials, userId }: AvatarUploa
     const file = e.target.files?.[0]
     if (!file) return
 
-    // Validation
-    const maxSize = 2 * 1024 * 1024 // 2MB
-    if (file.size > maxSize) {
-      toast.error("L'image ne doit pas dépasser 2MB")
-      return
-    }
-
-    const allowedTypes = ["image/jpeg", "image/png", "image/webp"]
-    if (!allowedTypes.includes(file.type)) {
-      toast.error("Format non supporté. Utilisez JPG, PNG ou WEBP")
+    // Validation avec helper
+    const validation = validateAvatarFile(file)
+    if (!validation.valid) {
+      toast.error(validation.error || "Fichier invalide")
       return
     }
 
@@ -51,34 +51,30 @@ export function AvatarUpload({ currentAvatarUrl, initials, userId }: AvatarUploa
   const uploadAvatar = async (file: File) => {
     setUploading(true)
     try {
-      // Nom du fichier: user_id/avatar.ext
-      const fileExt = file.name.split('.').pop()
-      const fileName = `${userId}/avatar.${fileExt}`
+      // Générer le chemin avec helper
+      const fileExt = getFileExtension(file.name)
+      const filePath = generateAvatarPath(userId, fileExt)
 
       // Upload dans Storage
       const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(fileName, file, {
+        .upload(filePath, file, {
           upsert: true, // Remplace si existe déjà
           contentType: file.type,
         })
 
       if (uploadError) throw uploadError
 
-      // Construire l'URL publique
-      const { data: { publicUrl } } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(fileName)
-
-      // Mettre à jour le profil
+      // Mettre à jour le profil avec le chemin relatif (pas l'URL complète)
       const { error: updateError } = await supabase
         .from('profiles')
-        .update({ avatar_url: fileName })
+        .update({ avatar_url: filePath })
         .eq('id', userId)
 
       if (updateError) throw updateError
 
-      setAvatarUrl(publicUrl)
+      // Stocker le chemin relatif pour reconstruction
+      setAvatarUrl(filePath)
       toast.success("Photo de profil mise à jour !")
       
       // Recharger la page pour mettre à jour l'avatar partout
@@ -97,10 +93,10 @@ export function AvatarUpload({ currentAvatarUrl, initials, userId }: AvatarUploa
 
     setUploading(true)
     try {
-      // Supprimer du Storage
+      // Supprimer du Storage (si un avatar existe)
       if (avatarUrl) {
-        const fileName = `${userId}/avatar.${avatarUrl.split('.').pop()}`
-        await supabase.storage.from('avatars').remove([fileName])
+        // avatarUrl contient déjà le chemin complet: userId/avatar.ext
+        await supabase.storage.from('avatars').remove([avatarUrl])
       }
 
       // Supprimer de la DB
@@ -125,7 +121,10 @@ export function AvatarUpload({ currentAvatarUrl, initials, userId }: AvatarUploa
     }
   }
 
-  const displayUrl = previewUrl || (avatarUrl ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/${avatarUrl}` : null)
+  // Construire l'URL d'affichage avec helper
+  // - Si preview local (upload en cours): utiliser le Data URL
+  // - Sinon si avatarUrl existe: c'est un chemin relatif, construire l'URL complète
+  const displayUrl = previewUrl || getAvatarUrl(avatarUrl)
 
   return (
     <div className="flex flex-col items-center gap-4">

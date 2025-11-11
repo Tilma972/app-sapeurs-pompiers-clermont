@@ -20,8 +20,6 @@ export const metadata: Metadata = {
   // PWA Configuration
   manifest: "/manifest.json",
   
-  // Theme Color
-  themeColor: "#C63320",
   
   // Apple Web App
   appleWebApp: {
