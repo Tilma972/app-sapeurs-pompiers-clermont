@@ -9,6 +9,8 @@ export type ShopProduct = {
     text: string
     variant: 'preorder' | 'new' | 'promo'
   }
+  stock?: number
+  status?: string
 }
 
 export const SHOP_PRODUCTS: ShopProduct[] = [
