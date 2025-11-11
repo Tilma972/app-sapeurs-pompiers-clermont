@@ -13,7 +13,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(defaultUrl),
   title: {
     default: "Amicale SP Clermont-l'Hérault",
-    template: "%s | Amicale SP",
+    template: "%s | Amicale ASPCH",
   },
   description: "Application de gestion pour l'Amicale des Sapeurs-Pompiers - Tournées, calendriers, dons fiscaux et services aux membres",
   
@@ -21,17 +21,17 @@ export const metadata: Metadata = {
   manifest: "/manifest.json",
   
   // Theme Color
-  themeColor: "#c41e3a",
+  themeColor: "#C63320",
   
   // Apple Web App
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "Amicale SP",
+    title: "Amicale ASPCH",
   },
   
   // Metadata supplémentaires
-  applicationName: "Amicale SP",
+  applicationName: "Amicale ASPCH",
   authors: [{ name: "Amicale des Sapeurs-Pompiers de Clermont-l'Hérault" }],
   keywords: ["pompiers", "sapeurs-pompiers", "amicale", "clermont", "hérault", "calendriers", "dons"],
   
@@ -47,7 +47,7 @@ export const metadata: Metadata = {
         url: "/icons/icon-512x512.png",
         width: 512,
         height: 512,
-        alt: "Logo Amicale SP",
+        alt: "Logo Amicale ASPCH",
       },
     ],
   },
@@ -80,7 +80,7 @@ export const viewport: Viewport = {
   maximumScale: 5,
   userScalable: true,
   viewportFit: "cover",
-  themeColor: "#c41e3a",
+  themeColor: "#C63320",
 };
 
 const geistSans = Geist({
@@ -114,7 +114,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-title" content="Amicale SP" />
         
         {/* Microsoft Tiles */}
-        <meta name="msapplication-TileColor" content="#c41e3a" />
+        <meta name="msapplication-TileColor" content="#C63320" />
         <meta name="msapplication-TileImage" content="/icons/icon-144x144.png" />
       </head>
       <body
