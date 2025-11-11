@@ -184,22 +184,36 @@ export async function uploadProductImage(formData: FormData) {
     return { error: "Aucun fichier sélectionné" }
   }
 
+  // Validation du fichier
+  const maxSize = 5 * 1024 * 1024 // 5MB
+  if (file.size > maxSize) {
+    return { error: "L'image ne doit pas dépasser 5MB" }
+  }
+
+  const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"]
+  if (!allowedTypes.includes(file.type)) {
+    return { error: "Format non supporté. Utilisez JPG, PNG, WEBP ou GIF" }
+  }
+
   // Generate unique filename
   const fileExt = file.name.split(".").pop()
   const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
   const filePath = `products/${fileName}`
 
   // Upload to Supabase Storage
-  const { error } = await supabase.storage
+  const { error: uploadError } = await supabase.storage
     .from("landing_page")
     .upload(filePath, file, {
       cacheControl: "3600",
       upsert: false,
+      contentType: file.type,
     })
 
-  if (error) {
-    console.error("Error uploading image:", error)
-    return { error: "Erreur lors de l'upload de l'image" }
+  if (uploadError) {
+    console.error("Error uploading image:", uploadError)
+    return { 
+      error: `Erreur lors de l'upload: ${uploadError.message}. Vérifiez que le bucket 'landing_page' existe et est public.` 
+    }
   }
 
   // Get public URL
