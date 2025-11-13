@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Calendar, Camera, Gift, Home, ShoppingBag, Sliders, User, Users, Wallet, Lightbulb, UserCheck } from "lucide-react";
+import { Calendar, Camera, Gift, Home, ShoppingBag, Sliders, User, Users, Wallet, Lightbulb } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { LogoutButton } from "@/components/logout-button";
 
@@ -14,7 +14,7 @@ const navigation = [
   { name: "Tournées & Calendriers", href: "/calendriers", icon: Calendar },
   { name: "Petites Annonces", href: "/annonces", icon: ShoppingBag },
   { name: "Boîte à Idées", href: "/idees", icon: Lightbulb },
-  { name: "Galerie Photos", href: "/galerie", icon: Camera },
+  { name: "Galerie SP", href: "/galerie", icon: Camera },
   { name: "Événements", href: "/associative", icon: Calendar },
   { name: "Mon Compte", href: "/mon-compte", icon: Wallet },
   { name: "Paramètres", href: "/parametres", icon: Sliders },
@@ -79,7 +79,7 @@ export function MobileNav() {
             <div className="px-2 text-xs uppercase tracking-wide text-muted-foreground">Administration</div>
             {[
               { name: "Vue d'ensemble", href: "/dashboard/admin", icon: Home },
-              { name: "Liste blanche", href: "/dashboard/admin/whitelist", icon: UserCheck },
+              { name: "Inscriptions en attente", href: "/dashboard/admin/pending", icon: User },
               { name: "Utilisateurs", href: "/dashboard/admin/users", icon: Users },
               { name: "Produits", href: "/dashboard/produits", icon: ShoppingBag },
               { name: "Équipes", href: "/dashboard/admin/equipes", icon: Calendar },

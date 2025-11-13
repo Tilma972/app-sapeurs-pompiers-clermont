@@ -361,8 +361,9 @@ export async function getCompletedChallengesCount(userId: string): Promise<{
     monthly: 0,
   };
 
-  (data || []).forEach((item: {challenge: {type: ChallengeType}}) => {
-    const type = item.challenge?.type;
+  const items = (data as unknown as Array<{ challenge?: Array<{ type: ChallengeType }> }>) || [];
+  items.forEach((item) => {
+    const type = item.challenge?.[0]?.type;
     if (type === 'daily') counts.daily++;
     if (type === 'weekly') counts.weekly++;
     if (type === 'monthly') counts.monthly++;

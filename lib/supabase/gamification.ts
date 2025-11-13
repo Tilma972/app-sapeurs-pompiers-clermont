@@ -263,13 +263,13 @@ export async function getBadgesWithProgress(userId: string): Promise<BadgeWithPr
         currentProgress = level;
         break;
       case 'ideas':
-        currentProgress = ideas;
+        currentProgress = Array.isArray(ideas) ? ideas.length : ideas;
         break;
       case 'likes':
-        currentProgress = likes;
+        currentProgress = Array.isArray(likes) ? likes.length : likes;
         break;
       case 'votes':
-        currentProgress = votes;
+        currentProgress = Array.isArray(votes) ? votes.length : votes;
         break;
     }
 
