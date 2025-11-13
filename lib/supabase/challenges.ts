@@ -180,7 +180,7 @@ export async function updateChallengeProgress(
     .eq('period_start', periodStart)
     .single();
 
-  let newProgress = (existing?.current_progress || 0) + increment;
+  const newProgress = (existing?.current_progress || 0) + increment;
   const wasCompleted = existing?.completed || false;
   const isNowCompleted = newProgress >= challenge.target_value;
 

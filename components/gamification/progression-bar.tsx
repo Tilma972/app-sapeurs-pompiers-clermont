@@ -130,7 +130,7 @@ export function ProgressionBar({ progression, className, compact = false }: Prog
               <span className="font-semibold">Félicitations ! Vous avez atteint le niveau maximum !</span>
             </div>
             <p className="text-sm text-muted-foreground mt-1">
-              Continuez à gagner de l'XP pour débloquer des badges et grimper dans les classements.
+              Continuez à gagner de l&apos;XP pour débloquer des badges et grimper dans les classements.
             </p>
           </div>
         )}

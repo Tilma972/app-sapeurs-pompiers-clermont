@@ -53,7 +53,7 @@ export function ChallengesList({ challenges, className }: ChallengesListProps) {
               Défis actifs
             </CardTitle>
             <CardDescription>
-              Complétez des défis pour gagner de l'XP et des jetons
+              Complétez des défis pour gagner de l&apos;XP et des jetons
             </CardDescription>
           </div>
           <Badge variant="secondary" className="text-lg px-3 py-1">
