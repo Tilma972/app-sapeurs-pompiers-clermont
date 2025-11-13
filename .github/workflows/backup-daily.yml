@@ -36,14 +36,26 @@ jobs:
           DB_HOST=$(echo "${{ secrets.SUPABASE_DB_URL }}" | sed -E 's|.*@([^:]+):.*|\1|')
           echo "Extracted hostname: $DB_HOST"
           
-          # Resolve to IPv4
-          DB_IP=$(dig +short "$DB_HOST" A | head -n1)
+          # Try multiple resolution methods
+          DB_IP=$(getent ahostsv4 "$DB_HOST" 2>/dev/null | awk 'NR==1 {print $1}')
+          
+          if [ -z "$DB_IP" ]; then
+            echo "getent failed, trying host command..."
+            DB_IP=$(host -t A "$DB_HOST" | awk '/has address/ {print $4; exit}')
+          fi
+          
+          if [ -z "$DB_IP" ]; then
+            echo "host failed, trying nslookup..."
+            DB_IP=$(nslookup "$DB_HOST" 2>/dev/null | awk '/^Address: / { print $2 }' | grep -v ':' | head -n1)
+          fi
+          
           echo "Resolved to IPv4: $DB_IP"
           
           # Verify we have an IP
           if [ -z "$DB_IP" ]; then
             echo "ERROR: Failed to resolve hostname to IPv4"
-            exit 1
+            echo "Falling back to original hostname (will use IPv6 if available)"
+            DB_IP="$DB_HOST"
           fi
           
           echo "DB_HOST=$DB_HOST" >> $GITHUB_ENV
