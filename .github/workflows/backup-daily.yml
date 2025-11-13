@@ -32,9 +32,20 @@ jobs:
       - name: 🌐 Resolve Supabase DB to IPv4
         run: |
           echo "Resolving Supabase database hostname to IPv4..."
-          DB_HOST=$(echo "${{ secrets.SUPABASE_DB_URL }}" | sed -n 's/.*@\(.*\):.*/\1/p')
-          DB_IP=$(getent ahostsv4 "$DB_HOST" | head -n1 | awk '{print $1}')
-          echo "Resolved $DB_HOST to IPv4: $DB_IP"
+          # Extract hostname from connection string
+          DB_HOST=$(echo "${{ secrets.SUPABASE_DB_URL }}" | awk -F'[@:]' '{print $(NF-2)}')
+          echo "Extracted hostname: $DB_HOST"
+          
+          # Resolve to IPv4
+          DB_IP=$(dig +short "$DB_HOST" A | head -n1)
+          echo "Resolved to IPv4: $DB_IP"
+          
+          # Verify we have an IP
+          if [ -z "$DB_IP" ]; then
+            echo "ERROR: Failed to resolve hostname to IPv4"
+            exit 1
+          fi
+          
           echo "DB_HOST=$DB_HOST" >> $GITHUB_ENV
           echo "DB_IP=$DB_IP" >> $GITHUB_ENV
       
@@ -53,7 +64,7 @@ jobs:
           # Replace hostname with IPv4 in connection string
           MODIFIED_DB_URL=$(echo "$SUPABASE_DB_URL" | sed "s/$DB_HOST/$DB_IP/g")
           export SUPABASE_DB_URL="$MODIFIED_DB_URL"
-          echo "Using IPv4 connection: $DB_IP"
+          echo "Using IPv4 connection to $DB_IP"
           node scripts/backup/backup-database.js
 
       - name: 📊 Backup Storage Buckets
