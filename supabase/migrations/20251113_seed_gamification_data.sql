@@ -74,10 +74,11 @@ INSERT INTO challenges_definitions (slug, name, description, type, target_value,
 ('daily_votes_3', 'Démocrate', 'Vote sur 3 idées aujourd''hui', 'daily', 3, 'votes', 30, 1, TRUE),
 ('daily_likes_5', 'Ambassadeur', 'Like 5 photos aujourd''hui', 'daily', 5, 'likes', 30, 1, TRUE),
 
--- ========== DÉFIS HEBDOMADAIRES (3) ==========
+-- ========== DÉFIS HEBDOMADAIRES (4) ==========
 ('weekly_calendars_30', 'Semaine de Feu', 'Distribue 30 calendriers cette semaine', 'weekly', 30, 'calendars', 200, 5, TRUE),
 ('weekly_ideas_1', 'Créatif', 'Poste au moins 1 idée cette semaine', 'weekly', 1, 'ideas', 150, 3, TRUE),
 ('weekly_engagement_10', 'Actif Social', 'Cumule 10 votes + likes cette semaine', 'weekly', 10, 'engagement', 150, 3, TRUE),
+('weekly_top5_team', 'Élite de l''Équipe', 'Sois dans le top 5 de ton équipe', 'weekly', 5, 'team_rank', 300, 10, TRUE),
 
 -- ========== DÉFIS MENSUELS (2) ==========
 ('monthly_calendars_100', 'Champion du Mois', 'Distribue 100 calendriers ce mois', 'monthly', 100, 'calendars', 1000, 50, TRUE),
