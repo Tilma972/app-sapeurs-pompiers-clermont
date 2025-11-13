@@ -29,38 +29,6 @@ jobs:
         run: |
           cd scripts/backup && npm ci
       
-      - name: 🌐 Resolve Supabase DB to IPv4
-        run: |
-          echo "Resolving Supabase database hostname to IPv4..."
-          # Extract hostname from connection string (between @ and :port)
-          DB_HOST=$(echo "${{ secrets.SUPABASE_DB_URL }}" | sed -E 's|.*@([^:]+):.*|\1|')
-          echo "Extracted hostname: $DB_HOST"
-          
-          # Try multiple resolution methods
-          DB_IP=$(getent ahostsv4 "$DB_HOST" 2>/dev/null | awk 'NR==1 {print $1}')
-          
-          if [ -z "$DB_IP" ]; then
-            echo "getent failed, trying host command..."
-            DB_IP=$(host -t A "$DB_HOST" | awk '/has address/ {print $4; exit}')
-          fi
-          
-          if [ -z "$DB_IP" ]; then
-            echo "host failed, trying nslookup..."
-            DB_IP=$(nslookup "$DB_HOST" 2>/dev/null | awk '/^Address: / { print $2 }' | grep -v ':' | head -n1)
-          fi
-          
-          echo "Resolved to IPv4: $DB_IP"
-          
-          # Verify we have an IP
-          if [ -z "$DB_IP" ]; then
-            echo "ERROR: Failed to resolve hostname to IPv4"
-            echo "Falling back to original hostname (will use IPv6 if available)"
-            DB_IP="$DB_HOST"
-          fi
-          
-          echo "DB_HOST=$DB_HOST" >> $GITHUB_ENV
-          echo "DB_IP=$DB_IP" >> $GITHUB_ENV
-      
       - name: 🗄️ Backup PostgreSQL
         env:
           SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
@@ -70,13 +38,8 @@ jobs:
           MINIO_ACCESS_KEY: ${{ secrets.MINIO_ACCESS_KEY }}
           MINIO_SECRET_KEY: ${{ secrets.MINIO_SECRET_KEY }}
           MINIO_BUCKET: ${{ secrets.MINIO_BUCKET }}
-          DB_HOST: ${{ env.DB_HOST }}
-          DB_IP: ${{ env.DB_IP }}
         run: |
-          # Replace hostname with IPv4 in connection string
-          MODIFIED_DB_URL=$(echo "$SUPABASE_DB_URL" | sed "s/$DB_HOST/$DB_IP/g")
-          export SUPABASE_DB_URL="$MODIFIED_DB_URL"
-          echo "Using IPv4 connection to $DB_IP"
+          echo "Starting database backup..."
           node scripts/backup/backup-database.js
 
       - name: 📊 Backup Storage Buckets
