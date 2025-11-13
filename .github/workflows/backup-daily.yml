@@ -29,11 +29,14 @@ jobs:
         run: |
           cd scripts/backup && npm ci
       
-      - name: 🌐 Configure IPv4 preference
+      - name: 🌐 Resolve Supabase DB to IPv4
         run: |
-          echo "Configuring IPv4 preference for database connection"
-          sudo sysctl -w net.ipv6.conf.all.disable_ipv6=1
-          sudo sysctl -w net.ipv6.conf.default.disable_ipv6=1
+          echo "Resolving Supabase database hostname to IPv4..."
+          DB_HOST=$(echo "${{ secrets.SUPABASE_DB_URL }}" | sed -n 's/.*@\(.*\):.*/\1/p')
+          DB_IP=$(getent ahostsv4 "$DB_HOST" | head -n1 | awk '{print $1}')
+          echo "Resolved $DB_HOST to IPv4: $DB_IP"
+          echo "DB_HOST=$DB_HOST" >> $GITHUB_ENV
+          echo "DB_IP=$DB_IP" >> $GITHUB_ENV
       
       - name: 🗄️ Backup PostgreSQL
         env:
@@ -44,7 +47,13 @@ jobs:
           MINIO_ACCESS_KEY: ${{ secrets.MINIO_ACCESS_KEY }}
           MINIO_SECRET_KEY: ${{ secrets.MINIO_SECRET_KEY }}
           MINIO_BUCKET: ${{ secrets.MINIO_BUCKET }}
+          DB_HOST: ${{ env.DB_HOST }}
+          DB_IP: ${{ env.DB_IP }}
         run: |
+          # Replace hostname with IPv4 in connection string
+          MODIFIED_DB_URL=$(echo "$SUPABASE_DB_URL" | sed "s/$DB_HOST/$DB_IP/g")
+          export SUPABASE_DB_URL="$MODIFIED_DB_URL"
+          echo "Using IPv4 connection: $DB_IP"
           node scripts/backup/backup-database.js
 
       - name: 📊 Backup Storage Buckets
