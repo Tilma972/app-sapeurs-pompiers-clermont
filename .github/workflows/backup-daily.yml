@@ -29,6 +29,12 @@ jobs:
         run: |
           cd scripts/backup && npm ci
       
+      - name: 🌐 Configure IPv4 preference
+        run: |
+          echo "Configuring IPv4 preference for database connection"
+          sudo sysctl -w net.ipv6.conf.all.disable_ipv6=1
+          sudo sysctl -w net.ipv6.conf.default.disable_ipv6=1
+      
       - name: 🗄️ Backup PostgreSQL
         env:
           SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
