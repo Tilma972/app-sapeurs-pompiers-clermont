@@ -41,19 +41,15 @@ const formatDate = (dateStr: string) => {
   });
 };
 
-const getAuthorInitials = (full_name?: string | null) => {
-  if (!full_name) return "?";
-  const names = full_name.split(" ");
-  if (names.length >= 2) {
-    return `${names[0][0]}${names[names.length - 1][0]}`.toUpperCase();
-  }
-  return full_name.slice(0, 2).toUpperCase();
+const getAuthorInitials = (nom?: string | null, prenom?: string | null) => {
+  if (!nom || !prenom) return "?";
+  return `${prenom[0]}${nom[0]}`.toUpperCase();
 };
 
 const getAuthorName = (idea: Awaited<ReturnType<typeof getIdeaById>>["idea"]) => {
   if (idea.anonyme) return "Anonyme";
-  if (!idea.author) return "Utilisateur";
-  return idea.author.full_name || "Utilisateur";
+  if (!idea.author || !idea.author.prenom || !idea.author.nom) return "Utilisateur";
+  return `${idea.author.prenom} ${idea.author.nom}`;
 };
 
 export default async function IdeaDetailPage({ params }: PageProps) {
@@ -88,7 +84,7 @@ export default async function IdeaDetailPage({ params }: PageProps) {
   }
 
   const authorName = getAuthorName(idea);
-  const authorInitials = idea.anonyme ? "?" : getAuthorInitials(idea.author?.full_name);
+  const authorInitials = idea.anonyme ? "?" : getAuthorInitials(idea.author?.nom, idea.author?.prenom);
 
   return (
     <PwaContainer>
