@@ -27,7 +27,7 @@ jobs:
 
       - name: 📦 Install dependencies
         run: |
-          npm install --prefix scripts/backup @supabase/supabase-js aws-sdk pg dotenv
+          cd scripts/backup && npm ci
       
       - name: 🗄️ Backup PostgreSQL
         env:
