@@ -1,0 +1,18 @@
+{
+  "name": "backup-scripts",
+  "version": "1.0.0",
+  "description": "Scripts de backup automatique Supabase vers Minio",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "backup:database": "node backup-database.js",
+    "backup:storage": "node backup-storage.js",
+    "restore:database": "node restore-database.js",
+    "backup:all": "npm run backup:database && npm run backup:storage"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.38.0",
+    "@aws-sdk/client-s3": "^3.470.0",
+    "dotenv": "^16.3.1"
+  }
+}
