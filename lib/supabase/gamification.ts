@@ -4,7 +4,6 @@
  */
 
 import { createClient as createClientComponent } from "@/lib/supabase/client";
-import { createClient as createServerClient } from "@/lib/supabase/server";
 import type {
   UserProgression,
   BadgeDefinition,
@@ -249,7 +248,6 @@ export async function getBadgesWithProgress(userId: string): Promise<BadgeWithPr
 
     // Calculer la progression
     let currentProgress = 0;
-    const threshold = badge.unlock_criteria.threshold;
 
     switch (badge.unlock_criteria.type) {
       case 'calendars':
