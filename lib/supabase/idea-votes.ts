@@ -123,8 +123,8 @@ export async function getIdeaVotes(ideaId: string) {
       *,
       user:profiles!user_id (
         id,
-        nom,
-        prenom,
+        first_name,
+        last_name,
         avatar_url
       )
     `)
@@ -269,8 +269,8 @@ export async function getTopVoters(limit: number = 10) {
       user_id,
       profiles!user_id (
         id,
-        nom,
-        prenom,
+        first_name,
+        last_name,
         avatar_url
       )
     `)
@@ -298,3 +298,4 @@ export async function getTopVoters(limit: number = 10) {
     .sort((a, b) => b.count - a.count)
     .slice(0, limit);
 }
+

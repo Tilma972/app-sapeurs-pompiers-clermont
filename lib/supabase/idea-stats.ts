@@ -42,8 +42,8 @@ export async function getIdeasDashboardStats(): Promise<IdeaStats> {
       *,
       author:profiles!user_id (
         id,
-        nom,
-        prenom,
+        first_name,
+        last_name,
         avatar_url
       )
     `)
@@ -172,8 +172,8 @@ export async function getTopContributors(limit: number = 10) {
       votes_count,
       profiles!user_id (
         id,
-        nom,
-        prenom,
+        first_name,
+        last_name,
         avatar_url
       )
     `)
@@ -218,8 +218,8 @@ export async function exportIdeasToCSV() {
       *,
       author:profiles!user_id (
         id,
-        nom,
-        prenom
+        first_name,
+        last_name 
       )
     `)
     .is('deleted_at', null)
@@ -253,7 +253,7 @@ export async function exportIdeasToCSV() {
     description: string;
     categories: string[];
     tags: string[];
-    author: { id: string; nom: string | null; prenom: string | null };
+    author: { id: string; first_name: string | null; last_name: string | null };
     anonyme: boolean;
     votes_count: number;
     comments_count: number;
@@ -265,8 +265,8 @@ export async function exportIdeasToCSV() {
   }) => {
     const authorName = idea.anonyme
       ? 'Anonyme'
-      : (idea.author?.prenom && idea.author?.nom) 
-        ? `${idea.author.prenom} ${idea.author.nom}`
+      : (idea.author?.last_name && idea.author?.first_name) 
+        ? `${idea.author.last_name} ${idea.author.first_name}`
         : 'Utilisateur';
 
     return [

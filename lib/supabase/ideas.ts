@@ -25,8 +25,8 @@ export async function getIdeas(filters?: IdeaFilters) {
       *,
       author:profiles!user_id (
         id,
-        nom,
-        prenom,
+        first_name,
+        last_name,
         role
       )
     `, { count: 'exact' })
@@ -115,8 +115,8 @@ export async function getIdeaById(ideaId: string) {
       *,
       author:profiles!user_id (
         id,
-        nom,
-        prenom,
+        first_name,
+        last_name,
         avatar_url
       )
     `)

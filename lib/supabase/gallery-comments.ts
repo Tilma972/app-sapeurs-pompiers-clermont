@@ -16,8 +16,8 @@ export interface GalleryCommentWithAuthor {
   deleted_at: string | null;
   author: {
     id: string;
-    nom: string | null;
-    prenom: string | null;
+    first_name: string | null;
+    last_name: string | null;
     role: string;
   };
 }
@@ -34,8 +34,8 @@ export async function getPhotoComments(photoId: string): Promise<GalleryCommentW
       *,
       author:profiles!user_id (
         id,
-        nom,
-        prenom,
+        first_name,
+        last_name,
         role
       )
     `)
@@ -83,8 +83,8 @@ export async function createPhotoComment(photoId: string, content: string): Prom
       *,
       author:profiles!user_id (
         id,
-        nom,
-        prenom,
+        first_name,
+        last_name,
         role
       )
     `)
@@ -141,8 +141,8 @@ export async function updatePhotoComment(commentId: string, content: string): Pr
       *,
       author:profiles!user_id (
         id,
-        nom,
-        prenom,
+        first_name,
+        last_name,
         role
       )
     `)
@@ -269,8 +269,8 @@ export async function getRecentPhotoComments(limit: number = 20) {
       *,
       author:profiles!user_id (
         id,
-        nom,
-        prenom,
+        first_name,
+        last_name,
         role
       ),
       photo:gallery_photos!photo_id (
@@ -302,8 +302,8 @@ export async function getFlaggedPhotoComments() {
       *,
       author:profiles!user_id (
         id,
-        nom,
-        prenom,
+        first_name,
+        last_name,
         role
       ),
       photo:gallery_photos!photo_id (

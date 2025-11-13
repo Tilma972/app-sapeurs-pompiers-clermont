@@ -18,8 +18,8 @@ export async function getIdeaComments(ideaId: string) {
       *,
       author:profiles!user_id (
         id,
-        nom,
-        prenom,
+        first_name,
+        last_name,
         role
       )
     `)
@@ -67,8 +67,8 @@ export async function createComment(ideaId: string, content: string) {
       *,
       author:profiles!user_id (
         id,
-        nom,
-        prenom,
+        first_name,
+        last_name,
         role
       )
     `)
@@ -125,8 +125,8 @@ export async function updateComment(commentId: string, content: string) {
       *,
       author:profiles!user_id (
         id,
-        nom,
-        prenom,
+        first_name,
+        last_name,
         role
       )
     `)
@@ -279,8 +279,8 @@ export async function getRecentComments(limit: number = 20) {
       *,
       author:profiles!user_id (
         id,
-        nom,
-        prenom,
+        first_name,
+        last_name,
         avatar_url
       ),
       idea:ideas!idea_id (
@@ -312,8 +312,8 @@ export async function getFlaggedComments() {
       *,
       author:profiles!user_id (
         id,
-        nom,
-        prenom,
+        first_name,
+        last_name,
         avatar_url
       ),
       idea:ideas!idea_id (

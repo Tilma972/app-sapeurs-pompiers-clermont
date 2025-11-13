@@ -134,8 +134,8 @@ export async function getAllReports(status?: ReportStatus) {
       *,
       reporter:profiles!reporter_user_id (
         id,
-        nom,
-        prenom,
+        first_name,
+        last_name,
         avatar_url
       ),
       idea:ideas (
@@ -150,8 +150,8 @@ export async function getAllReports(status?: ReportStatus) {
       ),
       reviewer:profiles!reviewed_by (
         id,
-        nom,
-        prenom
+        first_name,
+        last_name 
       )
     `)
     .order('created_at', { ascending: false });
@@ -229,8 +229,8 @@ export async function getIdeaReports(ideaId: string) {
       *,
       reporter:profiles!reporter_user_id (
         id,
-        nom,
-        prenom,
+        first_name,
+        last_name,
         avatar_url
       )
     `)
@@ -257,8 +257,8 @@ export async function getCommentReports(commentId: string) {
       *,
       reporter:profiles!reporter_user_id (
         id,
-        nom,
-        prenom,
+        first_name,
+        last_name,
         avatar_url
       )
     `)
