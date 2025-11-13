@@ -217,6 +217,7 @@ export async function exportIdeasToCSV() {
     .select(`
       *,
       author:profiles!user_id (
+        id,
         nom,
         prenom
       )
@@ -252,7 +253,7 @@ export async function exportIdeasToCSV() {
     description: string;
     categories: string[];
     tags: string[];
-    author: { nom: string | null; prenom: string | null };
+    author: { id: string; nom: string | null; prenom: string | null };
     anonyme: boolean;
     votes_count: number;
     comments_count: number;
@@ -264,7 +265,9 @@ export async function exportIdeasToCSV() {
   }) => {
     const authorName = idea.anonyme
       ? 'Anonyme'
-      : `${idea.author?.prenom || ''} ${idea.author?.nom || ''}`.trim();
+      : (idea.author?.prenom && idea.author?.nom) 
+        ? `${idea.author.prenom} ${idea.author.nom}`
+        : 'Utilisateur';
 
     return [
       idea.id,

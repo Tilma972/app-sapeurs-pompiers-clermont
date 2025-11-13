@@ -33,18 +33,14 @@ const truncateText = (text: string, maxLength: number = 150) => {
 };
 
 const getAuthorInitials = (author: IdeaWithAuthor["author"]) => {
-  if (!author || !author.full_name) return "?";
-  const names = author.full_name.split(" ");
-  if (names.length >= 2) {
-    return `${names[0][0]}${names[names.length - 1][0]}`.toUpperCase();
-  }
-  return author.full_name.slice(0, 2).toUpperCase();
+  if (!author || !author.prenom || !author.nom) return "?";
+  return `${author.prenom[0]}${author.nom[0]}`.toUpperCase();
 };
 
 const getAuthorName = (idea: IdeaWithAuthor) => {
   if (idea.anonyme) return "Anonyme";
-  if (!idea.author) return "Utilisateur";
-  return idea.author.full_name || "Utilisateur";
+  if (!idea.author || !idea.author.prenom || !idea.author.nom) return "Utilisateur";
+  return `${idea.author.prenom} ${idea.author.nom}`;
 };
 
 export function IdeaCard({ idea }: IdeaCardProps) {

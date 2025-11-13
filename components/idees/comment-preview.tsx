@@ -38,17 +38,13 @@ const formatDate = (dateStr: string) => {
 };
 
 const getAuthorInitials = (author: IdeaCommentWithAuthor["author"]) => {
-  if (!author || !author.full_name) return "?";
-  const names = author.full_name.split(" ");
-  if (names.length >= 2) {
-    return `${names[0][0]}${names[names.length - 1][0]}`.toUpperCase();
-  }
-  return author.full_name.slice(0, 2).toUpperCase();
+  if (!author || !author.prenom || !author.nom) return "?";
+  return `${author.prenom[0]}${author.nom[0]}`.toUpperCase();
 };
 
 const getAuthorName = (author: IdeaCommentWithAuthor["author"]) => {
-  if (!author) return "Utilisateur";
-  return author.full_name || "Utilisateur";
+  if (!author || !author.prenom || !author.nom) return "Utilisateur";
+  return `${author.prenom} ${author.nom}`;
 };
 
 export function CommentPreview({ comments, totalCount, ideaId }: CommentPreviewProps) {

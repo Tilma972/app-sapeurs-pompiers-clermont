@@ -41,7 +41,8 @@ export interface Idea {
 export interface IdeaWithAuthor extends Idea {
   author: {
     id: string;
-    full_name: string;
+    nom: string | null;
+    prenom: string | null;
     role: string;
   } | null;
 }
@@ -69,7 +70,8 @@ export interface IdeaComment {
 export interface IdeaCommentWithAuthor extends IdeaComment {
   author: {
     id: string;
-    full_name: string;
+    nom: string | null;
+    prenom: string | null;
     role: string;
   };
 }
