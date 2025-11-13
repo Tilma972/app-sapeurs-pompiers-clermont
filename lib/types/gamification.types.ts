@@ -150,10 +150,10 @@ export interface LeaderboardEntry {
   total_xp: number;
   streak_days: number;
   // Infos utilisateur
-  nom?: string;
-  prenom?: string;
-  avatar_url?: string;
-  equipe_nom?: string;
+  nom?: string | null;
+  prenom?: string | null;
+  avatar_url?: string | null;
+  equipe_nom?: string | null;
   // Métriques
   calendriers_distribues?: number;
   montant_collecte?: number;

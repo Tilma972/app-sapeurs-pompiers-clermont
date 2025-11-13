@@ -30,6 +30,67 @@ CREATE INDEX IF NOT EXISTS idx_badges_category ON badges_definitions(category);
 CREATE INDEX IF NOT EXISTS idx_badges_rarity ON badges_definitions(rarity);
 CREATE INDEX IF NOT EXISTS idx_badges_active ON badges_definitions(active);
 
+-- Ajouter la colonne active et les contraintes manquantes si elles n'existent pas
+DO $$ 
+BEGIN
+  -- Ajouter colonne active si manquante
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'badges_definitions' AND column_name = 'active'
+  ) THEN
+    ALTER TABLE badges_definitions ADD COLUMN active BOOLEAN DEFAULT TRUE;
+  END IF;
+  
+  -- Ajouter colonne updated_at si manquante
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'badges_definitions' AND column_name = 'updated_at'
+  ) THEN
+    ALTER TABLE badges_definitions ADD COLUMN updated_at TIMESTAMPTZ DEFAULT NOW();
+  END IF;
+  
+  -- Ajouter contrainte category si manquante (drop first in case of mismatch)
+  BEGIN
+    ALTER TABLE badges_definitions DROP CONSTRAINT IF EXISTS badges_definitions_category_check;
+    ALTER TABLE badges_definitions ADD CONSTRAINT badges_definitions_category_check 
+      CHECK (category IN ('starter', 'montant', 'social', 'streak', 'excellence', 'special'));
+  EXCEPTION WHEN OTHERS THEN
+    NULL; -- Ignorer si erreur
+  END;
+  
+  -- Ajouter contrainte rarity si manquante
+  BEGIN
+    ALTER TABLE badges_definitions DROP CONSTRAINT IF EXISTS badges_definitions_rarity_check;
+    ALTER TABLE badges_definitions ADD CONSTRAINT badges_definitions_rarity_check 
+      CHECK (rarity IN ('common', 'rare', 'epic', 'legendary'));
+  EXCEPTION WHEN OTHERS THEN
+    NULL;
+  END;
+  
+  -- Ajouter contrainte xp_reward si manquante
+  BEGIN
+    ALTER TABLE badges_definitions DROP CONSTRAINT IF EXISTS badges_definitions_xp_reward_check;
+    ALTER TABLE badges_definitions ADD CONSTRAINT badges_definitions_xp_reward_check 
+      CHECK (xp_reward >= 0);
+  EXCEPTION WHEN OTHERS THEN
+    NULL;
+  END;
+  
+  -- Mettre à jour les valeurs NULL pour rarity
+  UPDATE badges_definitions SET rarity = 'common' WHERE rarity IS NULL;
+  
+  -- Ajouter NOT NULL sur category si besoin
+  IF EXISTS (SELECT 1 FROM badges_definitions WHERE category IS NULL) THEN
+    RAISE NOTICE 'Some badges have NULL category - please fix manually';
+  ELSE
+    ALTER TABLE badges_definitions ALTER COLUMN category SET NOT NULL;
+  END IF;
+  
+  -- Ajouter NOT NULL sur rarity
+  ALTER TABLE badges_definitions ALTER COLUMN rarity SET NOT NULL;
+  ALTER TABLE badges_definitions ALTER COLUMN rarity SET DEFAULT 'common';
+END $$;
+
 -- =====================================================
 -- 2. TABLE : user_badges
 -- Badges débloqués par chaque utilisateur

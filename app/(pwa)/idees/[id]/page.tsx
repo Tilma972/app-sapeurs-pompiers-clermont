@@ -148,12 +148,12 @@ export default async function IdeaDetailPage({ params }: PageProps) {
               {idea.description}
             </p>
 
-            {/* Audio player si vocal */}
-            {idea.audio_url && (
+            {/* Audio player si vocal - Uniquement pour auteur/admin */}
+            {idea.audio_url && (isOwner || isAdmin) && (
               <div className="bg-muted p-4 rounded-lg">
                 <p className="text-sm font-medium mb-2 flex items-center gap-2">
                   <Mic className="h-4 w-4" />
-                  Enregistrement audio
+                  Enregistrement audio (transcription vocale)
                 </p>
                 <audio controls className="w-full">
                   <source src={idea.audio_url} type="audio/webm" />

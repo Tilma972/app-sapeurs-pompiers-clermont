@@ -7,6 +7,39 @@ import { createClient as createClientComponent } from "@/lib/supabase/client";
 import type { LeaderboardEntry, UserRank } from "@/lib/types/gamification.types";
 
 // =====================================================
+// TYPES SUPABASE
+// =====================================================
+
+interface SupabaseProfileData {
+  first_name: string | null;
+  last_name: string | null;
+  avatar_url: string | null;
+  calendriers_distribues: number;
+  montant_collecte: number;
+  equipe?: Array<{ equipe_nom: string | null }>;
+  equipe_id?: string | null;
+}
+
+interface SupabaseProgressionWithProfile {
+  user_id: string;
+  level: number;
+  total_xp: number;
+  streak_days: number;
+  profiles: Array<SupabaseProfileData>;
+}
+
+interface SupabaseXpHistoryEntry {
+  user_id: string;
+  amount: number;
+  profiles: Array<SupabaseProfileData>;
+  progression: Array<{
+    level: number;
+    total_xp: number;
+    streak_days: number;
+  }>;
+}
+
+// =====================================================
 // CLASSEMENT GLOBAL
 // =====================================================
 
@@ -24,8 +57,8 @@ export async function getGlobalLeaderboard(limit: number = 100): Promise<Leaderb
       total_xp,
       streak_days,
       profiles:user_id (
-        nom,
-        prenom,
+        first_name,
+        last_name,
         avatar_url,
         calendriers_distribues,
         montant_collecte,
@@ -43,35 +76,22 @@ export async function getGlobalLeaderboard(limit: number = 100): Promise<Leaderb
     return [];
   }
 
-  return (data || []).map((item: LeaderboardEntryRaw, index) => ({
+  const results = (data as unknown as SupabaseProgressionWithProfile[]) || [];
+  
+  return results.map((item, index) => ({
     user_id: item.user_id,
     rank: index + 1,
     level: item.level,
     total_xp: item.total_xp,
     streak_days: item.streak_days,
-    nom: item.profiles?.nom || null,
-    prenom: item.profiles?.prenom || null,
-    avatar_url: item.profiles?.avatar_url || null,
-    calendriers_distribues: item.profiles?.calendriers_distribues || 0,
-    montant_collecte: item.profiles?.montant_collecte || 0,
-    equipe_nom: (item.profiles?.equipe as {equipe_nom?: string})?.equipe_nom || null,
+    nom: item.profiles?.[0]?.first_name || null,
+    prenom: item.profiles?.[0]?.last_name || null,
+    avatar_url: item.profiles?.[0]?.avatar_url || null,
+    calendriers_distribues: item.profiles?.[0]?.calendriers_distribues || 0,
+    montant_collecte: item.profiles?.[0]?.montant_collecte || 0,
+    equipe_nom: item.profiles?.[0]?.equipe?.[0]?.equipe_nom || null,
   }));
 }
-
-type LeaderboardEntryRaw = {
-  user_id: string;
-  level: number;
-  total_xp: number;
-  streak_days: number;
-  profiles?: {
-    nom: string | null;
-    prenom: string | null;
-    avatar_url: string | null;
-    calendriers_distribues: number;
-    montant_collecte: number;
-    equipe: unknown;
-  };
-};
 
 /**
  * Récupère le classement global par niveau
@@ -87,8 +107,8 @@ export async function getGlobalLeaderboardByLevel(limit: number = 100): Promise<
       total_xp,
       streak_days,
       profiles:user_id (
-        nom,
-        prenom,
+        first_name,
+        last_name,
         avatar_url,
         calendriers_distribues,
         montant_collecte,
@@ -106,18 +126,20 @@ export async function getGlobalLeaderboardByLevel(limit: number = 100): Promise<
     return [];
   }
 
-  return (data || []).map((item: LeaderboardEntryRaw, index) => ({
+  const results = (data as unknown as SupabaseProgressionWithProfile[]) || [];
+  
+  return results.map((item, index) => ({
     user_id: item.user_id,
     rank: index + 1,
     level: item.level,
     total_xp: item.total_xp,
     streak_days: item.streak_days,
-    nom: item.profiles?.nom || null,
-    prenom: item.profiles?.prenom || null,
-    avatar_url: item.profiles?.avatar_url || null,
-    calendriers_distribues: item.profiles?.calendriers_distribues || 0,
-    montant_collecte: item.profiles?.montant_collecte || 0,
-    equipe_nom: (item.profiles?.equipe as {equipe_nom?: string})?.equipe_nom || null,
+    nom: item.profiles?.[0]?.first_name || null,
+    prenom: item.profiles?.[0]?.last_name || null,
+    avatar_url: item.profiles?.[0]?.avatar_url || null,
+    calendriers_distribues: item.profiles?.[0]?.calendriers_distribues || 0,
+    montant_collecte: item.profiles?.[0]?.montant_collecte || 0,
+    equipe_nom: item.profiles?.[0]?.equipe?.[0]?.equipe_nom || null,
   }));
 }
 
@@ -139,8 +161,8 @@ export async function getTeamLeaderboard(teamId: string, limit: number = 50): Pr
       total_xp,
       streak_days,
       profiles:user_id (
-        nom,
-        prenom,
+        first_name,
+        last_name,
         avatar_url,
         calendriers_distribues,
         montant_collecte,
@@ -159,18 +181,20 @@ export async function getTeamLeaderboard(teamId: string, limit: number = 50): Pr
     return [];
   }
 
-  return (data || []).map((item: LeaderboardEntryRaw, index) => ({
+  const results = (data as unknown as SupabaseProgressionWithProfile[]) || [];
+  
+  return results.map((item, index) => ({
     user_id: item.user_id,
     rank: index + 1,
     level: item.level,
     total_xp: item.total_xp,
     streak_days: item.streak_days,
-    nom: item.profiles?.nom || null,
-    prenom: item.profiles?.prenom || null,
-    avatar_url: item.profiles?.avatar_url || null,
-    calendriers_distribues: item.profiles?.calendriers_distribues || 0,
-    montant_collecte: item.profiles?.montant_collecte || 0,
-    equipe_nom: (item.profiles?.equipe as {equipe_nom?: string})?.equipe_nom || null,
+    nom: item.profiles?.[0]?.first_name || null,
+    prenom: item.profiles?.[0]?.last_name || null,
+    avatar_url: item.profiles?.[0]?.avatar_url || null,
+    calendriers_distribues: item.profiles?.[0]?.calendriers_distribues || 0,
+    montant_collecte: item.profiles?.[0]?.montant_collecte || 0,
+    equipe_nom: item.profiles?.[0]?.equipe?.[0]?.equipe_nom || null,
   }));
 }
 
@@ -198,8 +222,8 @@ export async function getWeeklyLeaderboard(limit: number = 100): Promise<Leaderb
       user_id,
       amount,
       profiles:user_id (
-        nom,
-        prenom,
+        first_name,
+        last_name,
         avatar_url,
         calendriers_distribues,
         montant_collecte,
@@ -236,38 +260,26 @@ export async function getWeeklyLeaderboard(limit: number = 100): Promise<Leaderb
     };
   }>();
 
-  (data || []).forEach((entry: {
-    user_id: string;
-    amount: number;
-    profiles: {
-      nom: string;
-      prenom: string;
-      avatar_url: string;
-      calendriers_distribues: number;
-      montant_collecte: number;
-      equipe: unknown;
-    };
-    progression: {
-      level: number;
-      total_xp: number;
-      streak_days: number;
-    };
-  }) => {
+  const entries = (data as unknown as SupabaseXpHistoryEntry[]) || [];
+  entries.forEach((entry) => {
     const existing = userXpMap.get(entry.user_id);
     const weeklyXp = (existing?.weeklyXp || 0) + entry.amount;
+
+    const profile = entry.profiles?.[0];
+    const prog = entry.progression?.[0];
 
     userXpMap.set(entry.user_id, {
       weeklyXp,
       userData: {
-        level: entry.progression?.level || 1,
-        total_xp: entry.progression?.total_xp || 0,
-        streak_days: entry.progression?.streak_days || 0,
-        nom: entry.profiles?.nom || null,
-        prenom: entry.profiles?.prenom || null,
-        avatar_url: entry.profiles?.avatar_url || null,
-        calendriers_distribues: entry.profiles?.calendriers_distribues || 0,
-        montant_collecte: entry.profiles?.montant_collecte || 0,
-        equipe_nom: (entry.profiles?.equipe as {equipe_nom?: string})?.equipe_nom || null,
+        level: prog?.level || 1,
+        total_xp: prog?.total_xp || 0,
+        streak_days: prog?.streak_days || 0,
+        nom: profile?.first_name || null,
+        prenom: profile?.last_name || null,
+        avatar_url: profile?.avatar_url || null,
+        calendriers_distribues: profile?.calendriers_distribues || 0,
+        montant_collecte: profile?.montant_collecte || 0,
+        equipe_nom: profile?.equipe?.[0]?.equipe_nom || null,
       },
     });
   });
@@ -276,13 +288,18 @@ export async function getWeeklyLeaderboard(limit: number = 100): Promise<Leaderb
   const sorted = Array.from(userXpMap.entries())
     .sort((a, b) => b[1].weeklyXp - a[1].weeklyXp)
     .slice(0, limit)
-    .map(([userId, data], index) => ({
+    .map(([userId, { weeklyXp, userData }], index) => ({
       user_id: userId,
       rank: index + 1,
-      level: data.userData.level,
-      total_xp: data.weeklyXp, // XP hebdomadaire dans ce contexte
-      streak_days: data.userData.streak_days,
-      ...data.userData,
+      level: userData.level,
+      total_xp: weeklyXp, // XP hebdomadaire dans ce contexte
+      streak_days: userData.streak_days,
+      nom: userData.nom,
+      prenom: userData.prenom,
+      avatar_url: userData.avatar_url,
+      calendriers_distribues: userData.calendriers_distribues,
+      montant_collecte: userData.montant_collecte,
+      equipe_nom: userData.equipe_nom,
     }));
 
   return sorted;
@@ -310,8 +327,8 @@ export async function getMonthlyLeaderboard(limit: number = 100): Promise<Leader
       user_id,
       amount,
       profiles:user_id (
-        nom,
-        prenom,
+        first_name,
+        last_name,
         avatar_url,
         calendriers_distribues,
         montant_collecte,
@@ -348,38 +365,26 @@ export async function getMonthlyLeaderboard(limit: number = 100): Promise<Leader
     };
   }>();
 
-  (data || []).forEach((entry: {
-    user_id: string;
-    amount: number;
-    profiles: {
-      nom: string;
-      prenom: string;
-      avatar_url: string;
-      calendriers_distribues: number;
-      montant_collecte: number;
-      equipe: unknown;
-    };
-    progression: {
-      level: number;
-      total_xp: number;
-      streak_days: number;
-    };
-  }) => {
+  const entries = (data as unknown as SupabaseXpHistoryEntry[]) || [];
+  entries.forEach((entry) => {
     const existing = userXpMap.get(entry.user_id);
     const monthlyXp = (existing?.monthlyXp || 0) + entry.amount;
+
+    const profile = entry.profiles?.[0];
+    const prog = entry.progression?.[0];
 
     userXpMap.set(entry.user_id, {
       monthlyXp,
       userData: {
-        level: entry.progression?.level || 1,
-        total_xp: entry.progression?.total_xp || 0,
-        streak_days: entry.progression?.streak_days || 0,
-        nom: entry.profiles?.nom || null,
-        prenom: entry.profiles?.prenom || null,
-        avatar_url: entry.profiles?.avatar_url || null,
-        calendriers_distribues: entry.profiles?.calendriers_distribues || 0,
-        montant_collecte: entry.profiles?.montant_collecte || 0,
-        equipe_nom: (entry.profiles?.equipe as {equipe_nom?: string})?.equipe_nom || null,
+        level: prog?.level || 1,
+        total_xp: prog?.total_xp || 0,
+        streak_days: prog?.streak_days || 0,
+        nom: profile?.first_name || null,
+        prenom: profile?.last_name || null,
+        avatar_url: profile?.avatar_url || null,
+        calendriers_distribues: profile?.calendriers_distribues || 0,
+        montant_collecte: profile?.montant_collecte || 0,
+        equipe_nom: profile?.equipe?.[0]?.equipe_nom || null,
       },
     });
   });
@@ -388,13 +393,18 @@ export async function getMonthlyLeaderboard(limit: number = 100): Promise<Leader
   const sorted = Array.from(userXpMap.entries())
     .sort((a, b) => b[1].monthlyXp - a[1].monthlyXp)
     .slice(0, limit)
-    .map(([userId, data], index) => ({
+    .map(([userId, { monthlyXp, userData }], index) => ({
       user_id: userId,
       rank: index + 1,
-      level: data.userData.level,
-      total_xp: data.monthlyXp, // XP mensuel dans ce contexte
-      streak_days: data.userData.streak_days,
-      ...data.userData,
+      level: userData.level,
+      total_xp: monthlyXp, // XP mensuel dans ce contexte
+      streak_days: userData.streak_days,
+      nom: userData.nom,
+      prenom: userData.prenom,
+      avatar_url: userData.avatar_url,
+      calendriers_distribues: userData.calendriers_distribues,
+      montant_collecte: userData.montant_collecte,
+      equipe_nom: userData.equipe_nom,
     }));
 
   return sorted;
