@@ -122,7 +122,7 @@ export function StreakCounter({ streakDays, lastActivityDate, className, compact
         {streakDays > 0 && !isStreakActive && (
           <div className="p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
             <p className="text-sm text-yellow-600 dark:text-yellow-500 font-medium">
-              ⚠️ N&apos;oubliez pas votre activité aujourd&apos;hui pour conserver votre série de {streakDays} jour{streakDays > 1 ? &apos;s&apos; : &apos;&apos;} !
+              ⚠️ N&apos;oubliez pas votre activité aujourd&apos;hui pour conserver votre série de {streakDays} jour{streakDays > 1 ? 's' : ''} !
             </p>
           </div>
         )}
