@@ -6,12 +6,6 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import {
-  createComment,
-  updateComment,
-  deleteComment,
-} from "@/lib/supabase/idea-comments";
-import { reportComment } from "@/lib/supabase/idea-reports";
 
 /**
  * Créer un commentaire
@@ -23,22 +17,35 @@ export async function createCommentAction(ideaId: string, content: string) {
     // Vérifier l'authentification
     const {
       data: { user },
+      error: authError,
     } = await supabase.auth.getUser();
-    if (!user) {
-      throw new Error("Vous devez être connecté");
+    
+    if (authError || !user) {
+      return { success: false, error: "Vous devez être connecté" };
     }
 
     // Validation
     if (!content || content.trim().length === 0) {
-      throw new Error("Le commentaire ne peut pas être vide");
+      return { success: false, error: "Le commentaire ne peut pas être vide" };
     }
 
     if (content.length > 2000) {
-      throw new Error("Le commentaire ne peut pas dépasser 2000 caractères");
+      return { success: false, error: "Le commentaire ne peut pas dépasser 2000 caractères" };
     }
 
     // Créer le commentaire
-    await createComment(ideaId, content.trim());
+    const { error } = await supabase
+      .from("idea_comments")
+      .insert({
+        idea_id: ideaId,
+        user_id: user.id,
+        content: content.trim(),
+      });
+
+    if (error) {
+      console.error("Error creating comment:", error);
+      return { success: false, error: "Erreur lors de la création du commentaire" };
+    }
 
     // Revalider la page
     revalidatePath(`/idees/${ideaId}`);
@@ -46,7 +53,7 @@ export async function createCommentAction(ideaId: string, content: string) {
     return { success: true };
   } catch (error) {
     console.error("Erreur createCommentAction:", error);
-    throw error;
+    return { success: false, error: "Une erreur est survenue" };
   }
 }
 
@@ -64,9 +71,11 @@ export async function updateCommentAction(
     // Vérifier l'authentification
     const {
       data: { user },
+      error: authError,
     } = await supabase.auth.getUser();
-    if (!user) {
-      throw new Error("Vous devez être connecté");
+    
+    if (authError || !user) {
+      return { success: false, error: "Vous devez être connecté" };
     }
 
     // Vérifier la propriété du commentaire
@@ -77,20 +86,31 @@ export async function updateCommentAction(
       .single();
 
     if (!comment || comment.user_id !== user.id) {
-      throw new Error("Vous n'êtes pas autorisé à modifier ce commentaire");
+      return { success: false, error: "Vous n'êtes pas autorisé à modifier ce commentaire" };
     }
 
     // Validation
     if (!content || content.trim().length === 0) {
-      throw new Error("Le commentaire ne peut pas être vide");
+      return { success: false, error: "Le commentaire ne peut pas être vide" };
     }
 
     if (content.length > 2000) {
-      throw new Error("Le commentaire ne peut pas dépasser 2000 caractères");
+      return { success: false, error: "Le commentaire ne peut pas dépasser 2000 caractères" };
     }
 
     // Modifier le commentaire
-    await updateComment(commentId, content.trim());
+    const { error } = await supabase
+      .from("idea_comments")
+      .update({
+        content: content.trim(),
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", commentId);
+
+    if (error) {
+      console.error("Error updating comment:", error);
+      return { success: false, error: "Erreur lors de la modification du commentaire" };
+    }
 
     // Revalider la page
     revalidatePath(`/idees/${ideaId}`);
@@ -98,7 +118,7 @@ export async function updateCommentAction(
     return { success: true };
   } catch (error) {
     console.error("Erreur updateCommentAction:", error);
-    throw error;
+    return { success: false, error: "Une erreur est survenue" };
   }
 }
 
@@ -112,9 +132,11 @@ export async function deleteCommentAction(commentId: string, ideaId: string) {
     // Vérifier l'authentification
     const {
       data: { user },
+      error: authError,
     } = await supabase.auth.getUser();
-    if (!user) {
-      throw new Error("Vous devez être connecté");
+    
+    if (authError || !user) {
+      return { success: false, error: "Vous devez être connecté" };
     }
 
     // Récupérer le profil pour vérifier le rôle admin
@@ -134,11 +156,19 @@ export async function deleteCommentAction(commentId: string, ideaId: string) {
       .single();
 
     if (!comment || (comment.user_id !== user.id && !isAdmin)) {
-      throw new Error("Vous n'êtes pas autorisé à supprimer ce commentaire");
+      return { success: false, error: "Vous n'êtes pas autorisé à supprimer ce commentaire" };
     }
 
-    // Supprimer le commentaire
-    await deleteComment(commentId);
+    // Supprimer (soft delete)
+    const { error } = await supabase
+      .from("idea_comments")
+      .update({ deleted_at: new Date().toISOString() })
+      .eq("id", commentId);
+
+    if (error) {
+      console.error("Error deleting comment:", error);
+      return { success: false, error: "Erreur lors de la suppression du commentaire" };
+    }
 
     // Revalider la page
     revalidatePath(`/idees/${ideaId}`);
@@ -146,7 +176,7 @@ export async function deleteCommentAction(commentId: string, ideaId: string) {
     return { success: true };
   } catch (error) {
     console.error("Erreur deleteCommentAction:", error);
-    throw error;
+    return { success: false, error: "Une erreur est survenue" };
   }
 }
 
@@ -160,9 +190,11 @@ export async function flagCommentAction(commentId: string, ideaId: string) {
     // Vérifier l'authentification
     const {
       data: { user },
+      error: authError,
     } = await supabase.auth.getUser();
-    if (!user) {
-      throw new Error("Vous devez être connecté");
+    
+    if (authError || !user) {
+      return { success: false, error: "Vous devez être connecté" };
     }
 
     // Vérifier que l'utilisateur ne signale pas son propre commentaire
@@ -173,11 +205,23 @@ export async function flagCommentAction(commentId: string, ideaId: string) {
       .single();
 
     if (comment?.user_id === user.id) {
-      throw new Error("Vous ne pouvez pas signaler votre propre commentaire");
+      return { success: false, error: "Vous ne pouvez pas signaler votre propre commentaire" };
     }
 
     // Signaler le commentaire
-    await reportComment(commentId, "spam", "Contenu inapproprié");
+    const { error } = await supabase
+      .from("idea_reports")
+      .insert({
+        comment_id: commentId,
+        reporter_id: user.id,
+        report_type: "spam",
+        reason: "Contenu inapproprié",
+      });
+
+    if (error) {
+      console.error("Error flagging comment:", error);
+      return { success: false, error: "Erreur lors du signalement" };
+    }
 
     // Revalider la page
     revalidatePath(`/idees/${ideaId}`);
@@ -185,6 +229,6 @@ export async function flagCommentAction(commentId: string, ideaId: string) {
     return { success: true };
   } catch (error) {
     console.error("Erreur flagCommentAction:", error);
-    throw error;
+    return { success: false, error: "Une erreur est survenue" };
   }
 }

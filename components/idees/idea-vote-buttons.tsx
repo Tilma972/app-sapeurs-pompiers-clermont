@@ -9,7 +9,7 @@ import { useState } from "react";
 import { ThumbsUp, ThumbsDown, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { voteIdea } from "@/lib/supabase/idea-votes";
+import { voteIdeaAction } from "@/app/idees/actions";
 import toast from "react-hot-toast";
 import type { VoteType } from "@/lib/types/ideas.types";
 
@@ -60,8 +60,12 @@ export function IdeaVoteButtons({
       setVotesCount(newCount);
       onVoteChange?.(newCount);
 
-      // Appel API
-      const result = await voteIdea(ideaId, voteType);
+      // Appel Server Action
+      const result = await voteIdeaAction(ideaId, voteType);
+
+      if (!result.success) {
+        throw new Error(result.error || "Erreur lors du vote");
+      }
 
       // Si le résultat indique que le vote a été retiré
       if (result.action === "removed") {
