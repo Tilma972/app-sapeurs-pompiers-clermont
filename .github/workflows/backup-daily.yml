@@ -32,8 +32,8 @@ jobs:
       - name: 🌐 Resolve Supabase DB to IPv4
         run: |
           echo "Resolving Supabase database hostname to IPv4..."
-          # Extract hostname from connection string
-          DB_HOST=$(echo "${{ secrets.SUPABASE_DB_URL }}" | awk -F'[@:]' '{print $(NF-2)}')
+          # Extract hostname from connection string (between @ and :port)
+          DB_HOST=$(echo "${{ secrets.SUPABASE_DB_URL }}" | sed -E 's|.*@([^:]+):.*|\1|')
           echo "Extracted hostname: $DB_HOST"
           
           # Resolve to IPv4
