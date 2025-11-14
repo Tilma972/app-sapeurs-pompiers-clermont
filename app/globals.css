@@ -330,3 +330,13 @@
 .animate-ken-burns {
   animation: ken-burns 20s ease-in-out infinite;
 }
+
+/* Leaflet overrides - Fix marker icons */
+.leaflet-container {
+  font-family: inherit;
+}
+
+.leaflet-control-attribution {
+  font-size: 10px;
+  opacity: 0.7;
+}
