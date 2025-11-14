@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Wallet } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { PwaContainer } from "@/components/layouts/pwa/pwa-container";
@@ -32,15 +33,19 @@ export default async function MonComptePage() {
 
   return (
     <PwaContainer>
-      <div className="space-y-6">
-        <div className="bg-card rounded-lg p-6 border">
+      <div className="space-y-6 pb-20">
+        {/* Header */}
+        <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <div>
+            <div className="flex items-center gap-2">
+              <Wallet className="h-6 w-6 text-primary" />
               <h1 className="text-2xl font-bold">Mon Compte</h1>
-              <p className="text-sm text-muted-foreground">Vos soldes et votre historique de rétribution</p>
             </div>
             <Badge variant="outline">Bêta</Badge>
           </div>
+          <p className="text-sm text-muted-foreground">
+            Vos soldes et votre historique de rétribution
+          </p>
         </div>
 
         {/* Si l'utilisateur n'a pas encore de compte (pas de clôture) */}

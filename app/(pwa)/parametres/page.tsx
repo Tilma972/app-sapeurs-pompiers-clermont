@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Settings } from "lucide-react";
 import { RetributionPreferencesCard } from "@/components/retribution-preferences-card";
 import { EquipeSettingsForm } from "@/components/admin/equipe-settings-form";
 import { PwaContainer } from "@/components/layouts/pwa/pwa-container";
@@ -36,15 +37,19 @@ export default async function ParametresPage() {
 
   return (
     <PwaContainer>
-      <div className="space-y-6">
-        <div className="bg-card rounded-lg p-6 border">
+      <div className="space-y-6 pb-20">
+        {/* Header */}
+        <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <div>
+            <div className="flex items-center gap-2">
+              <Settings className="h-6 w-6 text-primary" />
               <h1 className="text-2xl font-bold">Paramètres</h1>
-              <p className="text-sm text-muted-foreground">Personnalisez votre expérience selon votre rôle</p>
             </div>
             <Badge variant="outline">{profile?.role || 'membre'}</Badge>
           </div>
+          <p className="text-sm text-muted-foreground">
+            Personnalisez votre expérience
+          </p>
         </div>
 
         {/* Section: Répartition (visible à tous) */}
