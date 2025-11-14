@@ -15,6 +15,12 @@ export async function signUpAction({ email, password, firstName, lastName }: {
   const normalizedFirstName = firstName.trim()
   const normalizedLastName = lastName.trim()
 
+  console.log('🔍 Tentative inscription:', {
+    firstName: normalizedFirstName,
+    lastName: normalizedLastName,
+    email: normalizedEmail
+  })
+
   const supabase = createClient()
 
   // Appel fonction SQL transactionnelle avec vérification EMAIL + NOM + PRÉNOM
@@ -26,13 +32,16 @@ export async function signUpAction({ email, password, firstName, lastName }: {
       p_email: normalizedEmail
     })
 
+  console.log('📋 Résultat whitelist:', { whitelistData, whitelistError })
+
   if (whitelistError) {
-    console.error('Whitelist claim error:', whitelistError)
+    console.error('❌ Whitelist claim error:', whitelistError)
     return { error: "Erreur lors de la vérification de la whitelist" }
   }
 
   // Vérifier si une entrée a été trouvée
   if (!whitelistData || whitelistData.length === 0) {
+    console.warn('⚠️ Aucune entrée whitelist trouvée')
     return {
       error: `Aucune inscription trouvée pour ${normalizedFirstName} ${normalizedLastName} avec l'email ${normalizedEmail}. Vérifie l'orthographe de tes informations ou contacte un administrateur.`
     }
