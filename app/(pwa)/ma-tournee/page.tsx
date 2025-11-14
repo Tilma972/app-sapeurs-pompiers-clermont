@@ -68,7 +68,6 @@ export default async function MaTourneePage() {
         <TourneeStatusCard 
           status="active"
           startTime={startTime}
-          secteur={tournee.zone || undefined}
           count={calendars}
           amount={Math.round(amount)}
         />

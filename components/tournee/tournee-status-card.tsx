@@ -1,21 +1,18 @@
 "use client"
 
 import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import { Flame } from "lucide-react"
 
 interface TourneeStatusCardProps {
   status: 'active' | 'inactive'
   startTime?: string
-  secteur?: string
   count: number
   amount: number
 }
 
 export function TourneeStatusCard({ 
   status, 
-  startTime, 
-  secteur, 
+  startTime,
   count, 
   amount 
 }: TourneeStatusCardProps) {
@@ -50,12 +47,6 @@ export function TourneeStatusCard({
               </p>
             </div>
           </div>
-          
-          {secteur && (
-            <Badge variant="secondary" className="shrink-0 text-xs sm:text-sm">
-              📍 {secteur}
-            </Badge>
-          )}
         </div>
         
         {/* Stats grid avec meilleure gestion responsive */}
