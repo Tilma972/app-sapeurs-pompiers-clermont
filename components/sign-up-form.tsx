@@ -52,7 +52,22 @@ export function SignUpForm({
       if (result.error) {
         setError(result.error);
       } else {
-        router.push("/auth/sign-up-success");
+        // Inscription réussie + whitelist validée = connexion automatique
+        const { createClient } = await import("@/lib/supabase/client");
+        const supabase = createClient();
+        
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email: email.trim().toLowerCase(),
+          password,
+        });
+        
+        if (signInError) {
+          // Fallback: redirection vers login si connexion auto échoue
+          router.push("/auth/login?message=Inscription réussie ! Connecte-toi maintenant.");
+        } else {
+          // Succès total : redirection directe vers PWA
+          router.push("/calendriers");
+        }
       }
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "Une erreur est survenue");
