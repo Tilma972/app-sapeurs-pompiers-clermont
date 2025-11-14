@@ -14,9 +14,10 @@ import { MapPin } from "lucide-react";
 interface SectorMapProps {
   secteur: string; // 'nord', 'sud', 'est', 'ouest', 'centre', 'nord-est', 'sud-est'
   className?: string;
+  fullscreen?: boolean; // Mode plein écran pour la modal
 }
 
-export function SectorMap({ secteur, className }: SectorMapProps) {
+export function SectorMap({ secteur, className, fullscreen = false }: SectorMapProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<L.Map | null>(null);
 
@@ -90,6 +91,16 @@ export function SectorMap({ secteur, className }: SectorMapProps) {
       }
     };
   }, [secteur]);
+
+  // Si mode fullscreen, pas de Card wrapper
+  if (fullscreen) {
+    return (
+      <div
+        ref={mapContainer}
+        className={`rounded-lg overflow-hidden border border-border ${className}`}
+      />
+    );
+  }
 
   return (
     <Card className={className}>
