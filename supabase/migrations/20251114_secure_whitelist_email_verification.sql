@@ -22,7 +22,6 @@ RETURNS TABLE (
   first_name text,
   last_name text,
   email text,
-  secteur text,
   used boolean,
   used_at timestamptz
 )
@@ -73,14 +72,13 @@ BEGIN
     )
   );
 
-  -- Retourner l'entrée claim
+  -- Retourner l'entrée claim (sans secteur qui n'existe pas)
   RETURN QUERY
   SELECT 
     entry.id,
     entry.first_name,
     entry.last_name,
     entry.email,
-    entry.secteur,
     entry.used,
     entry.used_at;
 END;
