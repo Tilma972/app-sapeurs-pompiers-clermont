@@ -10,14 +10,19 @@ export async function signUpAction({ email, password, firstName, lastName }: {
     return { error: "Tous les champs sont requis" }
   }
 
+  // Normalisation des données (sécurité + cohérence)
+  const normalizedEmail = email.trim().toLowerCase()
+  const normalizedFirstName = firstName.trim().charAt(0).toUpperCase() + firstName.trim().slice(1).toLowerCase()
+  const normalizedLastName = lastName.trim().toUpperCase()
+
   const supabase = createClient()
 
-  // Appel fonction SQL transactionnelle
+  // Appel fonction SQL transactionnelle avec vérification EMAIL + NOM + PRÉNOM
   const { data: whitelistData, error: whitelistError } = await supabase
     .rpc('claim_whitelist_entry', {
-      p_first_name: firstName,
-      p_last_name: lastName,
-      p_email: email
+      p_first_name: normalizedFirstName,
+      p_last_name: normalizedLastName,
+      p_email: normalizedEmail
     })
 
   if (whitelistError) {
@@ -28,7 +33,7 @@ export async function signUpAction({ email, password, firstName, lastName }: {
   // Vérifier si une entrée a été trouvée
   if (!whitelistData || whitelistData.length === 0) {
     return {
-      error: "Votre inscription n'est pas autorisée. Contactez l'administrateur pour être ajouté à la liste."
+      error: `Aucune inscription trouvée pour ${normalizedFirstName} ${normalizedLastName} avec l'email ${normalizedEmail}. Vérifie l'orthographe de tes informations ou contacte un administrateur.`
     }
   }
 
@@ -36,13 +41,13 @@ export async function signUpAction({ email, password, firstName, lastName }: {
 
   // Créer compte auth
   const { error: authError } = await supabase.auth.signUp({
-    email,
+    email: normalizedEmail,
     password,
     options: {
       data: {
-        full_name: `${firstName} ${lastName}`,
-        first_name: firstName,
-        last_name: lastName,
+        full_name: `${normalizedFirstName} ${normalizedLastName}`,
+        first_name: normalizedFirstName,
+        last_name: normalizedLastName,
       }
     }
   })
