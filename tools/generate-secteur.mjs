@@ -10,12 +10,12 @@ const DOSSIER_SORTIE = 'public/sectors';
 const SECTEURS_CONFIG = [
   {
     nom: 'Secteur Nord',
-    communes: ['Lacoste', 'Brignac', 'Jonquières'],
+    communes: ['Lacoste', 'Brignac'],
     sous_secteurs: ['Secteur Nord'],
   },
   {
     nom: 'Secteur Ouest',
-    communes: ['Octon', 'Salasc', 'Mérifons', 'Mourèze', 'Liausson', 'Villeneuvette', 'Valmascle'],
+    communes: ['Salasc', 'Mérifons', 'Mourèze', 'Liausson', 'Villeneuvette', 'Valmascle'],
     sous_secteurs: ['Secteur Ouest'],
   },
   {
@@ -25,7 +25,7 @@ const SECTEURS_CONFIG = [
   },
   {
     nom: 'Secteur Nord-Est',
-    communes: ['Saint-Saturnin-de-Lucian', 'Saint-Guiraud', 'Saint-Félix-de-Lodez', 'Arboras', 'Ceyras'],
+    communes: ['Saint-Saturnin-de-Lucian', 'Saint-Guiraud', 'Saint-Félix-de-Lodez', 'Arboras', 'Ceyras', 'Joncquières'],
     sous_secteurs: [],
   },
   {
