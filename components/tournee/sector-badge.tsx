@@ -23,7 +23,7 @@ export function SectorBadge({ secteur, onClick, className = '' }: SectorBadgePro
   return (
     <Badge
       variant="outline"
-      className={`cursor-pointer hover:bg-accent transition-colors ${className}`}
+      className={`cursor-pointer hover:bg-accent transition-colors inline-flex items-center ${className}`}
       onClick={onClick}
     >
       <MapPin className="w-3 h-3 mr-1" />
