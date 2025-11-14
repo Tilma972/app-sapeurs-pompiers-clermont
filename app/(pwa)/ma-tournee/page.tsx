@@ -1,5 +1,6 @@
 import { PwaContainer } from "@/components/layouts/pwa/pwa-container"
 import { TourneeStatusCard } from "@/components/tournee/tournee-status-card"
+import { SectorMap } from "@/components/tournee/sector-map"
 import { Button } from "@/components/ui/button"
 import { createClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
@@ -16,6 +17,23 @@ export default async function MaTourneePage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect("/auth/login")
 
+  // Récupérer le secteur de l'équipe de l'utilisateur
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("team_id")
+    .eq("id", user.id)
+    .single();
+
+  let userSecteur: string | null = null;
+  if (profile?.team_id) {
+    const { data: equipe } = await supabase
+      .from("equipes")
+      .select("secteur")
+      .eq("id", profile.team_id)
+      .single();
+    userSecteur = equipe?.secteur || null;
+  }
+
   const tourneeData = await getActiveTourneeWithTransactions()
 
   // Pas de tournée active
@@ -23,6 +41,12 @@ export default async function MaTourneePage() {
     return (
       <PwaContainer>
         <TourneeStatusCard status="inactive" count={0} amount={0} />
+        
+        {/* Carte du secteur si assigné */}
+        {userSecteur && (
+          <SectorMap secteur={userSecteur} className="mt-4" />
+        )}
+
         <div className="grid grid-cols-1 gap-3 sm:gap-4 mt-4">
           <Button size="lg" disabled className="h-20 sm:h-24 text-base sm:text-lg w-full">
             💳 PAIEMENT CARTE
@@ -50,6 +74,11 @@ export default async function MaTourneePage() {
           count={calendars}
           amount={Math.round(amount)}
         />
+
+        {/* Carte du secteur si assigné */}
+        {userSecteur && (
+          <SectorMap secteur={userSecteur} className="mt-4" />
+        )}
 
         {/* Gros boutons tactiles - Layout optimisé */}
         <div className="grid grid-cols-1 gap-3 sm:gap-4 mt-4">

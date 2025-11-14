@@ -20,6 +20,7 @@ interface EquipeSettingsFormProps {
     pourcentage_minimum_pot: number;
     pourcentage_recommande_pot: number;
     mode_transparence: 'prive' | 'equipe' | 'anonyme';
+    secteur?: string | null;
     communes?: string[] | null;
     secteur_centre_lat?: number | null;
     secteur_centre_lon?: number | null;
@@ -27,6 +28,16 @@ interface EquipeSettingsFormProps {
   canEdit?: boolean;
   canArchive?: boolean;
 }
+
+// Secteurs disponibles (correspondant aux fichiers dans public/sectors/)
+const SECTEURS_DISPONIBLES = [
+  { value: '', label: 'Aucun secteur' },
+  { value: 'nord', label: 'Secteur Nord' },
+  { value: 'sud', label: 'Secteur Sud' },
+  { value: 'ouest', label: 'Secteur Ouest' },
+  { value: 'nord-est', label: 'Secteur Nord-Est' },
+  { value: 'sud-est', label: 'Secteur Sud-Est' },
+];
 
 export function EquipeSettingsForm({ equipe, canEdit = false, canArchive = false }: EquipeSettingsFormProps) {
   const router = useRouter();
@@ -37,6 +48,7 @@ export function EquipeSettingsForm({ equipe, canEdit = false, canArchive = false
     mode_transparence: equipe.mode_transparence,
   });
   const [geo, setGeo] = useState({
+    secteur: equipe.secteur ?? undefined as string | undefined,
     communesText: (equipe.communes && equipe.communes.length > 0) ? equipe.communes.join(', ') : '',
     secteur_centre_lat: equipe.secteur_centre_lat ?? undefined as number | undefined,
     secteur_centre_lon: equipe.secteur_centre_lon ?? undefined as number | undefined,
@@ -53,6 +65,7 @@ export function EquipeSettingsForm({ equipe, canEdit = false, canArchive = false
     try {
       const payload: Record<string, unknown> = {
         ...settings,
+        secteur: geo.secteur ?? null,
         communes: geo.communesText
           ? geo.communesText.split(',').map((s) => s.trim()).filter(Boolean)
           : null,
@@ -212,6 +225,26 @@ export function EquipeSettingsForm({ equipe, canEdit = false, canArchive = false
         )}
 
         {/* Zone géographique */}
+        <div className="space-y-2">
+          <Label htmlFor="secteur">Secteur géographique</Label>
+          <select
+            id="secteur"
+            className="w-full border rounded p-2 bg-background"
+            value={geo.secteur ?? ''}
+            disabled={!canEdit || isLoading || equipe.status === 'archived'}
+            onChange={(e) => setGeo({ ...geo, secteur: e.target.value || undefined })}
+          >
+            {SECTEURS_DISPONIBLES.map((s) => (
+              <option key={s.value} value={s.value}>
+                {s.label}
+              </option>
+            ))}
+          </select>
+          <p className="text-xs text-muted-foreground">
+            Zone d&apos;intervention affichée sur la carte (fichiers GeoJSON)
+          </p>
+        </div>
+
         <div className="space-y-2">
           <Label htmlFor="communes">Communes desservies (séparées par des virgules)</Label>
           <textarea
