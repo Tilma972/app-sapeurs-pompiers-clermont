@@ -16,6 +16,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { createClient } from "@/lib/supabase/client"
+import { useState, useEffect } from "react"
 
 interface PwaAppBarProps {
   title?: string
@@ -30,6 +31,12 @@ interface PwaAppBarProps {
 export function PwaAppBar({ title, user }: PwaAppBarProps) {
   const router = useRouter()
   const pathname = usePathname()
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+
+  // Fermer le menu mobile lors du changement de route
+  useEffect(() => {
+    setMobileMenuOpen(false)
+  }, [pathname])
 
   const getPageTitle = () => {
     if (title) return title
@@ -58,7 +65,7 @@ export function PwaAppBar({ title, user }: PwaAppBarProps) {
     <header className="sticky top-0 z-50 bg-background/95 border-b border-border backdrop-blur supports-[backdrop-filter]:bg-background/60 pt-safe">
       <div className="flex items-center justify-between h-16 px-4">
         {/* Hamburger menu for navigation */}
-        <Sheet>
+        <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
           <SheetTrigger asChild>
             <Button variant="ghost" size="icon" aria-label="Ouvrir le menu">
               <Menu />
