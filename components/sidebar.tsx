@@ -74,6 +74,7 @@ interface SidebarProps {
 export function Sidebar({ className }: SidebarProps) {
   const pathname = usePathname();
   const [role, setRole] = useState<string | null>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -100,6 +101,11 @@ export function Sidebar({ className }: SidebarProps) {
       mounted = false;
     };
   }, []);
+
+  // Fermer le menu mobile lors de la navigation
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [pathname]);
 
   const NavList = () => (
     <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
@@ -297,7 +303,7 @@ export function Sidebar({ className }: SidebarProps) {
 
         {/* Mobile menu trigger */}
         <div className="sm:hidden">
-          <Sheet>
+          <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon" aria-label="Ouvrir le menu">
                 <Menu className="h-5 w-5" />
