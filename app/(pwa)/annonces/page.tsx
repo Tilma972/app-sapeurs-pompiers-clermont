@@ -164,8 +164,20 @@ export default function AnnoncesPage() {
   }
 
   return (
-    <>
-      <div className="sticky top-[64px] z-10 bg-background px-4 py-3 border-b">
+    <PwaContainer>
+      <div className="space-y-6 pb-20">
+        {/* Header */}
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <MessageCircle className="h-6 w-6 text-primary" />
+            <h1 className="text-2xl font-bold">Petites Annonces</h1>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Achetez et vendez entre pompiers
+          </p>
+        </div>
+
+        {/* Barre de recherche */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
           <Input
@@ -177,7 +189,6 @@ export default function AnnoncesPage() {
             aria-label="Rechercher une annonce"
           />
         </div>
-      </div>
 
       <div className="flex gap-2 px-4 py-3 border-b">
         <Button
@@ -219,10 +230,11 @@ export default function AnnoncesPage() {
         ))}
       </div>
 
-      <PwaContainer>
-        <h2 className="text-2xl font-bold tracking-tight px-0 pb-3 pt-2">
-          Dernières Annonces
-        </h2>
+        {/* Dernières Annonces */}
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight pb-3 pt-2">
+            Dernières Annonces
+          </h2>
 
         <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
           <span>
@@ -241,7 +253,7 @@ export default function AnnoncesPage() {
         )}
 
         {!loading && annonces.length > 0 && (
-          <div className="grid grid-cols-[repeat(auto-fit,minmax(158px,1fr))] gap-4 pb-20">
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(158px,1fr))] gap-4">
             {annonces.map((annonce) => {
               const statutBadge = getStatutBadge(annonce.statut)
               return (
@@ -414,7 +426,8 @@ export default function AnnoncesPage() {
             </Button>
           </div>
         )}
-      </PwaContainer>
-    </>
+        </div>
+      </div>
+    </PwaContainer>
   )
 }
