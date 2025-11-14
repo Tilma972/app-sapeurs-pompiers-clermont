@@ -20,6 +20,8 @@ export function SignUpForm({
   ...props
 }: React.ComponentPropsWithoutRef<"div">) {
   const [email, setEmail] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [password, setPassword] = useState("");
   const [repeatPassword, setRepeatPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -41,17 +43,11 @@ export function SignUpForm({
     try {
       const { signUpAction } = await import("@/app/auth/sign-up/signUpAction");
       
-      // Extraction robuste du prénom/nom depuis l'email
-      const emailLocalPart = email.split("@")[0];
-      const nameParts = emailLocalPart.split(".");
-      const firstName = nameParts[0] || emailLocalPart;
-      const lastName = nameParts[1] || "Utilisateur";
-      
       const result = await signUpAction({
-        email,
+        email: email.trim(),
         password,
-        firstName,
-        lastName,
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
       });
       if (result.error) {
         setError(result.error);
@@ -70,11 +66,41 @@ export function SignUpForm({
       <Card>
         <CardHeader>
           <CardTitle className="text-2xl">Inscription à l&apos;amicale</CardTitle>
-          <CardDescription>Rejoins la grande famille des amicalistes&nbsp;!</CardDescription>
+          <CardDescription>
+            Rejoins la grande famille des amicalistes&nbsp;!
+            <br />
+            <span className="text-xs text-muted-foreground mt-1 block">
+              Entre ton nom et prénom <strong>exactement comme enregistrés</strong> par l&apos;administrateur.
+            </span>
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSignUp}>
             <div className="flex flex-col gap-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="firstName">Prénom</Label>
+                  <Input
+                    id="firstName"
+                    type="text"
+                    placeholder="Jean"
+                    required
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="lastName">Nom</Label>
+                  <Input
+                    id="lastName"
+                    type="text"
+                    placeholder="Dupont"
+                    required
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                  />
+                </div>
+              </div>
               <div className="grid gap-2">
                 <Label htmlFor="email">E-mail</Label>
                 <Input
