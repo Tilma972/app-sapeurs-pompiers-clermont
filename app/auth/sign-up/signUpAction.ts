@@ -12,12 +12,13 @@ export async function signUpAction({ email, password, firstName, lastName }: {
 
   // Normalisation des données (sécurité + cohérence)
   const normalizedEmail = email.trim().toLowerCase()
-  const normalizedFirstName = firstName.trim().charAt(0).toUpperCase() + firstName.trim().slice(1).toLowerCase()
-  const normalizedLastName = lastName.trim().toUpperCase()
+  const normalizedFirstName = firstName.trim()
+  const normalizedLastName = lastName.trim()
 
   const supabase = createClient()
 
   // Appel fonction SQL transactionnelle avec vérification EMAIL + NOM + PRÉNOM
+  // La fonction SQL fait lower() donc la casse n'a pas d'importance
   const { data: whitelistData, error: whitelistError } = await supabase
     .rpc('claim_whitelist_entry', {
       p_first_name: normalizedFirstName,
