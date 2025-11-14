@@ -66,7 +66,7 @@ export function SignUpForm({
           router.push("/auth/login?message=Inscription réussie ! Connecte-toi maintenant.");
         } else {
           // Succès total : redirection directe vers PWA
-          router.push("/calendriers");
+          router.push("/dashboard");
         }
       }
     } catch (error: unknown) {
