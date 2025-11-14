@@ -25,10 +25,20 @@ export function TourneeClotureModal({ tourneeId, onClose }: ModalClotureProps) {
   const total = Math.max(0, (especes || 0) + (cheques || 0))
   const montantAmicale = total * 0.7
   const montantPompier = total * 0.3
-  const isValid = total > 0 && calendriers > 0
+  // Accepter la clôture même sans vente (tournée infructueuse)
+  const isValid = calendriers >= 0 && total >= 0
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    
+    // Si aucune vente, demander confirmation
+    if (calendriers === 0 && total === 0) {
+      const confirm = window.confirm(
+        '⚠️ Aucune vente enregistrée.\n\nVoulez-vous vraiment clôturer cette tournée sans calendriers ni montant ?'
+      )
+      if (!confirm) return
+    }
+    
     if (!isValid) return
     setIsSubmitting(true)
     try {
@@ -41,9 +51,10 @@ export function TourneeClotureModal({ tourneeId, onClose }: ModalClotureProps) {
         toast.error(res?.error || 'Erreur lors de la clôture', { duration: 4000 })
         return
       }
-      toast.success(`🎉 Tournée clôturée ! Répartition effectuée selon vos préférences.`, { duration: 5000 })
+      toast.success(`🎉 Tournée clôturée ! ${total > 0 ? 'Répartition effectuée selon vos préférences.' : ''}`, { duration: 5000 })
       onClose()
-      router.push('/dashboard/mon-compte')
+      router.push('/calendriers')
+      router.refresh()
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Erreur lors de la clôture'
       toast.error(message, { duration: 4000 })

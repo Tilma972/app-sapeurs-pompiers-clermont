@@ -58,7 +58,7 @@ export default async function CarteSecteurt() {
         <div className="flex-1 text-center">
           <h1 className="text-lg font-semibold">📍 {secteurLabel}</h1>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Zone en rouge = ton périmètre d&apos;intervention
+            Zone en rouge = secteur assigné
           </p>
         </div>
         <div className="w-20"></div> {/* Spacer pour centrer le titre */}
