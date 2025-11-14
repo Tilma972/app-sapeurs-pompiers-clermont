@@ -1,6 +1,6 @@
 import { PwaContainer } from "@/components/layouts/pwa/pwa-container"
 import { TourneeStatusCard } from "@/components/tournee/tournee-status-card"
-import { SectorMap } from "@/components/tournee/sector-map"
+import { MaTourneeClient } from "@/components/tournee/ma-tournee-client"
 import { Button } from "@/components/ui/button"
 import { createClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
@@ -42,10 +42,8 @@ export default async function MaTourneePage() {
       <PwaContainer>
         <TourneeStatusCard status="inactive" count={0} amount={0} />
         
-        {/* Carte du secteur si assigné */}
-        {userSecteur && (
-          <SectorMap secteur={userSecteur} className="mt-4" />
-        )}
+        {/* Badge cliquable du secteur si assigné */}
+        {userSecteur && <MaTourneeClient secteur={userSecteur} />}
 
         <div className="grid grid-cols-1 gap-3 sm:gap-4 mt-4">
           <Button size="lg" disabled className="h-20 sm:h-24 text-base sm:text-lg w-full">
@@ -75,10 +73,8 @@ export default async function MaTourneePage() {
           amount={Math.round(amount)}
         />
 
-        {/* Carte du secteur si assigné */}
-        {userSecteur && (
-          <SectorMap secteur={userSecteur} className="mt-4" />
-        )}
+        {/* Badge cliquable du secteur si assigné */}
+        {userSecteur && <MaTourneeClient secteur={userSecteur} />}
 
         {/* Gros boutons tactiles - Layout optimisé */}
         <div className="grid grid-cols-1 gap-3 sm:gap-4 mt-4">
