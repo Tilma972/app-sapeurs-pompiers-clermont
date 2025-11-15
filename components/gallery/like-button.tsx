@@ -34,8 +34,20 @@ export function LikeButton({
   const [particles, setParticles] = useState<number[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
+  // Log au montage initial
+  useEffect(() => {
+    console.log("🎨 [LikeButton] Mount:", {
+      photoId,
+      initialLiked,
+      initialCount,
+      currentLiked: liked,
+      currentCount: count,
+    });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   // 🔥 AMÉLIORATION 2: Sync avec props initiales (fix sync galerie ↔ détail)
   useEffect(() => {
+    console.log("🔄 [LikeButton] Props changed:", { initialLiked, initialCount });
     setLiked(initialLiked);
     setCount(initialCount);
   }, [initialLiked, initialCount]);
