@@ -8,7 +8,7 @@ const newsItems = [
   {
     type: "amicale",
     title: "Assemblée générale 2025",
-    date: "14 Novemvre 2025",
+    date: "14 Novembre 2025",
     description: "Rendez-vous annuel pour faire le bilan de nos actions et définir les orientations futures.",
     icon: Users,
     color: "icon-users"
