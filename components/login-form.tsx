@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import Image from "next/image";
 
 export function LoginForm({
   className,
@@ -48,37 +49,43 @@ export function LoginForm({
   };
 
   return (
-    <div className={cn("flex flex-col gap-6", className)} {...props}>
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-2xl">Login</CardTitle>
-          <CardDescription>
-            Enter your email below to login to your account
+    <div className={cn("flex flex-col gap-6 items-center justify-center min-h-[80vh]", className)} {...props}>
+      <Card className="w-full max-w-md shadow-lg">
+        <CardHeader className="flex flex-col items-center gap-2">
+          <Image src="/icons/icon-192x192.png" alt="Logo Amicale" width={64} height={64} className="mb-2 rounded-full" />
+          <CardTitle className="text-2xl text-center">Bienvenue sur l&apos;espace membres</CardTitle>
+          <CardDescription className="text-center text-base text-muted-foreground">
+            Amicale des Sapeurs-Pompiers de Clermont-l&apos;Hérault<br />
+            <span className="text-xs text-primary font-medium">Merci d&apos;utiliser votre vraie adresse e-mail pour vous connecter.</span>
           </CardDescription>
+          <div className="text-center text-sm text-primary font-medium mt-2">
+            Ravi de vous revoir ! Connectez-vous pour accéder à votre espace amicaliste.
+          </div>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleLogin}>
             <div className="flex flex-col gap-6">
               <div className="grid gap-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">Adresse e-mail</Label>
                 <Input
                   id="email"
                   type="email"
-                  placeholder="m@example.com"
+                  placeholder="Votre adresse e-mail"
                   required
                   value={email}
                   aria-invalid={!!error}
                   onChange={(e) => setEmail(e.target.value)}
+                  autoComplete="email"
                 />
               </div>
               <div className="grid gap-2">
                 <div className="flex items-center">
-                  <Label htmlFor="password">Password</Label>
+                  <Label htmlFor="password">Mot de passe</Label>
                   <Link
                     href="/auth/forgot-password"
                     className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
                   >
-                    Forgot your password?
+                    Mot de passe oublié ?
                   </Link>
                 </div>
                 <Input
@@ -88,6 +95,7 @@ export function LoginForm({
                   value={password}
                   aria-invalid={!!error}
                   onChange={(e) => setPassword(e.target.value)}
+                  autoComplete="current-password"
                 />
               </div>
               {error && (
@@ -96,16 +104,16 @@ export function LoginForm({
                 </p>
               )}
               <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Logging in..." : "Login"}
+                {isLoading ? "Connexion en cours..." : "Se connecter"}
               </Button>
             </div>
             <div className="mt-4 text-center text-sm">
-              Don&apos;t have an account?{" "}
+              Pas encore membre ?{' '}
               <Link
                 href="/auth/sign-up"
-                className="underline underline-offset-4"
+                className="underline underline-offset-4 font-medium"
               >
-                Sign up
+                Inscrivez-vous ici
               </Link>
             </div>
           </form>
