@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
       id: string
       amount_total?: number | null
       customer_details?: { email?: string | null; name?: string | null } | null
-      metadata?: { tournee_id?: string; calendar_given?: string; user_id?: string }
+      metadata?: { tournee_id?: string; calendar_given?: string; user_id?: string; source?: string }
     }
 
     const admin = createAdminClient()
@@ -68,6 +68,15 @@ export async function POST(req: NextRequest) {
       const calendarAccepted = (session.metadata?.calendar_given === 'true') ? true : false
       const userId = session.metadata?.user_id ?? null
       const tourneeId = session.metadata?.tournee_id ?? null
+      const source = session.metadata?.source ?? 'boutique'
+
+      // Déterminer les notes en fonction de la source
+      let notes = 'Stripe Checkout'
+      if (source === 'landing_page_donation') {
+        notes = 'Don landing page (Stripe Checkout)'
+      } else if (source === 'boutique') {
+        notes = 'Boutique (Stripe Checkout)'
+      }
 
       const { data: tx } = await admin
         .from('support_transactions')
@@ -81,7 +90,7 @@ export async function POST(req: NextRequest) {
           stripe_session_id: session.id,
           supporter_email: donorEmail,
           supporter_name: donorName,
-          notes: 'Stripe Checkout',
+          notes,
         })
         .select('id, amount, supporter_name, supporter_email')
         .single()
@@ -109,6 +118,11 @@ export async function POST(req: NextRequest) {
             .update({ receipt_sent: true })
             .eq('id', tx.id)
         }
+      }
+
+      // Log pour traçabilité
+      if (source === 'landing_page_donation') {
+        log.info('✅ Don landing page traité', { sessionId: session.id, amount, donorEmail })
       }
     }
   }
