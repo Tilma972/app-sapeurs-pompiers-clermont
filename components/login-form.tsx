@@ -52,7 +52,15 @@ export function LoginForm({
     <div className={cn("flex flex-col gap-6 items-center justify-center min-h-[80vh]", className)} {...props}>
       <Card className="w-full max-w-md shadow-lg">
         <CardHeader className="flex flex-col items-center gap-2">
-          <Image src="/icons/icon-192x192.png" alt="Logo Amicale" width={64} height={64} className="mb-2 rounded-full" />
+          <div className="relative w-16 h-16 mb-2">
+            <Image
+              src="https://npyfregghvnmqxwgkfea.supabase.co/storage/v1/object/public/logo/logo_amicale.svg"
+              alt="Logo Amicale des Sapeurs-Pompiers"
+              fill
+              className="object-contain group-hover:scale-105 transition-transform duration-300 rounded-full"
+              priority
+            />
+          </div>
           <CardTitle className="text-2xl text-center">Bienvenue sur l&apos;espace membres</CardTitle>
           <CardDescription className="text-center text-base text-muted-foreground">
             Amicale des Sapeurs-Pompiers de Clermont-l&apos;Hérault<br />
