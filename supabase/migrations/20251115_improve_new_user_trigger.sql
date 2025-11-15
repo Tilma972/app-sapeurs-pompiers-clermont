@@ -3,11 +3,9 @@
 -- Description: Activation immédiate après inscription (whitelist = validation suffisante)
 
 -- =====================================================
--- ÉTAPE 1: Recréer le trigger handle_new_user()
+-- SOLUTION: Remplacer uniquement la FONCTION (pas le trigger)
+-- Le trigger existant continuera d'appeler la nouvelle version
 -- =====================================================
-
-DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
-DROP FUNCTION IF EXISTS handle_new_user();
 
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER
@@ -48,14 +46,5 @@ $$;
 COMMENT ON FUNCTION public.handle_new_user() IS
 'Trigger amélioré: crée un profil membre actif dès inscription car whitelist = validation suffisante';
 
--- =====================================================
--- ÉTAPE 2: Recréer le trigger
--- =====================================================
-
-CREATE TRIGGER on_auth_user_created
-  AFTER INSERT ON auth.users
-  FOR EACH ROW
-  EXECUTE FUNCTION public.handle_new_user();
-
-COMMENT ON TRIGGER on_auth_user_created ON auth.users IS
-'Crée automatiquement un profil membre actif après inscription validée par whitelist';
+-- Note: Le trigger on_auth_user_created existe déjà et appelle automatiquement
+-- la nouvelle version de la fonction handle_new_user()
