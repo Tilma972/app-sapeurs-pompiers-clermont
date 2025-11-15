@@ -12,7 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { CheckCircle2, AlertCircle, Loader2, Clock } from "lucide-react";
+import { CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
 import { updateProfile } from "@/app/actions/profile/update-profile";
 import type { Profile } from "@/lib/types/profile";
 
@@ -26,10 +26,8 @@ export function UnifiedProfileForm({ profile, equipes }: UnifiedProfileFormProps
   const [isPending, startTransition] = useTransition();
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
-  // Déterminer l'état du profil
-  const isNewUser = !profile.first_name || !profile.last_name || !profile.team_id;
-  const isPendingApproval = profile.role === "pending";
-  const isApproved = profile.role !== "pending";
+  // Déterminer si c'est un profil incomplet
+  const isProfileIncomplete = !profile.team_id;
 
   const [formData, setFormData] = useState({
     first_name: profile.first_name || "",
@@ -64,89 +62,21 @@ export function UnifiedProfileForm({ profile, equipes }: UnifiedProfileFormProps
       if (result.error) {
         setMessage({ type: "error", text: result.error });
       } else {
-        if (isNewUser) {
-          setMessage({
-            type: "success",
-            text: "Inscription envoyée ! Un administrateur va valider votre compte.",
-          });
-        } else {
-          setMessage({ type: "success", text: "Profil mis à jour avec succès" });
-        }
+        setMessage({ type: "success", text: "Profil mis à jour avec succès !" });
       }
     });
   };
 
-  // État 2 : En attente de validation
-  if (!isNewUser && isPendingApproval) {
-    return (
-      <div className="space-y-6">
-        <Alert className="border-orange-200 bg-orange-50 dark:border-orange-900 dark:bg-orange-950">
-          <Clock className="h-4 w-4 text-orange-600 dark:text-orange-400" />
-          <AlertDescription className="text-orange-800 dark:text-orange-200">
-            <strong>Inscription en attente de validation</strong>
-            <p className="mt-1 text-sm">
-              Votre demande d&apos;inscription a été envoyée. Un administrateur va vérifier vos
-              informations et valider votre compte sous peu.
-            </p>
-          </AlertDescription>
-        </Alert>
-
-        <div className="rounded-lg border bg-card p-6 space-y-4">
-          <h3 className="font-semibold text-lg">Informations envoyées</h3>
-          
-          <div className="grid gap-4 text-sm">
-            <div>
-              <p className="text-muted-foreground">Nom complet</p>
-              <p className="font-medium">{profile.first_name} {profile.last_name}</p>
-            </div>
-            
-            <div>
-              <p className="text-muted-foreground">Équipe</p>
-              <p className="font-medium">
-                {equipes.find(e => e.id === profile.team_id)?.nom || "Non spécifiée"}
-              </p>
-            </div>
-
-            <div>
-              <p className="text-muted-foreground">Téléphone</p>
-              <p className="font-medium">{profile.phone || <span className="italic text-muted-foreground">Non renseigné</span>}</p>
-            </div>
-            <div>
-              <p className="text-muted-foreground">Email</p>
-              <p className="font-medium">{profile.email}</p>
-            </div>
-          </div>
-        </div>
-
-        <p className="text-sm text-muted-foreground text-center">
-          Vous recevrez un email dès que votre compte sera validé.
-        </p>
-      </div>
-    );
-  }
-
-  // État 1 (nouvel utilisateur) ou État 3 (utilisateur validé qui modifie)
   return (
     <div className="space-y-6">
-      {/* Badge de statut pour utilisateurs validés */}
-      {!isNewUser && isApproved && (
-        <Alert className="border-green-200 bg-green-50 dark:border-green-900 dark:bg-green-950">
-          <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
-          <AlertDescription className="text-green-800 dark:text-green-200">
-            <strong>Compte validé</strong> - Vous pouvez modifier vos informations ci-dessous.
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {/* Message pour nouveaux utilisateurs */}
-      {isNewUser && (
-        <Alert>
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            <strong>Complétez votre inscription</strong>
+      {/* Message si profil incomplet */}
+      {isProfileIncomplete && (
+        <Alert className="border-blue-200 bg-blue-50 dark:border-blue-900 dark:bg-blue-950">
+          <AlertCircle className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+          <AlertDescription className="text-blue-800 dark:text-blue-200">
+            <strong>Complète ton profil</strong>
             <p className="mt-1 text-sm">
-              Pour accéder à toutes les fonctionnalités, veuillez remplir les informations
-              ci-dessous. Votre demande sera validée par un administrateur.
+              Sélectionne ton équipe pour accéder à toutes les fonctionnalités de l&apos;app.
             </p>
           </AlertDescription>
         </Alert>
@@ -276,8 +206,6 @@ export function UnifiedProfileForm({ profile, equipes }: UnifiedProfileFormProps
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               Enregistrement...
             </>
-          ) : isNewUser ? (
-            "Envoyer ma demande d'inscription"
           ) : (
             "Mettre à jour mon profil"
           )}

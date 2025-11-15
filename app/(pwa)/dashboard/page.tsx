@@ -1,20 +1,25 @@
 ﻿import { redirect } from "next/navigation";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { PwaContainer } from "@/components/layouts/pwa/pwa-container";
 import FeatureCardsGrid from "@/components/dashboard/feature-cards";
 import { getCurrentUserProfile } from "@/lib/supabase/profile";
 import { getGlobalStats } from "@/lib/supabase/tournee";
-// import { getUserPersonalStats } from "@/lib/supabase/tournee";
-// import { getUserEquipeInfo } from "@/lib/supabase/equipes";
 import HeroSection from "@/components/hero-section";
-// import { Card } from "@/components/ui/card";
-// import { Separator } from "@/components/ui/separator";
-// import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { CheckCircle2, AlertCircle } from "lucide-react";
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ welcome?: string }>;
+}) {
 const supabase = await createClient();
 const { data: { user } } = await supabase.auth.getUser();
 if (!user) redirect("/auth/login");
+
+	// Next.js 15: searchParams est maintenant une Promise
+	const params = await searchParams;
 
 	const [profile, globalStats, approvedPhotosCountRes, ideasCountRes] = await Promise.all([
 		getCurrentUserProfile(),
@@ -48,6 +53,10 @@ const eventsCount = undefined;
 const offersCount = undefined;
 const profileComplete = Boolean(profile?.full_name);
 
+// Détection nouvel utilisateur et profil incomplet
+const isNewUser = params.welcome === "true";
+const needsTeam = !profile?.team_id;
+
 return (
 <div className="flex flex-col -mt-14">
 {/* Hero en pleine largeur, collé au header */}
@@ -65,6 +74,36 @@ className="rounded-none w-screen"
 {/* Contenu principal avec padding */}
 <PwaContainer>
 <div className="space-y-5 pt-6">
+{/* Alerte bienvenue pour nouveaux utilisateurs */}
+{isNewUser && needsTeam && (
+<Alert className="border-green-200 bg-green-50 dark:border-green-900 dark:bg-green-950">
+<CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
+<AlertDescription className="text-green-800 dark:text-green-200">
+<strong>Bienvenue {profile?.first_name || userName} ! 🎉</strong>
+<p className="mt-1 text-sm">
+Pour profiter pleinement de l&apos;app, {" "}
+<Link href="/dashboard/profil" className="underline font-medium">
+complète ton profil ici
+</Link>
+{" "} et choisis ton équipe.
+</p>
+</AlertDescription>
+</Alert>
+)}
+
+{/* Alerte persistante si profil incomplet (pour utilisateurs existants) */}
+{!isNewUser && needsTeam && (
+<Alert className="border-orange-200 bg-orange-50 dark:border-orange-900 dark:bg-orange-950">
+<AlertCircle className="h-4 w-4 text-orange-600 dark:text-orange-400" />
+<AlertDescription className="text-orange-800 dark:text-orange-200">
+<Link href="/dashboard/profil" className="underline font-medium">
+Complète ton profil
+</Link>
+{" "} pour rejoindre une équipe et accéder à toutes les fonctionnalités.
+</AlertDescription>
+</Alert>
+)}
+
 <FeatureCardsGrid
 annoncesCount={annoncesCount}
 photosCount={photosCount}
