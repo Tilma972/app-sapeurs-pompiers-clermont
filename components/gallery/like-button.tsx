@@ -9,6 +9,7 @@ import { Heart, Loader2 } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
 import toast from "react-hot-toast";
 import { cn } from "@/lib/utils";
+import { useRealtimeLikes } from "@/hooks/use-realtime-likes";
 
 interface LikeButtonProps {
   photoId: string;
@@ -38,6 +39,18 @@ export function LikeButton({
     setLiked(initialLiked);
     setCount(initialCount);
   }, [initialLiked, initialCount]);
+
+  // 🔥 NOUVEAU: Synchronisation temps réel via Supabase Realtime
+  const handleRealtimeCountChange = useCallback((newCount: number) => {
+    setCount(newCount);
+    onLikeChange?.(liked, newCount);
+  }, [liked, onLikeChange]);
+
+  useRealtimeLikes({
+    photoId,
+    onLikeCountChange: handleRealtimeCountChange,
+    enabled: true,
+  });
 
   // 🔥 AMÉLIORATION 1: useCallback pour éviter re-renders inutiles
   const handleClick = useCallback(async (e: React.MouseEvent) => {
@@ -71,6 +84,7 @@ export function LikeButton({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ photo_id: photoId }),
+        credentials: "include",
       });
 
       if (!res.ok) {

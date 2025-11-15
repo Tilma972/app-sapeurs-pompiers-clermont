@@ -1,11 +1,11 @@
-import { getPhotoById } from "@/lib/supabase/gallery";
+import { getPhotoById, getUserLikedPhotos } from "@/lib/supabase/gallery";
 import { getPhotoComments, createPhotoComment, updatePhotoComment, deletePhotoComment, flagPhotoComment } from "@/lib/supabase/gallery-comments";
 import type { IdeaCommentWithAuthor } from "@/lib/types/ideas.types";
 import { PwaContainer } from "@/components/layouts/pwa/pwa-container";
 import Link from "next/link";
 import Image from "next/image";
 import ReportButton from "@/components/gallery/report-button";
-import { Heart } from "lucide-react";
+import { LikeButton } from "@/components/gallery/like-button";
 import { CommentSection } from "@/components/idees/comment-section";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
@@ -19,9 +19,13 @@ export default async function FocusedPhotoDetail({ params }: { params: Promise<{
   
   const { id } = await params;
   const photo = await getPhotoById(id);
-  
+
   // Récupérer les commentaires
   const comments = await getPhotoComments(id);
+
+  // Récupérer l'état de like de l'utilisateur
+  const likedPhotoIds = await getUserLikedPhotos([id]);
+  const userLiked = likedPhotoIds.includes(id);
   
   // Vérifier si admin
   const { data: profile } = await supabase
@@ -57,11 +61,15 @@ export default async function FocusedPhotoDetail({ params }: { params: Promise<{
             <div className="mt-3">
               <ReportButton photoId={photo.id} />
             </div>
-            
-            {/* Affichage du nombre de likes (lecture seule) */}
-            <div className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
-              <Heart className="w-4 h-4" />
-              <span>{photo.likes_count} {photo.likes_count > 1 ? 'likes' : 'like'}</span>
+
+            {/* Bouton like interactif */}
+            <div className="mt-3">
+              <LikeButton
+                photoId={photo.id}
+                initialLiked={userLiked}
+                initialCount={photo.likes_count}
+                variant="compact"
+              />
             </div>
           </div>
           

@@ -10,6 +10,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { Heart } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { LikeButton } from "./like-button";
+import { useRealtimeLikes } from "@/hooks/use-realtime-likes";
 
 interface PhotoWithInteractionsProps {
   photoId: string;
@@ -45,6 +46,18 @@ export function PhotoWithInteractions({
     setLiked(initialLiked);
     setCount(initialCount);
   }, [initialLiked, initialCount]);
+
+  // 🔥 NOUVEAU: Synchronisation temps réel via Supabase Realtime
+  const handleRealtimeCountChange = useCallback((newCount: number) => {
+    setCount(newCount);
+    onLikeChange?.(liked, newCount);
+  }, [liked, onLikeChange]);
+
+  useRealtimeLikes({
+    photoId,
+    onLikeCountChange: handleRealtimeCountChange,
+    enabled: enableDoubleTap,
+  });
 
   // Cleanup timeout
   useEffect(() => {
@@ -93,6 +106,7 @@ export function PhotoWithInteractions({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ photo_id: photoId }),
+        credentials: "include",
       })
         .then((res) => {
           if (!res.ok) throw new Error("API error");
