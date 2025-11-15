@@ -48,10 +48,12 @@ export function PhotoWithInteractions({
   }, [initialLiked, initialCount]);
 
   // 🔥 NOUVEAU: Synchronisation temps réel via Supabase Realtime
-  const handleRealtimeCountChange = useCallback((newCount: number) => {
+  const handleRealtimeCountChange = useCallback((newCount: number, userLiked: boolean) => {
+    console.log("🔄 [PhotoWithInteractions] Realtime update:", { newCount, userLiked });
     setCount(newCount);
-    onLikeChange?.(liked, newCount);
-  }, [liked, onLikeChange]);
+    setLiked(userLiked);
+    onLikeChange?.(userLiked, newCount);
+  }, [onLikeChange]);
 
   useRealtimeLikes({
     photoId,

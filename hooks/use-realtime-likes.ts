@@ -10,7 +10,7 @@ import { createClient } from "@/lib/supabase/client";
 
 interface UseRealtimeLikesOptions {
   photoId: string;
-  onLikeCountChange: (newCount: number) => void;
+  onLikeCountChange: (newCount: number, userLiked: boolean) => void;
   enabled?: boolean;
 }
 
@@ -36,14 +36,40 @@ export function useRealtimeLikes({
           filter: `photo_id=eq.${photoId}`,
         },
         async () => {
-          // Quand un changement est détecté, recalculer le nombre de likes
+          console.log("🔄 [Realtime] Change detected for photo:", photoId);
+
+          // Récupérer le user actuel
+          const { data: { user } } = await supabase.auth.getUser();
+
+          if (!user) {
+            console.warn("⚠️ [Realtime] No user, skipping update");
+            return;
+          }
+
+          // Compter TOUS les likes de la photo
           const { count } = await supabase
             .from("gallery_likes")
             .select("*", { count: "exact", head: true })
             .eq("photo_id", photoId);
 
+          // Vérifier si l'utilisateur ACTUEL a liké cette photo
+          const { data: userLike } = await supabase
+            .from("gallery_likes")
+            .select("photo_id")
+            .eq("photo_id", photoId)
+            .eq("user_id", user.id)
+            .maybeSingle();
+
+          const userLiked = !!userLike;
+
+          console.log("🔄 [Realtime] Update:", {
+            photoId,
+            count: count || 0,
+            userLiked,
+          });
+
           if (count !== null) {
-            onLikeCountChange(count);
+            onLikeCountChange(count, userLiked);
           }
         }
       )
