@@ -39,10 +39,8 @@ export function SignUpForm({
       return;
     }
 
-    // Appel logique transactionnelle
     try {
       const { signUpAction } = await import("@/app/auth/sign-up/signUpAction");
-      
       const result = await signUpAction({
         email: email.trim(),
         password,
@@ -52,21 +50,20 @@ export function SignUpForm({
       if (result.error) {
         setError(result.error);
       } else {
-        // Auto-connexion après inscription réussie
+        console.log('✅ Inscription réussie, tentative connexion automatique...');
         const { createClient } = await import("@/lib/supabase/client");
         const supabase = createClient();
-
-        const { error: signInError } = await supabase.auth.signInWithPassword({
+        const { data, error: signInError } = await supabase.auth.signInWithPassword({
           email: email.trim().toLowerCase(),
           password,
         });
-
+        console.log('🔐 Résultat connexion:', { data, signInError });
         if (signInError) {
-          // Si la connexion échoue, rediriger vers login avec message
-          router.push("/auth/login?message=Inscription réussie ! Connecte-toi maintenant");
+          console.error('❌ Erreur connexion automatique:', signInError);
+          router.push("/auth/login?message=Inscription réussie ! Connecte-toi maintenant.");
         } else {
-          // Connexion réussie, rediriger vers dashboard avec welcome
-          router.push("/dashboard?welcome=true");
+          console.log('✅ Connexion réussie, redirection vers /dashboard');
+          router.push("/dashboard");
         }
       }
     } catch (error: unknown) {
