@@ -94,49 +94,81 @@ export async function createPhoto(input: {
  */
 export async function toggleLike(photoId: string): Promise<{ liked: boolean; count: number }> {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error("not_authenticated");
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+  console.log("🔍 [toggleLike] Auth check:", {
+    hasUser: !!user,
+    userId: user?.id,
+    authError: authError?.message,
+  });
+
+  if (!user) {
+    console.error("❌ [toggleLike] Not authenticated");
+    throw new Error("not_authenticated");
+  }
 
   // Vérifier si like existe déjà
-  const { data: existing } = await supabase
+  console.log("🔍 [toggleLike] Checking existing like for photo:", photoId, "user:", user.id);
+  const { data: existing, error: checkError } = await supabase
     .from("gallery_likes")
     .select("photo_id")
     .eq("photo_id", photoId)
     .eq("user_id", user.id)
     .maybeSingle();
 
+  console.log("🔍 [toggleLike] Existing like:", existing, "error:", checkError?.message);
+
   let newLikedState: boolean;
 
   if (existing) {
     // Supprimer le like (unlike)
+    console.log("🗑️ [toggleLike] Deleting like");
     const { error: deleteError } = await supabase
       .from("gallery_likes")
       .delete()
       .eq("photo_id", photoId)
       .eq("user_id", user.id);
-    
-    if (deleteError) throw deleteError;
+
+    if (deleteError) {
+      console.error("❌ [toggleLike] Delete error:", deleteError);
+      throw deleteError;
+    }
+    console.log("✅ [toggleLike] Like deleted successfully");
     newLikedState = false;
   } else {
     // Ajouter le like
+    console.log("➕ [toggleLike] Inserting like");
     const { error: insertError } = await supabase
       .from("gallery_likes")
       .insert({ photo_id: photoId, user_id: user.id });
-    
-    if (insertError) throw insertError;
+
+    if (insertError) {
+      console.error("❌ [toggleLike] Insert error:", insertError);
+      throw insertError;
+    }
+    console.log("✅ [toggleLike] Like inserted successfully");
     newLikedState = true;
   }
 
   // Compter directement les likes au lieu de lire likes_count (évite problème de timing avec trigger)
-  const { count } = await supabase
+  console.log("🔢 [toggleLike] Counting likes for photo:", photoId);
+  const { count, error: countError } = await supabase
     .from("gallery_likes")
     .select("*", { count: "exact", head: true })
     .eq("photo_id", photoId);
 
-  return {
+  if (countError) {
+    console.error("❌ [toggleLike] Count error:", countError);
+  }
+  console.log("🔢 [toggleLike] Final count:", count);
+
+  const result = {
     liked: newLikedState,
     count: count || 0,
   };
+
+  console.log("✅ [toggleLike] Returning result:", result);
+  return result;
 }
 
 /**
