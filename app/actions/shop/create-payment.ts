@@ -57,6 +57,7 @@ export async function createShopPayment(data: {
         source: 'boutique',
         customer_name: data.customerName || '',
         items: JSON.stringify(data.items.map(i => ({ id: i.id, name: i.name, qty: i.quantity }))),
+        calendar_given: 'true', // Boutique = achat, pas un don fiscal
       },
     })
 

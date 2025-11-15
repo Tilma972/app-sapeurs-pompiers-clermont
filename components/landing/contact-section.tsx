@@ -1,10 +1,11 @@
 ﻿'use client';
 
 import { useState } from 'react';
-import { Mail, Phone, MapPin, Send, Heart, CreditCard, Banknote } from 'lucide-react';
+import { Mail, Phone, MapPin, Send } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
 import { fadeInUp, staggerContainer, staggerItem } from '@/lib/animations';
+import { DonationFormSection } from './donation-form-section';
 
 export function ContactSection() {
   const [titleRef, titleInView] = useInView({
@@ -193,51 +194,7 @@ export function ContactSection() {
             initial="hidden"
             animate={infoInView ? "visible" : "hidden"}
           >
-            <div className="bg-brandTurquoise text-white rounded-lg p-6 md:p-8">
-              <div className="flex items-center gap-3 mb-4 md:mb-6">
-                <Heart className="w-6 h-6 md:w-8 md:h-8" />
-                <h3 className="font-montserrat text-xl md:text-2xl font-bold">
-                  Soutenez-nous
-                </h3>
-              </div>
-
-              <p className="text-white/90 mb-6 md:mb-8 leading-relaxed text-sm md:text-base">
-                Votre don nous aide à maintenir nos activités, organiser des événements et soutenir nos membres. 
-                Chaque contribution compte et fait la différence.
-              </p>
-
-              <div className="space-y-4">
-                <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6">
-                  <h4 className="font-semibold text-lg mb-4">Choisissez votre montant</h4>
-                  <div className="grid grid-cols-3 gap-3 mb-4">
-                    <button className="bg-white text-brandTurquoise font-bold py-3 rounded-lg hover:scale-105 transition-transform">
-                      20€
-                    </button>
-                    <button className="bg-white text-brandTurquoise font-bold py-3 rounded-lg hover:scale-105 transition-transform">
-                      50€
-                    </button>
-                    <button className="bg-white text-brandTurquoise font-bold py-3 rounded-lg hover:scale-105 transition-transform">
-                      100€
-                    </button>
-                  </div>
-                  <input
-                    type="number"
-                    placeholder="Montant personnalisé"
-                    className="w-full px-4 py-3 rounded-lg text-gray-800 focus:ring-2 focus:ring-white"
-                  />
-                </div>
-
-                <button className="w-full bg-white text-brandTurquoise font-bold py-4 rounded-lg hover:bg-gray-100 transition-colors flex items-center justify-center gap-2">
-                  <CreditCard className="w-5 h-5" />
-                  Faire un don par carte
-                </button>
-
-                <button className="w-full bg-white/20 text-white font-bold py-4 rounded-lg hover:bg-white/30 transition-colors flex items-center justify-center gap-2">
-                  <Banknote className="w-5 h-5" />
-                  Virement bancaire
-                </button>
-              </div>
-            </div>
+            <DonationFormSection />
 
             <div className="bg-brandCream rounded-lg p-6 border-l-4 border-brandOrange">
               <h4 className="font-montserrat font-bold text-brandBrown mb-3">
