@@ -16,6 +16,7 @@ const categories: { value: "all" | GalleryCategory; label: string }[] = [
 ];
 
 export const dynamic = "force-dynamic";
+export const revalidate = 0; // Désactiver complètement le cache
 
 export default async function GaleriePwaPage({
   searchParams,
@@ -28,10 +29,12 @@ export default async function GaleriePwaPage({
   const { category } = await searchParams;
   const catParam = (category || "all") as "all" | GalleryCategory;
   const photos = await listPhotos({ category: catParam === "all" ? undefined : catParam, limit: 48 });
-  
+
   // Récupérer les likes de l'utilisateur
   const photoIds = photos.map((p) => p.id);
+  console.log("🔍 [GaleriePage SSR] About to call getUserLikedPhotos with", photoIds.length, "photos");
   const likedPhotoIds = await getUserLikedPhotos(photoIds);
+  console.log("✅ [GaleriePage SSR] Got", likedPhotoIds.length, "liked photos:", likedPhotoIds);
 
   return (
   <PwaContainer>
