@@ -75,7 +75,7 @@ export function DonationFormSection() {
         setError('Une erreur est survenue. Veuillez réessayer.');
         setIsLoading(false);
       }
-    } catch (err) {
+    } catch {
       setError('Une erreur est survenue. Veuillez réessayer.');
       setIsLoading(false);
     }
