@@ -52,7 +52,22 @@ export function SignUpForm({
       if (result.error) {
         setError(result.error);
       } else {
-        router.push("/auth/sign-up-success");
+        // Auto-connexion après inscription réussie
+        const { createClient } = await import("@/lib/supabase/client");
+        const supabase = createClient();
+
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email: email.trim().toLowerCase(),
+          password,
+        });
+
+        if (signInError) {
+          // Si la connexion échoue, rediriger vers login avec message
+          router.push("/auth/login?message=Inscription réussie ! Connecte-toi maintenant");
+        } else {
+          // Connexion réussie, rediriger vers dashboard avec welcome
+          router.push("/dashboard?welcome=true");
+        }
       }
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "Une erreur est survenue");
