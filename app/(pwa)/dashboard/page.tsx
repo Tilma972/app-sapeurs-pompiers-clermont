@@ -12,11 +12,14 @@ import { CheckCircle2, AlertCircle } from "lucide-react";
 export default async function DashboardPage({
   searchParams,
 }: {
-  searchParams: { welcome?: string };
+  searchParams: Promise<{ welcome?: string }>;
 }) {
 const supabase = await createClient();
 const { data: { user } } = await supabase.auth.getUser();
 if (!user) redirect("/auth/login");
+
+	// Next.js 15: searchParams est maintenant une Promise
+	const params = await searchParams;
 
 	const [profile, globalStats, approvedPhotosCountRes, ideasCountRes] = await Promise.all([
 		getCurrentUserProfile(),
@@ -51,7 +54,7 @@ const offersCount = undefined;
 const profileComplete = Boolean(profile?.full_name);
 
 // Détection nouvel utilisateur et profil incomplet
-const isNewUser = searchParams.welcome === "true";
+const isNewUser = params.welcome === "true";
 const needsTeam = !profile?.team_id;
 
 return (
