@@ -80,6 +80,8 @@ export function LikeButton({
     setIsLoading(true);
 
     try {
+      console.log("🔵 [LikeButton] Sending like request for photo:", photoId);
+
       const res = await fetch("/api/gallery/like", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -87,12 +89,16 @@ export function LikeButton({
         credentials: "include",
       });
 
+      console.log("🔵 [LikeButton] Response status:", res.status, res.statusText);
+
       if (!res.ok) {
         const error = await res.json();
+        console.error("❌ [LikeButton] Error response:", error);
         throw new Error(error.error || "Erreur lors du like");
       }
 
       const { liked: serverLiked, count: serverCount } = await res.json();
+      console.log("✅ [LikeButton] Success:", { serverLiked, serverCount });
 
       // Sync avec serveur
       setLiked(serverLiked);
