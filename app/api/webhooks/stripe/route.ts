@@ -95,7 +95,9 @@ export async function POST(req: NextRequest) {
         .select('id, amount, supporter_name, supporter_email')
         .single()
 
-      if (tx && amount >= 6) {
+      // Générer un reçu fiscal UNIQUEMENT pour les dons (calendar_accepted: false)
+      // Boutique et achats avec contrepartie n'ont PAS droit au reçu fiscal
+      if (tx && amount >= 6 && !calendarAccepted) {
         const { data: rec } = await admin.rpc('issue_receipt', { p_transaction_id: tx.id }).single()
         const receiptNumber = (rec as { receipt_number?: string } | null)?.receipt_number ?? null
 
@@ -222,7 +224,8 @@ export async function POST(req: NextRequest) {
       .select('id, amount, supporter_name, supporter_email')
       .single()
 
-    if (tx && amount >= 6) {
+    // Générer un reçu fiscal UNIQUEMENT pour les dons (calendar_accepted: false)
+    if (tx && amount >= 6 && !calendarAccepted) {
       const { data: rec } = await admin.rpc('issue_receipt', { p_transaction_id: tx.id }).single()
       const receiptNumber = (rec as { receipt_number?: string } | null)?.receipt_number ?? null
 
@@ -320,7 +323,8 @@ export async function POST(req: NextRequest) {
       .select('id, amount, supporter_name, supporter_email')
       .single()
 
-    if (tx && amount >= 6) {
+    // Générer un reçu fiscal UNIQUEMENT pour les dons (calendar_accepted: false)
+    if (tx && amount >= 6 && !calendarGiven) {
       const { data: rec } = await admin.rpc('issue_receipt', { p_transaction_id: tx.id }).single()
       const receiptNumber = (rec as { receipt_number?: string } | null)?.receipt_number ?? null
 
