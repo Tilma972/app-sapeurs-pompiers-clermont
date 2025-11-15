@@ -176,16 +176,36 @@ export async function toggleLike(photoId: string): Promise<{ liked: boolean; cou
  */
 export async function getUserLikedPhotos(photoIds: string[]): Promise<string[]> {
   if (photoIds.length === 0) return [];
-  
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return [];
 
-  const { data } = await supabase
+  const supabase = await createClient();
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+  console.log("🔍 [getUserLikedPhotos] Auth check:", {
+    hasUser: !!user,
+    userId: user?.id,
+    authError: authError?.message,
+    photoIds,
+  });
+
+  if (!user) {
+    console.warn("⚠️ [getUserLikedPhotos] No user, returning empty array");
+    return [];
+  }
+
+  const { data, error } = await supabase
     .from("gallery_likes")
     .select("photo_id")
     .eq("user_id", user.id)
     .in("photo_id", photoIds);
 
-  return (data || []).map(like => like.photo_id);
+  console.log("🔍 [getUserLikedPhotos] Query result:", {
+    data,
+    error: error?.message,
+    count: data?.length || 0,
+  });
+
+  const likedIds = (data || []).map(like => like.photo_id);
+  console.log("✅ [getUserLikedPhotos] Returning liked photo IDs:", likedIds);
+
+  return likedIds;
 }
