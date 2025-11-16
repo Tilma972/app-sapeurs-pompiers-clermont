@@ -66,7 +66,7 @@ export function Partenaires({ partners: partenaires }: PartenairesProps) {
         >
           {[
             { value: '5 000+', label: 'Calendriers', icon: Award },
-            { value: '20 000', label: 'Habitants touchés*', icon: TrendingUp },
+            { value: '+20 000', label: 'Habitants touchés*', icon: TrendingUp },
             { value: '365', label: 'Jours visibles', icon: Star },
             { value: '~2¢', label: 'Coût / contact*', icon: Handshake },
           ].map((stat, i) => (
