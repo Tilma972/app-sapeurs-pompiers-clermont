@@ -98,9 +98,9 @@ export function HeroSimple({ loggedIn = false }: { loggedIn?: boolean }) {
                         </>
                       ) : (
                         <>
-                          <PrimaryCta href="/auth/login">
+                          <PrimaryCta href="/#contact">
                             <span className="inline-flex items-center">
-                              <Heart className="mr-2 h-5 w-5" /> Soutenir l&apos;amicale
+                              <Heart className="mr-2 h-5 w-5" /> Faire un don
                             </span>
                           </PrimaryCta>
                         </>
