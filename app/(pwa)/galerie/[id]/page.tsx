@@ -7,6 +7,7 @@ import Image from "next/image";
 import ReportButton from "@/components/gallery/report-button";
 import { LikeButton } from "@/components/gallery/like-button";
 import { CommentSection } from "@/components/idees/comment-section";
+import { FullscreenImage } from "@/components/gallery/fullscreen-image";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 
@@ -54,9 +55,13 @@ export default async function FocusedPhotoDetail({ params }: { params: Promise<{
           <section className="mt-1 sm:mt-2">
             <Link href="/galerie" className="text-xs text-muted-foreground hover:text-foreground">← Retour à la galerie</Link>
           </section>
-          <div className="rounded-lg overflow-hidden border relative w-full aspect-[4/3]">
-            <Image src={photo.image_url} alt={photo.title} fill sizes="100vw" style={{ objectFit: "cover" }} />
-          </div>
+
+          {/* Image cliquable pour plein écran */}
+          <FullscreenImage src={photo.image_url} alt={photo.title}>
+            <div className="rounded-lg overflow-hidden border relative w-full aspect-[4/3]">
+              <Image src={photo.image_url} alt={photo.title} fill sizes="100vw" style={{ objectFit: "cover" }} />
+            </div>
+          </FullscreenImage>
           <div>
             <h1 className="text-lg font-semibold">{photo.title}</h1>
             {photo.description && (
