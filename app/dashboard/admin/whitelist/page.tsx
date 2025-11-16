@@ -109,10 +109,10 @@ function WhitelistEntryRow({
         {!entry.used && (
           <Button
             variant="ghost"
-            size="sm"
+            size="icon"
             onClick={() => setEditing(true)}
           >
-            ✏️ Modifier
+            <Pencil className="h-4 w-4" />
           </Button>
         )}
         <Button
@@ -130,7 +130,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Pencil } from "lucide-react";
 import { toast } from "react-hot-toast";
 
 interface WhitelistEntry {
