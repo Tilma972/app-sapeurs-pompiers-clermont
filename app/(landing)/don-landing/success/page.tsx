@@ -33,7 +33,7 @@ export default function DonationSuccessPage() {
             href="/"
             className="flex-1 px-6 py-3 bg-primary hover:bg-primary/90 text-white font-semibold rounded-lg transition-colors"
           >
-            Retour à l'accueil
+            Retour à l&apos;accueil
           </Link>
           <Link
             href="/#contact"
