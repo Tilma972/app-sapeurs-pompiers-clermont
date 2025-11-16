@@ -22,6 +22,7 @@ export default function ReportButton({ photoId }: { photoId: string }) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ photo_id: photoId, reason }),
+        credentials: "include",
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "report_failed");
