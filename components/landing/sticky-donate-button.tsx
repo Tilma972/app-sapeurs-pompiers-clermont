@@ -29,7 +29,7 @@ export function StickyDonateButton() {
           className="fixed bottom-8 right-8 z-50"
         >
           <Link
-            href="/don"
+            href="/#contact"
             className="flex items-center gap-2 px-6 py-3 bg-primary hover:bg-primary/90 text-white font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 group"
           >
             <Heart className="h-5 w-5 group-hover:scale-110 transition-transform" />
