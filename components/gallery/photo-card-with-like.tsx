@@ -26,6 +26,13 @@ interface PhotoCardWithLikeProps {
 }
 
 export function PhotoCardWithLike({ photo, initialLiked }: PhotoCardWithLikeProps) {
+  console.log("📸 [PhotoCard] Rendering:", {
+    photoId: photo.id,
+    title: photo.title,
+    initialLiked,
+    likes_count: photo.likes_count,
+  });
+
   return (
     <Link
       href={`/galerie/${photo.id}`}
