@@ -9,6 +9,7 @@ import { Heart, Loader2 } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
 import toast from "react-hot-toast";
 import { cn } from "@/lib/utils";
+import { useRealtimeLikes } from "@/hooks/use-realtime-likes";
 
 interface LikeButtonProps {
   photoId: string;
@@ -33,11 +34,37 @@ export function LikeButton({
   const [particles, setParticles] = useState<number[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
+  // Log au montage initial
+  useEffect(() => {
+    console.log("🎨 [LikeButton] Mount:", {
+      photoId,
+      initialLiked,
+      initialCount,
+      currentLiked: liked,
+      currentCount: count,
+    });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   // 🔥 AMÉLIORATION 2: Sync avec props initiales (fix sync galerie ↔ détail)
   useEffect(() => {
+    console.log("🔄 [LikeButton] Props changed:", { initialLiked, initialCount });
     setLiked(initialLiked);
     setCount(initialCount);
   }, [initialLiked, initialCount]);
+
+  // 🔥 NOUVEAU: Synchronisation temps réel via Supabase Realtime
+  const handleRealtimeCountChange = useCallback((newCount: number, userLiked: boolean) => {
+    console.log("🔄 [LikeButton] Realtime update:", { newCount, userLiked });
+    setCount(newCount);
+    setLiked(userLiked);
+    onLikeChange?.(userLiked, newCount);
+  }, [onLikeChange]);
+
+  useRealtimeLikes({
+    photoId,
+    onLikeCountChange: handleRealtimeCountChange,
+    enabled: true,
+  });
 
   // 🔥 AMÉLIORATION 1: useCallback pour éviter re-renders inutiles
   const handleClick = useCallback(async (e: React.MouseEvent) => {
@@ -67,18 +94,25 @@ export function LikeButton({
     setIsLoading(true);
 
     try {
+      console.log("🔵 [LikeButton] Sending like request for photo:", photoId);
+
       const res = await fetch("/api/gallery/like", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ photo_id: photoId }),
+        credentials: "include",
       });
+
+      console.log("🔵 [LikeButton] Response status:", res.status, res.statusText);
 
       if (!res.ok) {
         const error = await res.json();
+        console.error("❌ [LikeButton] Error response:", error);
         throw new Error(error.error || "Erreur lors du like");
       }
 
       const { liked: serverLiked, count: serverCount } = await res.json();
+      console.log("✅ [LikeButton] Success:", { serverLiked, serverCount });
 
       // Sync avec serveur
       setLiked(serverLiked);
