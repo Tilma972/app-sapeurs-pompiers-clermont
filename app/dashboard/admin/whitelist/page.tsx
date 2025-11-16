@@ -1,6 +1,131 @@
 "use client";
 
 import { useEffect, useState } from "react";
+function WhitelistEntryRow({ 
+  entry, 
+  onUpdate, 
+  onDelete 
+}: { 
+  entry: WhitelistEntry; 
+  onUpdate: () => void;
+  onDelete: (id: string) => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [form, setForm] = useState({
+    first_name: entry.first_name,
+    last_name: entry.last_name,
+    email: entry.email || ""
+  });
+  const [saving, setSaving] = useState(false);
+
+  async function handleSave() {
+    if (!form.first_name.trim() || !form.last_name.trim()) {
+      toast.error("Nom et prénom requis");
+      return;
+    }
+    setSaving(true);
+    const res = await fetch('/api/admin/whitelist/update', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: entry.id, ...form })
+    });
+    if (res.ok) {
+      toast.success("Modifié avec succès");
+      setEditing(false);
+      onUpdate();
+    } else {
+      const err = await res.json();
+      toast.error(err.error || "Erreur");
+    }
+    setSaving(false);
+  }
+
+  function handleCancel() {
+    setForm({
+      first_name: entry.first_name,
+      last_name: entry.last_name,
+      email: entry.email || ""
+    });
+    setEditing(false);
+  }
+
+  if (editing && !entry.used) {
+    return (
+      <div className="flex flex-col gap-2 p-3 border rounded bg-muted/30">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+          <Input
+            placeholder="Prénom"
+            value={form.first_name}
+            onChange={e => setForm({ ...form, first_name: e.target.value })}
+            disabled={saving}
+          />
+          <Input
+            placeholder="Nom"
+            value={form.last_name}
+            onChange={e => setForm({ ...form, last_name: e.target.value })}
+            disabled={saving}
+          />
+          <Input
+            placeholder="Email"
+            type="email"
+            value={form.email}
+            onChange={e => setForm({ ...form, email: e.target.value })}
+            disabled={saving}
+          />
+        </div>
+        <div className="flex gap-2 justify-end">
+          <Button 
+            size="sm" 
+            variant="outline" 
+            onClick={handleCancel}
+            disabled={saving}
+          >
+            Annuler
+          </Button>
+          <Button 
+            size="sm" 
+            onClick={handleSave}
+            disabled={saving}
+          >
+            {saving ? "..." : "Sauvegarder"}
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center justify-between p-3 border rounded">
+      <div>
+        <p className="font-medium">{entry.first_name} {entry.last_name}</p>
+        <p className="text-sm text-muted-foreground">
+          {entry.email || "Pas d'email"}
+        </p>
+      </div>
+      <div className="flex items-center gap-2">
+        <Badge variant={entry.used ? "secondary" : "default"}>
+          {entry.used ? "Inscrit" : "Autorisé"}
+        </Badge>
+        {!entry.used && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setEditing(true)}
+          >
+            ✏️ Modifier
+          </Button>
+        )}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => onDelete(entry.id)}
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </div>
+    </div>
+  );
+}
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -179,27 +304,12 @@ export default function WhitelistPage() {
         <h2 className="font-semibold mb-4">Pompiers autorisés ({entries.length})</h2>
         <div className="space-y-2">
           {entries.map((entry) => (
-            <div key={entry.id} className="flex items-center justify-between p-3 border rounded">
-              <div>
-                <p className="font-medium">{entry.first_name} {entry.last_name}</p>
-                <p className="text-sm text-muted-foreground">
-                  {entry.email || "Pas d'email"}
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                <Badge variant={entry.used ? "secondary" : "default"}>
-                  {entry.used ? "Inscrit" : "Autorisé"}
-                </Badge>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => handleDelete(entry.id)}
-                  disabled={loading}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
+            <WhitelistEntryRow 
+              key={entry.id} 
+              entry={entry} 
+              onUpdate={() => loadEntries(page, search)}
+              onDelete={handleDelete}
+            />
           ))}
         </div>
         {/* Pagination */}
