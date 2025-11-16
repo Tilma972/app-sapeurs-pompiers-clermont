@@ -14,7 +14,7 @@ const navigation = [
   { name: "Tournées & Calendriers", href: "/calendriers", icon: Calendar },
   { name: "Petites Annonces", href: "/annonces", icon: ShoppingBag },
   { name: "Boîte à Idées", href: "/idees", icon: Lightbulb },
-  { name: "Galerie SP", href: "/galerie", icon: Camera },
+  { name: "Galerie Photos", href: "/galerie", icon: Camera },
   { name: "Événements", href: "/associative", icon: Calendar },
   { name: "Mon Compte", href: "/mon-compte", icon: Wallet },
   { name: "Paramètres", href: "/parametres", icon: Sliders },
