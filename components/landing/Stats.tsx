@@ -8,8 +8,8 @@ import { staggerContainer, staggerItem } from '@/lib/animations';
 export function Stats() {
   const stats = [
     { value: 1976, suffix: '+', label: 'Interventions par an', duration: 2.5 },
-    { value: 98, suffix: '', label: 'Sapeurs-Pompiers volontaires', duration: 2 },
-    { value: 21, suffix: '', label: 'Communes desservies', duration: 1.5 },
+    { value: 101, suffix: '', label: 'Sapeurs-Pompiers', duration: 2 },
+    { value: 20, suffix: '', label: 'Communes desservies', duration: 1.5 },
   ];
 
   const [ref, inView] = useInView({
