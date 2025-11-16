@@ -98,11 +98,38 @@ export default async function CalendriersPage() {
   })();
 
   return (
+
     <PwaContainer>
       <div className="space-y-6">
         <section className="space-y-2 mt-1 sm:mt-2">
           <div className="text-sm text-muted-foreground mb-2 text-center">Suivi de ton activité en cours.</div>
         </section>
+
+        {/* Nouveau : Accès rapide au secteur */}
+        {profile?.team_id && (
+          <>
+            {await (async () => {
+              const { data: equipe } = await supabase
+                .from("equipes")
+                .select("secteur")
+                .eq("id", profile.team_id)
+                .single();
+              if (!equipe?.secteur) return null;
+              return (
+                <section className="mt-4">
+                  <Link href="/ma-tournee/carte">
+                    <Button variant="outline" className="w-full h-12 text-sm font-medium">
+                      🗺️ Consulter mon secteur
+                    </Button>
+                  </Link>
+                  <p className="text-xs text-muted-foreground text-center mt-1.5">
+                    Visualise ta zone de distribution avant de partir
+                  </p>
+                </section>
+              );
+            })()}
+          </>
+        )}
 
         {/* KPIs utilisateur global */}
         <section className="grid grid-cols-2 gap-3">
