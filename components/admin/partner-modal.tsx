@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -47,6 +47,22 @@ export function PartnerModal({ isOpen, onClose, partner, onSuccess }: PartnerMod
   const [isUploading, setIsUploading] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [previewLogo, setPreviewLogo] = useState<string>(partner?.logo || "")
+
+  // Réinitialiser le formulaire quand le modal s'ouvre avec un nouveau partenaire
+  useEffect(() => {
+    if (isOpen) {
+      setFormData({
+        id: partner?.id,
+        name: partner?.name || "",
+        logo: partner?.logo || "",
+        website: partner?.website || "",
+        tier: partner?.tier || "bronze",
+        sector: partner?.sector || "",
+        since: partner?.since || new Date().getFullYear(),
+      })
+      setPreviewLogo(partner?.logo || "")
+    }
+  }, [isOpen, partner])
 
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
