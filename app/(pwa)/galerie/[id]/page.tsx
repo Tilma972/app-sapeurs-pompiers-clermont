@@ -27,6 +27,14 @@ export default async function FocusedPhotoDetail({ params }: { params: Promise<{
   // Récupérer l'état de like de l'utilisateur
   const likedPhotoIds = await getUserLikedPhotos([id]);
   const userLiked = likedPhotoIds.includes(id);
+
+  // Compter les VRAIS likes en temps réel (ne pas utiliser photo.likes_count)
+  const { count: realLikesCount } = await supabase
+    .from("gallery_likes")
+    .select("*", { count: "exact", head: true })
+    .eq("photo_id", id);
+
+  console.log("🔍 [PhotoDetail] Real likes count:", realLikesCount, "vs column value:", photo?.likes_count);
   
   // Vérifier si admin
   const { data: profile } = await supabase
@@ -68,7 +76,7 @@ export default async function FocusedPhotoDetail({ params }: { params: Promise<{
               <LikeButton
                 photoId={photo.id}
                 initialLiked={userLiked}
-                initialCount={photo.likes_count}
+                initialCount={realLikesCount || 0}
                 variant="compact"
               />
             </div>
