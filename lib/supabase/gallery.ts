@@ -26,15 +26,23 @@ export async function listPhotos(params?: {
   before?: string; // ISO created_at for pagination
 }): Promise<GalleryPhoto[]> {
   const supabase = await createClient();
-  let query = supabase.from("gallery_photos").select("*", { count: "exact" }).order("created_at", { ascending: false });
 
-  if (params?.category) query = query.eq("category", params.category);
-  if (params?.authorId) query = query.eq("user_id", params.authorId);
-  if (params?.before) query = query.lt("created_at", params.before);
-  if (params?.limit) query = query.limit(params.limit);
+  console.log("🔍 [listPhotos] Using RPC to get real-time counts");
 
-  const { data, error } = await query;
-  if (error) throw error;
+  // Utiliser la fonction RPC qui compte les likes en temps réel
+  const { data, error } = await supabase.rpc('list_photos_with_real_counts', {
+    p_category: params?.category || null,
+    p_author_id: params?.authorId || null,
+    p_limit: params?.limit || 48,
+    p_before: params?.before || null,
+  });
+
+  if (error) {
+    console.error("❌ [listPhotos] RPC error:", error);
+    throw error;
+  }
+
+  console.log("✅ [listPhotos] Got", data?.length || 0, "photos with real counts");
   return (data || []) as GalleryPhoto[];
 }
 
