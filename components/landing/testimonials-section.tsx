@@ -15,7 +15,7 @@ const testimonials = [
   },
   {
     name: "Jean-Pierre M.",
-    location: "Ville voisine",
+    location: "Canet",
     message: "Les actions de prévention organisées par l'amicale sont remarquables. Elles nous sensibilisent aux gestes qui sauvent.",
     rating: 5,
     type: "citoyen"
