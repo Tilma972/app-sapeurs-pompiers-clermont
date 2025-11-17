@@ -247,11 +247,30 @@ choco install postgresql
 
 ### Erreur : "password authentication failed"
 
-**Cause :** Le mot de passe dans `SUPABASE_DB_URL` est incorrect.
+**Cause :** Le mot de passe dans `SUPABASE_DB_URL` est incorrect ou mal encodé.
 
-**Solution :**
-1. Récupérez le mot de passe dans Supabase Dashboard → Settings → Database
-2. Vérifiez que l'URL contient bien `:[PASSWORD]@`
+**Problème fréquent :** Les mots de passe Supabase contiennent souvent des caractères spéciaux (`#`, `@`, `$`, `%`, etc.) qui doivent être **encodés en URL**.
+
+**Solution 1 - Utiliser l'URL pré-encodée (RECOMMANDÉ) :**
+
+1. Dashboard Supabase → Cliquez **"Connect"**
+2. **Type** : URI, **Source** : Primary database, **Method** : Session pooler
+3. **Copiez l'URL COMPLÈTE** affichée (le mot de passe est déjà encodé)
+4. Mettez à jour le secret GitHub `SUPABASE_DB_URL` avec cette URL
+
+**Solution 2 - Utiliser l'outil d'encodage :**
+
+```bash
+cd scripts/backup
+npm run encode-password
+```
+
+Cet outil vous guidera pour générer l'URL correcte avec le mot de passe encodé.
+
+**Exemples d'encodage :**
+- `MyP@ssw#rd$` → `MyP%40ssw%23rd%24`
+- `Pass!word&123` → `Pass%21word%26123`
+- `Secret#Key@2024` → `Secret%23Key%402024`
 
 ### Le backup ne sauvegarde que 1000 fichiers
 
@@ -301,6 +320,44 @@ node restore-database.js
 
 # Backup spécifique
 node restore-database.js 2025-11-17T03-00
+```
+
+### encode-password.js
+
+**Outil interactif pour générer l'URL de connexion PostgreSQL avec le mot de passe correctement encodé.**
+
+**Pourquoi cet outil ?**
+Les mots de passe Supabase contiennent souvent des caractères spéciaux qui doivent être encodés en URL. Cet outil simplifie ce processus.
+
+**Usage :**
+```bash
+npm run encode-password
+```
+
+**L'outil vous demandera :**
+1. Votre PROJECT-REF (ex: `npyfregghvnmqxwgkfea`)
+2. Votre région (ex: `eu-west-3`)
+3. Votre mot de passe de base de données
+
+**Il générera :**
+- L'URL Session pooler (recommandée pour GitHub Actions)
+- L'URL Direct connection (si IPv6 disponible)
+- La liste des caractères encodés
+
+**Exemple de sortie :**
+```
+✅ URLs générées:
+
+📍 SESSION POOLER (recommandé pour GitHub Actions - IPv4):
+postgresql://postgres.abc123:MyP%40ss%23word@aws-0-eu-west-3.pooler.supabase.com:5432/postgres
+
+💡 Informations:
+   Mot de passe original: MyP@ss#word
+   Mot de passe encodé: MyP%40ss%23word
+
+   Caractères encodés:
+   "@" → "%40"
+   "#" → "%23"
 ```
 
 ---
