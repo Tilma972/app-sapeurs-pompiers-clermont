@@ -12,8 +12,9 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useState, useEffect } from "react";
+import { type EmailOtpType } from "@supabase/supabase-js";
 
 export function UpdatePasswordForm({
   className,
@@ -22,7 +23,43 @@ export function UpdatePasswordForm({
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(true);
+  const [verificationError, setVerificationError] = useState<string | null>(null);
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Vérifier le token OTP au chargement de la page
+  useEffect(() => {
+    const verifyToken = async () => {
+      const token_hash = searchParams.get("token_hash");
+      const type = searchParams.get("type") as EmailOtpType | null;
+
+      // Si pas de token, on suppose que l'utilisateur est déjà authentifié (depuis la route /auth/confirm)
+      if (!token_hash || !type) {
+        setIsVerifying(false);
+        return;
+      }
+
+      const supabase = createClient();
+
+      try {
+        const { error } = await supabase.auth.verifyOtp({
+          type,
+          token_hash,
+        });
+
+        if (error) {
+          setVerificationError(error.message);
+        }
+      } catch (err) {
+        setVerificationError(err instanceof Error ? err.message : "Erreur lors de la vérification");
+      } finally {
+        setIsVerifying(false);
+      }
+    };
+
+    verifyToken();
+  }, [searchParams]);
 
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,6 +82,55 @@ export function UpdatePasswordForm({
       setIsLoading(false);
     }
   };
+
+  // Afficher un message de chargement pendant la vérification du token
+  if (isVerifying) {
+    return (
+      <div className={cn("flex flex-col gap-6", className)} {...props}>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-2xl">Vérification...</CardTitle>
+            <CardDescription>
+              Vérification de ton lien de réinitialisation en cours...
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-center p-6">
+              <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Afficher une erreur si la vérification a échoué
+  if (verificationError) {
+    return (
+      <div className={cn("flex flex-col gap-6", className)} {...props}>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-2xl">Erreur</CardTitle>
+            <CardDescription>
+              Impossible de vérifier ton lien de réinitialisation
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-red-500 mb-4">{verificationError}</p>
+            <p className="text-sm text-muted-foreground mb-4">
+              Le lien de réinitialisation est peut-être expiré ou invalide.
+            </p>
+            <Button
+              onClick={() => router.push("/auth/forgot-password")}
+              className="w-full"
+            >
+              Demander un nouveau lien
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
