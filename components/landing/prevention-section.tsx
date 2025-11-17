@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { PremiumIcon } from "@/components/landing/premium-icon";
-import { Shield, Phone } from "lucide-react";
+import { Shield, Phone, BookOpen } from "lucide-react";
 import React from "react";
 import EmergencyGuideModal from "@/components/landing/emergency-guide-modal";
 import { GuideKey } from "@/lib/emergency-guides";
@@ -20,9 +20,34 @@ export function PreventionSection() {
   const [initial, setInitial] = React.useState<GuideKey>("18");
 
   const openGuide = (key: GuideKey) => {
-    setInitial(key);
-    setOpen(true);
-  };
+    // Analytics: lightweight, best-effort push to common providers (typed safely)
+    if (typeof window !== "undefined") {
+      try {
+        type AnalyticsWindow = Window & {
+          dataLayer?: { push: (...args: unknown[]) => void }
+          gtag?: (...args: unknown[]) => void
+          plausible?: (event: string, opts?: Record<string, unknown>) => void
+        }
+        const win = window as unknown as AnalyticsWindow
+        const payload = { event: "guide_open", guide: key }
+
+        if (win.dataLayer && typeof win.dataLayer.push === "function") {
+          win.dataLayer.push(payload)
+        } else if (typeof win.gtag === "function") {
+          win.gtag("event", "select_content", { content_type: "guide", item_id: key })
+        } else if (typeof win.plausible === "function") {
+          win.plausible("Guide Opened", { props: { guide: key } })
+        } else {
+          console.debug("analytics: guide_open", payload)
+        }
+      } catch {
+        // swallow analytics errors
+      }
+    }
+
+    setInitial(key)
+    setOpen(true)
+  }
 
   return (
     <section id="prevention" className="py-12 w-full">
@@ -56,9 +81,12 @@ export function PreventionSection() {
                 transition={{ duration: 0.5, delay: index * 0.08 }}
                 viewport={{ once: true }}
                 onClick={() => openGuide(emergency.number as GuideKey)}
-                className="relative glass-card p-3 text-center rounded-lg h-[120px] flex flex-col justify-center items-center cursor-pointer hover:shadow-lg focus:outline-none"
+                className="relative glass-card p-3 text-center rounded-lg h-[120px] flex flex-col justify-center items-center cursor-pointer hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
               >
-                <div className="absolute right-3 top-3 text-xs px-2 py-0.5 rounded bg-primary/10 text-primary">📖 Guide d&apos;appel</div>
+                <div className="absolute right-3 top-3 text-xs px-2 py-0.5 rounded bg-primary/10 text-primary flex items-center gap-1">
+                  <BookOpen className="h-4 w-4" aria-hidden />
+                  <span className="sr-only">Guide d&apos;appel</span>
+                </div>
                 <div className="mb-2 flex justify-center">
                   <PremiumIcon
                     icon={Phone}
