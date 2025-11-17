@@ -66,7 +66,7 @@ function CancelContent() {
             Amicale des Sapeurs-Pompiers de Clermont-l&apos;Hérault
           </p>
           <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
-            Besoin d&apos;aide ? Contactez-nous à contact@amicale-sp-clermont.fr
+            Besoin d&apos;aide ? Contactez-nous à contact@pompiers34800.com
           </p>
         </div>
       </div>

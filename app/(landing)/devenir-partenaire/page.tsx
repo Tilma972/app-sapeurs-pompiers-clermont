@@ -161,7 +161,7 @@ export default function DevenirPartenairePage() {
                 const body = encodeURIComponent(
                   `Entreprise: ${payload.company}\nContact: ${payload.contact}\nEmail: ${payload.email}\nTéléphone: ${payload.phone}\nFormats souhaités: ${payload.formats}\nMois de parution: ${payload.months}\nMessage:\n${payload.message}`
                 );
-                window.location.href = `mailto:contact@amicale-sp-clermont.fr?subject=${subject}&body=${body}`;
+                window.location.href = `mailto:contact@pompiers34800.com?subject=${subject}&body=${body}`;
               }}
               className="grid grid-cols-1 md:grid-cols-2 gap-4"
             >
@@ -294,7 +294,7 @@ export default function DevenirPartenairePage() {
           <p className="text-muted-foreground mb-5">Contactez-nous pour recevoir une proposition personnalisée.</p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Button asChild>
-              <Link href="mailto:contact@amicale-sp-clermont.fr">
+              <Link href="mailto:contact@pompiers34800.com">
                 <Mail className="mr-2 h-5 w-5" /> Demander un devis
               </Link>
             </Button>
