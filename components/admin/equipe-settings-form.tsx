@@ -20,6 +20,7 @@ interface EquipeSettingsFormProps {
     pourcentage_minimum_pot: number;
     pourcentage_recommande_pot: number;
     mode_transparence: 'prive' | 'equipe' | 'anonyme';
+    calendriers_remis_par_admin?: number | null;
     secteur?: string | null;
     communes?: string[] | null;
     secteur_centre_lat?: number | null;
@@ -47,6 +48,7 @@ export function EquipeSettingsForm({ equipe, canEdit = false, canArchive = false
     pourcentage_recommande_pot: equipe.pourcentage_recommande_pot,
     mode_transparence: equipe.mode_transparence,
   });
+  const [calendriersRemis, setCalendriersRemis] = useState(equipe.calendriers_remis_par_admin ?? 0);
   const [geo, setGeo] = useState({
     secteur: equipe.secteur ?? undefined as string | undefined,
     communesText: (equipe.communes && equipe.communes.length > 0) ? equipe.communes.join(', ') : '',
@@ -65,6 +67,7 @@ export function EquipeSettingsForm({ equipe, canEdit = false, canArchive = false
     try {
       const payload: Record<string, unknown> = {
         ...settings,
+        calendriers_remis_par_admin: calendriersRemis,
         secteur: geo.secteur ?? null,
         communes: geo.communesText
           ? geo.communesText.split(',').map((s) => s.trim()).filter(Boolean)
@@ -223,6 +226,25 @@ export function EquipeSettingsForm({ equipe, canEdit = false, canArchive = false
             </div>
           </>
         )}
+
+        {/* Calendriers remis par l'admin */}
+        <div className="space-y-2">
+          <Label htmlFor="calendriers-remis">Calendriers remis par l&apos;admin</Label>
+          <div className="flex items-center gap-2">
+            <Input
+              id="calendriers-remis"
+              type="number"
+              min={0}
+              value={calendriersRemis}
+              disabled={!canEdit || isLoading || equipe.status === 'archived'}
+              onChange={(e) => setCalendriersRemis(Number(e.target.value))}
+            />
+            <span className="text-sm text-muted-foreground">calendriers</span>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Nombre de calendriers physiquement remis à cette équipe par l&apos;administration
+          </p>
+        </div>
 
         {/* Zone géographique */}
         <div className="space-y-2">
