@@ -69,26 +69,44 @@ npm install
 
 **Le problème le plus courant est l'utilisation du mauvais type de connexion PostgreSQL.**
 
-Supabase propose 2 types de connexion :
-- ❌ **Transaction mode** (port 6543) → **NE FONCTIONNE PAS** avec `pg_dump`
-- ✅ **Session mode / Direct connection** (port 5432) → **À UTILISER**
+Supabase propose 3 types de connexion :
+
+| Type | Port | Format | Compatible `pg_dump` | Réseau |
+|------|------|--------|---------------------|--------|
+| **Direct connection** | 5432 | `db.xxx.supabase.co:5432` | ✅ OUI | IPv6 |
+| **Session pooler** | 5432 | `aws-x-region.pooler.supabase.com:5432` | ✅ OUI | IPv4 |
+| **Transaction pooler** | 6543 | `aws-x-region.pooler.supabase.com:6543` | ❌ NON | IPv4 |
+
+**Pour GitHub Actions, utilisez le Session pooler** (IPv4 compatible, port 5432)
 
 #### Comment obtenir la bonne URL de connexion :
 
 1. Allez sur https://supabase.com/dashboard
 2. Sélectionnez votre projet
-3. **Settings** → **Database**
+3. Cliquez sur **Connect**
 4. Dans la section **Connection string** :
-   - Sélectionnez **"Direct connection"** ou **"Session mode"** (pas "Transaction")
-   - Copiez l'URL qui ressemble à :
+   - **Type** : URI
+   - **Source** : Primary database
+   - **Method** : **Session pooler** (recommandé pour GitHub Actions - IPv4)
+   - OU **Direct connection** (si votre environnement supporte IPv6)
+   - ❌ **PAS Transaction pooler**
 
+5. Copiez l'URL qui ressemble à :
+
+**Session pooler (recommandé pour GitHub Actions) :**
 ```
 postgresql://postgres.[PROJECT-REF]:[PASSWORD]@aws-0-eu-west-3.pooler.supabase.com:5432/postgres
 ```
 
+**Direct connection (si IPv6 disponible) :**
+```
+postgresql://postgres:[PASSWORD]@db.abcdefghijklmnopqrst.supabase.co:5432/postgres
+```
+
 **Points clés :**
 - Port **5432** (pas 6543)
-- Format : `postgresql://postgres.[PROJECT-REF]:[PASSWORD]@[HOST]:5432/postgres`
+- Le script convertit automatiquement 6543 → 5432 si vous vous trompez
+- GitHub Actions utilise IPv4, donc **Session pooler** est préférable
 
 #### Variables d'environnement requises
 
@@ -177,7 +195,7 @@ Créez les secrets suivants :
 |--------|-------------|---------|
 | `NEXT_PUBLIC_SUPABASE_URL` | URL publique Supabase | `https://xxx.supabase.co` |
 | `SUPABASE_SERVICE_ROLE_KEY` | Clé service role | `eyJhbGci...` |
-| `SUPABASE_DB_URL` | **URL de connexion directe (port 5432)** | `postgresql://postgres.xxx:pwd@...5432/postgres` |
+| `SUPABASE_DB_URL` | **Session pooler (port 5432) - IPv4 compatible** | `postgresql://postgres.xxx:pwd@aws-0-eu-west-3.pooler.supabase.com:5432/postgres` |
 | `MINIO_ENDPOINT` | URL de votre MinIO | `https://console.s3.dsolution-ia.fr` |
 | `MINIO_ACCESS_KEY` | Access key MinIO | `your_access_key` |
 | `MINIO_SECRET_KEY` | Secret key MinIO | `your_secret_key` |
@@ -196,15 +214,20 @@ Vous pouvez lancer le backup manuellement :
 
 ### Erreur : "Tenant or user not found"
 
-**Cause :** Vous utilisez l'URL du Transaction pooler (port 6543) au lieu de la connexion directe.
+**Cause :** Vous utilisez l'URL du **Transaction pooler** (port 6543) au lieu du **Session pooler** ou **Direct connection**.
 
 **Solution automatique :** Le script détecte maintenant ce problème et convertit automatiquement le port 6543 en 5432.
 
-**Solution manuelle :**
-1. Allez dans Supabase Dashboard → Settings → Database
-2. Changez "Transaction mode" vers **"Direct connection"** ou **"Session mode"**
-3. Copiez la nouvelle URL (avec port 5432)
+**Solution manuelle (recommandée) :**
+1. Allez dans Supabase Dashboard → Cliquez **"Connect"**
+2. Configurez :
+   - **Type** : URI
+   - **Source** : Primary database
+   - **Method** : **"Session pooler"** (recommandé pour GitHub Actions - IPv4)
+3. Copiez l'URL (format : `postgresql://postgres.xxx:pwd@aws-x-region.pooler.supabase.com:5432/postgres`)
 4. Mettez à jour votre secret GitHub `SUPABASE_DB_URL`
+
+**Important :** Le Session pooler est préférable pour GitHub Actions car il est IPv4 compatible.
 
 ### Erreur : "pg_dump: command not found"
 
