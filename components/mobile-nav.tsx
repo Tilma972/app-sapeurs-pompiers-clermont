@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Calendar, Camera, Gift, Home, ShoppingBag, Sliders, User, Users, Wallet, Lightbulb } from "lucide-react";
+import { Calendar, Camera, Gift, Home, ShoppingBag, Sliders, User, Users, Wallet, Lightbulb, Shield, UserCheck, Building2, Settings, Image } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { LogoutButton } from "@/components/logout-button";
 
@@ -78,14 +78,17 @@ export function MobileNav() {
           <div className="pt-4 mt-2 border-t border-border space-y-2">
             <div className="px-2 text-xs uppercase tracking-wide text-muted-foreground">Administration</div>
             {[
-              { name: "Vue d'ensemble", href: "/dashboard/admin", icon: Home },
-              { name: "Inscriptions en attente", href: "/dashboard/admin/pending", icon: User },
-              { name: "Utilisateurs", href: "/dashboard/admin/users", icon: Users },
-              { name: "Produits", href: "/dashboard/produits", icon: ShoppingBag },
-              { name: "Équipes", href: "/dashboard/admin/equipes", icon: Calendar },
-              { name: "Avantages", href: "/dashboard/admin/avantages", icon: Gift },
-              { name: "Chèques", href: "/dashboard/admin/cheques", icon: Wallet },
-              { name: "Reçus fiscaux", href: "/dashboard/admin/receipts", icon: Gift },
+              { name: "Vue d'ensemble", href: "/admin", icon: Home },
+              { name: "Liste blanche", href: "/admin/whitelist", icon: Shield },
+              { name: "Utilisateurs", href: "/admin/users", icon: Users },
+              { name: "Équipes", href: "/admin/equipes", icon: UserCheck },
+              { name: "Partenaires", href: "/admin/partenaires", icon: Building2 },
+              { name: "Avantages", href: "/admin/avantages", icon: Gift },
+              { name: "Produits", href: "/admin/produits", icon: ShoppingBag },
+              { name: "Chèques", href: "/admin/cheques", icon: Wallet },
+              { name: "Reçus fiscaux", href: "/admin/receipts", icon: Gift },
+              { name: "Modération galerie", href: "/admin/gallery-moderation", icon: Image },
+              { name: "Paramètres", href: "/admin/settings", icon: Settings },
             ].map((item) => {
               const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
               const Icon = item.icon;
