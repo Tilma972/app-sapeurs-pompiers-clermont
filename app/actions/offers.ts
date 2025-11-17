@@ -23,7 +23,7 @@ export async function createOfferAction(formData: OfferFormData) {
       return { success: false, error: error.message };
     }
 
-    revalidatePath('/dashboard/admin/avantages');
+    revalidatePath('/admin/avantages');
     revalidatePath('/avantages');
     revalidatePath(`/avantages/${data.id}`);
 
@@ -49,7 +49,7 @@ export async function updateOfferAction(id: string, formData: Partial<OfferFormD
       return { success: false, error: error.message };
     }
 
-    revalidatePath('/dashboard/admin/avantages');
+    revalidatePath('/admin/avantages');
     revalidatePath('/avantages');
     revalidatePath(`/avantages/${id}`);
 
@@ -73,7 +73,7 @@ export async function deleteOfferAction(id: string) {
       return { success: false, error: error.message };
     }
 
-    revalidatePath('/dashboard/admin/avantages');
+    revalidatePath('/admin/avantages');
     revalidatePath('/avantages');
 
     return { success: true };
