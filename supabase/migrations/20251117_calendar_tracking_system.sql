@@ -82,7 +82,7 @@ FROM public.equipes e
 LEFT JOIN public.profiles p ON p.team_id = e.id AND p.role IN ('membre', 'chef_equipe')
 LEFT JOIN public.tournees t ON t.user_id = p.id AND t.statut = 'completed'
 WHERE e.actif = true
-GROUP BY e.id, e.nom, e.numero, e.couleur, e.calendriers_remis_par_admin
+GROUP BY e.id, e.nom, e.numero, e.couleur, e.calendriers_remis_par_admin, e.ordre_affichage
 ORDER BY e.ordre_affichage;
 
 -- Commentaire pour la documentation
@@ -121,7 +121,7 @@ FROM public.profiles p
 LEFT JOIN public.equipes e ON e.id = p.team_id
 LEFT JOIN public.tournees t ON t.user_id = p.id AND t.statut = 'completed'
 WHERE p.role IN ('membre', 'chef_equipe')
-GROUP BY p.id, p.full_name, p.display_name, p.team_id, e.nom,
+GROUP BY p.id, p.full_name, p.display_name, p.team_id, e.nom, e.ordre_affichage,
          p.calendriers_lot_attribue, p.calendriers_reception_confirmee,
          p.calendriers_confirmation_date
 ORDER BY e.ordre_affichage, p.full_name;
