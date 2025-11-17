@@ -24,7 +24,7 @@ export async function PATCH(_request: Request, context: { params: Promise<{ id: 
   // Whitelist fields
   const allowed = new Set([
     'nom','numero','type','description','secteur','communes','secteur_centre_lat','secteur_centre_lon',
-    'calendriers_alloues','couleur','ordre_affichage','chef_equipe_id',
+    'calendriers_alloues','calendriers_remis_par_admin','couleur','ordre_affichage','chef_equipe_id',
     'enable_retribution','pourcentage_minimum_pot','pourcentage_recommande_pot','mode_transparence',
     'status','actif'
   ])
