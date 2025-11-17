@@ -7,8 +7,8 @@ import { staggerContainer, staggerItem } from '@/lib/animations';
 
 export function Stats() {
   const stats = [
-    { value: 1976, suffix: '+', label: 'Interventions par an', duration: 2.5 },
-    { value: 101, suffix: '', label: 'Sapeurs-Pompiers', duration: 2 },
+    { value: 1976, prefix: '+', label: 'Interventions par an', duration: 2.5 },
+    { value: 108, suffix: '', label: 'Sapeurs-Pompiers', duration: 2 },
     { value: 20, suffix: '', label: 'Communes desservies', duration: 1.5 },
   ];
 
@@ -52,9 +52,14 @@ export function Stats() {
                   '0'
                 )}
               </p>
-              <p className="mt-2 text-base md:text-lg text-[#4A2E2C] dark:text-dark-text/90">
+              <p className="mt-2 text-base md:text-lg text-[#4A2E2C] dark:text-[#F5EAD6]">
                 {stat.label}
               </p>
+              {index === 0 && (
+                <p className="mt-1 text-xs text-[#6B4A48] dark:text-[#F5EAD6]">
+                  Statistiques 2024
+                </p>
+              )}
             </motion.div>
           ))}
         </motion.div>
