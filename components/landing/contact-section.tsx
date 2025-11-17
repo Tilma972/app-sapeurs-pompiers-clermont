@@ -234,7 +234,7 @@ export function ContactSection() {
                 <Mail className="w-5 h-5 text-primary dark:text-brandOrange mt-1 shrink-0" />
                 <div>
                   <p className="font-semibold text-brandBrown dark:text-darkText">Email</p>
-                  <p className="text-gray-600 dark:text-darkText/80">contact@amicale-sp-clermont.fr</p>
+                  <p className="text-gray-600 dark:text-darkText/80">contact@pompiers34800.com</p>
                 </div>
               </motion.div>
             </motion.div>

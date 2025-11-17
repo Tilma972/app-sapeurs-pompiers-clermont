@@ -119,7 +119,7 @@ export default function MerciBoutiquePage() {
                 Si vous avez des questions concernant votre commande, n&apos;hésitez pas à nous contacter.
               </p>
               <div className="text-sm space-y-1">
-                <p className="font-medium">Email : contact@amicale-sapeurs-pompiers.fr</p>
+                <p className="font-medium">Email : contact@pompiers34800.com</p>
                 <p className="font-medium">Tél : 01 23 45 67 89</p>
               </div>
             </div>

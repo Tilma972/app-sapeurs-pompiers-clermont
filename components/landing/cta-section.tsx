@@ -51,7 +51,7 @@ const contactInfo = [
   {
     icon: Mail,
     label: "Email",
-    value: "contact@amicale-sp-clermont.fr"
+  value: "contact@pompiers34800.com"
   },
   {
     icon: Clock,
