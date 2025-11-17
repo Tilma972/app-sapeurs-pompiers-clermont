@@ -9,7 +9,8 @@
     "backup:storage": "node backup-storage.js",
     "restore:database": "node restore-database.js",
     "backup:all": "npm run backup:database && npm run backup:storage",
-    "encode-password": "node encode-password.js"
+    "encode-password": "node encode-password.js",
+    "verify-connection": "node verify-connection.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.38.0",
