@@ -37,14 +37,24 @@ const preventionCommunes: Partial<CommuneData>[] = [
     name: "Brignac",
     distance: '9 km',
     mainRisks: [
-      { name: 'Crue du Soulondres', icon: Waves, advice: [
-        'Ce ruisseau peut vite réagir aux orages. Ne pas sous-estimer sa force.',
-        'Ne laissez pas les enfants jouer près du cours d\'eau après de fortes pluies.'
-      ] },
-      { name: 'Feux de végétation', icon: Flame, advice: [
-        'N\'allumez pas de barbecue en bordure de végétation.',
-        'Entretenez les abords de votre maison pour créer une zone de protection.'
-      ] }
+      {
+        name: 'Crue de la Lergue',
+        icon: Waves,
+        advice: [
+          'La Lergue est la principale rivière traversant la commune. Elle peut réagir vite aux orages.',
+          'Ne sous-estimez pas la force du courant, même si le niveau d\'eau paraît bas.',
+          'Consultez le plan communal de sauvegarde en mairie pour connaître les zones à risque.'
+        ]
+      },
+      {
+        name: 'Feux de végétation',
+        icon: Flame,
+        advice: [
+          'N\'allumez pas de barbecue en bordure de végétation.',
+          'Entretenez les abords de votre maison pour créer une zone de protection.',
+          'Le débroussaillement est une obligation légale et votre meilleure sécurité.'
+        ]
+      }
     ]
   },
   {
