@@ -266,7 +266,7 @@ export function ContactSection() {
               <ul className="space-y-3 text-gray-700">
                 <li className="flex items-start gap-2">
                   <span className="text-brandRed">•</span>
-                  <span>Devenez membre de l&apos;amicale</span>
+                     <span>Soutenez l&apos;amicale</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-brandRed"></span>
