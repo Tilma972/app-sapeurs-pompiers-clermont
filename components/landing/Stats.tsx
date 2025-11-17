@@ -7,7 +7,7 @@ import { staggerContainer, staggerItem } from '@/lib/animations';
 
 export function Stats() {
   const stats = [
-    { value: 1976, prefix: '+', label: 'Interventions par an', duration: 2.5 },
+    { value: 1976, prefix: '', label: 'Interventions par an', duration: 2.5 },
     { value: 108, suffix: '', label: 'Sapeurs-Pompiers', duration: 2 },
     { value: 20, suffix: '', label: 'Communes desservies', duration: 1.5 },
   ];
