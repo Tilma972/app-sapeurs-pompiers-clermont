@@ -2,8 +2,6 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
-import Image from "next/image";
-import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Check, Building2, CalendarDays, Handshake, Mail, Phone, ArrowLeft } from "lucide-react";
@@ -11,7 +9,6 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { PrimaryCta } from "@/components/landing/primary-cta";
 
 export default function DevenirPartenairePage() {
   return (
@@ -24,71 +21,37 @@ export default function DevenirPartenairePage() {
           </Link>
         </Button>
       </div>
-      {/* Hero */}
-      <section className="container max-w-6xl mx-auto px-4">
+
+      {/* Hero simplifié */}
+      <section className="container max-w-6xl mx-auto px-4 mb-16">
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
           viewport={{ once: true }}
-          className="text-center mb-10 relative"
+          className="text-center"
         >
-          <div className="absolute left-0 -top-2 md:-top-4">
-            <div className="relative w-24 h-24 md:w-40 md:h-40">
-              <Image
-                src="https://npyfregghvnmqxwgkfea.supabase.co/storage/v1/object/public/logo/logo_amicale.svg"
-                alt="Logo Amicale des Sapeurs-Pompiers"
-                fill
-                sizes="160px"
-                className="object-contain"
-                priority
-              />
-            </div>
-          </div>
-          <Badge variant="outline" className="mb-3">Partenariats</Badge>
-          <h1 className="text-3xl md:text-5xl font-bold mb-4">Devenir partenaire de l&apos;Amicale</h1>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Renforcez votre présence locale tout en soutenant nos actions solidaires.
+          <h1 className="text-3xl md:text-5xl font-bold mb-4">Devenir partenaire</h1>
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
+            Renforcez votre visibilité locale tout en soutenant nos actions solidaires.
+            Votre publicité sur 5 000+ calendriers distribués dans la région.
           </p>
-          <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
-            <PrimaryCta href="#devis"><span className="inline-flex items-center"><Mail className="mr-2 h-5 w-5" /> Demander un devis</span></PrimaryCta>
-            <PrimaryCta href="tel:+33467449970" variant="outline"><span className="inline-flex items-center"><Phone className="mr-2 h-5 w-5" /> 04 67 44 99 70</span></PrimaryCta>
-          </div>
+          <Button size="lg" asChild>
+            <a href="#devis" className="gap-2">
+              <Mail className="h-5 w-5" /> Demander un devis
+            </a>
+          </Button>
         </motion.div>
       </section>
 
       {/* Bénéfices */}
-      <section className="container max-w-6xl mx-auto px-4">
-        {/* Bandeau métriques */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          viewport={{ once: true }}
-          className="mb-6 rounded-xl border bg-background/60 backdrop-blur px-4 py-5"
-        >
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-            {[
-              { v: "5 000+", l: "Calendriers" },
-              { v: "20 000", l: "Habitants touchés*" },
-              { v: "365", l: "Jours visibles" },
-              { v: "~2¢", l: "Coût / contact*" },
-            ].map((m) => (
-              <div key={m.v} className="rounded-lg border p-3">
-                <div className="text-2xl font-bold text-primary">{m.v}</div>
-                <div className="text-xs text-muted-foreground mt-1">{m.l}</div>
-              </div>
-            ))}
-          </div>
-          <p className="mt-3 text-[11px] text-muted-foreground text-center">*Estimations locales. Coût par contact calculé sur format 6×4 cm.</p>
-        </motion.div>
-
+      <section className="container max-w-6xl mx-auto px-4 mb-16">
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.1 }}
+          transition={{ duration: 0.8 }}
           viewport={{ once: true }}
-          className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10"
+          className="grid grid-cols-1 md:grid-cols-2 gap-6"
         >
           {[
             {
@@ -126,14 +89,14 @@ export default function DevenirPartenairePage() {
       </section>
 
       {/* Formulaire de demande */}
-      <section id="devis" className="container max-w-3xl mx-auto px-4 mt-10 mb-12 md:mb-16">
+      <section id="devis" className="container max-w-3xl mx-auto px-4 mb-16">
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
           viewport={{ once: true }}
         >
-          <h2 className="text-2xl md:text-3xl font-bold mb-6">Demander un devis</h2>
+          <h2 className="text-2xl md:text-3xl font-bold mb-6 text-center">Demander un devis</h2>
           <Card className="p-6">
             <form
               onSubmit={(e) => {
@@ -227,62 +190,52 @@ export default function DevenirPartenairePage() {
         </motion.div>
       </section>
 
-      {/* Formats sans prix */}
-      <section className="container max-w-6xl mx-auto px-4">
+      {/* En pratique - Formats & Process fusionnés */}
+      <section className="container max-w-6xl mx-auto px-4 mb-16">
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.1 }}
+          transition={{ duration: 0.8 }}
           viewport={{ once: true }}
         >
-          <h2 className="text-2xl md:text-3xl font-bold mb-6">Formats proposés</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <h2 className="text-2xl md:text-3xl font-bold mb-2 text-center">En pratique</h2>
+          <p className="text-muted-foreground text-center mb-8 max-w-2xl mx-auto">
+            Choisissez votre format, envoyez votre visuel et touchez des milliers de foyers.
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
             {[
-              { title: "6×4 cm", desc: "Logo + coordonnées. Format standard et efficace." },
-              { title: "6×8 cm", desc: "Plus d'espace pour visuel ou détails de l'offre." },
-              { title: "12×4 cm", desc: "Bandeau horizontal pour forte présence." },
+              { title: "6×4 cm", desc: "Format standard. Logo + coordonnées essentielles." },
+              { title: "6×8 cm", desc: "Double hauteur. Plus d'espace pour votre message." },
+              { title: "12×4 cm", desc: "Bandeau horizontal. Maximum de visibilité." },
             ].map((f) => (
-              <Card key={f.title} className="p-6 flex flex-col">
+              <Card key={f.title} className="p-6 text-center">
                 <h3 className="font-semibold text-lg mb-2">{f.title}</h3>
-                <p className="text-muted-foreground mb-4">{f.desc}</p>
-                <div className="mt-auto text-sm text-muted-foreground">Tarifs sur demande</div>
+                <p className="text-sm text-muted-foreground">{f.desc}</p>
               </Card>
             ))}
           </div>
-        </motion.div>
-      </section>
 
-      {/* Process */}
-      <section className="container max-w-6xl mx-auto px-4">
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.1 }}
-          viewport={{ once: true }}
-          className="mt-10"
-        >
-          <h2 className="text-2xl md:text-3xl font-bold mb-6">Comment ça marche ?</h2>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center text-sm">
             {[
-              { n: 1, t: "Choisissez", d: "Sélectionnez le format et la période." },
-              { n: 2, t: "Validez", d: "Envoyez votre visuel, on prépare le BAT." },
-              { n: 3, t: "Imprimez", d: "Intégration puis impression du calendrier." },
-              { n: 4, t: "Distribuez", d: "5 000+ foyers dès décembre." },
+              { n: "1", t: "Choisissez" },
+              { n: "2", t: "Envoyez" },
+              { n: "3", t: "Validez" },
+              { n: "4", t: "Distribuez" },
             ].map((s) => (
-              <Card key={s.n} className="p-6 text-center">
-                <div className="mx-auto mb-2 w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-bold">
+              <div key={s.n} className="flex flex-col items-center">
+                <div className="mb-2 w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm">
                   {s.n}
                 </div>
-                <h3 className="font-semibold mb-1">{s.t}</h3>
-                <p className="text-sm text-muted-foreground">{s.d}</p>
-              </Card>
+                <span className="text-muted-foreground">{s.t}</span>
+              </div>
             ))}
           </div>
         </motion.div>
       </section>
 
-      {/* CTA final */}
-      <section className="container max-w-6xl mx-auto px-4 mt-10">
+      {/* CTA final simplifié */}
+      <section className="container max-w-6xl mx-auto px-4 mb-8">
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -290,20 +243,12 @@ export default function DevenirPartenairePage() {
           viewport={{ once: true }}
           className="text-center"
         >
-          <h2 className="text-2xl md:text-3xl font-bold mb-3">Prêt à démarrer ?</h2>
-          <p className="text-muted-foreground mb-5">Contactez-nous pour recevoir une proposition personnalisée.</p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Button asChild>
-              <Link href="mailto:contact@pompiers34800.com">
-                <Mail className="mr-2 h-5 w-5" /> Demander un devis
-              </Link>
-            </Button>
-            <Button variant="outline" asChild>
-              <a href="tel:+33467449970">
-                <Phone className="mr-2 h-5 w-5" /> 04 67 44 99 70
-              </a>
-            </Button>
-          </div>
+          <p className="text-muted-foreground mb-4">Une question ? Contactez-nous</p>
+          <Button variant="outline" asChild>
+            <a href="tel:+33467449970" className="gap-2">
+              <Phone className="h-5 w-5" /> 04 67 44 99 70
+            </a>
+          </Button>
         </motion.div>
       </section>
     </div>
