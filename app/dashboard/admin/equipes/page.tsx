@@ -77,6 +77,7 @@ export default async function AdminEquipesPage() {
           pourcentage_minimum_pot: number;
           pourcentage_recommande_pot: number;
           mode_transparence: 'prive' | 'equipe' | 'anonyme';
+          calendriers_remis_par_admin?: number | null;
           communes?: string[] | null;
           secteur_centre_lat?: number | null;
           secteur_centre_lon?: number | null;

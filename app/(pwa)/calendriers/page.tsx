@@ -12,6 +12,7 @@ import { KpiCard } from "@/components/kpi-card";
 import { getCurrentUserProfile } from "@/lib/supabase/profile";
 import { formatNumber, formatCurrencyRounded } from "@/lib/formatters";
 import { CALENDRIER_CONFIG, STATS_CONFIG } from "@/lib/config";
+import { CalendriersClientWrapper } from "@/components/calendriers-client-wrapper";
 
 export default async function CalendriersPage() {
   const supabase = await createClient();
@@ -30,7 +31,17 @@ export default async function CalendriersPage() {
     getUserPersonalStats(),
     getCurrentUserProfile(),
   ]);
-  
+
+  // Vérifier la confirmation de réception des calendriers
+  const { data: calendarInfo } = await supabase
+    .from('profiles')
+    .select('calendriers_lot_attribue, calendriers_reception_confirmee')
+    .eq('id', user.id)
+    .single();
+
+  const needsConfirmation = calendarInfo && !calendarInfo.calendriers_reception_confirmee;
+  const calendriersLotAttribue = calendarInfo?.calendriers_lot_attribue ?? 40;
+
   // Vérification s'il y a une tournée active
   const hasActiveTournee = tourneeData && tourneeData.tournee;
 
@@ -96,12 +107,15 @@ export default async function CalendriersPage() {
   })();
 
   return (
-
-    <PwaContainer>
-      <div className="space-y-6">
-        <section className="space-y-2 mt-1 sm:mt-2">
-          <div className="text-sm text-muted-foreground mb-2 text-center">Suivi de ton activité en cours.</div>
-        </section>
+    <CalendriersClientWrapper
+      needsConfirmation={!!needsConfirmation}
+      calendriersLotAttribue={calendriersLotAttribue}
+    >
+      <PwaContainer>
+        <div className="space-y-6">
+          <section className="space-y-2 mt-1 sm:mt-2">
+            <div className="text-sm text-muted-foreground mb-2 text-center">Suivi de ton activité en cours.</div>
+          </section>
 
         {/* Nouveau : Accès rapide au secteur */}
         {profile?.team_id && (
@@ -149,7 +163,10 @@ export default async function CalendriersPage() {
           </div>
         ) : (
           <div className="mt-2 sm:mt-4">
-            <StartTourneeButton />
+            <StartTourneeButton
+              isBlocked={!!needsConfirmation}
+              blockReason="Vous devez confirmer avoir reçu vos calendriers pour démarrer une tournée"
+            />
           </div>
         )}
 
@@ -186,5 +203,6 @@ export default async function CalendriersPage() {
         <TeamsLeaderboardProgress teams={teams} className="shadow-sm" />
       </div>
     </PwaContainer>
+    </CalendriersClientWrapper>
   );
 }
