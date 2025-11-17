@@ -16,7 +16,7 @@ export async function POST() {
     }
 
     // Appeler la fonction RPC pour confirmer la réception
-    const { data, error } = await supabase.rpc('confirm_calendar_reception')
+    const { error } = await supabase.rpc('confirm_calendar_reception')
 
     if (error) {
       console.error('Erreur lors de la confirmation:', error)

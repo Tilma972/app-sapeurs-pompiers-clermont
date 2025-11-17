@@ -119,7 +119,7 @@ export default async function CalendriersSuiviAdminPage() {
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium flex items-center gap-2 text-amber-900 dark:text-amber-100">
                   <AlertTriangle className="h-4 w-4" />
-                  {membresNonConfirmes.length} membre(s) n'ont pas confirmé la réception
+                  {membresNonConfirmes.length} membre(s) n&apos;ont pas confirmé la réception
                 </CardTitle>
               </CardHeader>
               <CardContent className="text-sm text-amber-800 dark:text-amber-200">
