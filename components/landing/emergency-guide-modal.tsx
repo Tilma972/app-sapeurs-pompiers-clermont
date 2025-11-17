@@ -4,7 +4,7 @@ import * as React from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { EMERGENCY_GUIDES, GUIDE_KEYS, GuideKey } from "@/lib/emergency-guides"
-import { X } from "lucide-react"
+import { Flame, Heart, Globe } from "lucide-react"
 
 interface EmergencyGuideModalProps {
   open: boolean
@@ -25,14 +25,15 @@ export default function EmergencyGuideModal({ open, onOpenChange, initial = "18"
         <DialogHeader>
           <div className="flex items-start justify-between">
             <div>
-              <DialogTitle className="text-lg font-semibold tracking-tight flex items-center gap-2">
-                <span className="text-2xl">{EMERGENCY_GUIDES[value].emoji}</span>
+              <DialogTitle className="text-lg font-semibold tracking-tight flex items-center gap-3">
+                {/* Use lucide icons instead of emoji to avoid platform rendering issues */}
+                {value === "18" ? <Flame className="h-6 w-6 text-primary" /> : null}
+                {value === "15" ? <Heart className="h-6 w-6 text-primary" /> : null}
+                {value === "112" ? <Globe className="h-6 w-6 text-primary" /> : null}
                 <span>{EMERGENCY_GUIDES[value].title}</span>
               </DialogTitle>
             </div>
-            <button aria-label="Fermer" className="-mr-2 p-1 rounded focus:outline-none" onClick={() => onOpenChange(false)}>
-              <X className="h-5 w-5 text-muted-foreground" />
-            </button>
+            {/* DialogContent already provides a close button; avoid duplicating it here */}
           </div>
           {EMERGENCY_GUIDES[value].intro ? (
             <p className="text-sm text-muted-foreground mt-1">{EMERGENCY_GUIDES[value].intro}</p>
