@@ -24,6 +24,7 @@ export type EquipeRanking = {
   equipe_nom: string;
   equipe_numero: number | null;
   secteur: string;
+  calendriers_alloues: number;
   montant_collecte: number;
   calendriers_distribues: number;
   progression_pourcentage: number;
