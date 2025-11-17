@@ -42,11 +42,92 @@ const s3Client = new S3Client({
   forcePathStyle: true, // Important pour Minio
 });
 
+/**
+ * Valide et corrige l'URL de connexion Supabase pour pg_dump
+ * Le pooler en mode transaction (port 6543) ne fonctionne pas avec pg_dump
+ */
+function fixSupabaseUrl(url) {
+  if (!url) return url;
+
+  console.log('🔍 Vérification de l\'URL de connexion PostgreSQL...');
+
+  // Vérifier si on utilise le pooler (port 6543)
+  if (url.includes(':6543')) {
+    console.log('⚠️  Détection du Connection Pooler Supabase (port 6543)');
+    console.log('   Ce mode ne fonctionne pas avec pg_dump');
+
+    // Remplacer par le port direct
+    const fixedUrl = url.replace(':6543', ':5432');
+    console.log('✅ Conversion automatique vers connexion directe (port 5432)');
+    console.log('');
+
+    return fixedUrl;
+  }
+
+  // Vérifier si on utilise bien le port 5432 ou 6543 en mode session
+  if (url.includes(':5432')) {
+    console.log('✅ Utilisation de la connexion directe (port 5432)');
+    console.log('');
+  } else {
+    console.log('ℹ️  Port de connexion détecté');
+    console.log('');
+  }
+
+  return url;
+}
+
+/**
+ * Teste la connexion PostgreSQL avant le backup
+ */
+async function testConnection(dbUrl) {
+  console.log('🔌 Test de connexion à PostgreSQL...');
+
+  try {
+    // Test simple avec psql
+    const testCommand = `psql "${dbUrl}" -c "SELECT version();" -t`;
+    const { stdout } = await execPromise(testCommand);
+
+    console.log('✅ Connexion réussie');
+    console.log(`   PostgreSQL: ${stdout.trim().substring(0, 80)}...`);
+    console.log('');
+    return true;
+  } catch (error) {
+    console.error('❌ Échec de connexion à PostgreSQL');
+    console.error('');
+
+    // Messages d'erreur détaillés selon le type d'erreur
+    if (error.message.includes('Tenant or user not found')) {
+      console.error('💡 SOLUTION:');
+      console.error('   1. Vérifiez que vous utilisez la bonne URL de connexion');
+      console.error('   2. Dans Supabase Dashboard → Settings → Database');
+      console.error('   3. Utilisez "Direct connection" (port 5432) ou "Session mode"');
+      console.error('   4. PAS le "Transaction mode" (port 6543)');
+      console.error('');
+      console.error('   Format attendu:');
+      console.error('   postgresql://postgres.[PROJECT-REF]:[PASSWORD]@aws-0-eu-west-3.pooler.supabase.com:5432/postgres');
+      console.error('');
+    } else if (error.message.includes('password authentication failed')) {
+      console.error('💡 SOLUTION:');
+      console.error('   Le mot de passe est incorrect. Vérifiez votre SUPABASE_DB_URL');
+      console.error('');
+    } else if (error.message.includes('could not translate host name')) {
+      console.error('💡 SOLUTION:');
+      console.error('   L\'URL est mal formée. Vérifiez le format de SUPABASE_DB_URL');
+      console.error('');
+    } else {
+      console.error(`   Erreur: ${error.message}`);
+      console.error('');
+    }
+
+    throw new Error('Connexion PostgreSQL impossible. Vérifiez SUPABASE_DB_URL');
+  }
+}
+
 async function checkDependencies() {
   console.log('🔍 Vérification des dépendances...');
-  
+
   const isWindows = process.platform === 'win32';
-  
+
   try {
     await execPromise('pg_dump --version');
     console.log('✅ pg_dump disponible');
@@ -64,9 +145,19 @@ async function checkDependencies() {
       console.error('');
       throw new Error('pg_dump non disponible. Installation requise (voir ci-dessus)');
     } else {
-      console.error('❌ pg_dump non trouvé. Installation...');
-      await execPromise('sudo apt-get update && sudo apt-get install -y postgresql-client');
+      console.error('❌ Outils PostgreSQL non trouvés. Installation...');
+      await execPromise('apt-get update && apt-get install -y postgresql-client');
+      console.log('✅ PostgreSQL client installé');
     }
+  }
+
+  try {
+    await execPromise('psql --version');
+    console.log('✅ psql disponible');
+  } catch (error) {
+    // psql est normalement installé avec pg_dump via postgresql-client
+    console.error('❌ psql non trouvé');
+    throw new Error('psql est requis pour tester la connexion');
   }
 
   try {
@@ -85,20 +176,20 @@ async function checkDependencies() {
   }
 }
 
-async function createBackup() {
+async function createBackup(dbUrl) {
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
   const filename = `database_backup_${timestamp}.sql`;
   const gzFilename = `${filename}.gz`;
-  
+
   // Windows compatible: utiliser le répertoire temp de l'OS
   const isWindows = process.platform === 'win32';
   const tmpDir = isWindows ? process.env.TEMP || 'C:\\temp' : '/tmp';
-  
+
   // Créer le répertoire temp s'il n'existe pas
   if (!require('fs').existsSync(tmpDir)) {
     require('fs').mkdirSync(tmpDir, { recursive: true });
   }
-  
+
   const backupPath = path.join(tmpDir, filename);
   const gzPath = path.join(tmpDir, gzFilename);
 
@@ -107,7 +198,7 @@ async function createBackup() {
   try {
     // Dump PostgreSQL
     console.log('🗄️  Dump PostgreSQL en cours...');
-    const dumpCommand = `pg_dump "${SUPABASE_DB_URL}" --no-owner --no-acl -F p -f "${backupPath}"`;
+    const dumpCommand = `pg_dump "${dbUrl}" --no-owner --no-acl -F p -f "${backupPath}"`;
     await execPromise(dumpCommand);
     console.log('✅ Dump PostgreSQL terminé');
 
@@ -242,19 +333,25 @@ async function main() {
     if (!MINIO_ACCESS_KEY) throw new Error('MINIO_ACCESS_KEY non défini');
     if (!MINIO_SECRET_KEY) throw new Error('MINIO_SECRET_KEY non défini');
 
-    // 1. Vérifier les dépendances
+    // 1. Corriger l'URL Supabase si nécessaire (port 6543 → 5432)
+    const fixedDbUrl = fixSupabaseUrl(SUPABASE_DB_URL);
+
+    // 2. Vérifier les dépendances
     await checkDependencies();
 
-    // 2. Créer le backup
-    const { gzPath, gzFilename, gzSizeMB } = await createBackup();
+    // 3. Tester la connexion PostgreSQL
+    await testConnection(fixedDbUrl);
 
-    // 3. Upload vers Minio
+    // 4. Créer le backup
+    const { gzPath, gzFilename, gzSizeMB } = await createBackup(fixedDbUrl);
+
+    // 5. Upload vers Minio
     await uploadToMinio(gzPath, gzFilename);
 
-    // 4. Nettoyage des anciens backups
+    // 6. Nettoyage des anciens backups
     await cleanupOldBackups();
 
-    // 5. Suppression du fichier temporaire
+    // 7. Suppression du fichier temporaire
     await cleanup(gzPath);
 
     const duration = ((Date.now() - startTime) / 1000).toFixed(1);
