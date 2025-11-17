@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Trash2, Pencil, Shield, Upload, Search } from "lucide-react";
+import { Plus, Trash2, Pencil, Shield, Search } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { AdminCard, AdminListCard } from "@/components/admin/admin-card";
