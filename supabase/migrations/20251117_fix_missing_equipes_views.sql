@@ -1,9 +1,19 @@
--- Migration: Vues et fonctions pour exploiter la table equipes
--- Description: Création des vues et fonctions pour alimenter les interfaces avec les données des équipes
+-- Migration: Fix missing equipes views and functions
+-- Description: Re-create equipes views and functions if they don't exist
+-- This fixes the "relation public.equipes_ranking_view does not exist" error
+
+-- Drop existing views and functions if they exist (to ensure clean recreation)
+DROP VIEW IF EXISTS public.equipes_ranking_view CASCADE;
+DROP VIEW IF EXISTS public.equipes_stats_view CASCADE;
+DROP VIEW IF EXISTS public.profiles_with_equipe_view CASCADE;
+DROP FUNCTION IF EXISTS get_equipe_stats(UUID) CASCADE;
+DROP FUNCTION IF EXISTS get_equipes_ranking() CASCADE;
+DROP FUNCTION IF EXISTS get_equipe_membres(UUID) CASCADE;
+DROP FUNCTION IF EXISTS get_equipes_summary_for_charts() CASCADE;
 
 -- Vue pour les statistiques d'équipes avec progression
 CREATE OR REPLACE VIEW public.equipes_stats_view AS
-SELECT 
+SELECT
     e.id as equipe_id,
     e.nom as equipe_nom,
     e.numero as equipe_numero,
@@ -14,31 +24,31 @@ SELECT
     e.ordre_affichage,
     e.chef_equipe_id,
     ce.full_name as chef_equipe_nom,
-    
+
     -- Statistiques calculées
     COALESCE(SUM(t.calendriers_distribues), 0) as calendriers_distribues,
     COALESCE(SUM(t.montant_collecte), 0) as montant_collecte,
     COALESCE(COUNT(t.id), 0) as nombre_tournees,
     COALESCE(COUNT(CASE WHEN t.statut = 'active' THEN 1 END), 0) as tournees_actives,
     COALESCE(COUNT(CASE WHEN t.statut = 'completed' THEN 1 END), 0) as tournees_terminees,
-    
+
     -- Calculs de progression
-    CASE 
-        WHEN e.calendriers_alloues > 0 THEN 
+    CASE
+        WHEN e.calendriers_alloues > 0 THEN
             ROUND((COALESCE(SUM(t.calendriers_distribues), 0)::DECIMAL / e.calendriers_alloues) * 100, 1)
-        ELSE 0 
+        ELSE 0
     END as progression_pourcentage,
-    
+
     -- Moyenne par calendrier
-    CASE 
-        WHEN COALESCE(SUM(t.calendriers_distribues), 0) > 0 THEN 
+    CASE
+        WHEN COALESCE(SUM(t.calendriers_distribues), 0) > 0 THEN
             ROUND(COALESCE(SUM(t.montant_collecte), 0) / COALESCE(SUM(t.calendriers_distribues), 0), 2)
-        ELSE 0 
+        ELSE 0
     END as moyenne_par_calendrier,
-    
+
     -- Nombre de membres dans l'équipe
     COALESCE(membres_count.count, 0) as nombre_membres,
-    
+
     -- Dernière activité
     MAX(t.date_debut) as derniere_activite
 
@@ -47,25 +57,25 @@ LEFT JOIN public.profiles p ON p.team_id = e.id
 LEFT JOIN public.tournees t ON t.user_id = p.id
 LEFT JOIN public.profiles ce ON ce.id = e.chef_equipe_id
 LEFT JOIN (
-    SELECT team_id, COUNT(*) as count 
-    FROM public.profiles 
-    WHERE team_id IS NOT NULL 
+    SELECT team_id, COUNT(*) as count
+    FROM public.profiles
+    WHERE team_id IS NOT NULL
     GROUP BY team_id
 ) membres_count ON membres_count.team_id = e.id
 WHERE e.actif = true
-GROUP BY e.id, e.nom, e.numero, e.type, e.secteur, e.calendriers_alloues, 
+GROUP BY e.id, e.nom, e.numero, e.type, e.secteur, e.calendriers_alloues,
          e.couleur, e.ordre_affichage, e.chef_equipe_id, ce.full_name, membres_count.count
 ORDER BY e.ordre_affichage;
 
 -- Vue pour les profils avec informations d'équipe
 CREATE OR REPLACE VIEW public.profiles_with_equipe_view AS
-SELECT 
+SELECT
     p.id,
     p.full_name,
     p.role,
     p.created_at,
     p.updated_at,
-    
+
     -- Informations d'équipe
     e.id as equipe_id,
     e.nom as equipe_nom,
@@ -77,7 +87,7 @@ SELECT
     e.ordre_affichage as equipe_ordre,
     e.chef_equipe_id,
     ce.full_name as chef_equipe_nom,
-    
+
     -- Statistiques personnelles
     COALESCE(stats.calendriers_distribues, 0) as calendriers_distribues,
     COALESCE(stats.montant_collecte, 0) as montant_collecte,
@@ -88,24 +98,24 @@ FROM public.profiles p
 LEFT JOIN public.equipes e ON e.id = p.team_id
 LEFT JOIN public.profiles ce ON ce.id = e.chef_equipe_id
 LEFT JOIN (
-    SELECT 
+    SELECT
         user_id,
         SUM(calendriers_distribues) as calendriers_distribues,
         SUM(montant_collecte) as montant_collecte,
         COUNT(*) as nombre_tournees,
-        CASE 
-            WHEN SUM(calendriers_distribues) > 0 THEN 
+        CASE
+            WHEN SUM(calendriers_distribues) > 0 THEN
                 ROUND(SUM(montant_collecte) / SUM(calendriers_distribues), 2)
-            ELSE 0 
+            ELSE 0
         END as moyenne_par_calendrier
-    FROM public.tournees 
+    FROM public.tournees
     WHERE statut = 'completed'
     GROUP BY user_id
 ) stats ON stats.user_id = p.id;
 
 -- Vue pour le classement des équipes
 CREATE OR REPLACE VIEW public.equipes_ranking_view AS
-SELECT 
+SELECT
     esv.*,
     ROW_NUMBER() OVER (ORDER BY esv.montant_collecte DESC) as rang_montant,
     ROW_NUMBER() OVER (ORDER BY esv.calendriers_distribues DESC) as rang_calendriers,
@@ -128,13 +138,13 @@ RETURNS TABLE (
     nombre_membres BIGINT,
     tournees_actives BIGINT,
     couleur TEXT
-) 
+)
 LANGUAGE plpgsql
 SECURITY DEFINER
 AS $$
 BEGIN
     RETURN QUERY
-    SELECT 
+    SELECT
         esv.equipe_id,
         esv.equipe_nom,
         esv.equipe_numero,
@@ -204,7 +214,7 @@ SECURITY DEFINER
 AS $$
 BEGIN
     RETURN QUERY
-    SELECT 
+    SELECT
         pwev.id as membre_id,
         pwev.full_name as membre_nom,
         pwev.role as membre_role,
@@ -216,7 +226,7 @@ BEGIN
     FROM public.profiles_with_equipe_view pwev
     LEFT JOIN public.tournees t ON t.user_id = pwev.id
     WHERE pwev.equipe_id = equipe_id_param
-    GROUP BY pwev.id, pwev.full_name, pwev.role, pwev.calendriers_distribues, 
+    GROUP BY pwev.id, pwev.full_name, pwev.role, pwev.calendriers_distribues,
              pwev.montant_collecte, pwev.moyenne_par_calendrier, pwev.nombre_tournees
     ORDER BY pwev.montant_collecte DESC;
 END;
@@ -237,7 +247,7 @@ SECURITY DEFINER
 AS $$
 BEGIN
     RETURN QUERY
-    SELECT 
+    SELECT
         esv.equipe_nom as team,
         esv.montant_collecte as totalAmountCollected,
         esv.calendriers_distribues as totalCalendarsDistributed,
@@ -266,9 +276,3 @@ COMMENT ON FUNCTION get_equipe_stats(UUID) IS 'Récupère les statistiques d''un
 COMMENT ON FUNCTION get_equipes_ranking() IS 'Récupère le classement des équipes par montant collecté';
 COMMENT ON FUNCTION get_equipe_membres(UUID) IS 'Récupère la liste des membres d''une équipe avec leurs statistiques';
 COMMENT ON FUNCTION get_equipes_summary_for_charts() IS 'Récupère le résumé des équipes pour les graphiques (compatible avec l''interface existante)';
-
-
-
-
-
-
