@@ -3,6 +3,9 @@
 import { motion } from "framer-motion";
 import { PremiumIcon } from "@/components/landing/premium-icon";
 import { Shield, Phone } from "lucide-react";
+import React from "react";
+import EmergencyGuideModal from "@/components/landing/emergency-guide-modal";
+import { GuideKey } from "@/lib/emergency-guides";
 
 const emergencyNumbers = [
   { number: "18", service: "Sapeurs-Pompiers", description: "Incendies, accidents, secours" },
@@ -10,9 +13,17 @@ const emergencyNumbers = [
   { number: "112", service: "Numéro européen", description: "Urgence depuis mobile" }
 ];
 
-// Conseils détaillés retirés sur la landing pour compacité
+// Conseils détaillés fournis via modal interactive
 
 export function PreventionSection() {
+  const [open, setOpen] = React.useState(false);
+  const [initial, setInitial] = React.useState<GuideKey>("18");
+
+  const openGuide = (key: GuideKey) => {
+    setInitial(key);
+    setOpen(true);
+  };
+
   return (
     <section id="prevention" className="py-12 w-full">
       <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
@@ -27,7 +38,7 @@ export function PreventionSection() {
           </p>
         </div>
 
-        {/* Numéros d'urgence */}
+        {/* Numéros d'urgence - compact cards */}
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -37,15 +48,18 @@ export function PreventionSection() {
         >
           <div className="grid grid-cols-3 gap-3 max-w-4xl mx-auto">
             {emergencyNumbers.map((emergency, index) => (
-              <motion.div
+              <motion.button
                 key={emergency.number}
-                initial={{ opacity: 0, scale: 0.9 }}
+                initial={{ opacity: 0, scale: 0.95 }}
                 whileInView={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
+                whileHover={{ scale: 1.02 }}
+                transition={{ duration: 0.5, delay: index * 0.08 }}
                 viewport={{ once: true }}
-                className="glass-card p-4 text-center rounded-lg"
+                onClick={() => openGuide(emergency.number as GuideKey)}
+                className="relative glass-card p-3 text-center rounded-lg h-[120px] flex flex-col justify-center items-center cursor-pointer hover:shadow-lg focus:outline-none"
               >
-                <div className="mb-4 flex justify-center">
+                <div className="absolute right-3 top-3 text-xs px-2 py-0.5 rounded bg-primary/10 text-primary">📖 Guide d&apos;appel</div>
+                <div className="mb-2 flex justify-center">
                   <PremiumIcon
                     icon={Phone}
                     variant="glow"
@@ -53,19 +67,21 @@ export function PreventionSection() {
                     className="icon-heart"
                   />
                 </div>
-                <div className="text-4xl font-bold text-primary mb-1">
+                <div className="text-2xl font-bold text-primary mb-0">
                   {emergency.number}
                 </div>
-                <h4 className="text-sm font-semibold text-foreground mb-1">
+                <h4 className="text-sm font-semibold text-foreground mt-1">
                   {emergency.service}
                 </h4>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-muted-foreground mt-1">
                   {emergency.description}
                 </p>
-              </motion.div>
+              </motion.button>
             ))}
           </div>
         </motion.div>
+
+        <EmergencyGuideModal open={open} onOpenChange={setOpen} initial={initial} />
         </div>
       </div>
     </section>
