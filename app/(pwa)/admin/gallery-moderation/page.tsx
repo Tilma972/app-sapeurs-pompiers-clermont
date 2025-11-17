@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import ModerationList from "@/components/admin/gallery-moderation-list";
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { AdminCard } from "@/components/admin/admin-card";
-import { Image } from "lucide-react";
+import { Image as ImageIcon } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -34,7 +34,7 @@ export default async function GalleryModerationPage() {
         <AdminPageHeader
           title="Modération Galerie"
           description="Erreur de chargement des photos signalées"
-          icon={<Image className="h-6 w-6" />}
+          icon={<ImageIcon className="h-6 w-6" />}
         />
       </div>
     );
@@ -56,7 +56,7 @@ export default async function GalleryModerationPage() {
       <AdminPageHeader
         title="Modération Galerie"
         description={`${flaggedPhotos?.length || 0} photo(s) signalée(s)`}
-        icon={<Image className="h-6 w-6" />}
+        icon={<ImageIcon className="h-6 w-6" />}
       />
 
       <AdminCard>
