@@ -34,12 +34,10 @@ export default async function CalendriersPage() {
   // Vérification s'il y a une tournée active
   const hasActiveTournee = tourneeData && tourneeData.tournee;
 
-  // 2) Mapping vers l'API du composant (objectif déduit via progression)
+  // 2) Mapping vers l'API du composant (utilise directement calendriers_alloues de la BDD)
   let teams: Team[] = (ranking ?? []).map((r) => {
     const achieved = Number(r.calendriers_distribues ?? STATS_CONFIG.COUNTER_DEFAULT)
-    const pct = Number(r.progression_pourcentage ?? STATS_CONFIG.PROGRESSION_DEFAULT)
-    const goalFromPct = pct > 0 ? Math.ceil(achieved / (pct / 100)) : null
-    const goalTotal = goalFromPct ?? Math.max(CALENDRIER_CONFIG.OBJECTIF_DEFAULT_CALENDRIERS, achieved)
+    const goalTotal = Number(r.calendriers_alloues ?? CALENDRIER_CONFIG.OBJECTIF_DEFAULT_CALENDRIERS)
     return {
       id: String(r.rang),
       name: r.equipe_nom ?? "Équipe",
