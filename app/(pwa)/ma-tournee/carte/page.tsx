@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import SectorMapFullscreen from "@/components/tournee/sector-map-fullscreen";
@@ -44,12 +45,16 @@ export default async function CarteSecteurt() {
 
   const secteurLabel = SECTEUR_LABELS[secteur] || secteur;
 
+  const headersList = await headers();
+  const referer = headersList.get("referer") || "";
+  const backUrl = referer.includes("/calendriers") ? "/calendriers" : "/ma-tournee";
+
   return (
     <div className="h-screen w-screen flex flex-col bg-background">
       {/* Header fixe */}
       <div className="flex items-center gap-3 p-4 border-b bg-card">
-        <Link 
-          href="/ma-tournee"
+        <Link
+          href={backUrl}
           className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
         >
           <ArrowLeft className="h-5 w-5" />
