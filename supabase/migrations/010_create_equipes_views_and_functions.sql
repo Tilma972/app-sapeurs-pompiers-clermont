@@ -159,6 +159,7 @@ RETURNS TABLE (
     equipe_nom TEXT,
     equipe_numero INTEGER,
     secteur TEXT,
+    calendriers_alloues INTEGER,
     montant_collecte NUMERIC,
     calendriers_distribues BIGINT,
     progression_pourcentage NUMERIC,
@@ -170,11 +171,12 @@ SECURITY DEFINER
 AS $$
 BEGIN
     RETURN QUERY
-    SELECT 
+    SELECT
         erv.rang_montant::INTEGER as rang,
         erv.equipe_nom,
         erv.equipe_numero,
         erv.secteur,
+        erv.calendriers_alloues,
         erv.montant_collecte,
         erv.calendriers_distribues,
         erv.progression_pourcentage,
