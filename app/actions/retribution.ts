@@ -65,6 +65,41 @@ export async function cloturerTourneeAvecRetribution(data: {
       return { ok: false, error: (error.message || 'Erreur lors de la clôture') as string }
     }
 
+    // === GAMIFICATION: Attribution d'XP pour calendriers distribués ===
+    try {
+      const userId = (tournee as { user_id: string }).user_id
+
+      // XP pour les calendriers distribués (10 XP base + 1 XP par 5€)
+      const baseXP = data.calendriersVendus * 10
+      const bonusXP = Math.floor(data.montantTotal / 5)
+      const totalXP = baseXP + bonusXP
+
+      // Attribution de l'XP via la fonction SQL
+      await supabase.rpc('award_xp', {
+        p_user_id: userId,
+        p_amount: totalXP,
+        p_reason: 'calendriers_distribues',
+        p_metadata: {
+          calendriers: data.calendriersVendus,
+          montant: data.montantTotal,
+          tournee_id: data.tourneeId,
+        },
+      })
+
+      // Mise à jour du streak quotidien
+      await supabase.rpc('update_user_streak', {
+        p_user_id: userId,
+      })
+
+      // Vérification et déblocage automatique des badges
+      await supabase.rpc('check_and_unlock_badges', {
+        p_user_id: userId,
+      })
+    } catch (gamificationError) {
+      // Ne pas bloquer la clôture si la gamification échoue
+      console.error('Erreur gamification (non-bloquante):', gamificationError)
+    }
+
   revalidatePath('/ma-tournee')
     revalidatePath('/dashboard/mon-compte')
     return { ok: true as const, result }

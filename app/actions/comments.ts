@@ -47,6 +47,26 @@ export async function createCommentAction(ideaId: string, content: string) {
       return { success: false, error: "Erreur lors de la création du commentaire" };
     }
 
+    // GAMIFICATION: Attribution d'XP pour commentaire
+    try {
+      await supabase.rpc('award_xp', {
+        p_user_id: user.id,
+        p_amount: 10,
+        p_reason: 'commentaire_poste',
+        p_metadata: {
+          idea_id: ideaId,
+        },
+      });
+
+      // Vérifier et débloquer les badges
+      await supabase.rpc('check_and_unlock_badges', {
+        p_user_id: user.id,
+      });
+    } catch (gamificationError) {
+      // Ne pas bloquer la création si la gamification échoue
+      console.error('Erreur gamification (non-bloquante):', gamificationError);
+    }
+
     // Revalider la page
     revalidatePath(`/idees/${ideaId}`);
 
