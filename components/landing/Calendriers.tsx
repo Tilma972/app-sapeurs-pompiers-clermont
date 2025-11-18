@@ -21,6 +21,12 @@ export function Calendrier() {
     threshold: 0.3,
   });
 
+  // Variants simples pour mobile (pas d'animation, juste affichage)
+  const mobileVariants = {
+    hidden: { opacity: 1 },
+    visible: { opacity: 1 }
+  };
+
   return (
     <section className="py-12 md:py-24 bg-brandCream dark:bg-darkSurface transition-colors w-full" id="calendrier">
       <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
@@ -30,9 +36,9 @@ export function Calendrier() {
           <motion.div
             ref={leftRef}
             className="md:w-1/2"
-            variants={isMobile ? {} : slideInLeft}
-            initial={isMobile ? false : "hidden"}
-            animate={isMobile ? false : (leftInView ? "visible" : "hidden")}
+            variants={isMobile ? mobileVariants : slideInLeft}
+            initial="hidden"
+            animate={leftInView ? "visible" : "hidden"}
           >
             <motion.div
               whileHover={isMobile ? {} : { scale: 1.05, rotate: 2 }}
@@ -53,9 +59,9 @@ export function Calendrier() {
           <motion.div
             ref={rightRef}
             className="md:w-1/2"
-            variants={isMobile ? {} : slideInRight}
-            initial={isMobile ? false : "hidden"}
-            animate={isMobile ? false : (rightInView ? "visible" : "hidden")}
+            variants={isMobile ? mobileVariants : slideInRight}
+            initial="hidden"
+            animate={rightInView ? "visible" : "hidden"}
           >
             <span className="font-bold text-primary dark:text-brandOrange text-sm">NOTRE PRODUIT PHARE</span>
             <h2 className="mt-2 text-2xl md:text-4xl font-montserrat font-bold text-brandBrown dark:text-darkText">
