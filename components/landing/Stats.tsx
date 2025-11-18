@@ -27,7 +27,7 @@ export function Stats() {
   };
 
   return (
-    <section className="py-8 md:py-12 bg-gray-50 dark:bg-[#5C3A38] transition-colors w-full">
+    <section className="py-8 md:py-12 bg-white dark:bg-[#5C3A38] transition-colors w-full">
       <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
         <motion.div
           ref={ref}
