@@ -116,7 +116,7 @@ export default async function ClassementPage() {
 
                     {/* Avatar */}
                     <Avatar className="h-10 w-10 shrink-0">
-                      <AvatarImage src={avatarUrl} />
+                      <AvatarImage src={avatarUrl ?? undefined} />
                       <AvatarFallback>{initials}</AvatarFallback>
                     </Avatar>
 
