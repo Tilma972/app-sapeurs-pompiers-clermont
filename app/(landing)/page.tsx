@@ -23,15 +23,20 @@ export default async function Home({ searchParams }: { searchParams?: Promise<{ 
 
   return (
     <div className="min-h-screen">
+      {/* H1 principal pour SEO et accessibilité (caché visuellement) */}
+      <h1 className="sr-only">
+        Amicale des Sapeurs-Pompiers de Clermont-l&apos;Hérault - Soutien, Solidarité et Actions au service des pompiers
+      </h1>
+
       {params?.pending === '1' && (
         <div className="mx-auto max-w-5xl px-4">
-          <div className="mt-4 rounded-lg border bg-yellow-50 text-yellow-900 p-4 text-sm">
+          <div className="mt-4 rounded-lg border bg-yellow-50 text-yellow-900 p-4 text-sm" role="alert">
             Votre inscription a bien été enregistrée et est en attente d&apos;approbation par un administrateur. Vous recevrez un email dès validation.
           </div>
         </div>
       )}
       <HeroSimple loggedIn={!!user} />
-      <main className="relative">
+      <main className="relative" aria-label="Contenu principal">
         <Stats />
         <Communes />
         <Missions />
