@@ -45,15 +45,15 @@ export function Stats() {
               <p className="text-5xl md:text-5xl font-[family-name:var(--font-montserrat)] font-bold text-primary dark:text-accent-orange">
                 {inView ? (
                   // Animation CountUp pour tous (mobile + desktop)
-                  // Mobile : durée réduite (1s), Desktop : durée normale
+                  // Mobile : durée 1.8s (compromis perf/esthétique), Desktop : durée normale
                   <>
                     <CountUp
                       end={stat.value}
-                      duration={isMobile ? 1 : stat.duration}
+                      duration={isMobile ? 1.8 : stat.duration}
                       separator=","
                       useEasing
                       easingFn={(t: number, b: number, c: number, d: number) => {
-                        // easeOutExpo
+                        // easeOutExpo - animation fluide et naturelle
                         return c * (-Math.pow(2, -10 * t / d) + 1) + b;
                       }}
                     />
