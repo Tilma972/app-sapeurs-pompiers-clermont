@@ -75,7 +75,7 @@ export default function MentionsLegalesPage() {
             </p>
           </section>
 
-          <section className="mb-8">
+          <section className="mb-8" id="rgpd">
             <h2 className="text-2xl font-semibold text-brandBrown dark:text-darkText mb-4">
               5. Protection des données personnelles (RGPD)
             </h2>
@@ -90,7 +90,7 @@ export default function MentionsLegalesPage() {
             </p>
           </section>
 
-          <section className="mb-8">
+          <section className="mb-8" id="cookies">
             <h2 className="text-2xl font-semibold text-brandBrown dark:text-darkText mb-4">
               6. Cookies
             </h2>
