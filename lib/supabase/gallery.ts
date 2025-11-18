@@ -156,6 +156,26 @@ export async function toggleLike(photoId: string): Promise<{ liked: boolean; cou
     }
     console.log("✅ [toggleLike] Like inserted successfully");
     newLikedState = true;
+
+    // GAMIFICATION: Attribution d'XP pour like de photo
+    try {
+      await supabase.rpc('award_xp', {
+        p_user_id: user.id,
+        p_amount: 3,
+        p_reason: 'like_photo',
+        p_metadata: {
+          photo_id: photoId,
+        },
+      });
+
+      // Vérifier et débloquer les badges
+      await supabase.rpc('check_and_unlock_badges', {
+        p_user_id: user.id,
+      });
+    } catch (gamificationError) {
+      // Ne pas bloquer le like si la gamification échoue
+      console.error('Erreur gamification (non-bloquante):', gamificationError);
+    }
   }
 
   // Compter directement les likes au lieu de lire likes_count (évite problème de timing avec trigger)

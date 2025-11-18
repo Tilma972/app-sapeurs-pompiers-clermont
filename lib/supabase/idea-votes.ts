@@ -80,6 +80,27 @@ export async function voteIdea(ideaId: string, voteType: VoteType) {
       throw error;
     }
 
+    // GAMIFICATION: Attribution d'XP pour vote
+    try {
+      await supabase.rpc('award_xp', {
+        p_user_id: user.id,
+        p_amount: 5,
+        p_reason: 'vote_idee',
+        p_metadata: {
+          idea_id: ideaId,
+          vote_type: voteType,
+        },
+      });
+
+      // Vérifier et débloquer les badges
+      await supabase.rpc('check_and_unlock_badges', {
+        p_user_id: user.id,
+      });
+    } catch (gamificationError) {
+      // Ne pas bloquer le vote si la gamification échoue
+      console.error('Erreur gamification (non-bloquante):', gamificationError);
+    }
+
     return { action: 'created', voteType };
   }
 }

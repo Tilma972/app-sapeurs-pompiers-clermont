@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist } from "next/font/google";
 import { ThemeProvider } from "next-themes";
-import { Toaster } from "react-hot-toast";
+import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 import { OverflowDebugger } from "@/components/overflow-debugger";
 
@@ -69,7 +69,7 @@ export default function RootLayout({
             {/* Footer optionnel */}
           </footer>
 
-          <Toaster position="bottom-center" />
+          <Toaster position="bottom-center" richColors expand visibleToasts={3} />
           {process.env.NODE_ENV === "development" ? <OverflowDebugger /> : null}
         </ThemeProvider>
       </body>
