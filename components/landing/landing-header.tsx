@@ -3,7 +3,8 @@
 import { Button } from "@/components/ui/button";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import { LogoutButton } from "@/components/logout-button";
-import { Menu, LogIn, Shield } from "lucide-react";
+import { ViewToggle } from "@/components/view-toggle";
+import { Menu, LogIn } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { useState } from "react";
@@ -82,12 +83,7 @@ export function LandingHeader({ user }: LandingHeaderProps) {
                 <span className="text-sm text-muted-foreground hidden sm:block">
                   Connecté
                 </span>
-                <Button asChild size="sm">
-                  <Link href="/dashboard">
-                    <Shield className="h-4 w-4 mr-2" />
-                    Espace membre
-                  </Link>
-                </Button>
+                <ViewToggle currentView="landing" variant="default" size="sm" />
                 <LogoutButton />
               </div>
             ) : (
@@ -135,15 +131,9 @@ export function LandingHeader({ user }: LandingHeaderProps) {
                   </Link>
                 ))}
                 {user ? (
-                  <Link
-                    href="/dashboard"
-                    className="block text-sm font-medium text-foreground hover:text-primary transition-colors"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <span className="inline-flex items-center">
-                      <Shield className="h-4 w-4 mr-2" /> Espace membre
-                    </span>
-                  </Link>
+                  <div onClick={() => setIsMenuOpen(false)}>
+                    <ViewToggle currentView="landing" variant="ghost" size="default" />
+                  </div>
                 ) : (
                   <Link
                     href="/auth/login"
