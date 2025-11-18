@@ -4,8 +4,11 @@ import { motion } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
 import CountUp from 'react-countup';
 import { staggerContainer, staggerItem } from '@/lib/animations';
+import { useIsMobile } from '@/hooks/use-is-mobile';
 
 export function Stats() {
+  const isMobile = useIsMobile();
+
   const stats = [
     { value: 1976, prefix: '', label: 'Interventions par an', duration: 2.5 },
     { value: 108, suffix: '', label: 'Sapeurs-Pompiers', duration: 2 },
@@ -23,23 +26,30 @@ export function Stats() {
         <motion.div
           ref={ref}
           className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 text-center max-w-[1920px] mx-auto"
-          variants={staggerContainer}
-          initial="hidden"
-          animate={inView ? "visible" : "hidden"}
+          variants={isMobile ? {} : staggerContainer}
+          initial={isMobile ? false : "hidden"}
+          animate={isMobile ? false : (inView ? "visible" : "hidden")}
         >
           {stats.map((stat, index) => (
             <motion.div
               key={index}
               className="p-4 md:p-6"
-              variants={staggerItem}
+              variants={isMobile ? {} : staggerItem}
             >
               <p className="text-4xl md:text-5xl font-[family-name:var(--font-montserrat)] font-bold text-primary dark:text-accent-orange">
-                {inView ? (
+                {isMobile ? (
+                  // Mobile: afficher directement la valeur (pas d'animation CountUp)
+                  <>
+                    {stat.value.toLocaleString('fr-FR')}
+                    {stat.suffix}
+                  </>
+                ) : inView ? (
+                  // Desktop: animation CountUp
                   <>
                     <CountUp
                       end={stat.value}
                       duration={stat.duration}
-                      separator="," 
+                      separator=","
                       useEasing
                       easingFn={(t: number, b: number, c: number, d: number) => {
                         // easeOutExpo

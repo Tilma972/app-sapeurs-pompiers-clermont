@@ -6,8 +6,11 @@ import { ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
 import { slideInLeft, slideInRight } from '@/lib/animations';
+import { useIsMobile } from '@/hooks/use-is-mobile';
 
 export function Calendrier() {
+  const isMobile = useIsMobile();
+
   const [leftRef, leftInView] = useInView({
     triggerOnce: true,
     threshold: 0.3,
@@ -27,19 +30,20 @@ export function Calendrier() {
           <motion.div
             ref={leftRef}
             className="md:w-1/2"
-            variants={slideInLeft}
-            initial="hidden"
-            animate={leftInView ? "visible" : "hidden"}
+            variants={isMobile ? {} : slideInLeft}
+            initial={isMobile ? false : "hidden"}
+            animate={isMobile ? false : (leftInView ? "visible" : "hidden")}
           >
             <motion.div
-              whileHover={{ scale: 1.05, rotate: 2 }}
+              whileHover={isMobile ? {} : { scale: 1.05, rotate: 2 }}
               transition={{ type: "spring", stiffness: 300 }}
             >
               <Image
                 src="https://npyfregghvnmqxwgkfea.supabase.co/storage/v1/object/public/landing_page/couverture_cal_2026%20.webp"
-                alt="Calendrier des sapeurs-pompiers 2026"
+                alt="Calendrier 2026 des Sapeurs-Pompiers de Clermont - 12 pages illustrées avec photos des pompiers en action"
                 width={600}
                 height={800}
+                loading="lazy"
                 className="rounded-lg shadow-2xl w-full"
               />
             </motion.div>
@@ -49,9 +53,9 @@ export function Calendrier() {
           <motion.div
             ref={rightRef}
             className="md:w-1/2"
-            variants={slideInRight}
-            initial="hidden"
-            animate={rightInView ? "visible" : "hidden"}
+            variants={isMobile ? {} : slideInRight}
+            initial={isMobile ? false : "hidden"}
+            animate={isMobile ? false : (rightInView ? "visible" : "hidden")}
           >
             <span className="font-bold text-primary dark:text-brandOrange text-sm">NOTRE PRODUIT PHARE</span>
             <h2 className="mt-2 text-2xl md:text-4xl font-montserrat font-bold text-brandBrown dark:text-darkText">
