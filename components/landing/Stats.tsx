@@ -20,10 +20,10 @@ export function Stats() {
     threshold: 0.3,
   });
 
-  // Variants simples pour mobile (pas d'animation, juste affichage)
+  // Variants simples pour mobile (animation légère)
   const mobileVariants = {
-    hidden: { opacity: 1 },
-    visible: { opacity: 1 }
+    hidden: { opacity: 0 },
+    visible: { opacity: 1, transition: { duration: 0.3 } }
   };
 
   return (
@@ -42,19 +42,14 @@ export function Stats() {
               className="p-4 md:p-6"
               variants={isMobile ? mobileVariants : staggerItem}
             >
-              <p className="text-4xl md:text-5xl font-[family-name:var(--font-montserrat)] font-bold text-primary dark:text-accent-orange">
-                {isMobile ? (
-                  // Mobile: afficher directement la valeur (pas d'animation CountUp)
-                  <>
-                    {stat.value.toLocaleString('fr-FR')}
-                    {stat.suffix}
-                  </>
-                ) : inView ? (
-                  // Desktop: animation CountUp
+              <p className="text-5xl md:text-5xl font-[family-name:var(--font-montserrat)] font-bold text-primary dark:text-accent-orange">
+                {inView ? (
+                  // Animation CountUp pour tous (mobile + desktop)
+                  // Mobile : durée réduite (1s), Desktop : durée normale
                   <>
                     <CountUp
                       end={stat.value}
-                      duration={stat.duration}
+                      duration={isMobile ? 1 : stat.duration}
                       separator=","
                       useEasing
                       easingFn={(t: number, b: number, c: number, d: number) => {
@@ -68,11 +63,11 @@ export function Stats() {
                   '0'
                 )}
               </p>
-              <p className="mt-2 text-base md:text-lg text-[#4A2E2C] dark:text-[#F5EAD6]">
+              <p className="mt-2 text-lg md:text-lg font-medium text-[#4A2E2C] dark:text-[#F5EAD6]">
                 {stat.label}
               </p>
               {index === 0 && (
-                <p className="mt-1 text-xs text-[#6B4A48] dark:text-[#F5EAD6]">
+                <p className="mt-1 text-sm md:text-xs text-[#6B4A48] dark:text-[#F5EAD6]">
                   Statistiques 2024
                 </p>
               )}
