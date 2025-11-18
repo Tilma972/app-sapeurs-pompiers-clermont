@@ -30,7 +30,51 @@ const footerLinks = {
 export function LandingFooter() {
   return (
     <footer className="bg-slate-900 text-white w-full">
-      <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 py-10">
+      {/* VERSION MOBILE COMPACTE - visible uniquement sur mobile */}
+      <div className="md:hidden w-full px-4 py-4">
+        <div className="flex flex-col gap-3">
+          {/* Ligne 1: Copyright + liens essentiels */}
+          <div className="flex flex-wrap items-center justify-center gap-2 text-xs text-muted-foreground">
+            <span>© {new Date().getFullYear()} Amicale SP</span>
+            <span>·</span>
+            <Link href="#legal" className="hover:text-primary transition-colors">
+              Mentions légales
+            </Link>
+            <span>·</span>
+            <a href="mailto:contact@pompiers34800.com" className="hover:text-primary transition-colors">
+              Contact
+            </a>
+            <span>·</span>
+            <Link href="#contact" className="hover:text-primary transition-colors">
+              Faire un don
+            </Link>
+          </div>
+
+          {/* Ligne 2: Réseaux sociaux + ThemeSwitcher */}
+          <div className="flex items-center justify-center gap-3">
+            <Link
+              href="#facebook"
+              aria-label="Facebook"
+              className="p-1.5 bg-white/10 rounded hover:bg-white/20 transition-colors"
+            >
+              <Facebook className="h-4 w-4" aria-hidden="true" />
+            </Link>
+            <Link
+              href="#instagram"
+              aria-label="Instagram"
+              className="p-1.5 bg-white/10 rounded hover:bg-white/20 transition-colors"
+            >
+              <Instagram className="h-4 w-4" aria-hidden="true" />
+            </Link>
+            <div className="ml-2">
+              <ThemeSwitcher />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* VERSION DESKTOP COMPLÈTE - visible uniquement sur desktop */}
+      <div className="hidden md:block w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 py-10">
         <div className="max-w-[1920px] mx-auto">
         {/* Barre d'actions supprimée sur demande */}
 
