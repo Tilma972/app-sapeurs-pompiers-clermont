@@ -1,7 +1,13 @@
 import { updateSession } from "@/lib/supabase/middleware";
-import { type NextRequest } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 
 export async function middleware(request: NextRequest) {
+  // Redirect /dashboard/admin/* to /admin/*
+  if (request.nextUrl.pathname.startsWith('/dashboard/admin')) {
+    const newPath = request.nextUrl.pathname.replace('/dashboard/admin', '/admin');
+    return NextResponse.redirect(new URL(newPath, request.url));
+  }
+
   return await updateSession(request);
 }
 
