@@ -53,7 +53,7 @@ export default async function GamificationPage() {
           }} />
 
           <StreakCounter
-            currentStreak={stats.streak_days}
+            streakDays={stats.streak_days}
             lastActivityDate={new Date().toISOString()}
           />
         </div>
