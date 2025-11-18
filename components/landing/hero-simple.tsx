@@ -6,9 +6,11 @@ import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { PrimaryCta } from "@/components/landing/primary-cta";
 import { heroSlides } from "@/components/landing/hero-slides";
+import { useIsMobile } from "@/hooks/use-is-mobile";
 
 export function HeroSimple({ loggedIn = false }: { loggedIn?: boolean }) {
   const [currentSlide, setCurrentSlide] = useState(0);
+  const isMobile = useIsMobile();
 
   // Autoplay simple
   useEffect(() => {
@@ -38,12 +40,14 @@ export function HeroSimple({ loggedIn = false }: { loggedIn?: boolean }) {
           <div className="absolute inset-0">
             <Image
               src={heroSlides[currentSlide].image}
-              alt={heroSlides[currentSlide].title}
+              alt="" // Empty alt for decorative background image
+              aria-hidden="true"
               fill
-              className="object-cover animate-ken-burns"
+              className={`object-cover ${isMobile ? "" : "animate-ken-burns"}`}
               priority={currentSlide === 0}
+              loading={currentSlide === 0 ? "eager" : "lazy"}
               sizes="100vw"
-              quality={90}
+              quality={isMobile ? 75 : 90}
             />
           </div>
 
@@ -61,15 +65,15 @@ export function HeroSimple({ loggedIn = false }: { loggedIn?: boolean }) {
                 transition={{ duration: 0.8, delay: 0.3 }}
                 className="space-y-6"
               >
-                {/* Titre principal */}
-                    <motion.h1
+                {/* Titre du slide (h2 car h1 principal est dans page.tsx) */}
+                    <motion.h2
                       initial={{ opacity: 0, y: 40 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.8, delay: 0.5 }}
                       className="text-5xl md:text-6xl lg:text-7xl font-bold leading-tight mb-4"
                     >
                       {heroSlides[currentSlide].title}
-                    </motion.h1>
+                    </motion.h2>
 
                 {/* Sous-titre */}
                 <motion.p
@@ -119,14 +123,19 @@ export function HeroSimple({ loggedIn = false }: { loggedIn?: boolean }) {
         {heroSlides.map((_, index) => (
           <button
             key={index}
-            className={`w-3 h-3 rounded-full transition-all duration-300 ${
-              index === currentSlide 
-                ? 'bg-white scale-125' 
-                : 'bg-white/40 hover:bg-white/60'
-            }`}
+            className={`min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full transition-all duration-300`}
             onClick={() => goToSlide(index)}
-            aria-label={`Aller au slide ${index + 1}`}
-          />
+            aria-label={`Aller à la diapositive ${index + 1} : ${heroSlides[index].title}`}
+            aria-current={index === currentSlide ? "true" : "false"}
+          >
+            <span
+              className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                index === currentSlide
+                  ? 'bg-white scale-125'
+                  : 'bg-white/40'
+              }`}
+            />
+          </button>
         ))}
       </div>
 
@@ -139,7 +148,8 @@ export function HeroSimple({ loggedIn = false }: { loggedIn?: boolean }) {
               index === currentSlide ? 'bg-white h-8' : 'bg-white/40 hover:bg-white/60'
             }`}
             onClick={() => goToSlide(index)}
-            aria-label={`Slide ${index + 1}`}
+            aria-label={`Aller à la diapositive ${index + 1} : ${heroSlides[index].title}`}
+            aria-current={index === currentSlide ? "true" : "false"}
           />
         ))}
       </div>
