@@ -71,7 +71,7 @@ export function PreventionSection() {
           viewport={{ once: true }}
           className="mb-16"
         >
-          <div className="grid grid-cols-3 gap-3 max-w-4xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-3 max-w-4xl mx-auto">
             {emergencyNumbers.map((emergency, index) => (
               <motion.button
                 key={emergency.number}
@@ -81,7 +81,7 @@ export function PreventionSection() {
                 transition={{ duration: 0.5, delay: index * 0.08 }}
                 viewport={{ once: true }}
                 onClick={() => openGuide(emergency.number as GuideKey)}
-                className="relative glass-card p-3 text-center rounded-lg h-[120px] flex flex-col justify-center items-center cursor-pointer hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                className="relative glass-card p-4 sm:p-3 text-center rounded-lg min-h-[120px] flex flex-col justify-center items-center cursor-pointer hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background min-w-[44px] min-h-[44px]"
               >
                 <div className="absolute right-3 top-3 text-xs px-2 py-0.5 rounded bg-primary/10 text-primary flex items-center gap-1">
                   <BookOpen className="h-4 w-4" aria-hidden />
@@ -95,13 +95,13 @@ export function PreventionSection() {
                     className="icon-heart"
                   />
                 </div>
-                <div className="text-2xl font-bold text-primary mb-0">
+                <div className="text-3xl sm:text-2xl font-bold text-primary mb-0">
                   {emergency.number}
                 </div>
-                <h4 className="text-sm font-semibold text-foreground mt-1">
+                <h4 className="text-base sm:text-sm font-semibold text-foreground mt-1">
                   {emergency.service}
                 </h4>
-                <p className="text-xs text-muted-foreground mt-1">
+                <p className="text-sm sm:text-xs text-muted-foreground mt-1">
                   {emergency.description}
                 </p>
               </motion.button>
