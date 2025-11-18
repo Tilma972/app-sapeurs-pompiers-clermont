@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import { LogoutButton } from "@/components/logout-button";
 import { ViewToggle } from "@/components/view-toggle";
-import { Menu, LogIn, Shield } from "lucide-react";
+import { Menu, LogIn } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { useState } from "react";
