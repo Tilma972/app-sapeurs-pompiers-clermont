@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { PwaContainer } from "@/components/layouts/pwa/pwa-container";
 import { getGlobalLeaderboard, getUserRankGlobal } from "@/lib/supabase/leaderboards";
+import { getUserProgression } from "@/lib/supabase/gamification";
 import { Trophy, Crown, Medal, ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -15,9 +16,10 @@ export default async function ClassementPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/auth/login");
 
-  const [leaderboard, userRank] = await Promise.all([
+  const [leaderboard, userRank, userProgression] = await Promise.all([
     getGlobalLeaderboard(50),
     getUserRankGlobal(user.id),
+    getUserProgression(user.id),
   ]);
 
   const getRankIcon = (rank: number) => {
@@ -56,7 +58,7 @@ export default async function ClassementPage() {
         </div>
 
         {/* Rang de l'utilisateur */}
-        {userRank && (
+        {userRank && userProgression && (
           <Card className="border-primary/50 bg-primary/5">
             <CardHeader className="pb-4">
               <CardTitle className="text-base">Ton classement</CardTitle>
@@ -64,16 +66,16 @@ export default async function ClassementPage() {
             <CardContent>
               <div className="flex items-center gap-4">
                 <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10">
-                  {getRankIcon(userRank.global_rank)}
+                  {getRankIcon(userRank.rank)}
                 </div>
                 <div className="flex-1">
-                  <p className="text-2xl font-bold">#{userRank.global_rank}</p>
+                  <p className="text-2xl font-bold">#{userRank.rank}</p>
                   <p className="text-sm text-muted-foreground">
-                    {userRank.total_xp.toLocaleString('fr-FR')} XP • Niveau {userRank.level}
+                    {userProgression.total_xp.toLocaleString('fr-FR')} XP • Niveau {userProgression.level}
                   </p>
                 </div>
-                <Badge variant={getRankBadgeVariant(userRank.global_rank)}>
-                  Top {userRank.percentile}%
+                <Badge variant={getRankBadgeVariant(userRank.rank)}>
+                  Top {Math.round(userRank.percentile)}%
                 </Badge>
               </div>
             </CardContent>
