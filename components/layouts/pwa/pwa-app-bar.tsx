@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { LogOut, Menu, Settings, User as UserIcon } from "lucide-react"
+import { LogOut, Menu, Settings, User as UserIcon, Home } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
@@ -109,6 +109,13 @@ export function PwaAppBar({ title, user }: PwaAppBarProps) {
               <DropdownMenuItem>
                 <Settings className="mr-2 h-4 w-4" />
                 <span>Paramètres</span>
+              </DropdownMenuItem>
+            </Link>
+            <DropdownMenuSeparator />
+            <Link href="/?view=landing">
+              <DropdownMenuItem>
+                <Home className="mr-2 h-4 w-4" />
+                <span>Accueil public</span>
               </DropdownMenuItem>
             </Link>
             <DropdownMenuSeparator />
