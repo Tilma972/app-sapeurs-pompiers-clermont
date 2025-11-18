@@ -629,14 +629,14 @@ export async function getGlobalStats(): Promise<{
   const supabase = await createClient();
 
   try {
-    // Requête directe sur support_transactions pour les vraies données
-    const { data: transactions } = await supabase
-      .from('support_transactions')
-      .select('amount, calendar_accepted')
-      .eq('payment_status', 'completed');
+    // Récupérer les stats des tournées complétées
+    const { data: tournees_completees } = await supabase
+      .from('tournees')
+      .select('calendriers_distribues, montant_collecte')
+      .eq('statut', 'completed');
 
-    const calendriers = transactions?.filter(t => t.calendar_accepted).length || 0;
-    const montant = transactions?.reduce((sum, t) => sum + (t.amount || 0), 0) || 0;
+    const calendriers = tournees_completees?.reduce((sum, t) => sum + (t.calendriers_distribues || 0), 0) || 0;
+    const montant = tournees_completees?.reduce((sum, t) => sum + (t.montant_collecte || 0), 0) || 0;
 
     // Compter les tournées actives
     const { count: tournees_actives } = await supabase

@@ -6,7 +6,7 @@ import { AdminStatCard } from "@/components/admin/admin-stat-card"
 import { AdminCard } from "@/components/admin/admin-card"
 import { getGlobalStats } from "@/lib/supabase/tournee"
 import Link from "next/link"
-import { UsersRound, Layers3, Calendar, Euro, Receipt, FileWarning, ChevronRight, LayoutDashboard } from "lucide-react"
+import { UsersRound, Layers3, Calendar, Euro, Receipt, FileWarning, ChevronRight, LayoutDashboard, AlertCircle } from "lucide-react"
 import { formatNumber, formatCurrency } from "@/lib/formatters"
 
 export const dynamic = 'force-dynamic'
@@ -24,7 +24,7 @@ export default async function AdminDashboardPage() {
   if (!me || !['admin','tresorier'].includes(me.role)) redirect('/dashboard')
 
   // Parallel queries
-  const [activeProfiles, activeTeams, global, chequesPending, receiptsToSend] = await Promise.all([
+  const [activeProfiles, activeTeams, global, chequesPending, receiptsToSend, calendriersNonConfirmes] = await Promise.all([
     supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('is_active', true),
     supabase.from('equipes').select('*', { count: 'exact', head: true }).eq('status', 'active'),
     getGlobalStats(),
@@ -34,6 +34,11 @@ export default async function AdminDashboardPage() {
     // Reçus à envoyer: on compte les transactions avec un numéro de reçu mais non envoyées
     supabase.from('support_transactions').select('*', { count: 'exact', head: true })
       .not('receipt_number','is', null).eq('receipt_sent', false),
+    // Calendriers non confirmés: membres actifs qui n'ont pas confirmé
+    supabase.from('profiles').select('*', { count: 'exact', head: true })
+      .eq('is_active', true)
+      .in('role', ['membre', 'chef_equipe'])
+      .eq('calendriers_reception_confirmee', false),
   ])
 
   const stats = [
@@ -41,12 +46,14 @@ export default async function AdminDashboardPage() {
     { title: 'Équipes actives', value: activeTeams.count || 0, icon: <Layers3 className="h-4 w-4" /> },
     { title: 'Calendriers vendus', value: formatNumber(global.total_calendriers_distribues), icon: <Calendar className="h-4 w-4" /> },
     { title: 'Montant collecté', value: formatCurrency(global.total_montant_collecte), icon: <Euro className="h-4 w-4" /> },
-    { title: 'Chèques à déposer', value: chequesPending.count || 0, icon: <FileWarning className="h-4 w-4" /> },
+    { title: 'Calendriers à confirmer', value: calendriersNonConfirmes.count || 0, icon: <AlertCircle className="h-4 w-4" /> },
     { title: 'Tournées actives', value: global.total_tournees_actives, icon: <Layers3 className="h-4 w-4" /> },
+    { title: 'Chèques à déposer', value: chequesPending.count || 0, icon: <FileWarning className="h-4 w-4" /> },
     { title: 'Reçus à envoyer', value: receiptsToSend.count || 0, icon: <Receipt className="h-4 w-4" /> },
   ]
 
   const alerts: Array<{ key: string; label: string; href: string; show: boolean; icon: React.ReactNode }> = [
+    { key: 'calendars', label: `${calendriersNonConfirmes.count || 0} membre(s) n'ont pas confirmé leurs calendriers`, href: '/admin/calendriers-suivi', show: (calendriersNonConfirmes.count || 0) > 0, icon: <AlertCircle className="h-4 w-4 text-amber-500" /> },
     { key: 'cheques', label: `${chequesPending.count || 0} chèque(s) à traiter`, href: '/admin/cheques', show: (chequesPending.count || 0) > 0, icon: <FileWarning className="h-4 w-4 text-amber-500" /> },
     { key: 'receipts', label: `${receiptsToSend.count || 0} reçu(s) à envoyer`, href: '/admin/receipts', show: (receiptsToSend.count || 0) > 0, icon: <Receipt className="h-4 w-4 text-amber-500" /> },
   ]
@@ -101,6 +108,7 @@ export default async function AdminDashboardPage() {
             { name: "Liste blanche", href: "/admin/whitelist", description: "Gérer les inscriptions autorisées" },
             { name: "Utilisateurs", href: "/admin/users", description: "Gérer les comptes utilisateurs" },
             { name: "Équipes", href: "/admin/equipes", description: "Configuration des équipes" },
+            { name: "Suivi calendriers", href: "/admin/calendriers-suivi", description: "Rapprochement admin/membres" },
             { name: "Partenaires", href: "/admin/partenaires", description: "Gérer les partenariats" },
             { name: "Avantages", href: "/admin/avantages", description: "Offres et réductions" },
             { name: "Produits", href: "/admin/produits", description: "Boutique et articles" },
