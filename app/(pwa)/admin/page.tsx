@@ -113,6 +113,7 @@ export default async function AdminDashboardPage() {
             { name: "Avantages", href: "/admin/avantages", description: "Offres et réductions" },
             { name: "Produits", href: "/admin/produits", description: "Boutique et articles" },
             { name: "Modération", href: "/admin/gallery-moderation", description: "Photos en attente" },
+            { name: "Webhooks", href: "/admin/webhooks", description: "Logs HelloAsso" },
             { name: "Paramètres", href: "/admin/settings", description: "Configuration générale" },
           ].map((item) => (
             <Link
