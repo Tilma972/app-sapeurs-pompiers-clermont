@@ -37,7 +37,7 @@ export function LandingFooter() {
           <div className="flex flex-wrap items-center justify-center gap-2 text-xs text-muted-foreground">
             <span>© {new Date().getFullYear()} Amicale SP</span>
             <span>·</span>
-            <Link href="#legal" className="hover:text-primary transition-colors">
+            <Link href="/mentions-legales" className="hover:text-primary transition-colors">
               Mentions légales
             </Link>
             <span>·</span>
