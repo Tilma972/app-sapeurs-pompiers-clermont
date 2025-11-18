@@ -1,6 +1,7 @@
 import { LandingHeaderWrapper } from "@/components/landing/landing-header-wrapper";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { StickyDonateButton } from "@/components/landing/sticky-donate-button";
+import { CookieConsent } from "@/components/cookie-consent";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function LandingLayout({
@@ -19,6 +20,7 @@ export default async function LandingLayout({
       </main>
       <LandingFooter />
       <StickyDonateButton />
+      <CookieConsent />
     </>
   );
 }

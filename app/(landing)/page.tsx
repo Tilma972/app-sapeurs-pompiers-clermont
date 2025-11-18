@@ -9,6 +9,10 @@ import { ContactSection } from "@/components/landing/contact-section";
 import { Partenaires } from "@/components/landing/Partenaires";
 import { Stats } from "@/components/landing/Stats";
 import { Communes } from "@/components/landing/Communes";
+import { landingMetadata } from "./metadata";
+import { OrganizationJsonLd } from "@/components/seo/json-ld";
+
+export const metadata = landingMetadata;
 
 export default async function Home({ searchParams }: { searchParams?: Promise<{ pending?: string }> }) {
   const supabase = await createClient();
@@ -23,6 +27,9 @@ export default async function Home({ searchParams }: { searchParams?: Promise<{ 
 
   return (
     <div className="min-h-screen">
+      {/* Structured Data pour SEO */}
+      <OrganizationJsonLd />
+
       {/* H1 principal pour SEO et accessibilité (caché visuellement) */}
       <h1 className="sr-only">
         Amicale des Sapeurs-Pompiers de Clermont-l&apos;Hérault - Soutien, Solidarité et Actions au service des pompiers

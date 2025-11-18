@@ -20,9 +20,9 @@ const footerLinks = {
     { name: "Support", href: "#support" }
   ],
   "Ressources": [
-    { name: "Attestation d’intervention", href: "https://www.sdis34.fr/formulaire-demande-dattestation-dintervention/" },
+    { name: "Attestation d'intervention", href: "https://www.sdis34.fr/formulaire-demande-dattestation-dintervention/" },
     { name: "FAQ", href: "#faq" },
-    { name: "Mentions légales", href: "#legal" }
+    { name: "Mentions légales", href: "/mentions-legales" }
   ]
 };
 
@@ -37,7 +37,7 @@ export function LandingFooter() {
           <div className="flex flex-wrap items-center justify-center gap-2 text-xs text-muted-foreground">
             <span>© {new Date().getFullYear()} Amicale SP</span>
             <span>·</span>
-            <Link href="#legal" className="hover:text-primary transition-colors">
+            <Link href="/mentions-legales" className="hover:text-primary transition-colors">
               Mentions légales
             </Link>
             <span>·</span>
@@ -230,13 +230,13 @@ export function LandingFooter() {
             Tous droits réservés.
           </p>
           <div className="flex gap-6 text-sm">
-            <Link href="#privacy" className="text-muted-foreground hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 rounded">
+            <Link href="/mentions-legales" className="text-muted-foreground hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 rounded">
+              Mentions légales
+            </Link>
+            <Link href="/mentions-legales#rgpd" className="text-muted-foreground hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 rounded">
               Confidentialité
             </Link>
-            <Link href="#terms" className="text-muted-foreground hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 rounded">
-              Conditions
-            </Link>
-            <Link href="#cookies" className="text-muted-foreground hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 rounded">
+            <Link href="/mentions-legales#cookies" className="text-muted-foreground hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 rounded">
               Cookies
             </Link>
           </div>
