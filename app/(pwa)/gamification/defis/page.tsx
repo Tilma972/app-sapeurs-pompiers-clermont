@@ -2,18 +2,17 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { PwaContainer } from "@/components/layouts/pwa/pwa-container";
 import { ChallengesList } from "@/components/gamification/challenges-list";
-import { getChallengesWithProgress } from "@/lib/supabase/challenges";
-import { Target } from "lucide-react";
+import { getUserChallengesProgress } from "@/lib/supabase/challenges";
+import { Target, ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft } from "lucide-react";
 
 export default async function DefisPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/auth/login");
 
-  const challenges = await getChallengesWithProgress(user.id);
+  const challenges = await getUserChallengesProgress(user.id);
 
   const completedCount = challenges.filter(c => c.completed).length;
   const totalCount = challenges.length;

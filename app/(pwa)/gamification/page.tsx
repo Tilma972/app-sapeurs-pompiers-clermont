@@ -124,7 +124,8 @@ export default async function GamificationPage() {
             <CardContent>
               <div className="space-y-3">
                 {stats.recent_badges.map((userBadge) => {
-                  const badge = userBadge.badge as any;
+                  const badge = userBadge.badge;
+                  if (!badge) return null;
                   return (
                     <div
                       key={userBadge.id}
