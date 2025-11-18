@@ -59,7 +59,7 @@ const getTypeLabel = (type: string) => {
 
 export function NewsSection() {
   return (
-    <section id="actualites" className="py-12 w-full">
+    <section id="actualites" className="py-12 bg-white dark:bg-darkBg transition-colors w-full">
       <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
         <div className="max-w-[1920px] mx-auto">
         <div className="text-center mb-6">

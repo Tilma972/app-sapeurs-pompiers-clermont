@@ -127,6 +127,7 @@ export function Partenaires({ partners: partenaires }: PartenairesProps) {
                             src={partner.logo}
                             alt={`Logo ${partner.name}`}
                             fill
+                            loading="lazy"
                             className="object-contain p-2 grayscale group-hover:grayscale-0 transition-all duration-300"
                           />
                         </div>

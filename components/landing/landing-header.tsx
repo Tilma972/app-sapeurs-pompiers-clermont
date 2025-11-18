@@ -47,9 +47,9 @@ export function LandingHeader({ user }: LandingHeaderProps) {
               />
             </div>
             <div className="hidden sm:block">
-              <h1 className="text-lg font-bold text-foreground group-hover:text-primary transition-colors">
+              <div className="text-lg font-bold text-foreground group-hover:text-primary transition-colors">
                 Amicale SP
-              </h1>
+              </div>
               <p className="text-xs text-muted-foreground">
                 Clermont l&apos;Hérault
               </p>
@@ -103,8 +103,10 @@ export function LandingHeader({ user }: LandingHeaderProps) {
             <Button
               variant="ghost"
               size="sm"
-              className="md:hidden"
+              className="md:hidden min-h-[44px] min-w-[44px]"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
+              aria-label={isMenuOpen ? "Fermer le menu" : "Ouvrir le menu"}
+              aria-expanded={isMenuOpen}
             >
               <Menu className="h-5 w-5" />
             </Button>
