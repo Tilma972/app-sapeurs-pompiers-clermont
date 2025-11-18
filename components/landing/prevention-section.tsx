@@ -63,7 +63,7 @@ export function PreventionSection() {
           </p>
         </div>
 
-        {/* Numéros d'urgence - compact cards */}
+        {/* Numéros d'urgence - enhanced cards with call action */}
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -73,40 +73,69 @@ export function PreventionSection() {
         >
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-3 max-w-4xl mx-auto">
             {emergencyNumbers.map((emergency, index) => (
-              <motion.button
+              <motion.div
                 key={emergency.number}
                 initial={{ opacity: 0, scale: 0.95 }}
                 whileInView={{ opacity: 1, scale: 1 }}
-                whileHover={{ scale: 1.02 }}
                 transition={{ duration: 0.5, delay: index * 0.08 }}
                 viewport={{ once: true }}
-                onClick={() => openGuide(emergency.number as GuideKey)}
-                className="relative glass-card p-4 sm:p-3 text-center rounded-lg min-h-[120px] flex flex-col justify-center items-center cursor-pointer hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background min-w-[44px] min-h-[44px]"
+                className="relative glass-card p-5 sm:p-4 text-center rounded-lg min-h-[180px] sm:min-h-[160px] flex flex-col justify-between items-center group hover:shadow-xl transition-shadow min-w-[44px]"
               >
-                <div className="absolute right-3 top-3 text-xs px-2 py-0.5 rounded bg-primary/10 text-primary flex items-center gap-1">
-                  <BookOpen className="h-4 w-4" aria-hidden />
-                  <span className="sr-only">Guide d&apos;appel</span>
+                {/* Badge "Guide d'appel" */}
+                <button
+                  onClick={() => openGuide(emergency.number as GuideKey)}
+                  className="absolute right-2 top-2 text-xs px-2 py-1 rounded bg-primary/10 text-primary hover:bg-primary/20 transition-colors flex items-center gap-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                  aria-label={`Guide d'appel pour le ${emergency.number}`}
+                >
+                  <BookOpen className="h-3 w-3" aria-hidden />
+                  <span className="hidden sm:inline">Guide</span>
+                </button>
+
+                <div className="flex-1 flex flex-col justify-center items-center">
+                  {/* Icône téléphone */}
+                  <div className="mb-3 flex justify-center">
+                    <PremiumIcon
+                      icon={Phone}
+                      variant="glow"
+                      size="md"
+                      className="icon-heart"
+                    />
+                  </div>
+
+                  {/* Numéro en très grand */}
+                  <div className="text-5xl sm:text-4xl font-bold text-primary mb-2 tracking-tight">
+                    {emergency.number}
+                  </div>
+
+                  {/* Service */}
+                  <h4 className="text-lg sm:text-base font-semibold text-foreground mb-1">
+                    {emergency.service}
+                  </h4>
+
+                  {/* Description */}
+                  <p className="text-sm sm:text-xs text-muted-foreground mb-4">
+                    {emergency.description}
+                  </p>
                 </div>
-                <div className="mb-2 flex justify-center">
-                  <PremiumIcon
-                    icon={Phone}
-                    variant="glow"
-                    size="sm"
-                    className="icon-heart"
-                  />
-                </div>
-                <div className="text-3xl sm:text-2xl font-bold text-primary mb-0">
-                  {emergency.number}
-                </div>
-                <h4 className="text-base sm:text-sm font-semibold text-foreground mt-1">
-                  {emergency.service}
-                </h4>
-                <p className="text-sm sm:text-xs text-muted-foreground mt-1">
-                  {emergency.description}
-                </p>
-              </motion.button>
+
+                {/* CTA - Appeler maintenant */}
+                <a
+                  href={`tel:${emergency.number}`}
+                  className="w-full px-4 py-2.5 bg-primary text-white font-semibold rounded-lg hover:bg-primary/90 transition-all flex items-center justify-center gap-2 shadow-md hover:shadow-lg group-hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                  aria-label={`Appeler le ${emergency.number} - ${emergency.service}`}
+                >
+                  <Phone className="h-4 w-4" />
+                  <span className="text-sm">Appeler</span>
+                </a>
+              </motion.div>
             ))}
           </div>
+
+          {/* Indication pour desktop - Script disponible */}
+          <p className="text-center text-sm text-muted-foreground mt-6 max-w-2xl mx-auto">
+            💡 <strong>Sur mobile</strong> : touchez "Appeler" pour lancer l'appel direct.
+            <strong> Sur tous les appareils</strong> : cliquez sur "Guide" pour voir le script d'appel et savoir quoi dire.
+          </p>
         </motion.div>
 
         <EmergencyGuideModal open={open} onOpenChange={setOpen} initial={initial} />
