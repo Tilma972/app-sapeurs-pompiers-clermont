@@ -21,10 +21,10 @@ export function Calendrier() {
     threshold: 0.3,
   });
 
-  // Variants simples pour mobile (pas d'animation, juste affichage)
+  // Variants simples pour mobile (animation légère fadeIn)
   const mobileVariants = {
-    hidden: { opacity: 1 },
-    visible: { opacity: 1 }
+    hidden: { opacity: 0 },
+    visible: { opacity: 1, transition: { duration: 0.4 } }
   };
 
   return (
@@ -35,7 +35,7 @@ export function Calendrier() {
           {/* Image */}
           <motion.div
             ref={leftRef}
-            className="md:w-1/2"
+            className="w-full md:w-1/2 flex justify-center"
             variants={isMobile ? mobileVariants : slideInLeft}
             initial="hidden"
             animate={leftInView ? "visible" : "hidden"}
@@ -43,6 +43,7 @@ export function Calendrier() {
             <motion.div
               whileHover={isMobile ? {} : { scale: 1.05, rotate: 2 }}
               transition={{ type: "spring", stiffness: 300 }}
+              className="w-full max-w-sm md:max-w-none"
             >
               <Image
                 src="https://npyfregghvnmqxwgkfea.supabase.co/storage/v1/object/public/landing_page/couverture_cal_2026%20.webp"
@@ -50,7 +51,7 @@ export function Calendrier() {
                 width={600}
                 height={800}
                 loading="lazy"
-                className="rounded-lg shadow-2xl w-full"
+                className="rounded-lg shadow-2xl w-full h-auto"
               />
             </motion.div>
           </motion.div>
@@ -58,27 +59,28 @@ export function Calendrier() {
           {/* Contenu */}
           <motion.div
             ref={rightRef}
-            className="md:w-1/2"
+            className="w-full md:w-1/2"
             variants={isMobile ? mobileVariants : slideInRight}
             initial="hidden"
             animate={rightInView ? "visible" : "hidden"}
           >
-            <span className="font-bold text-primary dark:text-brandOrange text-sm">NOTRE PRODUIT PHARE</span>
-            <h2 className="mt-2 text-2xl md:text-4xl font-montserrat font-bold text-brandBrown dark:text-darkText">
+            <span className="font-bold text-primary dark:text-brandOrange text-sm md:text-sm">NOTRE PRODUIT PHARE</span>
+            <h2 className="mt-2 text-3xl md:text-4xl font-montserrat font-bold text-brandBrown dark:text-darkText">
               Le Calendrier 2026 est arrivé !
             </h2>
-            <p className="mt-3 md:mt-4 text-base md:text-lg text-brandBrown/80 dark:text-darkText/90">
-              Plus qu&apos;une tradition, notre calendrier annuel est la principale source de 
-              financement de nos actions. Chaque contribution lors de la tournée des calendriers 
+            <p className="mt-3 md:mt-4 text-lg md:text-lg text-brandBrown/80 dark:text-darkText/90 leading-relaxed">
+              Plus qu&apos;une tradition, notre calendrier annuel est la principale source de
+              financement de nos actions. Chaque contribution lors de la tournée des calendriers
               est un soutien direct à notre Amicale.
             </p>
             <motion.div
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
+              className="mt-6 md:mt-8"
             >
               <Link
                 href="/boutique"
-                className="mt-6 md:mt-8 inline-flex items-center justify-center px-6 py-3 font-medium text-white bg-brandOrange rounded-lg hover:bg-brandOrange/90 transition-all shadow-lg hover:shadow-xl group"
+                className="inline-flex items-center justify-center px-8 py-4 text-base md:text-lg font-bold text-white bg-brandOrange rounded-lg hover:bg-brandOrange/90 transition-all shadow-lg hover:shadow-xl group w-full md:w-auto"
               >
                 Pré-commander en ligne
                 <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" size={20} />
