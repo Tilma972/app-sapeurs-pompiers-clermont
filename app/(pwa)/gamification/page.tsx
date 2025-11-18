@@ -8,7 +8,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Trophy, Zap, Target, Award, TrendingUp } from "lucide-react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
 
 export default async function GamificationPage() {
   const supabase = await createClient();
