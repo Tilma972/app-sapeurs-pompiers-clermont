@@ -133,8 +133,8 @@ export function PreventionSection() {
 
           {/* Indication pour desktop - Script disponible */}
           <p className="text-center text-sm text-muted-foreground mt-6 max-w-2xl mx-auto">
-            💡 <strong>Sur mobile</strong> : touchez "Appeler" pour lancer l'appel direct.
-            <strong> Sur tous les appareils</strong> : cliquez sur "Guide" pour voir le script d'appel et savoir quoi dire.
+            💡 <strong>Sur mobile</strong> : touchez &quot;Appeler&quot; pour lancer l&apos;appel direct.
+            <strong> Sur tous les appareils</strong> : cliquez sur &quot;Guide&quot; pour voir le script d&apos;appel et savoir quoi dire.
           </p>
         </motion.div>
 
