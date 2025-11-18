@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { PremiumIcon } from "@/components/landing/premium-icon";
-import { Shield, Phone, BookOpen } from "lucide-react";
+import { Shield, Phone, MessageCircle } from "lucide-react";
 import React from "react";
 import EmergencyGuideModal from "@/components/landing/emergency-guide-modal";
 import { GuideKey } from "@/lib/emergency-guides";
@@ -79,18 +79,8 @@ export function PreventionSection() {
                 whileInView={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.5, delay: index * 0.08 }}
                 viewport={{ once: true }}
-                className="relative glass-card p-5 sm:p-4 text-center rounded-lg min-h-[180px] sm:min-h-[160px] flex flex-col justify-between items-center group hover:shadow-xl transition-shadow min-w-[44px]"
+                className="glass-card p-5 sm:p-4 text-center rounded-lg min-h-[240px] sm:min-h-[220px] flex flex-col justify-between items-center group hover:shadow-xl transition-shadow"
               >
-                {/* Badge "Guide d'appel" */}
-                <button
-                  onClick={() => openGuide(emergency.number as GuideKey)}
-                  className="absolute right-2 top-2 text-xs px-2 py-1 rounded bg-primary/10 text-primary hover:bg-primary/20 transition-colors flex items-center gap-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                  aria-label={`Guide d'appel pour le ${emergency.number}`}
-                >
-                  <BookOpen className="h-3 w-3" aria-hidden />
-                  <span className="hidden sm:inline">Guide</span>
-                </button>
-
                 <div className="flex-1 flex flex-col justify-center items-center">
                   {/* Icône téléphone */}
                   <div className="mb-3 flex justify-center">
@@ -118,23 +108,35 @@ export function PreventionSection() {
                   </p>
                 </div>
 
-                {/* CTA - Appeler maintenant */}
-                <a
-                  href={`tel:${emergency.number}`}
-                  className="w-full px-4 py-2.5 bg-primary text-white font-semibold rounded-lg hover:bg-primary/90 transition-all flex items-center justify-center gap-2 shadow-md hover:shadow-lg group-hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-                  aria-label={`Appeler le ${emergency.number} - ${emergency.service}`}
-                >
-                  <Phone className="h-4 w-4" />
-                  <span className="text-sm">Appeler</span>
-                </a>
+                {/* Double CTA - Appeler + Script */}
+                <div className="w-full space-y-2">
+                  {/* Bouton principal - Appeler */}
+                  <a
+                    href={`tel:${emergency.number}`}
+                    className="w-full px-4 py-2.5 bg-primary text-white font-semibold rounded-lg hover:bg-primary/90 transition-all flex items-center justify-center gap-2 shadow-md hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                    aria-label={`Appeler le ${emergency.number} - ${emergency.service}`}
+                  >
+                    <Phone className="h-4 w-4" />
+                    <span className="text-sm">Appeler le {emergency.number}</span>
+                  </a>
+
+                  {/* Bouton secondaire - Script */}
+                  <button
+                    onClick={() => openGuide(emergency.number as GuideKey)}
+                    className="w-full px-4 py-2.5 bg-transparent border-2 border-primary text-primary font-semibold rounded-lg hover:bg-primary/10 transition-all flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                    aria-label={`Voir le script d'appel pour le ${emergency.number}`}
+                  >
+                    <MessageCircle className="h-4 w-4" />
+                    <span className="text-sm">Que dire au {emergency.number} ?</span>
+                  </button>
+                </div>
               </motion.div>
             ))}
           </div>
 
-          {/* Indication pour desktop - Script disponible */}
+          {/* Indication pédagogique */}
           <p className="text-center text-sm text-muted-foreground mt-6 max-w-2xl mx-auto">
-            💡 <strong>Sur mobile</strong> : touchez &quot;Appeler&quot; pour lancer l&apos;appel direct.
-            <strong> Sur tous les appareils</strong> : cliquez sur &quot;Guide&quot; pour voir le script d&apos;appel et savoir quoi dire.
+            💡 <strong>Nouveau ici ?</strong> Consultez les scripts d&apos;appel pour savoir quelles informations donner aux secours, même avant d&apos;en avoir besoin.
           </p>
         </motion.div>
 
