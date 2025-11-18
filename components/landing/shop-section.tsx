@@ -10,10 +10,10 @@ import { UnifiedCard } from "@/components/landing/unified-card";
 const products = [
   {
     id: 1,
-    name: "Calendrier 2024",
+    name: "Calendrier 2026",
     description: "Calendrier officiel avec photos des équipes et véhicules",
     price: "15€",
-    image: "https://npyfregghvnmqxwgkfea.supabase.co/storage/v1/object/public/landing_page/24_24.jpeg",
+    image: "https://npyfregghvnmqxwgkfea.supabase.co/storage/v1/object/public/landing_page/couverture_cal_2026%20.webp",
     category: "calendrier",
     featured: true
   },
