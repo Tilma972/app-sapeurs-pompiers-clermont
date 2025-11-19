@@ -66,7 +66,7 @@ export default async function DemanderVersementPage() {
             <li>Le montant demandé sera bloqué immédiatement sur votre compte</li>
             <li>Une fois validée par le trésorier, votre demande sera traitée sous {VERSEMENT_CONFIG.DELAI_TRAITEMENT_JOURS} jours ouvrés</li>
             <li>Vous recevrez une notification par email à chaque étape du traitement</li>
-            <li>Les demandes en attente peuvent être annulées depuis votre page "Mon compte"</li>
+            <li>Les demandes en attente peuvent être annulées depuis votre page &quot;Mon compte&quot;</li>
           </ul>
         </div>
       </div>

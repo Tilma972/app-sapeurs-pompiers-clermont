@@ -457,7 +457,7 @@ export async function createDemandeVersement(
     }
 
     return { success: true, demande_id: data };
-  } catch (error: any) {
+  } catch (error) {
     logError(error, {
       component: 'createDemandeVersement',
       action: 'create',
@@ -489,7 +489,7 @@ export async function validateDemande(
     }
 
     return { success: true };
-  } catch (error: any) {
+  } catch (error) {
     logError(error, {
       component: 'validateDemande',
       action: 'validate',
@@ -521,7 +521,7 @@ export async function markDemandePaid(
     }
 
     return { success: true };
-  } catch (error: any) {
+  } catch (error) {
     logError(error, {
       component: 'markDemandePaid',
       action: 'mark_paid',
@@ -553,7 +553,7 @@ export async function rejectDemande(
     }
 
     return { success: true };
-  } catch (error: any) {
+  } catch (error) {
     logError(error, {
       component: 'rejectDemande',
       action: 'reject',

@@ -6,7 +6,7 @@
  */
 
 import { useState } from 'react'
-import { DemandeVersementAvecUtilisateur, getStatutLabel, getTypeVersementLabel, getStatutBadgeVariant, masquerIBAN, canValidateDemande, canMarkAsPaid, canRejectDemande } from "@/lib/types"
+import { DemandeVersementAvecUtilisateur, getStatutLabel, getTypeVersementLabel, getStatutBadgeVariant, masquerIBAN, canValidateDemande, canMarkAsPaid } from "@/lib/types"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { formatCurrency, formatDateLong } from "@/lib/formatters"
@@ -48,8 +48,8 @@ export function DemandesTresorerieTable({ demandes, showActions = true }: Demand
       } else {
         toast.error(result.error || 'Erreur lors de la validation')
       }
-    } catch (error: any) {
-      toast.error(error?.message || 'Erreur')
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Erreur')
     } finally {
       setActionLoading(null)
     }
@@ -65,8 +65,8 @@ export function DemandesTresorerieTable({ demandes, showActions = true }: Demand
       } else {
         toast.error(result.error || 'Erreur')
       }
-    } catch (error: any) {
-      toast.error(error?.message || 'Erreur')
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Erreur')
     } finally {
       setActionLoading(null)
     }
@@ -92,8 +92,8 @@ export function DemandesTresorerieTable({ demandes, showActions = true }: Demand
       } else {
         toast.error(result.error || 'Erreur')
       }
-    } catch (error: any) {
-      toast.error(error?.message || 'Erreur')
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Erreur')
     } finally {
       setActionLoading(null)
     }
@@ -237,7 +237,7 @@ export function DemandesTresorerieTable({ demandes, showActions = true }: Demand
           <DialogHeader>
             <DialogTitle>Rejeter la demande</DialogTitle>
             <DialogDescription>
-              Veuillez indiquer la raison du rejet. L'utilisateur sera notifié.
+              Veuillez indiquer la raison du rejet. L&apos;utilisateur sera notifié.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -334,7 +334,7 @@ export function DemandesTresorerieTable({ demandes, showActions = true }: Demand
 
               {selectedDemande.notes_utilisateur && (
                 <div>
-                  <Label className="text-muted-foreground">Notes de l'utilisateur</Label>
+                  <Label className="text-muted-foreground">Notes de l&apos;utilisateur</Label>
                   <p className="mt-1 p-3 rounded bg-muted/50 text-sm">
                     {selectedDemande.notes_utilisateur}
                   </p>
