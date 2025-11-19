@@ -620,8 +620,8 @@ export async function getTeamsSummary(): Promise<{
 
 /**
  * Récupère les statistiques globales de toutes les tournées
- * Utilise la fonction PostgreSQL get_global_tournee_stats() avec SECURITY DEFINER
- * pour contourner les RLS policies et voir les tournées de toutes les équipes
+ * Grâce à la RLS policy qui permet la lecture de toutes les tournées,
+ * on peut compter directement les calendriers de toutes les équipes
  */
 export async function getGlobalStats(): Promise<{
   total_calendriers_distribues: number;
@@ -631,26 +631,48 @@ export async function getGlobalStats(): Promise<{
   const supabase = await createClient();
 
   try {
-    // Appeler la fonction PostgreSQL qui compte TOUS les calendriers de TOUTES les équipes
-    // (tournées complétées depuis tournees.calendriers_distribues + tournées actives depuis support_transactions)
-    const { data, error } = await supabase.rpc('get_global_tournee_stats');
+    // 1. Compter les calendriers des tournées COMPLÉTÉES (source de vérité finale)
+    const { data: tourneesCompleted } = await supabase
+      .from('tournees')
+      .select('calendriers_distribues, montant_collecte')
+      .eq('statut', 'completed');
 
-    if (error) {
-      console.error('[getGlobalStats] Erreur RPC:', error);
-      return {
-        total_calendriers_distribues: 0,
-        total_montant_collecte: 0,
-        total_tournees_actives: 0
-      };
+    const calendriersCompleted = tourneesCompleted?.reduce((sum, t) => sum + (t.calendriers_distribues || 0), 0) || 0;
+    const montantCompleted = tourneesCompleted?.reduce((sum, t) => sum + (t.montant_collecte || 0), 0) || 0;
+
+    // 2. Compter les calendriers des tournées ACTIVES via support_transactions
+    // (car elles n'ont pas encore de valeur finale dans calendriers_distribues)
+    const { data: tourneesActives } = await supabase
+      .from('tournees')
+      .select('id')
+      .eq('statut', 'active');
+
+    let calendriersActives = 0;
+    let montantActives = 0;
+
+    if (tourneesActives && tourneesActives.length > 0) {
+      const activeIds = tourneesActives.map(t => t.id);
+      const { data: transactions } = await supabase
+        .from('support_transactions')
+        .select('amount, calendar_accepted')
+        .in('tournee_id', activeIds)
+        .eq('payment_status', 'completed');
+
+      calendriersActives = transactions?.filter(t => t.calendar_accepted).length || 0;
+      montantActives = transactions?.reduce((sum, t) => sum + (t.amount || 0), 0) || 0;
     }
 
-    // La fonction RPC retourne un tableau avec un seul élément
-    const stats = data?.[0];
+    // 3. Compter les tournées actives
+    const { count: tournees_actives } = await supabase
+      .from('tournees')
+      .select('*', { count: 'exact', head: true })
+      .eq('statut', 'active');
 
+    // 4. Additionner les totaux
     return {
-      total_calendriers_distribues: Number(stats?.total_calendriers_distribues || 0),
-      total_montant_collecte: Number(stats?.total_montant_collecte || 0),
-      total_tournees_actives: Number(stats?.total_tournees_actives || 0)
+      total_calendriers_distribues: calendriersCompleted + calendriersActives,
+      total_montant_collecte: montantCompleted + montantActives,
+      total_tournees_actives: tournees_actives || 0
     };
 
   } catch (error) {
