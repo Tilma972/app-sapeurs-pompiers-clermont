@@ -180,6 +180,39 @@ export const IDEES_CONFIG = {
 } as const;
 
 // ============================
+// VERSEMENT & TRÉSORERIE
+// ============================
+
+export const VERSEMENT_CONFIG = {
+  /**
+   * Montant minimum pour une demande de versement (en €)
+   */
+  MONTANT_MINIMUM_VERSEMENT: 10,
+
+  /**
+   * Montant maximum par demande de versement (en €)
+   */
+  MONTANT_MAXIMUM_VERSEMENT: 500,
+
+  /**
+   * Délai de traitement estimé (en jours ouvrés)
+   */
+  DELAI_TRAITEMENT_JOURS: 7,
+
+  /**
+   * Frais de gestion pour les cartes cadeaux (en %)
+   * Ces frais sont déduits du montant versé
+   */
+  FRAIS_CARTE_CADEAU: 5,
+
+  /**
+   * Montant minimum pour demander un virement (en €)
+   * En dessous, seule la carte cadeau est disponible
+   */
+  MONTANT_MINIMUM_VIREMENT: 20,
+} as const;
+
+// ============================
 // RÔLES & PERMISSIONS
 // ============================
 
@@ -193,6 +226,11 @@ export const ROLES_CONFIG = {
    * Rôles avec accès admin
    */
   ADMIN_ROLES: ['admin', 'chef'] as const,
+
+  /**
+   * Rôles avec accès trésorerie
+   */
+  TREASURER_ROLES: ['tresorier', 'admin'] as const,
 
   /**
    * Rôles pouvant gérer une équipe
@@ -213,9 +251,26 @@ export function isAdminRole(role: string | undefined): boolean {
 }
 
 /**
+ * Vérifie si un rôle a des permissions trésorier
+ */
+export function isTreasurerRole(role: string | undefined): boolean {
+  if (!role) return false;
+  return (ROLES_CONFIG.TREASURER_ROLES as readonly string[]).includes(role);
+}
+
+/**
  * Vérifie si un rôle peut gérer une équipe
  */
 export function canManageTeam(role: string | undefined): boolean {
   if (!role) return false;
   return (ROLES_CONFIG.TEAM_MANAGER_ROLES as readonly string[]).includes(role);
+}
+
+/**
+ * Calcule le montant net après frais de carte cadeau
+ */
+export function calculateNetAmountAfterFees(montant: number): number {
+  const fraisPercent = VERSEMENT_CONFIG.FRAIS_CARTE_CADEAU;
+  const frais = (montant * fraisPercent) / 100;
+  return montant - frais;
 }

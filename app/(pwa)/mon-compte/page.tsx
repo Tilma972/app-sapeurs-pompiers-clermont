@@ -3,14 +3,16 @@ import { redirect } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Wallet } from "lucide-react";
+import { Wallet, Plus } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { PwaContainer } from "@/components/layouts/pwa/pwa-container";
 import { formatCurrency, formatDateLong } from "@/lib/formatters";
 import { getUserCompte, getPotEquipe, getMouvementsRetribution } from "@/lib/supabase/compte";
+import { getUserDemandes } from "@/lib/supabase/versement";
 import { getEquipeWithSettingsFromProfile } from "@/lib/supabase/equipes";
-import { RETRIBUTION_CONFIG, PAGINATION_CONFIG } from "@/lib/config";
+import { RETRIBUTION_CONFIG, PAGINATION_CONFIG, VERSEMENT_CONFIG } from "@/lib/config";
+import { DemandesListe } from "@/components/compte/demandes-liste";
 
 export default async function MonComptePage() {
   const supabase = await createClient();
@@ -18,10 +20,11 @@ export default async function MonComptePage() {
   if (!user) redirect("/auth/login");
 
   // Récupération des données via les helpers
-  const [compte, eqWithSettings, mouvements] = await Promise.all([
+  const [compte, eqWithSettings, mouvements, demandes] = await Promise.all([
     getUserCompte(supabase, user.id),
     getEquipeWithSettingsFromProfile(supabase, user.id),
     getMouvementsRetribution(supabase, user.id, PAGINATION_CONFIG.MOUVEMENTS_RETRIBUTION_LIMIT),
+    getUserDemandes(supabase, user.id, 5),
   ]);
 
   const recommandationEquipe = eqWithSettings?.pourcentage_recommande_pot ?? RETRIBUTION_CONFIG.RECOMMANDE_POT_EQUIPE_DEFAULT;
@@ -100,6 +103,39 @@ export default async function MonComptePage() {
               Détails des contributions disponibles selon le mode de transparence de l&apos;équipe.
             </div>
           </details>
+        )}
+
+        {/* Action: Demander un versement */}
+        {compte && compte.solde_disponible && compte.solde_disponible >= VERSEMENT_CONFIG.MONTANT_MINIMUM_VERSEMENT && (
+          <Card className="border-primary/20 bg-primary/5">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex-1">
+                  <div className="text-sm font-medium mb-1">💳 Demander un versement</div>
+                  <div className="text-xs text-muted-foreground">
+                    Recevez votre rétribution par virement ou carte cadeau
+                  </div>
+                </div>
+                <Link href="/mon-compte/demander-versement">
+                  <Button size="sm" className="gap-2">
+                    <Plus className="h-4 w-4" />
+                    Nouvelle demande
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Mes demandes de versement */}
+        {demandes && demandes.length > 0 && (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold">Mes demandes de versement</h2>
+              <Badge variant="outline">{demandes.length}</Badge>
+            </div>
+            <DemandesListe demandes={demandes} />
+          </div>
         )}
 
         {(mouvements && mouvements.length > 0) && (
