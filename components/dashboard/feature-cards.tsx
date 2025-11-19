@@ -10,6 +10,7 @@ export function FeatureCardsGrid(props: {
   profileComplete?: boolean;
   globalCalendarsDistributed?: number;
   ideasCount?: number;
+  isTreasurer?: boolean;
 }) {
   const features: Feature[] = [
     {
@@ -93,6 +94,18 @@ export function FeatureCardsGrid(props: {
       ],
     },
   ];
+
+  // Ajouter la carte Trésorerie uniquement pour les trésoriers/admins
+  if (props.isTreasurer) {
+    features.push({
+      title: "Trésorerie",
+      description: "Gestion des demandes de versement",
+      iconKey: "wallet",
+      href: "/tresorerie",
+      gradient: "from-indigo-500 to-blue-700",
+      badges: ["Accès Trésorier"],
+    });
+  }
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

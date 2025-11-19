@@ -236,6 +236,11 @@ export const ROLES_CONFIG = {
    * Rôles pouvant gérer une équipe
    */
   TEAM_MANAGER_ROLES: ['admin', 'chef'] as const,
+
+  /**
+   * Rôles pouvant créer des demandes de pot d'équipe
+   */
+  TEAM_LEADER_ROLES: ['chef_equipe', 'admin'] as const,
 } as const;
 
 // ============================
@@ -264,6 +269,14 @@ export function isTreasurerRole(role: string | undefined): boolean {
 export function canManageTeam(role: string | undefined): boolean {
   if (!role) return false;
   return (ROLES_CONFIG.TEAM_MANAGER_ROLES as readonly string[]).includes(role);
+}
+
+/**
+ * Vérifie si un rôle peut créer des demandes de pot d'équipe
+ */
+export function isTeamLeaderRole(role: string | undefined): boolean {
+  if (!role) return false;
+  return (ROLES_CONFIG.TEAM_LEADER_ROLES as readonly string[]).includes(role);
 }
 
 /**

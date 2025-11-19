@@ -8,6 +8,7 @@ import { getGlobalStats } from "@/lib/supabase/tournee";
 import HeroSection from "@/components/hero-section";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CheckCircle2, AlertCircle } from "lucide-react";
+import { isTreasurerRole } from "@/lib/config";
 
 export default async function DashboardPage({
   searchParams,
@@ -52,6 +53,7 @@ const ideasCount = ideasCountRes.count ?? 0;
 const eventsCount = undefined;
 const offersCount = undefined;
 const profileComplete = Boolean(profile?.full_name);
+const isUserTreasurer = isTreasurerRole(profile?.role);
 
 // Détection nouvel utilisateur et profil incomplet
 const isNewUser = params.welcome === "true";
@@ -112,6 +114,7 @@ eventsCount={eventsCount}
 offersCount={offersCount}
 profileComplete={profileComplete}
 globalCalendarsDistributed={globalStats?.total_calendriers_distribues}
+isTreasurer={isUserTreasurer}
 />
 </div>
 </PwaContainer>
