@@ -184,7 +184,30 @@ export async function createIdeaAction(data: CreateIdeaInput) {
       throw new Error("Erreur lors de la création de l'idée");
     }
 
-    // 5. Revalider la page liste
+    // 5. GAMIFICATION: Attribution d'XP pour publication d'idée
+    if (data.status === 'published') {
+      try {
+        await supabase.rpc('award_xp', {
+          p_user_id: user.id,
+          p_amount: 50,
+          p_reason: 'idee_postee',
+          p_metadata: {
+            idea_id: idea.id,
+            title: data.title,
+          },
+        });
+
+        // Vérifier et débloquer les badges
+        await supabase.rpc('check_and_unlock_badges', {
+          p_user_id: user.id,
+        });
+      } catch (gamificationError) {
+        // Ne pas bloquer la création si la gamification échoue
+        console.error('Erreur gamification (non-bloquante):', gamificationError);
+      }
+    }
+
+    // 6. Revalider la page liste
     revalidatePath("/idees");
 
     return {

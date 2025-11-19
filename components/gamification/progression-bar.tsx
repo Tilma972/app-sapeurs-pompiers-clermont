@@ -8,7 +8,7 @@ import type { UserProgression } from "@/lib/types/gamification.types";
 import { getXpRequiredForLevel } from "@/lib/supabase/gamification";
 
 interface ProgressionBarProps {
-  progression: UserProgression;
+  progression: Pick<UserProgression, 'level' | 'current_xp' | 'total_xp' | 'streak_days' | 'tokens'>;
   className?: string;
   compact?: boolean; // Mode compact pour affichage dans le header
 }
