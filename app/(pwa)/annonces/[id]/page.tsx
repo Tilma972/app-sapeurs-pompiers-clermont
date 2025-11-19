@@ -425,7 +425,6 @@ export default function AnnonceDetailPage({ params }: { params: Promise<{ id: st
           </div>
         </div>
       </div>
-      </div>
     </PwaContainer>
   )
 }
