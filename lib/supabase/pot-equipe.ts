@@ -6,14 +6,12 @@
 import { SupabaseClient } from '@supabase/supabase-js'
 import { Database } from '@/lib/database.types'
 import {
-  DemandePotEquipeRow,
   DemandePotEquipeAvecDetails,
-  MouvementPotEquipeRow,
   MouvementPotEquipeAvecDetails,
   CreateDemandePotEquipeInput,
   StatutDemandePotType,
 } from '@/lib/types/pot-equipe'
-import { logError } from '@/lib/logger'
+import { logError } from '@/lib/utils/error-handling'
 
 type SupabaseClientType = SupabaseClient<Database>
 

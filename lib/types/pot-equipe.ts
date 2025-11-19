@@ -7,8 +7,6 @@
  * régénérer les types avec: npx supabase gen types typescript
  */
 
-import type { Database } from '@/lib/database.types'
-
 // =====================================================
 // TYPES TEMPORAIRES (à remplacer après migration)
 // =====================================================
@@ -193,12 +191,12 @@ export function getStatutPotLabel(statut: StatutDemandePotType): string {
  */
 export function getStatutPotBadgeVariant(
   statut: StatutDemandePotType
-): 'default' | 'secondary' | 'success' | 'destructive' | 'outline' {
-  const variants: Record<StatutDemandePotType, 'default' | 'secondary' | 'success' | 'destructive' | 'outline'> = {
+): 'default' | 'secondary' | 'destructive' | 'outline' {
+  const variants: Record<StatutDemandePotType, 'default' | 'secondary' | 'destructive' | 'outline'> = {
     en_attente: 'secondary',
     en_cours: 'default',
     validee: 'outline',
-    payee: 'success',
+    payee: 'default',
     rejetee: 'destructive',
   }
   return variants[statut] || 'default'
@@ -227,22 +225,24 @@ export function canValidateDemandePot(demande: DemandePotEquipeRow): boolean {
  * Vérifie si une demande peut être marquée comme payée
  */
 export function canMarkAsPaidPot(demande: DemandePotEquipeRow): boolean {
-  return [
+  const validStatuts: string[] = [
     StatutDemandePot.EN_ATTENTE,
     StatutDemandePot.EN_COURS,
     StatutDemandePot.VALIDEE,
-  ].includes(demande.statut as StatutDemandePotType)
+  ]
+  return validStatuts.includes(demande.statut)
 }
 
 /**
  * Vérifie si une demande peut être rejetée
  */
 export function canRejectDemandePot(demande: DemandePotEquipeRow): boolean {
-  return [
+  const validStatuts: string[] = [
     StatutDemandePot.EN_ATTENTE,
     StatutDemandePot.EN_COURS,
     StatutDemandePot.VALIDEE,
-  ].includes(demande.statut as StatutDemandePotType)
+  ]
+  return validStatuts.includes(demande.statut)
 }
 
 /**
