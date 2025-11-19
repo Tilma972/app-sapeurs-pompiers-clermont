@@ -1,12 +1,79 @@
-import { Database } from '@/lib/database.types'
-
 // =====================================================
 // TYPES DE BASE DE DONNÉES
 // =====================================================
 
-export type DemandeVersementRow = Database['public']['Tables']['demandes_versement']['Row']
-export type DemandeVersementInsert = Database['public']['Tables']['demandes_versement']['Insert']
-export type DemandeVersementUpdate = Database['public']['Tables']['demandes_versement']['Update']
+// Types temporaires en attendant la régénération après migration
+// TODO: Régénérer les types après avoir appliqué la migration 20251119_demandes_versement_system.sql
+// avec: npx supabase gen types typescript --project-id YOUR_PROJECT_ID > lib/database.types.ts
+
+export type DemandeVersementRow = {
+  id: string
+  user_id: string
+  equipe_id: string | null
+  montant: number
+  type_versement: 'virement' | 'carte_cadeau'
+  iban: string | null
+  nom_beneficiaire: string | null
+  statut: 'en_attente' | 'en_cours' | 'validee' | 'payee' | 'rejetee'
+  created_at: string
+  updated_at: string
+  validated_at: string | null
+  validated_by: string | null
+  paid_at: string | null
+  paid_by: string | null
+  rejected_at: string | null
+  rejected_by: string | null
+  rejection_reason: string | null
+  notes_utilisateur: string | null
+  notes_tresorier: string | null
+  preuve_paiement_url: string | null
+}
+
+export type DemandeVersementInsert = {
+  id?: string
+  user_id: string
+  equipe_id?: string | null
+  montant: number
+  type_versement: 'virement' | 'carte_cadeau'
+  iban?: string | null
+  nom_beneficiaire?: string | null
+  statut?: 'en_attente' | 'en_cours' | 'validee' | 'payee' | 'rejetee'
+  created_at?: string
+  updated_at?: string
+  validated_at?: string | null
+  validated_by?: string | null
+  paid_at?: string | null
+  paid_by?: string | null
+  rejected_at?: string | null
+  rejected_by?: string | null
+  rejection_reason?: string | null
+  notes_utilisateur?: string | null
+  notes_tresorier?: string | null
+  preuve_paiement_url?: string | null
+}
+
+export type DemandeVersementUpdate = {
+  id?: string
+  user_id?: string
+  equipe_id?: string | null
+  montant?: number
+  type_versement?: 'virement' | 'carte_cadeau'
+  iban?: string | null
+  nom_beneficiaire?: string | null
+  statut?: 'en_attente' | 'en_cours' | 'validee' | 'payee' | 'rejetee'
+  created_at?: string
+  updated_at?: string
+  validated_at?: string | null
+  validated_by?: string | null
+  paid_at?: string | null
+  paid_by?: string | null
+  rejected_at?: string | null
+  rejected_by?: string | null
+  rejection_reason?: string | null
+  notes_utilisateur?: string | null
+  notes_tresorier?: string | null
+  preuve_paiement_url?: string | null
+}
 
 // Alias pour compatibilité
 export type DemandeVersement = DemandeVersementRow
