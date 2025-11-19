@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/dialog"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { getMyAnnonces, updateAnnonceStatut, deleteAnnonce } from "@/lib/supabase/annonces"
+import { PwaContainer } from "@/components/layouts/pwa/pwa-container"
 
 interface Annonce {
   id: string
@@ -162,41 +163,44 @@ export default function MesAnnoncesPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Chargement de vos annonces...</p>
+      <PwaContainer>
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Chargement de vos annonces...</p>
+          </div>
         </div>
-      </div>
+      </PwaContainer>
     )
   }
 
   return (
-    <div className="min-h-screen bg-background pb-24">
-      {/* Stats */}
-      <div className="bg-primary text-primary-foreground p-6">
-        <h1 className="text-2xl font-bold mb-4">Mes annonces</h1>
-        <div className="grid grid-cols-4 gap-2">
-          <div className="text-center">
-            <div className="text-2xl font-bold">{stats.total}</div>
-            <div className="text-xs opacity-90">Total</div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold">{stats.active}</div>
-            <div className="text-xs opacity-90">Actives</div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold">{stats.inactive}</div>
-            <div className="text-xs opacity-90">Pausées</div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold">{stats.sold}</div>
-            <div className="text-xs opacity-90">Vendues</div>
+    <PwaContainer noPaddingTop maxWidth="full">
+      <div className="space-y-6 pb-6">
+        {/* Stats - pleine largeur */}
+        <div className="-mx-4 bg-primary text-primary-foreground p-6">
+          <h1 className="text-2xl font-bold mb-4">Mes annonces</h1>
+          <div className="grid grid-cols-4 gap-2">
+            <div className="text-center">
+              <div className="text-2xl font-bold">{stats.total}</div>
+              <div className="text-xs opacity-90">Total</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold">{stats.active}</div>
+              <div className="text-xs opacity-90">Actives</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold">{stats.inactive}</div>
+              <div className="text-xs opacity-90">Pausées</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold">{stats.sold}</div>
+              <div className="text-xs opacity-90">Vendues</div>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div className="px-4 py-6 space-y-4">
+      <div className="space-y-4">
         {/* Bouton nouvelle annonce */}
         <Button
           className="w-full"
@@ -338,6 +342,7 @@ export default function MesAnnoncesPage() {
           </TabsContent>
         </Tabs>
       </div>
+      </div>
 
       {/* Dialog de confirmation de suppression */}
       <Dialog open={!!deleteDialog} onOpenChange={() => setDeleteDialog(null)}>
@@ -361,6 +366,6 @@ export default function MesAnnoncesPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </PwaContainer>
   )
 }
