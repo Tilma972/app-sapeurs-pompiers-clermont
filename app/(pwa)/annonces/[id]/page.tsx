@@ -10,6 +10,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { getAnnonceById, addToFavorites, removeFromFavorites } from "@/lib/supabase/annonces"
+import { PwaContainer } from "@/components/layouts/pwa/pwa-container"
 
 interface Annonce {
   id: string
@@ -183,18 +184,20 @@ export default function AnnonceDetailPage({ params }: { params: Promise<{ id: st
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center space-y-3">
-          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-muted-foreground">Chargement...</p>
+      <PwaContainer>
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center space-y-3">
+            <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
+            <p className="text-muted-foreground">Chargement...</p>
+          </div>
         </div>
-      </div>
+      </PwaContainer>
     )
   }
 
   if (!annonce) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4">
+      <PwaContainer>
         <Card className="p-6 text-center">
           <AlertCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
           <h2 className="text-xl font-bold mb-2">Annonce introuvable</h2>
@@ -203,17 +206,17 @@ export default function AnnonceDetailPage({ params }: { params: Promise<{ id: st
             Retour aux annonces
           </Button>
         </Card>
-      </div>
+      </PwaContainer>
     )
   }
 
   const statutBadge = getStatutBadge(annonce.statut)
 
   return (
-    <div className="min-h-screen bg-background pb-24">
-      {/* Header sticky */}
-      <div className="sticky top-[64px] z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b px-4 py-3">
-        <div className="flex items-center justify-between">
+    <PwaContainer>
+      <div className="space-y-6 pb-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
           <Button
             variant="ghost"
             size="icon"
@@ -422,6 +425,6 @@ export default function AnnonceDetailPage({ params }: { params: Promise<{ id: st
           </div>
         </div>
       </div>
-    </div>
+    </PwaContainer>
   )
 }

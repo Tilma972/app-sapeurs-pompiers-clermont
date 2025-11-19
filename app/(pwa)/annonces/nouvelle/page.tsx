@@ -15,6 +15,7 @@ import { AlertCircle, Loader2 } from "lucide-react"
 import { createAnnonce, uploadAnnoncePhoto } from "@/lib/supabase/annonces"
 import { createClient } from "@/lib/supabase/client"
 import { compressImage } from "@/lib/utils/image-compression"
+import { PwaContainer } from "@/components/layouts/pwa/pwa-container"
 
 const categories = [
   "Équipement",
@@ -150,9 +151,9 @@ export default function NouvelleAnnoncePage() {
   }
 
   return (
-    <div className="min-h-screen bg-background pb-24">
-      {/* Header sticky */}
-      <div className="sticky top-[64px] z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b px-4 py-3">
+    <PwaContainer>
+      <div className="space-y-6 pb-6">
+        {/* Header */}
         <div className="flex items-center gap-3">
           <Button
             variant="ghost"
@@ -163,9 +164,8 @@ export default function NouvelleAnnoncePage() {
           </Button>
           <h1 className="text-xl font-bold">Nouvelle annonce</h1>
         </div>
-      </div>
 
-      <form onSubmit={handleSubmit} className="px-4 py-6 space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-6">
         {/* Photos */}
         <Card>
           <CardHeader>
@@ -350,37 +350,36 @@ export default function NouvelleAnnoncePage() {
         </Alert>
 
         {/* Boutons d'action */}
-        <div className="fixed bottom-0 left-0 right-0 bg-background border-t p-4 z-20">
-          <div className="max-w-2xl mx-auto flex gap-3">
-            <Button
-              type="button"
-              variant="outline"
-              className="flex-1"
-              onClick={() => router.back()}
-              disabled={isSubmitting}
-            >
-              Annuler
-            </Button>
-            <Button
-              type="submit"
-              className="flex-1"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                  Publication...
-                </>
-              ) : (
-                <>
-                  <Plus className="h-5 w-5 mr-2" />
-                  Publier
-                </>
-              )}
-            </Button>
-          </div>
+        <div className="flex gap-3 pt-4">
+          <Button
+            type="button"
+            variant="outline"
+            className="flex-1"
+            onClick={() => router.back()}
+            disabled={isSubmitting}
+          >
+            Annuler
+          </Button>
+          <Button
+            type="submit"
+            className="flex-1"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                Publication...
+              </>
+            ) : (
+              <>
+                <Plus className="h-5 w-5 mr-2" />
+                Publier
+              </>
+            )}
+          </Button>
         </div>
       </form>
-    </div>
+      </div>
+    </PwaContainer>
   )
 }
