@@ -99,7 +99,7 @@ export async function getDemandeById(
     logError(error, {
       component: 'getDemandeById',
       action: 'fetch',
-      demandeId,
+      metadata: { demandeId },
     });
     return null;
   }
@@ -189,7 +189,7 @@ export async function getAllDemandes(
     logError(error, {
       component: 'getAllDemandes',
       action: 'fetch',
-      filters,
+      metadata: { filters },
     });
     return [];
   }
@@ -255,7 +255,7 @@ export async function countDemandes(
     logError(error, {
       component: 'countDemandes',
       action: 'count',
-      filters,
+      metadata: { filters },
     });
     return 0;
   }
@@ -324,7 +324,7 @@ export async function getStatistiquesDemandes(
     logError(error, {
       component: 'getStatistiquesDemandes',
       action: 'fetch',
-      equipe_id,
+      metadata: { equipe_id },
     });
     return null;
   }
@@ -360,7 +360,7 @@ export async function hasSufficientBalance(
       component: 'hasSufficientBalance',
       action: 'check',
       userId,
-      montant,
+      metadata: { montant },
     });
     return false;
   }
@@ -461,11 +461,11 @@ export async function createDemandeVersement(
     logError(error, {
       component: 'createDemandeVersement',
       action: 'create',
-      params,
+      metadata: { params },
     });
     return {
       success: false,
-      error: error?.message || 'Erreur lors de la création de la demande',
+      error: error instanceof Error ? error.message : 'Erreur lors de la création de la demande',
     };
   }
 }
@@ -493,11 +493,11 @@ export async function validateDemande(
     logError(error, {
       component: 'validateDemande',
       action: 'validate',
-      demandeId,
+      metadata: { demandeId },
     });
     return {
       success: false,
-      error: error?.message || 'Erreur lors de la validation',
+      error: error instanceof Error ? error.message : 'Erreur lors de la validation',
     };
   }
 }
@@ -525,11 +525,11 @@ export async function markDemandePaid(
     logError(error, {
       component: 'markDemandePaid',
       action: 'mark_paid',
-      demandeId,
+      metadata: { demandeId },
     });
     return {
       success: false,
-      error: error?.message || 'Erreur lors du marquage comme payée',
+      error: error instanceof Error ? error.message : 'Erreur lors du marquage comme payée',
     };
   }
 }
@@ -557,11 +557,11 @@ export async function rejectDemande(
     logError(error, {
       component: 'rejectDemande',
       action: 'reject',
-      demandeId,
+      metadata: { demandeId },
     });
     return {
       success: false,
-      error: error?.message || 'Erreur lors du rejet',
+      error: error instanceof Error ? error.message : 'Erreur lors du rejet',
     };
   }
 }
