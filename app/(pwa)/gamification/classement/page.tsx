@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { PwaContainer } from "@/components/layouts/pwa/pwa-container";
 import { getGlobalLeaderboard, getUserRankGlobal } from "@/lib/supabase/leaderboards";
-import { getUserProgression } from "@/lib/supabase/gamification";
+import { getUserProgressionServer } from "@/lib/supabase/gamification-server";
 import { Trophy, Crown, Medal, ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -19,7 +19,7 @@ export default async function ClassementPage() {
   const [leaderboard, userRank, userProgression] = await Promise.all([
     getGlobalLeaderboard(50),
     getUserRankGlobal(user.id),
-    getUserProgression(user.id),
+    getUserProgressionServer(user.id),
   ]);
 
   const getRankIcon = (rank: number) => {

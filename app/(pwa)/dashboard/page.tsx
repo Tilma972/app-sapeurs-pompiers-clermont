@@ -8,7 +8,7 @@ import { getGlobalStats } from "@/lib/supabase/tournee";
 import HeroSection from "@/components/hero-section";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CheckCircle2, AlertCircle } from "lucide-react";
-import { getUserProgression } from "@/lib/supabase/gamification";
+import { getUserProgressionServer } from "@/lib/supabase/gamification-server";
 import { ProgressionBar } from "@/components/gamification/progression-bar";
 import { Card } from "@/components/ui/card";
 
@@ -29,7 +29,7 @@ if (!user) redirect("/auth/login");
 		getGlobalStats(),
 		supabase.from('gallery_photos').select('*', { count: 'exact', head: true }).eq('status', 'approved'),
 		supabase.from('ideas').select('*', { count: 'exact', head: true }).is('deleted_at', null),
-		getUserProgression(user.id)
+		getUserProgressionServer(user.id)
 	]);
 
 	// Récupérer le nom de l'équipe si team_id existe

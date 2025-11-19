@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { PwaContainer } from "@/components/layouts/pwa/pwa-container";
 import { ProgressionBar } from "@/components/gamification/progression-bar";
 import { StreakCounter } from "@/components/gamification/streak-counter";
-import { getGamificationStats } from "@/lib/supabase/gamification";
+import { getGamificationStatsServer } from "@/lib/supabase/gamification-server";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Trophy, Zap, Target, Award, TrendingUp } from "lucide-react";
@@ -14,7 +14,7 @@ export default async function GamificationPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/auth/login");
 
-  const stats = await getGamificationStats(user.id);
+  const stats = await getGamificationStatsServer(user.id);
 
   if (!stats) {
     return (
