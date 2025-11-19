@@ -135,11 +135,11 @@ export async function creerDemandeVersementAction(
       success: true,
       data: { demande_id: result.demande_id! },
     };
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error in creerDemandeVersementAction:', error);
     return {
       success: false,
-      error: error?.message || "Une erreur est survenue",
+      error: error instanceof Error ? error.message : "Une erreur est survenue",
     };
   }
 }
@@ -203,11 +203,11 @@ export async function annulerDemandeAction(
     revalidatePath('/mon-compte');
 
     return { success: true };
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error in annulerDemandeAction:', error);
     return {
       success: false,
-      error: error?.message || "Une erreur est survenue",
+      error: error instanceof Error ? error.message : "Une erreur est survenue",
     };
   }
 }
@@ -266,11 +266,11 @@ export async function validerDemandeAction(
     revalidatePath('/mon-compte');
 
     return { success: true };
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error in validerDemandeAction:', error);
     return {
       success: false,
-      error: error?.message || "Une erreur est survenue",
+      error: error instanceof Error ? error.message : "Une erreur est survenue",
     };
   }
 }
@@ -325,11 +325,11 @@ export async function marquerPayeeAction(
     revalidatePath('/mon-compte');
 
     return { success: true };
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error in marquerPayeeAction:', error);
     return {
       success: false,
-      error: error?.message || "Une erreur est survenue",
+      error: error instanceof Error ? error.message : "Une erreur est survenue",
     };
   }
 }
@@ -392,11 +392,11 @@ export async function rejeterDemandeAction(
     revalidatePath('/mon-compte');
 
     return { success: true };
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error in rejeterDemandeAction:', error);
     return {
       success: false,
-      error: error?.message || "Une erreur est survenue",
+      error: error instanceof Error ? error.message : "Une erreur est survenue",
     };
   }
 }

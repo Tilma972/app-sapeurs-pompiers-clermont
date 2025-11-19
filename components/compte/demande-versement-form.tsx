@@ -15,7 +15,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Loader2, Wallet, CreditCard, Building2, Info, AlertCircle } from 'lucide-react'
 import { creerDemandeVersementAction } from '@/app/actions/versement'
@@ -114,8 +114,8 @@ export function DemandeVersementForm({ soldeDisponible, onSuccess }: DemandeVers
       } else {
         setError(result.error || 'Une erreur est survenue')
       }
-    } catch (err: any) {
-      setError(err?.message || 'Une erreur est survenue')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Une erreur est survenue')
     } finally {
       setIsSubmitting(false)
     }
@@ -177,7 +177,7 @@ export function DemandeVersementForm({ soldeDisponible, onSuccess }: DemandeVers
         <Label>Mode de versement</Label>
         <RadioGroup
           value={typeVersement}
-          onValueChange={(value) => setValue('type_versement', value as any)}
+          onValueChange={(value) => setValue('type_versement', value as typeof TypeVersement.VIREMENT | typeof TypeVersement.CARTE_CADEAU)}
           className="grid grid-cols-1 md:grid-cols-2 gap-4"
         >
           {/* Virement bancaire */}
@@ -281,8 +281,8 @@ export function DemandeVersementForm({ soldeDisponible, onSuccess }: DemandeVers
           <AlertDescription>
             <p className="font-medium mb-1">Carte cadeau</p>
             <p className="text-sm">
-              Des frais de {VERSEMENT_CONFIG.FRAIS_CARTE_CADEAU}% s'appliquent pour couvrir les frais de gestion.
-              Vous recevrez une carte cadeau d'un montant de <strong>{formatCurrency(montantNet || 0)}</strong>.
+              Des frais de {VERSEMENT_CONFIG.FRAIS_CARTE_CADEAU}% s&apos;appliquent pour couvrir les frais de gestion.
+              Vous recevrez une carte cadeau d&apos;un montant de <strong>{formatCurrency(montantNet || 0)}</strong>.
             </p>
           </AlertDescription>
         </Alert>

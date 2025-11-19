@@ -4,7 +4,7 @@ import { PwaContainer } from "@/components/layouts/pwa/pwa-container";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { DollarSign, Clock, CheckCircle, XCircle, TrendingUp } from "lucide-react";
+import { Clock, CheckCircle, XCircle, TrendingUp } from "lucide-react";
 import { isTreasurerRole } from "@/lib/config";
 import { getAllDemandes, getStatistiquesDemandes } from "@/lib/supabase/versement";
 import { formatCurrency } from "@/lib/formatters";
