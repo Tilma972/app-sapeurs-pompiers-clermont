@@ -8,6 +8,9 @@ import { getGlobalStats } from "@/lib/supabase/tournee";
 import HeroSection from "@/components/hero-section";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CheckCircle2, AlertCircle } from "lucide-react";
+import { getUserProgression } from "@/lib/supabase/gamification";
+import { ProgressionBar } from "@/components/gamification/progression-bar";
+import { Card } from "@/components/ui/card";
 
 export default async function DashboardPage({
   searchParams,
@@ -21,11 +24,12 @@ if (!user) redirect("/auth/login");
 	// Next.js 15: searchParams est maintenant une Promise
 	const params = await searchParams;
 
-	const [profile, globalStats, approvedPhotosCountRes, ideasCountRes] = await Promise.all([
+	const [profile, globalStats, approvedPhotosCountRes, ideasCountRes, userProgression] = await Promise.all([
 		getCurrentUserProfile(),
 		getGlobalStats(),
 		supabase.from('gallery_photos').select('*', { count: 'exact', head: true }).eq('status', 'approved'),
-		supabase.from('ideas').select('*', { count: 'exact', head: true }).is('deleted_at', null)
+		supabase.from('ideas').select('*', { count: 'exact', head: true }).is('deleted_at', null),
+		getUserProgression(user.id)
 	]);
 
 	// Récupérer le nom de l'équipe si team_id existe
@@ -102,6 +106,15 @@ Complète ton profil
 {" "} pour rejoindre une équipe et accéder à toutes les fonctionnalités.
 </AlertDescription>
 </Alert>
+)}
+
+{/* Widget de progression */}
+{userProgression && (
+<Link href="/gamification">
+<Card className="hover:shadow-md transition-shadow cursor-pointer">
+<ProgressionBar progression={userProgression} compact />
+</Card>
+</Link>
 )}
 
 <FeatureCardsGrid
