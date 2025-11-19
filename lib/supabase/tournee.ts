@@ -629,24 +629,48 @@ export async function getGlobalStats(): Promise<{
   const supabase = await createClient();
 
   try {
-    // Requête directe sur support_transactions pour les vraies données
-    const { data: transactions } = await supabase
-      .from('support_transactions')
-      .select('amount, calendar_accepted')
-      .eq('payment_status', 'completed');
+    // 1. Compter les calendriers des tournées COMPLÉTÉES (source de vérité finale)
+    const { data: tourneesCompleted } = await supabase
+      .from('tournees')
+      .select('calendriers_distribues, montant_collecte')
+      .eq('statut', 'completed')
+      .not('calendriers_distribues', 'is', null);
 
-    const calendriers = transactions?.filter(t => t.calendar_accepted).length || 0;
-    const montant = transactions?.reduce((sum, t) => sum + (t.amount || 0), 0) || 0;
+    const calendriersCompleted = tourneesCompleted?.reduce((sum, t) => sum + (t.calendriers_distribues || 0), 0) || 0;
+    const montantCompleted = tourneesCompleted?.reduce((sum, t) => sum + (t.montant_collecte || 0), 0) || 0;
 
-    // Compter les tournées actives
+    // 2. Compter les calendriers des tournées ACTIVES via support_transactions
+    // (car elles n'ont pas encore de valeur dans calendriers_distribues)
+    const { data: tourneesActives } = await supabase
+      .from('tournees')
+      .select('id')
+      .eq('statut', 'active');
+
+    let calendriersActives = 0;
+    let montantActives = 0;
+
+    if (tourneesActives && tourneesActives.length > 0) {
+      const activeIds = tourneesActives.map(t => t.id);
+      const { data: transactions } = await supabase
+        .from('support_transactions')
+        .select('amount, calendar_accepted')
+        .in('tournee_id', activeIds)
+        .eq('payment_status', 'completed');
+
+      calendriersActives = transactions?.filter(t => t.calendar_accepted).length || 0;
+      montantActives = transactions?.reduce((sum, t) => sum + (t.amount || 0), 0) || 0;
+    }
+
+    // 3. Compter les tournées actives
     const { count: tournees_actives } = await supabase
       .from('tournees')
       .select('*', { count: 'exact', head: true })
       .eq('statut', 'active');
 
+    // 4. Additionner les totaux
     return {
-      total_calendriers_distribues: calendriers,
-      total_montant_collecte: montant,
+      total_calendriers_distribues: calendriersCompleted + calendriersActives,
+      total_montant_collecte: montantCompleted + montantActives,
       total_tournees_actives: tournees_actives || 0
     };
 
