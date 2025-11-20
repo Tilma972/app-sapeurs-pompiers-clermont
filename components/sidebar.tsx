@@ -21,6 +21,7 @@ import {
   Megaphone,
   FileText,
   UserCheck,
+  MapPin,
 } from "lucide-react";
 import { LogoutButton } from "@/components/logout-button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -60,7 +61,8 @@ const adminNavigation = {
     { name: "Annonces", href: "/dashboard/admin/annonces-landing", icon: Megaphone },
   ],
   organisation: [
-    { name: "Équipes", href: "/dashboard/admin/equipes", icon: Calendar },
+    { name: "Équipes", href: "/dashboard/admin/equipes", icon: Users },
+    { name: "Zones de tournée", href: "/dashboard/admin/zones-tournees", icon: MapPin },
     { name: "Avantages", href: "/dashboard/admin/avantages", icon: Gift },
     { name: "Chèques", href: "/dashboard/admin/cheques", icon: Wallet },
     { name: "Reçus fiscaux", href: "/dashboard/admin/receipts", icon: FileText },
