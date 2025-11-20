@@ -39,10 +39,10 @@ interface Equipe {
 
 interface ZonesMapProps {
   zones: Zone[];
-  equipes: Equipe[];
+  equipes?: Equipe[]; // Not used currently but kept for future features
 }
 
-export function ZonesMap({ zones, equipes }: ZonesMapProps) {
+export function ZonesMap({ zones }: ZonesMapProps) {
   // Convertir les zones en GeoJSON FeatureCollection
   const geoJsonData = useMemo<FeatureCollection<Geometry>>(() => {
     const features = zones.map((zone) => {
