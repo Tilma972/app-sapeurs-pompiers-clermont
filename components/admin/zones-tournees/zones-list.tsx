@@ -99,7 +99,7 @@ export function ZonesList({ zones, pompiers }: ZonesListProps) {
 
   // Secteurs uniques
   const secteurs = useMemo(() => {
-    const unique = new Set(zones.map((z) => z.equipe_secteur).filter(Boolean));
+    const unique = new Set(zones.map((z) => z.equipe_secteur).filter((s): s is string => s !== null));
     return Array.from(unique).sort();
   }, [zones]);
 
