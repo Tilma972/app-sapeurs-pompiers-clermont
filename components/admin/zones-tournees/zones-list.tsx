@@ -57,10 +57,10 @@ interface Equipe {
 interface ZonesListProps {
   zones: Zone[];
   pompiers: Pompier[];
-  equipes: Equipe[];
+  equipes?: Equipe[]; // Not used currently but kept for future features
 }
 
-export function ZonesList({ zones, pompiers, equipes }: ZonesListProps) {
+export function ZonesList({ zones, pompiers }: ZonesListProps) {
   const [search, setSearch] = useState("");
   const [secteurFilter, setSecteurFilter] = useState<string>("all");
   const [statutFilter, setStatutFilter] = useState<string>("all");

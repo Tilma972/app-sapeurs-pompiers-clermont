@@ -6,8 +6,8 @@ import "leaflet-defaulticon-compatibility";
 
 import { MapContainer, TileLayer, GeoJSON, Popup, useMap } from "react-leaflet";
 import { useEffect, useMemo, useRef } from "react";
-import type { GeoJSON as LGeoJSON, PathOptions, StyleFunction } from "leaflet";
-import type { FeatureCollection, Geometry } from "geojson";
+import type { GeoJSON as LGeoJSON, PathOptions, StyleFunction, Layer, LeafletMouseEvent } from "leaflet";
+import type { Feature, FeatureCollection, Geometry } from "geojson";
 import { Badge } from "@/components/ui/badge";
 
 interface ZonesMapInnerProps {
@@ -16,7 +16,6 @@ interface ZonesMapInnerProps {
 
 function FitBoundsOnData({ data }: { data: FeatureCollection<Geometry> }) {
   const map = useMap();
-  const geoRef = useRef<LGeoJSON | null>(null);
 
   useEffect(() => {
     if (data.features.length === 0) return;
@@ -39,7 +38,7 @@ function FitBoundsOnData({ data }: { data: FeatureCollection<Geometry> }) {
       const latLngs = bounds;
       try {
         map.fitBounds(latLngs, { padding: [50, 50], maxZoom: 14 });
-      } catch (e) {
+      } catch {
         // Silencieux
       }
     }
@@ -58,7 +57,7 @@ export default function ZonesMapInner({ data }: ZonesMapInnerProps) {
       const statut = props?.statut as string;
       const couleurEquipe = props?.equipe_couleur as string | null;
 
-      let fillColor = couleurEquipe || '#3b82f6';
+      const fillColor = couleurEquipe || '#3b82f6';
       let fillOpacity = 0.4;
 
       // Modifier l'opacité selon le statut
@@ -84,16 +83,16 @@ export default function ZonesMapInner({ data }: ZonesMapInnerProps) {
 
   // Gestion du hover
   const onEachFeature = useMemo(
-    () => (feature: any, layer: any) => {
+    () => (feature: Feature<Geometry>, layer: Layer) => {
       layer.on({
-        mouseover: (e: any) => {
-          const layer = e.target;
-          layer.setStyle({
+        mouseover: (e: LeafletMouseEvent) => {
+          const targetLayer = e.target;
+          targetLayer.setStyle({
             weight: 3,
             fillOpacity: 0.7,
           });
         },
-        mouseout: (e: any) => {
+        mouseout: (e: LeafletMouseEvent) => {
           if (geoRef.current) {
             geoRef.current.resetStyle(e.target);
           }
