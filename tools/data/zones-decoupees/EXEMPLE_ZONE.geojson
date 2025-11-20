@@ -1,0 +1,28 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "code_zone": "NE-01",
+        "nom_zone": "Ceyras - Centre Ville",
+        "commune": "Ceyras",
+        "population_estimee": 280
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [3.4369, 43.6733],
+            [3.4388, 43.6728],
+            [3.4395, 43.6715],
+            [3.4380, 43.6702],
+            [3.4362, 43.6708],
+            [3.4358, 43.6720],
+            [3.4369, 43.6733]
+          ]
+        ]
+      }
+    }
+  ]
+}
