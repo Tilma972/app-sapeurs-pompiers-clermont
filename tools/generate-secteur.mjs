@@ -1,4 +1,4 @@
-// tools/generate-secteurs.mjs
+﻿// tools/generate-secteur.mjs
 import fs from 'node:fs';
 import path from 'node:path';
 
