@@ -47,7 +47,7 @@ export default async function AdminZonesTourneesPage() {
 
     return {
       ...equipe,
-      stats: stats || {
+      stats: (stats || {
         total_zones: 0,
         zones_a_faire: 0,
         zones_en_cours: 0,
@@ -56,6 +56,15 @@ export default async function AdminZonesTourneesPage() {
         total_calendriers_alloues: 0,
         total_calendriers_distribues: 0,
         progression_pct: 0
+      }) as {
+        total_zones: number;
+        zones_a_faire: number;
+        zones_en_cours: number;
+        zones_terminees: number;
+        total_population: number;
+        total_calendriers_alloues: number;
+        total_calendriers_distribues: number;
+        progression_pct: number;
       }
     };
   });
