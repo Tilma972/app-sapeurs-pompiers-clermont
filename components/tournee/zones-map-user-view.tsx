@@ -1,9 +1,40 @@
-"use client";
-
 import { useEffect, useRef, useState } from "react";
 import L, { type Layer, type LeafletMouseEvent } from "leaflet";
 import type { Feature, Geometry } from "geojson";
 import "leaflet/dist/leaflet.css";
+
+// Helper pour extraire la géométrie depuis différents formats
+function extractGeometry(geom: unknown): Geometry | null {
+  if (!geom) return null;
+
+  let parsed = geom;
+
+  // 1. Parser si c'est une string JSON
+  if (typeof parsed === 'string') {
+    try {
+      parsed = JSON.parse(parsed);
+    } catch (error) {
+      console.error("Failed to parse geom JSON:", error);
+      return null;
+    }
+  }
+
+  // 2. Vérifier la structure
+  const obj = parsed as Record<string, unknown>;
+
+  // Cas A: C'est une Feature GeoJSON complète → extraire .geometry
+  if (obj.type === 'Feature' && obj.geometry) {
+    return obj.geometry as Geometry;
+  }
+
+  // Cas B: C'est directement une Geometry (Polygon, MultiPolygon, etc.)
+  if (obj.type && ['Polygon', 'MultiPolygon', 'Point', 'LineString', 'MultiLineString', 'MultiPoint', 'GeometryCollection'].includes(obj.type as string)) {
+    return obj as Geometry;
+  }
+
+  console.error("Unknown geom format:", obj);
+  return null;
+}
 
 interface Zone {
   id: string;
@@ -18,7 +49,7 @@ interface Zone {
   equipe_couleur: string | null;
   pompier_id: string | null;
   pompier_nom: string | null;
-  geom: Geometry; // ✅ Typage fort au lieu de unknown
+  geom: unknown; // ✅ Accepte Feature, Geometry ou string JSON
 }
 
 interface UserZone {
@@ -29,7 +60,7 @@ interface UserZone {
   nb_calendriers_alloues: number | null;
   nb_calendriers_distribues: number | null;
   statut: string;
-  geom: Geometry; // ✅ Typage fort au lieu de unknown
+  geom: unknown; // ✅ Accepte Feature, Geometry ou string JSON
 }
 
 interface ZonesMapUserViewProps {
@@ -207,10 +238,17 @@ export function ZonesMapUserView({
 
     zones.forEach((zone) => {
       try {
+        // ✅ Extraire la vraie géométrie (gère Feature/Geometry/string)
+        const geometry = extractGeometry(zone.geom);
+        if (!geometry) {
+          console.warn("Skipping zone with invalid geom:", zone.code_zone);
+          return;
+        }
+
         const feature: Feature<Geometry> = {
           type: "Feature",
-          geometry: zone.geom,
-          properties: zone as any, // ✅ Plus propre que 'as unknown as Record'
+          geometry, // ✅ Géométrie propre extraite
+          properties: zone as any,
         };
 
         const geoJsonLayer = L.geoJSON(feature, {
@@ -236,17 +274,23 @@ export function ZonesMapUserView({
         const userZoneData = zones.find((z) => z.id === userZone.id);
         if (userZoneData) {
           try {
-            const feature: Feature<Geometry> = {
-              type: "Feature",
-              geometry: userZoneData.geom,
-              properties: userZoneData as any,
-            };
-            const userGeoJson = L.geoJSON(feature);
-            map.fitBounds(userGeoJson.getBounds(), { padding: [50, 50] });
+            // ✅ Extraire la géométrie propre
+            const geometry = extractGeometry(userZoneData.geom);
+            if (geometry) {
+              const feature: Feature<Geometry> = {
+                type: "Feature",
+                geometry, // ✅ Géométrie extraite
+                properties: userZoneData as any,
+              };
+              const userGeoJson = L.geoJSON(feature);
+              map.fitBounds(userGeoJson.getBounds(), { padding: [50, 50] });
+            } else {
+              throw new Error("Invalid user zone geometry");
+            }
           } catch {
             // Fallback : centrer sur toutes les zones
             const bounds = L.latLngBounds(allBounds);
-            if (bounds.isValid()) { // ✅ Sécurité supplémentaire
+            if (bounds.isValid()) {
               map.fitBounds(bounds, { padding: [20, 20] });
             }
           }
@@ -254,7 +298,7 @@ export function ZonesMapUserView({
       } else {
         // Centrer sur toutes les zones
         const bounds = L.latLngBounds(allBounds);
-        if (bounds.isValid()) { // ✅ Sécurité supplémentaire
+        if (bounds.isValid()) {
           map.fitBounds(bounds, { padding: [20, 20] });
         }
       }
