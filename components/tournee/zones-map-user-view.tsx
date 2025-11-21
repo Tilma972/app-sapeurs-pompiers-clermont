@@ -18,7 +18,7 @@ interface Zone {
   equipe_couleur: string | null;
   pompier_id: string | null;
   pompier_nom: string | null;
-  geom: Geometry; // ✅ Typage fort au lieu de unknown
+  geom: Geometry;
 }
 
 interface UserZone {
@@ -29,7 +29,7 @@ interface UserZone {
   nb_calendriers_alloues: number | null;
   nb_calendriers_distribues: number | null;
   statut: string;
-  geom: Geometry; // ✅ Typage fort au lieu de unknown
+  geom: Geometry;
 }
 
 interface ZonesMapUserViewProps {
@@ -46,31 +46,30 @@ export function ZonesMapUserView({
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<L.Map | null>(null);
   const layersGroup = useRef<L.LayerGroup | null>(null);
-  const isMapInitialized = useRef(false); // ✅ Évite recentrage forcé à chaque update
-  const prevUserZoneId = useRef<string | null>(null); // ✅ Détecte changement d'assignation
+  
+  // Refs pour gérer l'état du zoom sans provoquer de re-render
+  const isMapInitialized = useRef(false);
+  const prevUserZoneId = useRef<string | null>(null);
+  
   const [showLegend, setShowLegend] = useState(true);
 
-  // ✅ Effect pour initialiser la carte (une seule fois)
+  // 1. Initialisation de la carte (Exécuté une seule fois)
   useEffect(() => {
     if (!mapContainer.current || mapInstance.current) return;
 
-    // Créer la carte
     const map = L.map(mapContainer.current, {
       center: [43.6275, 3.4331],
       zoom: 12,
       zoomControl: true,
     });
 
-    // Tuiles OpenStreetMap
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       attribution:
         '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
       maxZoom: 18,
     }).addTo(map);
 
-    // Créer le groupe de layers
     layersGroup.current = L.layerGroup().addTo(map);
-
     mapInstance.current = map;
 
     return () => {
@@ -82,17 +81,16 @@ export function ZonesMapUserView({
     };
   }, []);
 
-  // ✅ Effect séparé pour mettre à jour les zones (réactif aux changements)
+  // 2. Mise à jour des données (Exécuté quand les props changent)
   useEffect(() => {
     if (!mapInstance.current || !layersGroup.current) return;
 
     const map = mapInstance.current;
     const layers = layersGroup.current;
 
-    // Nettoyer les anciens layers
     layers.clearLayers();
 
-    // Fonction pour obtenir le style d'une zone
+    // --- Définitions des styles et popups ---
     const getZoneStyle = (zone: Zone): L.PathOptions => {
       const isUserZone = userZone?.id === zone.id;
 
@@ -123,7 +121,6 @@ export function ZonesMapUserView({
       }
     };
 
-    // Fonction pour créer le popup
     const createPopup = (zone: Zone): string => {
       const isUserZone = userZone?.id === zone.id;
       const progression = zone.nb_calendriers_alloues
@@ -143,7 +140,7 @@ export function ZonesMapUserView({
           }
           <div class="font-bold text-base mb-2">${zone.code_zone}</div>
           <div class="text-sm mb-3">${zone.nom_zone}</div>
-
+          
           <div class="space-y-1 text-xs">
             <div class="flex justify-between">
               <span class="text-muted-foreground">Population :</span>
@@ -163,12 +160,10 @@ export function ZonesMapUserView({
             </div>
             ${
               zone.pompier_nom
-                ? `
-              <div class="flex justify-between pt-2 border-t">
-                <span class="text-muted-foreground">Pompier :</span>
-                <span class="font-medium">${zone.pompier_nom}</span>
-              </div>
-            `
+                ? `<div class="flex justify-between pt-2 border-t">
+                    <span class="text-muted-foreground">Pompier :</span>
+                    <span class="font-medium">${zone.pompier_nom}</span>
+                   </div>`
                 : '<div class="pt-2 border-t text-muted-foreground italic">Non assignée</div>'
             }
           </div>
@@ -176,41 +171,36 @@ export function ZonesMapUserView({
       `;
     };
 
-    // Fonction pour gérer les événements de survol
     const onEachFeature = (feature: Feature<Geometry>, layer: Layer) => {
       const zone = feature.properties as Zone;
-
-      layer.bindPopup(createPopup(zone), {
-        maxWidth: 300,
-        className: "custom-popup",
-      });
+      layer.bindPopup(createPopup(zone), { maxWidth: 300, className: "custom-popup" });
 
       layer.on({
         mouseover: (e: LeafletMouseEvent) => {
-          const targetLayer = e.target as L.Path; // ✅ Cast explicite
+          const targetLayer = e.target as L.Path;
           const isUserZone = userZone?.id === zone.id;
-
           targetLayer.setStyle({
             weight: isUserZone ? 5 : 3,
             fillOpacity: isUserZone ? 0.7 : 0.4,
           });
         },
         mouseout: (e: LeafletMouseEvent) => {
-          const targetLayer = e.target as L.Path; // ✅ Cast explicite
+          const targetLayer = e.target as L.Path;
           targetLayer.setStyle(getZoneStyle(zone));
         },
       });
     };
 
-    // Ajouter toutes les zones sur la carte
+    // --- Ajout des couches ---
     const allBounds: L.LatLngBounds[] = [];
 
     zones.forEach((zone) => {
       try {
-        const feature: Feature<Geometry> = {
+        // ✅ CORRECTION 1 : Typage précis avec Feature<Geometry, Zone>
+        const feature: Feature<Geometry, Zone> = {
           type: "Feature",
           geometry: zone.geom,
-          properties: zone as any, // ✅ Plus propre que 'as unknown as Record'
+          properties: zone, // Plus besoin de 'as any'
         };
 
         const geoJsonLayer = L.geoJSON(feature, {
@@ -225,45 +215,41 @@ export function ZonesMapUserView({
       }
     });
 
-    // ✅ Recentrer intelligemment : uniquement si premier rendu OU userZone vient de changer
+    // --- Logique de recentrage intelligente ---
     const userZoneChanged = prevUserZoneId.current !== userZone?.id;
-    const shouldFitBounds =
-      (!isMapInitialized.current || userZoneChanged) && allBounds.length > 0;
+    const shouldFitBounds = (!isMapInitialized.current || userZoneChanged) && allBounds.length > 0;
 
     if (shouldFitBounds) {
       if (userZone && zones.find((z) => z.id === userZone.id)) {
-        // Centrer sur la zone du pompier
+        // Cas A : L'utilisateur a une zone -> Focus sur sa zone
         const userZoneData = zones.find((z) => z.id === userZone.id);
         if (userZoneData) {
           try {
-            const feature: Feature<Geometry> = {
+            // ✅ CORRECTION 2 : Typage précis avec Feature<Geometry, Zone>
+            const feature: Feature<Geometry, Zone> = {
               type: "Feature",
               geometry: userZoneData.geom,
-              properties: userZoneData as any,
+              properties: userZoneData, // Plus besoin de 'as any'
             };
             const userGeoJson = L.geoJSON(feature);
             map.fitBounds(userGeoJson.getBounds(), { padding: [50, 50] });
           } catch {
-            // Fallback : centrer sur toutes les zones
             const bounds = L.latLngBounds(allBounds);
-            if (bounds.isValid()) { // ✅ Sécurité supplémentaire
-              map.fitBounds(bounds, { padding: [20, 20] });
-            }
+            if (bounds.isValid()) map.fitBounds(bounds, { padding: [20, 20] });
           }
         }
       } else {
-        // Centrer sur toutes les zones
+        // Cas B : Pas de zone (ou zone retirée) -> Vue d'ensemble
         const bounds = L.latLngBounds(allBounds);
-        if (bounds.isValid()) { // ✅ Sécurité supplémentaire
-          map.fitBounds(bounds, { padding: [20, 20] });
-        }
+        if (bounds.isValid()) map.fitBounds(bounds, { padding: [20, 20] });
       }
 
-      // Marquer comme initialisé et sauvegarder l'ID de la zone
+      // Mise à jour des témoins
       isMapInitialized.current = true;
       prevUserZoneId.current = userZone?.id || null;
     }
-  }, [zones, userZone, equipeColor]); // ✅ Réactif aux changements
+
+  }, [zones, userZone, equipeColor]);
 
   return (
     <div className="relative h-full w-full">
@@ -274,34 +260,15 @@ export function ZonesMapUserView({
         <div className="absolute bottom-4 right-4 bg-card border rounded-lg shadow-lg p-3 text-xs z-[1000]">
           <div className="flex items-center justify-between mb-2">
             <span className="font-semibold">Légende</span>
-            <button
-              onClick={() => setShowLegend(false)}
-              className="text-muted-foreground hover:text-foreground"
-            >
-              ✕
-            </button>
+            <button onClick={() => setShowLegend(false)} className="text-muted-foreground hover:text-foreground">✕</button>
           </div>
           <div className="space-y-1.5">
             <div className="flex items-center gap-2">
-              <div
-                className="w-4 h-4 rounded border-2"
-                style={{
-                  backgroundColor: equipeColor,
-                  borderColor: equipeColor,
-                  opacity: 0.7,
-                }}
-              />
+              <div className="w-4 h-4 rounded border-2" style={{ backgroundColor: equipeColor, borderColor: equipeColor, opacity: 0.7 }} />
               <span>Ta zone</span>
             </div>
             <div className="flex items-center gap-2">
-              <div
-                className="w-4 h-4 rounded border"
-                style={{
-                  backgroundColor: equipeColor,
-                  borderColor: equipeColor,
-                  opacity: 0.3,
-                }}
-              />
+              <div className="w-4 h-4 rounded border" style={{ backgroundColor: equipeColor, borderColor: equipeColor, opacity: 0.3 }} />
               <span>Zone de collègue</span>
             </div>
             <div className="flex items-center gap-2">
@@ -312,23 +279,16 @@ export function ZonesMapUserView({
         </div>
       )}
 
-      {/* Bouton pour réafficher la légende */}
       {!showLegend && (
-        <button
-          onClick={() => setShowLegend(true)}
-          className="absolute bottom-4 right-4 bg-card border rounded-lg shadow-lg p-2 text-xs z-[1000] hover:bg-accent"
-        >
+        <button onClick={() => setShowLegend(true)} className="absolute bottom-4 right-4 bg-card border rounded-lg shadow-lg p-2 text-xs z-[1000] hover:bg-accent">
           📖 Légende
         </button>
       )}
 
-      {/* Message si pas de zones */}
       {zones.length === 0 && (
         <div className="absolute inset-0 flex items-center justify-center bg-background/50 z-[1000]">
           <div className="bg-card border rounded-lg shadow-lg p-6 text-center">
-            <p className="text-muted-foreground">
-              Aucune zone de tournée disponible pour ce secteur
-            </p>
+            <p className="text-muted-foreground">Aucune zone de tournée disponible pour ce secteur</p>
           </div>
         </div>
       )}
