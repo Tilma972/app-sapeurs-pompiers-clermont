@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Calendar, Camera, Gift, Home, ShoppingBag, Sliders, User, Users, Wallet, Lightbulb, Shield, UserCheck, Building2, Settings, Image, Trophy } from "lucide-react";
+import { Calendar, Camera, Gift, Home, ShoppingBag, Sliders, User, Users, Wallet, Lightbulb, Shield, UserCheck, Building2, Settings, Image, Trophy, MapPin, Package, Webhook } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { LogoutButton } from "@/components/logout-button";
 
@@ -53,7 +53,7 @@ export function MobileNav() {
 
   return (
     <div className="flex h-full flex-col">
-      <nav className="flex-1 px-2 py-4 space-y-2">
+      <nav className="flex-1 px-2 py-4 space-y-2 overflow-y-auto">
         {navigation.map((item) => {
           const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
           const Icon = item.icon;
@@ -83,12 +83,15 @@ export function MobileNav() {
               { name: "Liste blanche", href: "/admin/whitelist", icon: Shield },
               { name: "Utilisateurs", href: "/admin/users", icon: Users },
               { name: "Équipes", href: "/admin/equipes", icon: UserCheck },
+              { name: "Zones de tournée", href: "/admin/zones-tournees", icon: MapPin },
+              { name: "Suivi calendriers", href: "/admin/calendriers-suivi", icon: Package },
               { name: "Partenaires", href: "/admin/partenaires", icon: Building2 },
               { name: "Avantages", href: "/admin/avantages", icon: Gift },
               { name: "Produits", href: "/admin/produits", icon: ShoppingBag },
               { name: "Chèques", href: "/admin/cheques", icon: Wallet },
               { name: "Reçus fiscaux", href: "/admin/receipts", icon: Gift },
               { name: "Modération galerie", href: "/admin/gallery-moderation", icon: Image },
+              { name: "Webhooks", href: "/admin/webhooks", icon: Webhook },
               { name: "Paramètres", href: "/admin/settings", icon: Settings },
             ].map((item) => {
               const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
