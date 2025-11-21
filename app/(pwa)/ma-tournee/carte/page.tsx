@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
-import SectorMapFullscreen from "@/components/tournee/sector-map-fullscreen";
+import { ZonesMapUserView } from "@/components/tournee/zones-map-user-view";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -21,7 +21,7 @@ export default async function CarteSecteurt() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/auth/login");
 
-  // Récupérer le secteur de l'équipe
+  // Récupérer le secteur et l'équipe de l'utilisateur
   const { data: profile } = await supabase
     .from("profiles")
     .select("team_id")
@@ -34,7 +34,7 @@ export default async function CarteSecteurt() {
 
   const { data: equipe } = await supabase
     .from("equipes")
-    .select("secteur")
+    .select("secteur, couleur, nom")
     .eq("id", profile.team_id)
     .single();
 
@@ -42,6 +42,20 @@ export default async function CarteSecteurt() {
   if (!secteur) {
     redirect("/ma-tournee");
   }
+
+  // Récupérer toutes les zones du secteur (pour le contexte)
+  const { data: zones } = await supabase
+    .from("zones_tournees_enrichies")
+    .select("*")
+    .eq("equipe_secteur", secteur)
+    .order("code_zone");
+
+  // Récupérer la zone assignée au pompier
+  const { data: userZone } = await supabase
+    .from("zones_tournees")
+    .select("id, code_zone, nom_zone, population_estimee, nb_calendriers_alloues, nb_calendriers_distribues, statut, geom")
+    .eq("pompier_id", user.id)
+    .single();
 
   const secteurLabel = SECTEUR_LABELS[secteur] || secteur;
 
@@ -63,7 +77,10 @@ export default async function CarteSecteurt() {
         <div className="flex-1 text-center">
           <h1 className="text-lg font-semibold">📍 {secteurLabel}</h1>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Zone en rouge = secteur assigné
+            {userZone
+              ? `Ta zone : ${userZone.code_zone} - ${userZone.nom_zone}`
+              : "Aucune zone assignée"
+            }
           </p>
         </div>
         <div className="w-20"></div> {/* Spacer pour centrer le titre */}
@@ -71,7 +88,11 @@ export default async function CarteSecteurt() {
 
       {/* Carte plein écran */}
       <div className="flex-1">
-        <SectorMapFullscreen secteur={secteur} />
+        <ZonesMapUserView
+          zones={zones || []}
+          userZone={userZone}
+          equipeColor={equipe?.couleur || "#3b82f6"}
+        />
       </div>
     </div>
   );

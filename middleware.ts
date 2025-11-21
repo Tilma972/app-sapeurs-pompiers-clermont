@@ -1,13 +1,14 @@
 import { updateSession } from "@/lib/supabase/middleware";
-import { NextResponse, type NextRequest } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 
 export async function middleware(request: NextRequest) {
-  // Migration: Redirection des anciennes routes admin
-  if (request.nextUrl.pathname.startsWith("/dashboard/admin")) {
-    const newPath = request.nextUrl.pathname.replace("/dashboard/admin", "/admin");
-    const url = request.nextUrl.clone();
-    url.pathname = newPath;
-    return NextResponse.redirect(url);
+  const { pathname } = request.nextUrl;
+
+  // Redirection: ancien layout dashboard/admin/* → nouvelle architecture PWA /admin/*
+  // Note: Les routes dans app/(pwa)/dashboard/ restent sur /dashboard/* (pas de redirection)
+  if (pathname.startsWith('/dashboard/admin/')) {
+    const adminPath = pathname.replace('/dashboard/admin', '/admin');
+    return NextResponse.redirect(new URL(adminPath, request.url));
   }
 
   return await updateSession(request);
