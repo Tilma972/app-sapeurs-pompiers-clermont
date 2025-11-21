@@ -18,7 +18,7 @@ interface Zone {
   equipe_couleur: string | null;
   pompier_id: string | null;
   pompier_nom: string | null;
-  geom: unknown;
+  geom: Geometry; // ✅ Typage fort au lieu de unknown
 }
 
 interface UserZone {
@@ -29,7 +29,7 @@ interface UserZone {
   nb_calendriers_alloues: number | null;
   nb_calendriers_distribues: number | null;
   statut: string;
-  geom: unknown;
+  geom: Geometry; // ✅ Typage fort au lieu de unknown
 }
 
 interface ZonesMapUserViewProps {
@@ -45,8 +45,10 @@ export function ZonesMapUserView({
 }: ZonesMapUserViewProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<L.Map | null>(null);
+  const layersGroup = useRef<L.LayerGroup | null>(null); // ✅ Groupe pour gérer les layers
   const [showLegend, setShowLegend] = useState(true);
 
+  // ✅ Effect pour initialiser la carte (une seule fois)
   useEffect(() => {
     if (!mapContainer.current || mapInstance.current) return;
 
@@ -64,14 +66,35 @@ export function ZonesMapUserView({
       maxZoom: 18,
     }).addTo(map);
 
+    // Créer le groupe de layers
+    layersGroup.current = L.layerGroup().addTo(map);
+
     mapInstance.current = map;
+
+    return () => {
+      if (mapInstance.current) {
+        mapInstance.current.remove();
+        mapInstance.current = null;
+        layersGroup.current = null;
+      }
+    };
+  }, []);
+
+  // ✅ Effect séparé pour mettre à jour les zones (réactif aux changements)
+  useEffect(() => {
+    if (!mapInstance.current || !layersGroup.current) return;
+
+    const map = mapInstance.current;
+    const layers = layersGroup.current;
+
+    // Nettoyer les anciens layers
+    layers.clearLayers();
 
     // Fonction pour obtenir le style d'une zone
     const getZoneStyle = (zone: Zone): L.PathOptions => {
       const isUserZone = userZone?.id === zone.id;
 
       if (isUserZone) {
-        // Zone du pompier connecté : couleur vive + bordure épaisse
         return {
           color: equipeColor,
           weight: 4,
@@ -80,7 +103,6 @@ export function ZonesMapUserView({
           fillOpacity: 0.5,
         };
       } else if (zone.pompier_id) {
-        // Zone assignée à un autre pompier : couleur équipe légère
         return {
           color: zone.equipe_couleur || "#94a3b8",
           weight: 2,
@@ -89,7 +111,6 @@ export function ZonesMapUserView({
           fillOpacity: 0.2,
         };
       } else {
-        // Zone non assignée : gris
         return {
           color: "#64748b",
           weight: 1,
@@ -164,7 +185,7 @@ export function ZonesMapUserView({
 
       layer.on({
         mouseover: (e: LeafletMouseEvent) => {
-          const targetLayer = e.target;
+          const targetLayer = e.target as L.Path; // ✅ Cast explicite
           const isUserZone = userZone?.id === zone.id;
 
           targetLayer.setStyle({
@@ -173,11 +194,8 @@ export function ZonesMapUserView({
           });
         },
         mouseout: (e: LeafletMouseEvent) => {
-          const targetLayer = e.target;
+          const targetLayer = e.target as L.Path; // ✅ Cast explicite
           targetLayer.setStyle(getZoneStyle(zone));
-        },
-        click: () => {
-          // Le popup s'ouvre automatiquement
         },
       });
     };
@@ -187,18 +205,18 @@ export function ZonesMapUserView({
 
     zones.forEach((zone) => {
       try {
-        const geojson = zone.geom as { type: string; coordinates: unknown };
         const feature: Feature<Geometry> = {
           type: "Feature",
-          geometry: geojson as Geometry,
+          geometry: zone.geom, // ✅ Plus besoin de cast, déjà typé
           properties: zone as unknown as Record<string, unknown>,
         };
 
         const geoJsonLayer = L.geoJSON(feature, {
           style: getZoneStyle(zone),
           onEachFeature,
-        }).addTo(map);
+        });
 
+        geoJsonLayer.addTo(layers);
         allBounds.push(geoJsonLayer.getBounds());
       } catch (error) {
         console.error("Error adding zone:", zone.code_zone, error);
@@ -212,13 +230,9 @@ export function ZonesMapUserView({
         const userZoneData = zones.find((z) => z.id === userZone.id);
         if (userZoneData) {
           try {
-            const geojson = userZoneData.geom as {
-              type: string;
-              coordinates: unknown;
-            };
             const feature: Feature<Geometry> = {
               type: "Feature",
-              geometry: geojson as Geometry,
+              geometry: userZoneData.geom, // ✅ Plus besoin de cast
               properties: userZoneData as unknown as Record<string, unknown>,
             };
             const userGeoJson = L.geoJSON(feature);
@@ -235,14 +249,7 @@ export function ZonesMapUserView({
         map.fitBounds(bounds, { padding: [20, 20] });
       }
     }
-
-    return () => {
-      if (mapInstance.current) {
-        mapInstance.current.remove();
-        mapInstance.current = null;
-      }
-    };
-  }, [zones, userZone, equipeColor]);
+  }, [zones, userZone, equipeColor]); // ✅ Réactif aux changements
 
   return (
     <div className="relative h-full w-full">
