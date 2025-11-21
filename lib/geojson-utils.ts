@@ -40,7 +40,8 @@ export function extractGeometry(geom: unknown): Geometry | null {
 
   // Cas C: C'est directement une Geometry (Polygon, MultiPolygon, etc.)
   if (obj.type && ['Polygon', 'MultiPolygon', 'Point', 'LineString', 'MultiLineString', 'MultiPoint', 'GeometryCollection'].includes(obj.type as string)) {
-    return obj as Geometry;
+    // ✅ CORRECTION : Double cast pour satisfaire TypeScript
+    return obj as unknown as Geometry;
   }
 
   console.error("Unknown geom format:", obj);
