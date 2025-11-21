@@ -105,7 +105,7 @@ export function ZoneAssignDialog({
               <SelectTrigger id="pompier">
                 <SelectValue placeholder="Sélectionner un pompier" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="max-h-[300px] overflow-y-auto">
                 <SelectItem value="unassigned">
                   <span className="text-muted-foreground italic">Non assigné</span>
                 </SelectItem>
