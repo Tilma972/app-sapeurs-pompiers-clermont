@@ -2,39 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import L, { type Layer, type LeafletMouseEvent } from "leaflet";
 import type { Feature, Geometry } from "geojson";
 import "leaflet/dist/leaflet.css";
-
-// Helper pour extraire la géométrie depuis différents formats
-function extractGeometry(geom: unknown): Geometry | null {
-  if (!geom) return null;
-
-  let parsed = geom;
-
-  // 1. Parser si c'est une string JSON
-  if (typeof parsed === 'string') {
-    try {
-      parsed = JSON.parse(parsed);
-    } catch (error) {
-      console.error("Failed to parse geom JSON:", error);
-      return null;
-    }
-  }
-
-  // 2. Vérifier la structure
-  const obj = parsed as Record<string, unknown>;
-
-  // Cas A: C'est une Feature GeoJSON complète → extraire .geometry
-  if (obj.type === 'Feature' && obj.geometry) {
-    return obj.geometry as Geometry;
-  }
-
-  // Cas B: C'est directement une Geometry (Polygon, MultiPolygon, etc.)
-  if (obj.type && ['Polygon', 'MultiPolygon', 'Point', 'LineString', 'MultiLineString', 'MultiPoint', 'GeometryCollection'].includes(obj.type as string)) {
-    return obj as Geometry;
-  }
-
-  console.error("Unknown geom format:", obj);
-  return null;
-}
+import { extractGeometry } from "@/lib/geojson-utils";
 
 interface Zone {
   id: string;
