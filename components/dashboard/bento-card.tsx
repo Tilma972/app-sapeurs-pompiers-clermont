@@ -31,8 +31,8 @@ export function BentoCard({
             href={href}
             className={cn(
                 "group relative col-span-1 flex flex-col justify-between overflow-hidden rounded-xl",
-                "bg-background/40 backdrop-blur-md border border-white/10 shadow-sm hover:shadow-md transition-all duration-300",
-                "hover:bg-background/60",
+                "bg-card border-border/50 border shadow-sm hover:shadow-xl transition-all duration-300",
+                "hover:scale-[1.02]",
                 className
             )}
         >
@@ -40,19 +40,22 @@ export function BentoCard({
             <div className="absolute inset-0 z-0">
                 {background}
                 {gradient && (
-                    <div className={cn("absolute inset-0 opacity-10 group-hover:opacity-20 transition-opacity bg-gradient-to-br", gradient)} />
+                    <div className={cn("absolute inset-0 opacity-15 group-hover:opacity-30 transition-opacity bg-gradient-to-br", gradient)} />
                 )}
             </div>
 
-            <div className="relative z-10 flex flex-col gap-1 p-6">
-                <div className={cn("flex items-center gap-2 mb-2")}>
-                    <div className={cn("p-2 rounded-lg bg-background/50 backdrop-blur-sm shadow-sm ring-1 ring-black/5 dark:ring-white/10")}>
-                        <Icon className="h-5 w-5 text-foreground/80" />
+            <div className="relative z-10 flex flex-col gap-3 p-6">
+                <div className={cn("flex items-center gap-3 mb-2")}>
+                    <div className={cn(
+                        "p-2.5 rounded-xl bg-background/80 backdrop-blur-sm shadow-sm ring-1 ring-black/5 dark:ring-white/10",
+                        "group-hover:bg-background transition-colors"
+                    )}>
+                        <Icon className="h-6 w-6 text-foreground" />
                     </div>
                     {badges && badges.length > 0 && (
-                        <div className="flex gap-1">
+                        <div className="flex gap-1.5 flex-wrap">
                             {badges.map((badge) => (
-                                <span key={badge} className="px-2 py-0.5 text-[10px] font-medium rounded-full bg-primary/10 text-primary border border-primary/20">
+                                <span key={badge} className="px-2.5 py-1 text-xs font-semibold rounded-full bg-primary/10 text-primary border border-primary/20 shadow-sm">
                                     {badge}
                                 </span>
                             ))}
@@ -60,10 +63,10 @@ export function BentoCard({
                     )}
                 </div>
 
-                <h3 className="font-semibold text-lg tracking-tight text-foreground">
+                <h3 className="font-bold text-xl tracking-tight text-foreground group-hover:text-primary transition-colors">
                     {title}
                 </h3>
-                <p className="text-sm text-muted-foreground max-w-[90%]">
+                <p className="text-sm text-muted-foreground/90 leading-relaxed max-w-[95%]">
                     {description}
                 </p>
             </div>
@@ -73,14 +76,14 @@ export function BentoCard({
                     "pointer-events-none absolute bottom-0 flex w-full translate-y-10 transform-gpu flex-row items-center p-4 opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100"
                 )}
             >
-                <div className="flex flex-row items-center gap-2 rounded-full bg-background/90 px-3 py-1 text-xs font-medium shadow-sm backdrop-blur-sm ring-1 ring-black/5 dark:ring-white/10">
+                <div className="flex flex-row items-center gap-2 rounded-full bg-background/95 px-4 py-1.5 text-sm font-semibold shadow-md backdrop-blur-md ring-1 ring-black/5 dark:ring-white/10 text-primary">
                     <span>{cta}</span>
-                    <ArrowRight className="h-3 w-3" />
+                    <ArrowRight className="h-4 w-4" />
                 </div>
             </div>
 
             {/* Decorative gradient blob */}
-            <div className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-primary/5 blur-3xl group-hover:bg-primary/10 transition-colors" />
+            <div className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-primary/10 blur-3xl group-hover:bg-primary/20 transition-colors duration-500" />
         </Link>
     );
 }
