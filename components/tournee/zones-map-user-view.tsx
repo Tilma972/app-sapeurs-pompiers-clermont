@@ -191,7 +191,7 @@ export function ZonesMapUserView({
         const feature: Feature<Geometry> = {
           type: "Feature",
           geometry: geojson as Geometry,
-          properties: zone as Record<string, unknown>,
+          properties: zone as unknown as Record<string, unknown>,
         };
 
         const geoJsonLayer = L.geoJSON(feature, {
@@ -219,7 +219,7 @@ export function ZonesMapUserView({
             const feature: Feature<Geometry> = {
               type: "Feature",
               geometry: geojson as Geometry,
-              properties: userZoneData as Record<string, unknown>,
+              properties: userZoneData as unknown as Record<string, unknown>,
             };
             const userGeoJson = L.geoJSON(feature);
             map.fitBounds(userGeoJson.getBounds(), { padding: [50, 50] });
