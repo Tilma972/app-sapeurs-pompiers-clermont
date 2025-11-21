@@ -45,15 +45,15 @@ export function ZonesMapUserView({
 }: ZonesMapUserViewProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<L.Map | null>(null);
-  const layersGroup = useRef<L.LayerGroup | null>(null);
+  // ✅ IMPORTANT : On utilise FeatureGroup au lieu de LayerGroup car il possède la méthode .getBounds()
+  const layersGroup = useRef<L.FeatureGroup | null>(null); 
   
-  // Refs pour gérer l'état du zoom sans provoquer de re-render
   const isMapInitialized = useRef(false);
   const prevUserZoneId = useRef<string | null>(null);
   
   const [showLegend, setShowLegend] = useState(true);
 
-  // 1. Initialisation de la carte (Exécuté une seule fois)
+  // 1. Initialisation de la carte
   useEffect(() => {
     if (!mapContainer.current || mapInstance.current) return;
 
@@ -69,7 +69,8 @@ export function ZonesMapUserView({
       maxZoom: 18,
     }).addTo(map);
 
-    layersGroup.current = L.layerGroup().addTo(map);
+    // ✅ Utilisation de featureGroup() qui supporte getBounds() nativement
+    layersGroup.current = L.featureGroup().addTo(map);
     mapInstance.current = map;
 
     return () => {
@@ -81,7 +82,7 @@ export function ZonesMapUserView({
     };
   }, []);
 
-  // 2. Mise à jour des données (Exécuté quand les props changent)
+  // 2. Mise à jour des données
   useEffect(() => {
     if (!mapInstance.current || !layersGroup.current) return;
 
@@ -90,7 +91,7 @@ export function ZonesMapUserView({
 
     layers.clearLayers();
 
-    // --- Définitions des styles et popups ---
+    // --- Définitions des styles et popups (inchangées) ---
     const getZoneStyle = (zone: Zone): L.PathOptions => {
       const isUserZone = userZone?.id === zone.id;
 
@@ -192,24 +193,20 @@ export function ZonesMapUserView({
     };
 
     // --- Ajout des couches ---
-    const allBounds: L.LatLngBounds[] = [];
+    // Note : Plus besoin de 'allBounds' manuel car FeatureGroup gère ça pour nous
 
     zones.forEach((zone) => {
       try {
-        // ✅ CORRECTION 1 : Typage précis avec Feature<Geometry, Zone>
         const feature: Feature<Geometry, Zone> = {
           type: "Feature",
           geometry: zone.geom,
-          properties: zone, // Plus besoin de 'as any'
+          properties: zone,
         };
 
-        const geoJsonLayer = L.geoJSON(feature, {
+        L.geoJSON(feature, {
           style: getZoneStyle(zone),
           onEachFeature,
-        });
-
-        geoJsonLayer.addTo(layers);
-        allBounds.push(geoJsonLayer.getBounds());
+        }).addTo(layers); // Ajout au FeatureGroup
       } catch (error) {
         console.error("Error adding zone:", zone.code_zone, error);
       }
@@ -217,34 +214,37 @@ export function ZonesMapUserView({
 
     // --- Logique de recentrage intelligente ---
     const userZoneChanged = prevUserZoneId.current !== userZone?.id;
-    const shouldFitBounds = (!isMapInitialized.current || userZoneChanged) && allBounds.length > 0;
+    // On vérifie si le groupe a des layers via getLayers().length
+    const hasLayers = layers.getLayers().length > 0;
+    const shouldFitBounds = (!isMapInitialized.current || userZoneChanged) && hasLayers;
 
     if (shouldFitBounds) {
       if (userZone && zones.find((z) => z.id === userZone.id)) {
-        // Cas A : L'utilisateur a une zone -> Focus sur sa zone
+        // Cas A : Focus sur zone pompier
         const userZoneData = zones.find((z) => z.id === userZone.id);
         if (userZoneData) {
           try {
-            // ✅ CORRECTION 2 : Typage précis avec Feature<Geometry, Zone>
             const feature: Feature<Geometry, Zone> = {
               type: "Feature",
               geometry: userZoneData.geom,
-              properties: userZoneData, // Plus besoin de 'as any'
+              properties: userZoneData,
             };
             const userGeoJson = L.geoJSON(feature);
             map.fitBounds(userGeoJson.getBounds(), { padding: [50, 50] });
           } catch {
-            const bounds = L.latLngBounds(allBounds);
+            // Fallback : utiliser les bounds globales du groupe
+            // ✅ CORRECTION : layers.getBounds() marche directement avec L.FeatureGroup
+            const bounds = layers.getBounds();
             if (bounds.isValid()) map.fitBounds(bounds, { padding: [20, 20] });
           }
         }
       } else {
-        // Cas B : Pas de zone (ou zone retirée) -> Vue d'ensemble
-        const bounds = L.latLngBounds(allBounds);
+        // Cas B : Vue d'ensemble
+        // ✅ CORRECTION : Plus besoin de L.latLngBounds(allBounds)
+        const bounds = layers.getBounds();
         if (bounds.isValid()) map.fitBounds(bounds, { padding: [20, 20] });
       }
 
-      // Mise à jour des témoins
       isMapInitialized.current = true;
       prevUserZoneId.current = userZone?.id || null;
     }
@@ -254,8 +254,7 @@ export function ZonesMapUserView({
   return (
     <div className="relative h-full w-full">
       <div ref={mapContainer} className="h-full w-full" />
-
-      {/* Légende */}
+      {/* Légende et reste du JSX inchangés */}
       {showLegend && (
         <div className="absolute bottom-4 right-4 bg-card border rounded-lg shadow-lg p-3 text-xs z-[1000]">
           <div className="flex items-center justify-between mb-2">
