@@ -109,10 +109,13 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
     }
 }
 
+import { useSidebar } from "@/components/ui/sidebar"
+
 export function AppSidebar({ user, ...props }: AppSidebarProps) {
     const pathname = usePathname()
     const router = useRouter()
     const [role, setRole] = React.useState<string | null>(null)
+    const { setOpenMobile, isMobile } = useSidebar()
 
     React.useEffect(() => {
         let mounted = true;
@@ -144,9 +147,15 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
         router.push("/auth/login")
     }
 
+    const handleLinkClick = () => {
+        if (isMobile) {
+            setOpenMobile(false)
+        }
+    }
+
     return (
-        <Sidebar collapsible="icon" className="bg-background border-r" {...props}>
-            <SidebarHeader>
+        <Sidebar collapsible="icon" className="bg-background border-r [&>div]:bg-background" {...props}>
+            <SidebarHeader className="bg-background">
                 <div className="flex items-center gap-2 px-2 py-1">
                     <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
                         <Shield className="size-4" />
@@ -157,7 +166,7 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
                     </div>
                 </div>
             </SidebarHeader>
-            <SidebarContent>
+            <SidebarContent className="bg-background">
                 {/* General Navigation */}
                 <SidebarGroup>
                     <SidebarGroupLabel>Navigation</SidebarGroupLabel>
@@ -166,7 +175,7 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
                             {data.navMain[0].items.map((item) => (
                                 <SidebarMenuItem key={item.title}>
                                     <SidebarMenuButton asChild isActive={pathname === item.url || pathname.startsWith(item.url + "/")}>
-                                        <Link href={item.url}>
+                                        <Link href={item.url} onClick={handleLinkClick}>
                                             <item.icon />
                                             <span>{item.title}</span>
                                         </Link>
@@ -192,7 +201,7 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
                                     {data.navMain[1].items.map((item) => (
                                         <SidebarMenuItem key={item.title}>
                                             <SidebarMenuButton asChild isActive={pathname === item.url || pathname.startsWith(item.url + "/")}>
-                                                <Link href={item.url}>
+                                                <Link href={item.url} onClick={handleLinkClick}>
                                                     <item.icon />
                                                     <span>{item.title}</span>
                                                 </Link>
@@ -221,7 +230,7 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
                                         {data.admin[0].items.map((item) => (
                                             <SidebarMenuItem key={item.title}>
                                                 <SidebarMenuButton asChild isActive={pathname === item.url || pathname.startsWith(item.url + "/")}>
-                                                    <Link href={item.url}>
+                                                    <Link href={item.url} onClick={handleLinkClick}>
                                                         <item.icon />
                                                         <span>{item.title}</span>
                                                     </Link>
@@ -235,7 +244,7 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
                     </Collapsible>
                 )}
             </SidebarContent>
-            <SidebarFooter>
+            <SidebarFooter className="bg-background">
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild>
