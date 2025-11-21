@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useRef, useState } from "react";
 import L, { type Layer, type LeafletMouseEvent } from "leaflet";
 import type { Feature, Geometry } from "geojson";
