@@ -1,7 +1,15 @@
 import { updateSession } from "@/lib/supabase/middleware";
-import { type NextRequest } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 
 export async function middleware(request: NextRequest) {
+  // Migration: Redirection des anciennes routes admin
+  if (request.nextUrl.pathname.startsWith("/dashboard/admin")) {
+    const newPath = request.nextUrl.pathname.replace("/dashboard/admin", "/admin");
+    const url = request.nextUrl.clone();
+    url.pathname = newPath;
+    return NextResponse.redirect(url);
+  }
+
   return await updateSession(request);
 }
 

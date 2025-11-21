@@ -2,11 +2,9 @@
 
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { LogOut, Menu, Settings, User as UserIcon, Home } from "lucide-react"
+import { LogOut, Settings, User as UserIcon, Home } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
-import MobileNav from "@/components/mobile-nav"
+import { SidebarTrigger } from "@/components/ui/sidebar"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,7 +14,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { createClient } from "@/lib/supabase/client"
-import { useState, useEffect } from "react"
 
 interface PwaAppBarProps {
   title?: string
@@ -31,12 +28,6 @@ interface PwaAppBarProps {
 export function PwaAppBar({ title, user }: PwaAppBarProps) {
   const router = useRouter()
   const pathname = usePathname()
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-
-  // Fermer le menu mobile lors du changement de route
-  useEffect(() => {
-    setMobileMenuOpen(false)
-  }, [pathname])
 
   const getPageTitle = () => {
     if (title) return title
@@ -65,21 +56,7 @@ export function PwaAppBar({ title, user }: PwaAppBarProps) {
     <header className="sticky top-0 z-50 bg-background/95 border-b border-border backdrop-blur supports-[backdrop-filter]:bg-background/60 pt-safe">
       <div className="flex items-center justify-between h-16 px-4">
         {/* Hamburger menu for navigation */}
-        <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-          <SheetTrigger asChild>
-            <Button variant="ghost" size="icon" aria-label="Ouvrir le menu">
-              <Menu />
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="left" className="p-0 w-80 sm:w-96" aria-describedby={undefined}>
-            <div className="h-16 flex items-center px-4 border-b border-border">
-              <SheetHeader className="p-0">
-                <SheetTitle className="text-base">Menu</SheetTitle>
-              </SheetHeader>
-            </div>
-            <MobileNav />
-          </SheetContent>
-        </Sheet>
+        <SidebarTrigger />
 
         <h1 className="text-base font-semibold truncate max-w-[60%] text-center">
           {getPageTitle()}
