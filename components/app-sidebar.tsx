@@ -13,10 +13,7 @@ import {
     Wallet,
     Lightbulb,
     Shield,
-    UserCheck,
-    Building2,
     Settings,
-    Image,
     Trophy,
     ChevronRight,
     LogOut,
@@ -35,6 +32,9 @@ import {
     SidebarMenu,
     SidebarMenuButton,
     SidebarMenuItem,
+    SidebarMenuSub,
+    SidebarMenuSubButton,
+    SidebarMenuSubItem,
     SidebarRail,
 } from "@/components/ui/sidebar"
 import {
@@ -80,21 +80,40 @@ const data = {
     ],
     admin: [
         {
-            title: "Administration",
-            url: "#",
-            icon: Shield,
+            title: "Tournées",
+            icon: Calendar,
             items: [
-                { title: "Vue d'ensemble", url: "/admin", icon: Home },
-                { title: "Liste blanche", url: "/admin/whitelist", icon: Shield },
-                { title: "Utilisateurs", url: "/admin/users", icon: Users },
-                { title: "Équipes", url: "/admin/equipes", icon: UserCheck },
-                { title: "Partenaires", url: "/admin/partenaires", icon: Building2 },
-                { title: "Avantages", url: "/admin/avantages", icon: Gift },
-                { title: "Produits", url: "/admin/produits", icon: ShoppingBag },
-                { title: "Chèques", url: "/admin/cheques", icon: Wallet },
-                { title: "Reçus fiscaux", url: "/admin/receipts", icon: Gift },
-                { title: "Modération galerie", url: "/admin/gallery-moderation", icon: Image },
-                { title: "Paramètres", url: "/admin/settings", icon: Settings },
+                { title: "Suivi Calendriers", url: "/admin/calendriers-suivi" },
+                { title: "Zones & Tournées", url: "/admin/zones-tournees" },
+            ],
+        },
+        {
+            title: "Membres",
+            icon: Users,
+            items: [
+                { title: "Utilisateurs", url: "/admin/users" },
+                { title: "Équipes", url: "/admin/equipes" },
+                { title: "Liste blanche", url: "/admin/whitelist" },
+            ],
+        },
+        {
+            title: "Gestion",
+            icon: Wallet,
+            items: [
+                { title: "Partenaires", url: "/admin/partenaires" },
+                { title: "Avantages", url: "/admin/avantages" },
+                { title: "Produits", url: "/admin/produits" },
+                { title: "Chèques", url: "/admin/cheques" },
+                { title: "Reçus fiscaux", url: "/admin/receipts" },
+            ],
+        },
+        {
+            title: "Système",
+            icon: Settings,
+            items: [
+                { title: "Webhooks", url: "/admin/webhooks" },
+                { title: "Modération galerie", url: "/admin/gallery-moderation" },
+                { title: "Paramètres", url: "/admin/settings" },
             ],
         },
     ],
@@ -227,15 +246,42 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
                             <CollapsibleContent>
                                 <SidebarGroupContent>
                                     <SidebarMenu>
-                                        {data.admin[0].items.map((item) => (
-                                            <SidebarMenuItem key={item.title}>
-                                                <SidebarMenuButton asChild isActive={pathname === item.url || pathname.startsWith(item.url + "/")}>
-                                                    <Link href={item.url} onClick={handleLinkClick}>
-                                                        <item.icon />
-                                                        <span>{item.title}</span>
-                                                    </Link>
-                                                </SidebarMenuButton>
-                                            </SidebarMenuItem>
+                                        {/* Vue d'ensemble */}
+                                        <SidebarMenuItem>
+                                            <SidebarMenuButton asChild isActive={pathname === "/admin"}>
+                                                <Link href="/admin" onClick={handleLinkClick}>
+                                                    <Home />
+                                                    <span>Vue d&apos;ensemble</span>
+                                                </Link>
+                                            </SidebarMenuButton>
+                                        </SidebarMenuItem>
+
+                                        {/* Categories */}
+                                        {data.admin.map((category) => (
+                                            <Collapsible key={category.title} defaultOpen={false} className="group/sub-collapsible">
+                                                <SidebarMenuItem>
+                                                    <CollapsibleTrigger asChild>
+                                                        <SidebarMenuButton>
+                                                            <category.icon />
+                                                            <span>{category.title}</span>
+                                                            <ChevronRight className="ml-auto transition-transform group-data-[state=open]/sub-collapsible:rotate-90" />
+                                                        </SidebarMenuButton>
+                                                    </CollapsibleTrigger>
+                                                    <CollapsibleContent>
+                                                        <SidebarMenuSub>
+                                                            {category.items.map((item) => (
+                                                                <SidebarMenuSubItem key={item.title}>
+                                                                    <SidebarMenuSubButton asChild isActive={pathname === item.url}>
+                                                                        <Link href={item.url} onClick={handleLinkClick}>
+                                                                            <span>{item.title}</span>
+                                                                        </Link>
+                                                                    </SidebarMenuSubButton>
+                                                                </SidebarMenuSubItem>
+                                                            ))}
+                                                        </SidebarMenuSub>
+                                                    </CollapsibleContent>
+                                                </SidebarMenuItem>
+                                            </Collapsible>
                                         ))}
                                     </SidebarMenu>
                                 </SidebarGroupContent>
