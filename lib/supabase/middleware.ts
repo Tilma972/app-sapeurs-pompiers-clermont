@@ -48,8 +48,9 @@ export async function updateSession(request: NextRequest) {
   const user = data?.claims;
 
   // Gestion intelligente des routes publiques vs privées
-  const isPrivateRoute = 
+  const isPrivateRoute =
     request.nextUrl.pathname.startsWith("/dashboard") ||
+    request.nextUrl.pathname.startsWith("/admin") ||
     request.nextUrl.pathname.startsWith("/(pwa)") ||
     request.nextUrl.pathname.includes("/ma-tournee") ||
     request.nextUrl.pathname.includes("/avantages");
