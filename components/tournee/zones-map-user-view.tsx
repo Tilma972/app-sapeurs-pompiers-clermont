@@ -45,7 +45,9 @@ export function ZonesMapUserView({
 }: ZonesMapUserViewProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<L.Map | null>(null);
-  const layersGroup = useRef<L.LayerGroup | null>(null); // ✅ Groupe pour gérer les layers
+  const layersGroup = useRef<L.LayerGroup | null>(null);
+  const isMapInitialized = useRef(false); // ✅ Évite recentrage forcé à chaque update
+  const prevUserZoneId = useRef<string | null>(null); // ✅ Détecte changement d'assignation
   const [showLegend, setShowLegend] = useState(true);
 
   // ✅ Effect pour initialiser la carte (une seule fois)
@@ -207,8 +209,8 @@ export function ZonesMapUserView({
       try {
         const feature: Feature<Geometry> = {
           type: "Feature",
-          geometry: zone.geom, // ✅ Plus besoin de cast, déjà typé
-          properties: zone as unknown as Record<string, unknown>,
+          geometry: zone.geom,
+          properties: zone as any, // ✅ Plus propre que 'as unknown as Record'
         };
 
         const geoJsonLayer = L.geoJSON(feature, {
@@ -223,8 +225,12 @@ export function ZonesMapUserView({
       }
     });
 
-    // Ajuster la vue
-    if (allBounds.length > 0) {
+    // ✅ Recentrer intelligemment : uniquement si premier rendu OU userZone vient de changer
+    const userZoneChanged = prevUserZoneId.current !== userZone?.id;
+    const shouldFitBounds =
+      (!isMapInitialized.current || userZoneChanged) && allBounds.length > 0;
+
+    if (shouldFitBounds) {
       if (userZone && zones.find((z) => z.id === userZone.id)) {
         // Centrer sur la zone du pompier
         const userZoneData = zones.find((z) => z.id === userZone.id);
@@ -232,22 +238,30 @@ export function ZonesMapUserView({
           try {
             const feature: Feature<Geometry> = {
               type: "Feature",
-              geometry: userZoneData.geom, // ✅ Plus besoin de cast
-              properties: userZoneData as unknown as Record<string, unknown>,
+              geometry: userZoneData.geom,
+              properties: userZoneData as any,
             };
             const userGeoJson = L.geoJSON(feature);
             map.fitBounds(userGeoJson.getBounds(), { padding: [50, 50] });
           } catch {
             // Fallback : centrer sur toutes les zones
             const bounds = L.latLngBounds(allBounds);
-            map.fitBounds(bounds, { padding: [20, 20] });
+            if (bounds.isValid()) { // ✅ Sécurité supplémentaire
+              map.fitBounds(bounds, { padding: [20, 20] });
+            }
           }
         }
       } else {
         // Centrer sur toutes les zones
         const bounds = L.latLngBounds(allBounds);
-        map.fitBounds(bounds, { padding: [20, 20] });
+        if (bounds.isValid()) { // ✅ Sécurité supplémentaire
+          map.fitBounds(bounds, { padding: [20, 20] });
+        }
       }
+
+      // Marquer comme initialisé et sauvegarder l'ID de la zone
+      isMapInitialized.current = true;
+      prevUserZoneId.current = userZone?.id || null;
     }
   }, [zones, userZone, equipeColor]); // ✅ Réactif aux changements
 
