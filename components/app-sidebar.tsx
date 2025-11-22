@@ -234,7 +234,7 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
                 </Collapsible>
 
                 {/* Admin Navigation */}
-                {role && ["admin", "tresorier"].includes(role) && (
+                {role && ["admin", "tresorier", "chef_equipe"].includes(role) && (
                     <Collapsible defaultOpen className="group/collapsible">
                         <SidebarGroup>
                             <SidebarGroupLabel asChild>
@@ -246,43 +246,52 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
                             <CollapsibleContent>
                                 <SidebarGroupContent>
                                     <SidebarMenu>
-                                        {/* Vue d'ensemble */}
-                                        <SidebarMenuItem>
-                                            <SidebarMenuButton asChild isActive={pathname === "/admin"}>
-                                                <Link href="/admin" onClick={handleLinkClick}>
-                                                    <Home />
-                                                    <span>Vue d&apos;ensemble</span>
-                                                </Link>
-                                            </SidebarMenuButton>
-                                        </SidebarMenuItem>
+                                        {/* Vue d'ensemble - Admin/Tresorier only */}
+                                        {["admin", "tresorier"].includes(role) && (
+                                            <SidebarMenuItem>
+                                                <SidebarMenuButton asChild isActive={pathname === "/admin"}>
+                                                    <Link href="/admin" onClick={handleLinkClick}>
+                                                        <Home />
+                                                        <span>Vue d&apos;ensemble</span>
+                                                    </Link>
+                                                </SidebarMenuButton>
+                                            </SidebarMenuItem>
+                                        )}
 
                                         {/* Categories */}
-                                        {data.admin.map((category) => (
-                                            <Collapsible key={category.title} defaultOpen={false} className="group/sub-collapsible">
-                                                <SidebarMenuItem>
-                                                    <CollapsibleTrigger asChild>
-                                                        <SidebarMenuButton>
-                                                            <category.icon />
-                                                            <span>{category.title}</span>
-                                                            <ChevronRight className="ml-auto transition-transform group-data-[state=open]/sub-collapsible:rotate-90" />
-                                                        </SidebarMenuButton>
-                                                    </CollapsibleTrigger>
-                                                    <CollapsibleContent>
-                                                        <SidebarMenuSub>
-                                                            {category.items.map((item) => (
-                                                                <SidebarMenuSubItem key={item.title}>
-                                                                    <SidebarMenuSubButton asChild isActive={pathname === item.url}>
-                                                                        <Link href={item.url} onClick={handleLinkClick}>
-                                                                            <span>{item.title}</span>
-                                                                        </Link>
-                                                                    </SidebarMenuSubButton>
-                                                                </SidebarMenuSubItem>
-                                                            ))}
-                                                        </SidebarMenuSub>
-                                                    </CollapsibleContent>
-                                                </SidebarMenuItem>
-                                            </Collapsible>
-                                        ))}
+                                        {data.admin.map((category) => {
+                                            // Filter categories based on role
+                                            if (role === "chef_equipe" && category.title !== "Tournées") {
+                                                return null;
+                                            }
+
+                                            return (
+                                                <Collapsible key={category.title} defaultOpen={role === "chef_equipe"} className="group/sub-collapsible">
+                                                    <SidebarMenuItem>
+                                                        <CollapsibleTrigger asChild>
+                                                            <SidebarMenuButton>
+                                                                <category.icon />
+                                                                <span>{category.title}</span>
+                                                                <ChevronRight className="ml-auto transition-transform group-data-[state=open]/sub-collapsible:rotate-90" />
+                                                            </SidebarMenuButton>
+                                                        </CollapsibleTrigger>
+                                                        <CollapsibleContent>
+                                                            <SidebarMenuSub>
+                                                                {category.items.map((item) => (
+                                                                    <SidebarMenuSubItem key={item.title}>
+                                                                        <SidebarMenuSubButton asChild isActive={pathname === item.url}>
+                                                                            <Link href={item.url} onClick={handleLinkClick}>
+                                                                                <span>{item.title}</span>
+                                                                            </Link>
+                                                                        </SidebarMenuSubButton>
+                                                                    </SidebarMenuSubItem>
+                                                                ))}
+                                                            </SidebarMenuSub>
+                                                        </CollapsibleContent>
+                                                    </SidebarMenuItem>
+                                                </Collapsible>
+                                            );
+                                        })}
                                     </SidebarMenu>
                                 </SidebarGroupContent>
                             </CollapsibleContent>

@@ -12,29 +12,48 @@ export default async function AdminZonesTourneesPage() {
 
   if (!user) redirect("/auth/login");
 
-  // Vérifier que l'utilisateur est admin
+  // Vérifier que l'utilisateur est admin ou chef d'équipe
   const { data: profile } = await supabase
     .from('profiles')
-    .select('role')
+    .select('role, team_id')
     .eq('id', user.id)
     .single();
 
-  if (profile?.role !== 'admin') {
+  if (!profile?.role || !['admin', 'chef_equipe'].includes(profile.role)) {
     redirect('/dashboard');
   }
 
-  // Récupérer toutes les zones enrichies
-  const { data: zones } = await supabase
+  const isChefEquipe = profile.role === 'chef_equipe';
+  const userTeamId = profile.team_id;
+
+  // Construction de la requête pour les zones
+  let zonesQuery = supabase
     .from('zones_tournees_enrichies')
     .select('*')
     .order('code_zone');
 
-  // Récupérer les statistiques par équipe
-  const { data: equipes } = await supabase
+  // Si chef d'équipe, filtrer par son équipe
+  if (isChefEquipe && userTeamId) {
+    zonesQuery = zonesQuery.eq('equipe_id', userTeamId);
+  } else if (isChefEquipe && !userTeamId) {
+    // Cas limite : chef d'équipe sans équipe assignée
+    zonesQuery = zonesQuery.eq('id', '00000000-0000-0000-0000-000000000000'); // Retourne rien
+  }
+
+  const { data: zones } = await zonesQuery;
+
+  // Récupérer les équipes (filtré si chef d'équipe)
+  let equipesQuery = supabase
     .from('equipes')
     .select('id, nom, secteur, couleur, numero')
     .eq('actif', true)
     .order('ordre_affichage');
+
+  if (isChefEquipe && userTeamId) {
+    equipesQuery = equipesQuery.eq('id', userTeamId);
+  }
+
+  const { data: equipes } = await equipesQuery;
 
   // Récupérer les statistiques pour chaque équipe
   const statsPromises = (equipes || []).map(async (equipe) => {
@@ -71,14 +90,20 @@ export default async function AdminZonesTourneesPage() {
 
   const equipesAvecStats = await Promise.all(statsPromises);
 
-  // Récupérer tous les pompiers pour l'assignation
-  const { data: pompiers } = await supabase
+  // Récupérer les pompiers pour l'assignation (filtré si chef d'équipe)
+  let pompiersQuery = supabase
     .from('profiles')
     .select('id, full_name, email, team_id')
     .not('full_name', 'is', null)
     .order('full_name');
 
-  // Statistiques globales
+  if (isChefEquipe && userTeamId) {
+    pompiersQuery = pompiersQuery.eq('team_id', userTeamId);
+  }
+
+  const { data: pompiers } = await pompiersQuery;
+
+  // Statistiques globales (calculées sur les zones visibles)
   const totalZones = zones?.length || 0;
   const zonesTerminees = zones?.filter(z => z.statut === 'Terminé').length || 0;
   const zonesEnCours = zones?.filter(z => z.statut === 'En cours').length || 0;
@@ -94,10 +119,12 @@ export default async function AdminZonesTourneesPage() {
       <div className="bg-card rounded-lg p-6 border">
         <h1 className="text-2xl font-bold flex items-center gap-2">
           <MapPin className="h-6 w-6" />
-          Gestion des zones de tournée
+          {isChefEquipe ? "Gestion de mon secteur" : "Gestion des zones de tournée"}
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Visualisez et gérez les zones de distribution de calendriers
+          {isChefEquipe
+            ? "Gérez les zones et les assignations de votre équipe"
+            : "Visualisez et gérez les zones de distribution de calendriers"}
         </p>
       </div>
 
@@ -156,15 +183,15 @@ export default async function AdminZonesTourneesPage() {
         </Card>
       </div>
 
-      {/* Statistiques par équipe */}
-      <ZonesStats equipes={equipesAvecStats} />
+      {/* Statistiques par équipe (caché pour chef d'équipe car redondant avec global) */}
+      {!isChefEquipe && <ZonesStats equipes={equipesAvecStats} />}
 
       {/* Carte interactive */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <MapPin className="h-5 w-5" />
-            Carte des zones de tournée
+            Carte des zones
           </CardTitle>
         </CardHeader>
         <CardContent>
