@@ -33,37 +33,32 @@ export function ProgressionBar({ progression, className, compact = false }: Prog
   // Mode compact (pour header)
   if (compact) {
     return (
-      <div className={`flex items-center gap-3 ${className || ''}`}>
+      <div className={`flex items-center gap-4 p-2 ${className || ''}`}>
         {/* Niveau */}
-        <div className="flex items-center gap-2">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center text-white font-bold shadow-lg">
+        <div className="relative">
+          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center text-white font-bold shadow-lg border-2 border-background ring-2 ring-blue-500/20">
             {level}
           </div>
-          <div className="flex flex-col">
-            <span className="text-xs text-muted-foreground">Niveau</span>
-            <span className="text-sm font-semibold">{level}</span>
-          </div>
+          {stats.isMaxLevel && (
+            <div className="absolute -top-1 -right-1 bg-yellow-500 rounded-full p-1 border border-background">
+              <Sparkles className="w-3 h-3 text-white" />
+            </div>
+          )}
         </div>
 
         {/* Barre de progression mini */}
-        {!stats.isMaxLevel && (
-          <div className="flex-1 max-w-[200px]">
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-xs text-muted-foreground">
-                {formatNumber(current_xp)} / {formatNumber(stats.xpForNext)} XP
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between mb-1.5">
+            <div className="flex flex-col">
+              <span className="text-xs font-medium text-foreground">Niveau {level}</span>
+              <span className="text-[10px] text-muted-foreground">
+                {stats.isMaxLevel ? "Niveau Max" : `${formatNumber(stats.xpForNext - current_xp)} XP restants`}
               </span>
-              <span className="text-xs font-semibold text-primary">{stats.progressPercentage}%</span>
             </div>
-            <Progress value={stats.progressPercentage} className="h-2" />
+            <span className="text-xs font-bold text-blue-500">{stats.progressPercentage}%</span>
           </div>
-        )}
-
-        {stats.isMaxLevel && (
-          <div className="flex items-center gap-1 text-yellow-500">
-            <Sparkles className="h-4 w-4" />
-            <span className="text-xs font-semibold">Niveau Max</span>
-          </div>
-        )}
+          <Progress value={stats.progressPercentage} className="h-2 bg-muted" indicatorClassName="bg-gradient-to-r from-blue-600 to-cyan-500" />
+        </div>
       </div>
     );
   }

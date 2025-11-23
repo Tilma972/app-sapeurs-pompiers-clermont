@@ -110,8 +110,8 @@ export default async function DashboardPage({
 
 					{/* Widget de progression */}
 					{userProgression && (
-						<Link href="/gamification">
-							<Card className="hover:shadow-md transition-shadow cursor-pointer">
+						<Link href="/dashboard/profil">
+							<Card className="hover:shadow-md transition-shadow cursor-pointer border-l-4 border-l-primary">
 								<ProgressionBar progression={userProgression} compact />
 							</Card>
 						</Link>
