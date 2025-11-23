@@ -298,12 +298,232 @@ export type Database = {
         }
         Relationships: []
       }
+      contact_messages: {
+        Row: {
+          created_at: string | null
+          email: string
+          id: string
+          message: string
+          name: string
+          read: boolean | null
+          replied: boolean | null
+          subject: string
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          id?: string
+          message: string
+          name: string
+          read?: boolean | null
+          replied?: boolean | null
+          subject: string
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          id?: string
+          message?: string
+          name?: string
+          read?: boolean | null
+          replied?: boolean | null
+          subject?: string
+        }
+        Relationships: []
+      }
+      demandes_pot_equipe: {
+        Row: {
+          categorie: string | null
+          created_at: string | null
+          demandeur_id: string
+          description: string
+          equipe_id: string
+          id: string
+          montant: number
+          notes_tresorier: string | null
+          paid_at: string | null
+          preuve_depense_url: string | null
+          rejection_reason: string | null
+          statut: string
+          titre: string
+          validated_at: string | null
+          validated_by: string | null
+        }
+        Insert: {
+          categorie?: string | null
+          created_at?: string | null
+          demandeur_id: string
+          description: string
+          equipe_id: string
+          id?: string
+          montant: number
+          notes_tresorier?: string | null
+          paid_at?: string | null
+          preuve_depense_url?: string | null
+          rejection_reason?: string | null
+          statut?: string
+          titre: string
+          validated_at?: string | null
+          validated_by?: string | null
+        }
+        Update: {
+          categorie?: string | null
+          created_at?: string | null
+          demandeur_id?: string
+          description?: string
+          equipe_id?: string
+          id?: string
+          montant?: number
+          notes_tresorier?: string | null
+          paid_at?: string | null
+          preuve_depense_url?: string | null
+          rejection_reason?: string | null
+          statut?: string
+          titre?: string
+          validated_at?: string | null
+          validated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "demandes_pot_equipe_equipe_id_fkey"
+            columns: ["equipe_id"]
+            isOneToOne: false
+            referencedRelation: "equipe_calendriers_suivi"
+            referencedColumns: ["equipe_id"]
+          },
+          {
+            foreignKeyName: "demandes_pot_equipe_equipe_id_fkey"
+            columns: ["equipe_id"]
+            isOneToOne: false
+            referencedRelation: "equipes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "demandes_pot_equipe_equipe_id_fkey"
+            columns: ["equipe_id"]
+            isOneToOne: false
+            referencedRelation: "equipes_ranking_view"
+            referencedColumns: ["equipe_id"]
+          },
+          {
+            foreignKeyName: "demandes_pot_equipe_equipe_id_fkey"
+            columns: ["equipe_id"]
+            isOneToOne: false
+            referencedRelation: "equipes_stats_view"
+            referencedColumns: ["equipe_id"]
+          },
+          {
+            foreignKeyName: "demandes_pot_equipe_equipe_id_fkey"
+            columns: ["equipe_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_with_equipe_view"
+            referencedColumns: ["equipe_id"]
+          },
+        ]
+      }
+      demandes_versement: {
+        Row: {
+          created_at: string | null
+          equipe_id: string | null
+          iban: string | null
+          id: string
+          montant: number
+          nom_beneficiaire: string | null
+          notes_tresorier: string | null
+          notes_utilisateur: string | null
+          paid_at: string | null
+          paid_by: string | null
+          preuve_paiement_url: string | null
+          rejection_reason: string | null
+          statut: string
+          type_versement: string
+          user_id: string
+          validated_at: string | null
+          validated_by: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          equipe_id?: string | null
+          iban?: string | null
+          id?: string
+          montant: number
+          nom_beneficiaire?: string | null
+          notes_tresorier?: string | null
+          notes_utilisateur?: string | null
+          paid_at?: string | null
+          paid_by?: string | null
+          preuve_paiement_url?: string | null
+          rejection_reason?: string | null
+          statut?: string
+          type_versement: string
+          user_id: string
+          validated_at?: string | null
+          validated_by?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          equipe_id?: string | null
+          iban?: string | null
+          id?: string
+          montant?: number
+          nom_beneficiaire?: string | null
+          notes_tresorier?: string | null
+          notes_utilisateur?: string | null
+          paid_at?: string | null
+          paid_by?: string | null
+          preuve_paiement_url?: string | null
+          rejection_reason?: string | null
+          statut?: string
+          type_versement?: string
+          user_id?: string
+          validated_at?: string | null
+          validated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "demandes_versement_equipe_id_fkey"
+            columns: ["equipe_id"]
+            isOneToOne: false
+            referencedRelation: "equipe_calendriers_suivi"
+            referencedColumns: ["equipe_id"]
+          },
+          {
+            foreignKeyName: "demandes_versement_equipe_id_fkey"
+            columns: ["equipe_id"]
+            isOneToOne: false
+            referencedRelation: "equipes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "demandes_versement_equipe_id_fkey"
+            columns: ["equipe_id"]
+            isOneToOne: false
+            referencedRelation: "equipes_ranking_view"
+            referencedColumns: ["equipe_id"]
+          },
+          {
+            foreignKeyName: "demandes_versement_equipe_id_fkey"
+            columns: ["equipe_id"]
+            isOneToOne: false
+            referencedRelation: "equipes_stats_view"
+            referencedColumns: ["equipe_id"]
+          },
+          {
+            foreignKeyName: "demandes_versement_equipe_id_fkey"
+            columns: ["equipe_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_with_equipe_view"
+            referencedColumns: ["equipe_id"]
+          },
+        ]
+      }
       equipes: {
         Row: {
           actif: boolean
           archived_at: string | null
           archived_by: string | null
           calendriers_alloues: number
+          calendriers_remis_par_admin: number
           charte_texte: string | null
           charte_votee: boolean | null
           chef_equipe_id: string | null
@@ -334,6 +554,7 @@ export type Database = {
           archived_at?: string | null
           archived_by?: string | null
           calendriers_alloues?: number
+          calendriers_remis_par_admin?: number
           charte_texte?: string | null
           charte_votee?: boolean | null
           chef_equipe_id?: string | null
@@ -364,6 +585,7 @@ export type Database = {
           archived_at?: string | null
           archived_by?: string | null
           calendriers_alloues?: number
+          calendriers_remis_par_admin?: number
           charte_texte?: string | null
           charte_votee?: boolean | null
           chef_equipe_id?: string | null
@@ -390,6 +612,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "equipes_archived_by_fkey"
+            columns: ["archived_by"]
+            isOneToOne: false
+            referencedRelation: "membres_calendriers_suivi"
+            referencedColumns: ["user_id"]
+          },
           {
             foreignKeyName: "equipes_archived_by_fkey"
             columns: ["archived_by"]
@@ -475,6 +704,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "gallery_photos"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gallery_comments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "membres_calendriers_suivi"
+            referencedColumns: ["user_id"]
           },
           {
             foreignKeyName: "gallery_comments_user_id_fkey"
@@ -648,6 +884,13 @@ export type Database = {
             foreignKeyName: "idea_comments_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
+            referencedRelation: "membres_calendriers_suivi"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "idea_comments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -723,6 +966,13 @@ export type Database = {
             foreignKeyName: "idea_reports_reporter_user_id_fkey"
             columns: ["reporter_user_id"]
             isOneToOne: false
+            referencedRelation: "membres_calendriers_suivi"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "idea_reports_reporter_user_id_fkey"
+            columns: ["reporter_user_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -739,6 +989,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles_with_identity"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "idea_reports_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "membres_calendriers_suivi"
+            referencedColumns: ["user_id"]
           },
           {
             foreignKeyName: "idea_reports_reviewed_by_fkey"
@@ -780,6 +1037,13 @@ export type Database = {
           voted_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "idea_vote_log_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "membres_calendriers_suivi"
+            referencedColumns: ["user_id"]
+          },
           {
             foreignKeyName: "idea_vote_log_user_id_fkey"
             columns: ["user_id"]
@@ -835,6 +1099,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "ideas"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "idea_votes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "membres_calendriers_suivi"
+            referencedColumns: ["user_id"]
           },
           {
             foreignKeyName: "idea_votes_user_id_fkey"
@@ -931,6 +1202,13 @@ export type Database = {
             foreignKeyName: "ideas_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
+            referencedRelation: "membres_calendriers_suivi"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "ideas_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -986,6 +1264,84 @@ export type Database = {
         }
         Relationships: []
       }
+      mouvements_pot_equipe: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          equipe_id: string
+          id: string
+          libelle: string
+          montant: number
+          solde_apres: number | null
+          solde_avant: number | null
+          source_id: string | null
+          source_type: string | null
+          type_mouvement: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          equipe_id: string
+          id?: string
+          libelle: string
+          montant: number
+          solde_apres?: number | null
+          solde_avant?: number | null
+          source_id?: string | null
+          source_type?: string | null
+          type_mouvement: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          equipe_id?: string
+          id?: string
+          libelle?: string
+          montant?: number
+          solde_apres?: number | null
+          solde_avant?: number | null
+          source_id?: string | null
+          source_type?: string | null
+          type_mouvement?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mouvements_pot_equipe_equipe_id_fkey"
+            columns: ["equipe_id"]
+            isOneToOne: false
+            referencedRelation: "equipe_calendriers_suivi"
+            referencedColumns: ["equipe_id"]
+          },
+          {
+            foreignKeyName: "mouvements_pot_equipe_equipe_id_fkey"
+            columns: ["equipe_id"]
+            isOneToOne: false
+            referencedRelation: "equipes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mouvements_pot_equipe_equipe_id_fkey"
+            columns: ["equipe_id"]
+            isOneToOne: false
+            referencedRelation: "equipes_ranking_view"
+            referencedColumns: ["equipe_id"]
+          },
+          {
+            foreignKeyName: "mouvements_pot_equipe_equipe_id_fkey"
+            columns: ["equipe_id"]
+            isOneToOne: false
+            referencedRelation: "equipes_stats_view"
+            referencedColumns: ["equipe_id"]
+          },
+          {
+            foreignKeyName: "mouvements_pot_equipe_equipe_id_fkey"
+            columns: ["equipe_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_with_equipe_view"
+            referencedColumns: ["equipe_id"]
+          },
+        ]
+      }
       mouvements_retribution: {
         Row: {
           created_at: string | null
@@ -1034,8 +1390,22 @@ export type Database = {
             foreignKeyName: "mouvements_retribution_equipe_id_fkey"
             columns: ["equipe_id"]
             isOneToOne: false
+            referencedRelation: "equipe_calendriers_suivi"
+            referencedColumns: ["equipe_id"]
+          },
+          {
+            foreignKeyName: "mouvements_retribution_equipe_id_fkey"
+            columns: ["equipe_id"]
+            isOneToOne: false
             referencedRelation: "equipes"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mouvements_retribution_equipe_id_fkey"
+            columns: ["equipe_id"]
+            isOneToOne: false
+            referencedRelation: "equipes_ranking_view"
+            referencedColumns: ["equipe_id"]
           },
           {
             foreignKeyName: "mouvements_retribution_equipe_id_fkey"
@@ -1118,6 +1488,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "partners"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "offer_usage_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "membres_calendriers_suivi"
+            referencedColumns: ["user_id"]
           },
           {
             foreignKeyName: "offer_usage_user_id_fkey"
@@ -1324,8 +1701,22 @@ export type Database = {
             foreignKeyName: "pots_equipe_equipe_id_fkey"
             columns: ["equipe_id"]
             isOneToOne: true
+            referencedRelation: "equipe_calendriers_suivi"
+            referencedColumns: ["equipe_id"]
+          },
+          {
+            foreignKeyName: "pots_equipe_equipe_id_fkey"
+            columns: ["equipe_id"]
+            isOneToOne: true
             referencedRelation: "equipes"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pots_equipe_equipe_id_fkey"
+            columns: ["equipe_id"]
+            isOneToOne: true
+            referencedRelation: "equipes_ranking_view"
+            referencedColumns: ["equipe_id"]
           },
           {
             foreignKeyName: "pots_equipe_equipe_id_fkey"
@@ -1391,6 +1782,9 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          calendriers_confirmation_date: string | null
+          calendriers_lot_attribue: number
+          calendriers_reception_confirmee: boolean
           created_at: string
           display_name: string | null
           email: string
@@ -1409,6 +1803,9 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          calendriers_confirmation_date?: string | null
+          calendriers_lot_attribue?: number
+          calendriers_reception_confirmee?: boolean
           created_at?: string
           display_name?: string | null
           email: string
@@ -1427,6 +1824,9 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          calendriers_confirmation_date?: string | null
+          calendriers_lot_attribue?: number
+          calendriers_reception_confirmee?: boolean
           created_at?: string
           display_name?: string | null
           email?: string
@@ -1448,8 +1848,22 @@ export type Database = {
             foreignKeyName: "profiles_team_id_fkey"
             columns: ["team_id"]
             isOneToOne: false
+            referencedRelation: "equipe_calendriers_suivi"
+            referencedColumns: ["equipe_id"]
+          },
+          {
+            foreignKeyName: "profiles_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
             referencedRelation: "equipes"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "equipes_ranking_view"
+            referencedColumns: ["equipe_id"]
           },
           {
             foreignKeyName: "profiles_team_id_fkey"
@@ -1730,8 +2144,22 @@ export type Database = {
             foreignKeyName: "tournees_equipe_id_fkey"
             columns: ["equipe_id"]
             isOneToOne: false
+            referencedRelation: "equipe_calendriers_suivi"
+            referencedColumns: ["equipe_id"]
+          },
+          {
+            foreignKeyName: "tournees_equipe_id_fkey"
+            columns: ["equipe_id"]
+            isOneToOne: false
             referencedRelation: "equipes"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tournees_equipe_id_fkey"
+            columns: ["equipe_id"]
+            isOneToOne: false
+            referencedRelation: "equipes_ranking_view"
+            referencedColumns: ["equipe_id"]
           },
           {
             foreignKeyName: "tournees_equipe_id_fkey"
@@ -1931,6 +2359,11 @@ export type Database = {
         Row: {
           added_at: string | null
           added_by: string | null
+          calendriers_recus: boolean | null
+          calendriers_recus_at: string | null
+          calendriers_remis: boolean | null
+          calendriers_remis_at: string | null
+          calendriers_remis_by: string | null
           email: string | null
           first_name: string
           id: string
@@ -1942,6 +2375,11 @@ export type Database = {
         Insert: {
           added_at?: string | null
           added_by?: string | null
+          calendriers_recus?: boolean | null
+          calendriers_recus_at?: string | null
+          calendriers_remis?: boolean | null
+          calendriers_remis_at?: string | null
+          calendriers_remis_by?: string | null
           email?: string | null
           first_name: string
           id?: string
@@ -1953,6 +2391,11 @@ export type Database = {
         Update: {
           added_at?: string | null
           added_by?: string | null
+          calendriers_recus?: boolean | null
+          calendriers_recus_at?: string | null
+          calendriers_remis?: boolean | null
+          calendriers_remis_at?: string | null
+          calendriers_remis_by?: string | null
           email?: string | null
           first_name?: string
           id?: string
@@ -2025,16 +2468,185 @@ export type Database = {
         }
         Relationships: []
       }
+      zones_tournees: {
+        Row: {
+          annee: number
+          code_zone: string | null
+          created_at: string
+          date_debut_tournee: string | null
+          date_fin_tournee: string | null
+          description: string | null
+          equipe_id: string
+          geom: Json
+          id: string
+          nb_calendriers_alloues: number | null
+          nb_calendriers_distribues: number | null
+          nb_foyers_estimes: number | null
+          nom_zone: string
+          notes: string | null
+          pompier_id: string | null
+          population_estimee: number | null
+          statut: string
+          updated_at: string
+        }
+        Insert: {
+          annee?: number
+          code_zone?: string | null
+          created_at?: string
+          date_debut_tournee?: string | null
+          date_fin_tournee?: string | null
+          description?: string | null
+          equipe_id: string
+          geom: Json
+          id?: string
+          nb_calendriers_alloues?: number | null
+          nb_calendriers_distribues?: number | null
+          nb_foyers_estimes?: number | null
+          nom_zone: string
+          notes?: string | null
+          pompier_id?: string | null
+          population_estimee?: number | null
+          statut?: string
+          updated_at?: string
+        }
+        Update: {
+          annee?: number
+          code_zone?: string | null
+          created_at?: string
+          date_debut_tournee?: string | null
+          date_fin_tournee?: string | null
+          description?: string | null
+          equipe_id?: string
+          geom?: Json
+          id?: string
+          nb_calendriers_alloues?: number | null
+          nb_calendriers_distribues?: number | null
+          nb_foyers_estimes?: number | null
+          nom_zone?: string
+          notes?: string | null
+          pompier_id?: string | null
+          population_estimee?: number | null
+          statut?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "zones_tournees_equipe_id_fkey"
+            columns: ["equipe_id"]
+            isOneToOne: false
+            referencedRelation: "equipe_calendriers_suivi"
+            referencedColumns: ["equipe_id"]
+          },
+          {
+            foreignKeyName: "zones_tournees_equipe_id_fkey"
+            columns: ["equipe_id"]
+            isOneToOne: false
+            referencedRelation: "equipes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "zones_tournees_equipe_id_fkey"
+            columns: ["equipe_id"]
+            isOneToOne: false
+            referencedRelation: "equipes_ranking_view"
+            referencedColumns: ["equipe_id"]
+          },
+          {
+            foreignKeyName: "zones_tournees_equipe_id_fkey"
+            columns: ["equipe_id"]
+            isOneToOne: false
+            referencedRelation: "equipes_stats_view"
+            referencedColumns: ["equipe_id"]
+          },
+          {
+            foreignKeyName: "zones_tournees_equipe_id_fkey"
+            columns: ["equipe_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_with_equipe_view"
+            referencedColumns: ["equipe_id"]
+          },
+          {
+            foreignKeyName: "zones_tournees_pompier_id_fkey"
+            columns: ["pompier_id"]
+            isOneToOne: false
+            referencedRelation: "membres_calendriers_suivi"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "zones_tournees_pompier_id_fkey"
+            columns: ["pompier_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "zones_tournees_pompier_id_fkey"
+            columns: ["pompier_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_with_equipe_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "zones_tournees_pompier_id_fkey"
+            columns: ["pompier_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_with_identity"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
-      equipes_stats_view: {
+      equipe_calendriers_suivi: {
         Row: {
-          archived_at: string | null
+          calendriers_distribues_total: number | null
+          calendriers_remis_par_admin: number | null
+          ecart: number | null
+          equipe_couleur: string | null
+          equipe_id: string | null
+          equipe_nom: string | null
+          equipe_numero: number | null
+          nb_membres_confirmes: number | null
+          nb_membres_total: number | null
+          stock_dormant: number | null
+          total_confirmes_membres: number | null
+          total_theorique_membres: number | null
+        }
+        Relationships: []
+      }
+      equipes_ranking_view: {
+        Row: {
           calendriers_alloues: number | null
           calendriers_distribues: number | null
           chef_equipe_id: string | null
           chef_equipe_nom: string | null
-          communes: string[] | null
+          couleur: string | null
+          derniere_activite: string | null
+          equipe_id: string | null
+          equipe_nom: string | null
+          equipe_numero: number | null
+          equipe_type: string | null
+          montant_collecte: number | null
+          moyenne_par_calendrier: number | null
+          nombre_membres: number | null
+          nombre_tournees: number | null
+          ordre_affichage: number | null
+          progression_pourcentage: number | null
+          rang_calendriers: number | null
+          rang_montant: number | null
+          rang_progression: number | null
+          secteur: string | null
+          tournees_actives: number | null
+          tournees_terminees: number | null
+        }
+        Relationships: []
+      }
+      equipes_stats_view: {
+        Row: {
+          calendriers_alloues: number | null
+          calendriers_distribues: number | null
+          chef_equipe_id: string | null
+          chef_equipe_nom: string | null
           couleur: string | null
           derniere_activite: string | null
           equipe_id: string | null
@@ -2048,13 +2660,62 @@ export type Database = {
           ordre_affichage: number | null
           progression_pourcentage: number | null
           secteur: string | null
-          secteur_centre_lat: number | null
-          secteur_centre_lon: number | null
-          status: string | null
           tournees_actives: number | null
           tournees_terminees: number | null
         }
         Relationships: []
+      }
+      membres_calendriers_suivi: {
+        Row: {
+          calendriers_confirmation_date: string | null
+          calendriers_distribues: number | null
+          calendriers_lot_attribue: number | null
+          calendriers_reception_confirmee: boolean | null
+          display_name: string | null
+          equipe_nom: string | null
+          full_name: string | null
+          nb_tournees_completees: number | null
+          stock_en_main: number | null
+          team_id: string | null
+          user_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "equipe_calendriers_suivi"
+            referencedColumns: ["equipe_id"]
+          },
+          {
+            foreignKeyName: "profiles_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "equipes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "equipes_ranking_view"
+            referencedColumns: ["equipe_id"]
+          },
+          {
+            foreignKeyName: "profiles_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "equipes_stats_view"
+            referencedColumns: ["equipe_id"]
+          },
+          {
+            foreignKeyName: "profiles_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_with_equipe_view"
+            referencedColumns: ["equipe_id"]
+          },
+        ]
       }
       profiles_with_equipe_view: {
         Row: {
@@ -2137,8 +2798,22 @@ export type Database = {
             foreignKeyName: "profiles_team_id_fkey"
             columns: ["team_id"]
             isOneToOne: false
+            referencedRelation: "equipe_calendriers_suivi"
+            referencedColumns: ["equipe_id"]
+          },
+          {
+            foreignKeyName: "profiles_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
             referencedRelation: "equipes"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "equipes_ranking_view"
+            referencedColumns: ["equipe_id"]
           },
           {
             foreignKeyName: "profiles_team_id_fkey"
@@ -2173,6 +2848,102 @@ export type Database = {
           user_id: string | null
         }
         Relationships: []
+      }
+      zones_tournees_enrichies: {
+        Row: {
+          annee: number | null
+          code_zone: string | null
+          created_at: string | null
+          date_debut_tournee: string | null
+          date_fin_tournee: string | null
+          description: string | null
+          equipe_couleur: string | null
+          equipe_id: string | null
+          equipe_nom: string | null
+          equipe_numero: number | null
+          equipe_secteur: string | null
+          geom: Json | null
+          id: string | null
+          nb_calendriers_alloues: number | null
+          nb_calendriers_distribues: number | null
+          nb_calendriers_restants: number | null
+          nb_foyers_estimes: number | null
+          nom_zone: string | null
+          notes: string | null
+          pompier_email: string | null
+          pompier_id: string | null
+          pompier_nom: string | null
+          pompier_telephone: string | null
+          population_estimee: number | null
+          progression_pct: number | null
+          statut: string | null
+          updated_at: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "zones_tournees_equipe_id_fkey"
+            columns: ["equipe_id"]
+            isOneToOne: false
+            referencedRelation: "equipe_calendriers_suivi"
+            referencedColumns: ["equipe_id"]
+          },
+          {
+            foreignKeyName: "zones_tournees_equipe_id_fkey"
+            columns: ["equipe_id"]
+            isOneToOne: false
+            referencedRelation: "equipes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "zones_tournees_equipe_id_fkey"
+            columns: ["equipe_id"]
+            isOneToOne: false
+            referencedRelation: "equipes_ranking_view"
+            referencedColumns: ["equipe_id"]
+          },
+          {
+            foreignKeyName: "zones_tournees_equipe_id_fkey"
+            columns: ["equipe_id"]
+            isOneToOne: false
+            referencedRelation: "equipes_stats_view"
+            referencedColumns: ["equipe_id"]
+          },
+          {
+            foreignKeyName: "zones_tournees_equipe_id_fkey"
+            columns: ["equipe_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_with_equipe_view"
+            referencedColumns: ["equipe_id"]
+          },
+          {
+            foreignKeyName: "zones_tournees_pompier_id_fkey"
+            columns: ["pompier_id"]
+            isOneToOne: false
+            referencedRelation: "membres_calendriers_suivi"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "zones_tournees_pompier_id_fkey"
+            columns: ["pompier_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "zones_tournees_pompier_id_fkey"
+            columns: ["pompier_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_with_equipe_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "zones_tournees_pompier_id_fkey"
+            columns: ["pompier_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_with_identity"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Functions: {
@@ -2211,7 +2982,8 @@ export type Database = {
           first_name: string
           id: string
           last_name: string
-          notes: string
+          used: boolean
+          used_at: string
         }[]
       }
       cleanup_orphan_idea_audios: { Args: never; Returns: undefined }
@@ -2241,6 +3013,17 @@ export type Database = {
             }
             Returns: Json
           }
+      confirm_calendar_reception: { Args: never; Returns: boolean }
+      creer_demande_versement: {
+        Args: {
+          p_iban?: string
+          p_montant: number
+          p_nom_beneficiaire?: string
+          p_notes_utilisateur?: string
+          p_type_versement: string
+        }
+        Returns: string
+      }
       generate_receipt_number: { Args: never; Returns: string }
       get_avatar_url: {
         Args: { p: Database["public"]["Tables"]["profiles"]["Row"] }
@@ -2280,9 +3063,23 @@ export type Database = {
           tournees_actives: number
         }[]
       }
+      get_equipe_zones_stats: {
+        Args: { p_annee?: number; p_equipe_id: string }
+        Returns: {
+          progression_pct: number
+          total_calendriers_alloues: number
+          total_calendriers_distribues: number
+          total_population: number
+          total_zones: number
+          zones_a_faire: number
+          zones_en_cours: number
+          zones_terminees: number
+        }[]
+      }
       get_equipes_ranking: {
         Args: never
         Returns: {
+          calendriers_alloues: number
           calendriers_distribues: number
           couleur: string
           equipe_nom: string
@@ -2499,6 +3296,33 @@ export type Database = {
           receipt_number: string
         }[]
       }
+      list_photos_with_real_counts: {
+        Args: {
+          p_author_id?: string
+          p_before?: string
+          p_category?: string
+          p_limit?: number
+        }
+        Returns: {
+          category: string
+          comments_count: number
+          created_at: string
+          description: string
+          id: string
+          image_url: string
+          likes_count: number
+          reports_count: number
+          status: string
+          taken_at: string
+          thumbnail_url: string
+          title: string
+          user_id: string
+        }[]
+      }
+      marquer_demande_payee: {
+        Args: { p_demande_id: string; p_preuve_url?: string }
+        Returns: boolean
+      }
       recalculate_idea_comments_count: {
         Args: { target_idea_id: string }
         Returns: undefined
@@ -2510,6 +3334,10 @@ export type Database = {
       recalculate_photo_comments_count: {
         Args: { target_photo_id: string }
         Returns: undefined
+      }
+      rejeter_demande_versement: {
+        Args: { p_demande_id: string; p_raison: string }
+        Returns: boolean
       }
       set_n8n_webhook_url: { Args: { url: string }; Returns: string }
       text_to_bytea: { Args: { data: string }; Returns: string }
@@ -2528,6 +3356,10 @@ export type Database = {
               error: true
             } & "Could not choose the best candidate function between: public.urlencode(string => bytea), public.urlencode(string => varchar). Try renaming the parameters or the function itself in the database so function overloading can be resolved"
           }
+      valider_demande_versement: {
+        Args: { p_demande_id: string; p_notes_tresorier?: string }
+        Returns: boolean
+      }
     }
     Enums: {
       payment_method_enum: "especes" | "cheque" | "carte" | "virement"
