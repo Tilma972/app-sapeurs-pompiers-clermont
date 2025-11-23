@@ -249,28 +249,31 @@ export async function getBadgesWithProgress(userId: string): Promise<BadgeWithPr
     // Calculer la progression
     let currentProgress = 0;
 
-    switch (badge.unlock_criteria.type) {
-      case 'calendars':
-        currentProgress = calendriers;
-        break;
-      case 'montant':
-        currentProgress = montant;
-        break;
-      case 'streak':
-        currentProgress = streak;
-        break;
-      case 'level':
-        currentProgress = level;
-        break;
-      case 'ideas':
-        currentProgress = Array.isArray(ideas) ? ideas.length : ideas;
-        break;
-      case 'likes':
-        currentProgress = Array.isArray(likes) ? likes.length : likes;
-        break;
-      case 'votes':
-        currentProgress = Array.isArray(votes) ? votes.length : votes;
-        break;
+    // Vérifier que unlock_criteria existe avant d'y accéder
+    if (badge.unlock_criteria && badge.unlock_criteria.type) {
+      switch (badge.unlock_criteria.type) {
+        case 'calendars':
+          currentProgress = calendriers;
+          break;
+        case 'montant':
+          currentProgress = montant;
+          break;
+        case 'streak':
+          currentProgress = streak;
+          break;
+        case 'level':
+          currentProgress = level;
+          break;
+        case 'ideas':
+          currentProgress = Array.isArray(ideas) ? ideas.length : ideas;
+          break;
+        case 'likes':
+          currentProgress = Array.isArray(likes) ? likes.length : likes;
+          break;
+        case 'votes':
+          currentProgress = Array.isArray(votes) ? votes.length : votes;
+          break;
+      }
     }
 
     return {
