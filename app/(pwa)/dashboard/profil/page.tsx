@@ -38,12 +38,15 @@ export default async function ProfilPage({
   if (!user) redirect("/auth/login");
 
   const params = await searchParams;
-  const defaultTab = params.tab || "stats";
+  const defaultTab = params?.tab || "stats";
 
-  // Fetch all data in parallel
-  const [profile, profileView, stats, badges, history, equipes, tourneesCount] = await Promise.all([
-    getCurrentUserProfile(),
-    supabase.from('profiles_with_equipe_view').select('*').eq('id', user.id).single(),
+  // 1. Ensure profile exists first
+  const profile = await getCurrentUserProfile();
+  if (!profile) redirect("/dashboard");
+
+  // 2. Fetch other data in parallel
+  const [profileView, stats, badges, history, equipes, tourneesCount] = await Promise.all([
+    supabase.from('profiles_with_equipe_view').select('*').eq('id', user.id).maybeSingle(),
     getGamificationStats(user.id),
     getBadgesWithProgress(user.id),
     getXpHistory(user.id),
