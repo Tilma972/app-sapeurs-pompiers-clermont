@@ -45,8 +45,10 @@ export async function getUserProgression(userId: string): Promise<UserProgressio
 
 /**
  * Récupère ou initialise la progression d'un utilisateur
+ * IMPORTANT: Ne lance jamais d'erreur - retourne null en cas d'échec
+ * pour éviter de bloquer l'application
  */
-export async function getOrCreateProgression(userId: string): Promise<UserProgression> {
+export async function getOrCreateProgression(userId: string): Promise<UserProgression | null> {
   const existing = await getUserProgression(userId);
 
   if (existing) {
@@ -70,7 +72,8 @@ export async function getOrCreateProgression(userId: string): Promise<UserProgre
 
   if (error) {
     console.error('Error creating user progression:', error);
-    throw error;
+    // Ne pas lancer d'erreur - retourner null pour ne pas bloquer l'app
+    return null;
   }
 
   return data;
@@ -357,6 +360,7 @@ export async function markBadgesAsSeen(userId: string, badgeIds: string[]): Prom
 
 /**
  * Récupère toutes les stats de gamification d'un utilisateur
+ * Retourne null si la progression ne peut pas être créée (pour ne pas bloquer l'app)
  */
 export async function getGamificationStats(userId: string): Promise<GamificationStats | null> {
   const [progression, userBadges, allBadges] = await Promise.all([
@@ -364,6 +368,12 @@ export async function getGamificationStats(userId: string): Promise<Gamification
     getUserBadges(userId),
     getAllBadges(),
   ]);
+
+  // Si pas de progression, retourner null (ne pas bloquer l'app)
+  if (!progression) {
+    console.warn('Could not load or create user progression - gamification disabled');
+    return null;
+  }
 
   const xpForNextLevel = getXpRequiredForLevel(progression.level + 1);
   const progressPercentage = xpForNextLevel > 0
