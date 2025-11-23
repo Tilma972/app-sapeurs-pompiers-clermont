@@ -20,15 +20,18 @@ export function TourneeClotureModal({ tourneeId, trigger, onClose }: ModalClotur
   const [open, setOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const [calendriers, setCalendriers] = useState(0)
-  const [especes, setEspeces] = useState(0)
-  const [cheques, setCheques] = useState(0)
+  const [calendriers, setCalendriers] = useState('')
+  const [especes, setEspeces] = useState('')
+  const [cheques, setCheques] = useState('')
 
-  const total = Math.max(0, (especes || 0) + (cheques || 0))
+  const calendriersNum = Number(calendriers) || 0
+  const especesNum = Number(especes) || 0
+  const chequesNum = Number(cheques) || 0
+  const total = Math.max(0, especesNum + chequesNum)
   const montantAmicale = total * 0.7
   const montantPompier = total * 0.3
   // Accepter la clôture même sans vente (tournée infructueuse)
-  const isValid = calendriers >= 0 && total >= 0
+  const isValid = calendriersNum >= 0 && total >= 0
 
   const handleOpenChange = (newOpen: boolean) => {
     setOpen(newOpen)
@@ -41,7 +44,7 @@ export function TourneeClotureModal({ tourneeId, trigger, onClose }: ModalClotur
     e.preventDefault()
 
     // Si aucune vente, demander confirmation
-    if (calendriers === 0 && total === 0) {
+    if (calendriersNum === 0 && total === 0) {
       const confirm = window.confirm(
         '⚠️ Aucune vente enregistrée.\n\nVoulez-vous vraiment clôturer cette tournée sans calendriers ni montant ?'
       )
@@ -53,7 +56,7 @@ export function TourneeClotureModal({ tourneeId, trigger, onClose }: ModalClotur
     try {
       const res = await cloturerTourneeAvecRetribution({
         tourneeId,
-        calendriersVendus: calendriers,
+        calendriersVendus: calendriersNum,
         montantTotal: total,
       })
       if (!res?.ok) {
@@ -85,17 +88,49 @@ export function TourneeClotureModal({ tourneeId, trigger, onClose }: ModalClotur
           <div className="space-y-4">
             <div>
               <Label htmlFor="calendriers">Calendriers vendus</Label>
-              <Input id="calendriers" type="number" min={0} value={calendriers} onChange={(e) => setCalendriers(Number(e.target.value))} required />
+              <Input
+                id="calendriers"
+                type="text"
+                inputMode="numeric"
+                placeholder="0"
+                value={calendriers}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/[^0-9]/g, '')
+                  setCalendriers(val)
+                }}
+                required
+              />
             </div>
 
             <div>
               <Label htmlFor="especes">Espèces (€)</Label>
-              <Input id="especes" type="number" step="0.01" min={0} value={especes} onChange={(e) => setEspeces(Number(e.target.value))} required />
+              <Input
+                id="especes"
+                type="text"
+                inputMode="decimal"
+                placeholder="0.00"
+                value={especes}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/[^0-9.]/g, '')
+                  setEspeces(val)
+                }}
+                required
+              />
             </div>
 
             <div>
               <Label htmlFor="cheques">Montant chèques (€)</Label>
-              <Input id="cheques" type="number" step="0.01" min={0} value={cheques} onChange={(e) => setCheques(Number(e.target.value))} />
+              <Input
+                id="cheques"
+                type="text"
+                inputMode="decimal"
+                placeholder="0.00"
+                value={cheques}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/[^0-9.]/g, '')
+                  setCheques(val)
+                }}
+              />
             </div>
           </div>
 
