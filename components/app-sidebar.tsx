@@ -14,7 +14,6 @@ import {
     Lightbulb,
     Shield,
     Settings,
-    Trophy,
     ChevronRight,
     LogOut,
 } from "lucide-react"
@@ -62,7 +61,6 @@ const data = {
                 { title: "Tournées & Calendriers", url: "/calendriers", icon: Calendar },
                 { title: "Petites Annonces", url: "/annonces", icon: ShoppingBag },
                 { title: "Boîte à Idées", url: "/idees", icon: Lightbulb },
-                { title: "Ma Progression", url: "/gamification", icon: Trophy },
                 { title: "Galerie Photos", url: "/galerie", icon: Camera },
                 { title: "Événements", url: "/associative", icon: Calendar },
             ],
