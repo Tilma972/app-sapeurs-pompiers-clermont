@@ -41,7 +41,7 @@ export const CALENDRIER_CONFIG = {
    * Objectif par défaut si non calculable depuis la progression
    * Utilisé comme fallback dans les graphiques
    */
-  OBJECTIF_DEFAULT_CALENDRIERS: 50,
+  OBJECTIF_DEFAULT_CALENDRIERS: 40,
 
   /**
    * Prix de vente standard d'un calendrier (en €)

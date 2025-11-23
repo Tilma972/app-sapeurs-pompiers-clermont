@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { getAvatarUrl } from "@/lib/utils/avatar";
 import { redirect } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getCurrentUserProfile } from "@/lib/supabase/profile";
@@ -25,12 +26,19 @@ const MILESTONES = [
   { niveau: 50, titre: "Légende", xp_requis: 10000, icone: "👑" },
 ];
 
-export default async function ProfilPage() {
+export default async function ProfilPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string }>;
+}) {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect("/auth/login");
+
+  const params = await searchParams;
+  const defaultTab = params.tab || "stats";
 
   // Fetch all data in parallel
   const [profile, profileView, stats, badges, history, equipes, tourneesCount] = await Promise.all([
@@ -73,7 +81,7 @@ export default async function ProfilPage() {
         <ProfileHeaderCard
           userName={`${profile.first_name || ''} ${profile.last_name || ''}`.trim() || profile.full_name || "Utilisateur"}
           equipeNom={profileView.data.nom_equipe || "Sans équipe"}
-          avatarUrl={profile.avatar_url || undefined}
+          avatarUrl={getAvatarUrl(profile.avatar_url) || undefined}
           memberSince={profile.created_at}
           stats={{
             calendriersTotal: profileView.data.calendriers_distribues || 0,
@@ -87,27 +95,29 @@ export default async function ProfilPage() {
         />
 
         {/* 2. Progress Bar */}
-        {stats && (
-          <Card className="bg-card/50 border-border">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg font-medium flex justify-between items-center">
-                <span>Progression</span>
-                <span className="text-sm text-muted-foreground font-normal">
-                  {stats.current_xp.toLocaleString()} / {stats.xp_for_next_level.toLocaleString()} XP
-                </span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <MultiStepProgress
-                currentXp={stats.total_xp}
-                milestones={MILESTONES}
-              />
-            </CardContent>
-          </Card>
-        )}
+        {
+          stats && (
+            <Card className="bg-card/50 border-border">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg font-medium flex justify-between items-center">
+                  <span>Progression</span>
+                  <span className="text-sm text-muted-foreground font-normal">
+                    {stats.current_xp.toLocaleString()} / {stats.xp_for_next_level.toLocaleString()} XP
+                  </span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <MultiStepProgress
+                  currentXp={stats.total_xp}
+                  milestones={MILESTONES}
+                />
+              </CardContent>
+            </Card>
+          )
+        }
 
         {/* 3. Tabs Content */}
-        <Tabs defaultValue="stats" className="w-full">
+        <Tabs defaultValue={defaultTab} className="w-full">
           <TabsList className="grid w-full grid-cols-4 mb-4">
             <TabsTrigger value="stats" className="text-xs sm:text-sm">📊 Stats</TabsTrigger>
             <TabsTrigger value="badges" className="text-xs sm:text-sm">🏅 Badges</TabsTrigger>
@@ -215,7 +225,7 @@ export default async function ProfilPage() {
             </Card>
           </TabsContent>
         </Tabs>
-      </div>
-    </PwaContainer>
+      </div >
+    </PwaContainer >
   );
 }
