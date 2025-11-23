@@ -83,7 +83,7 @@ export default async function ProfilPage({
         {/* 1. Profile Header (New Design) */}
         <ProfileHeaderCard
           userName={`${profile.first_name || ''} ${profile.last_name || ''}`.trim() || profile.full_name || "Utilisateur"}
-          equipeNom={profileView.data.nom_equipe || "Sans équipe"}
+          equipeNom={profileView.data.equipe_nom || "Sans équipe"}
           avatarUrl={getAvatarUrl(profile.avatar_url) || undefined}
           memberSince={profile.created_at}
           stats={{
@@ -151,7 +151,7 @@ export default async function ProfilPage({
               rarity: b.rarity,
               unlocked: b.unlocked,
               unlockedAt: b.unlocked_at,
-              progression: b.current_progress !== undefined && b.unlock_criteria.threshold > 0
+              progression: b.current_progress !== undefined && b.unlock_criteria?.threshold && b.unlock_criteria.threshold > 0
                 ? Math.min((b.current_progress / b.unlock_criteria.threshold) * 100, 100)
                 : 0
             }))} />
