@@ -86,7 +86,7 @@ export default async function DashboardPage({
 								<strong>Bienvenue {profile?.first_name || userName} ! 🎉</strong>
 								<p className="mt-1 text-sm">
 									Pour profiter pleinement de l&apos;app, {" "}
-									<Link href="/dashboard/profil" className="underline font-medium">
+									<Link href="/dashboard/profil?tab=settings" className="underline font-medium">
 										complète ton profil ici
 									</Link>
 									{" "} et choisis ton équipe.
@@ -100,7 +100,7 @@ export default async function DashboardPage({
 						<Alert className="border-orange-200 bg-orange-50 dark:border-orange-900 dark:bg-orange-950">
 							<AlertCircle className="h-4 w-4 text-orange-600 dark:text-orange-400" />
 							<AlertDescription className="text-orange-800 dark:text-orange-200">
-								<Link href="/dashboard/profil" className="underline font-medium">
+								<Link href="/dashboard/profil?tab=settings" className="underline font-medium">
 									Complète ton profil
 								</Link>
 								{" "} pour rejoindre une équipe et accéder à toutes les fonctionnalités.
