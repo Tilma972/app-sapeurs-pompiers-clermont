@@ -368,6 +368,8 @@ export async function getActiveTourneeWithTransactions(): Promise<{
 
 /**
  * Récupère les statistiques personnelles de l'utilisateur
+ * IMPORTANT: Combine les tournées complétées (valeurs finales de la table tournees)
+ * et les tournées actives (transactions en temps réel via tournee_summary)
  */
 export async function getUserPersonalStats(): Promise<{
   totalCalendarsDistributed: number;
@@ -375,28 +377,64 @@ export async function getUserPersonalStats(): Promise<{
   averagePerCalendar: number;
 } | null> {
   const supabase = await createClient();
-  
+
   const { data: { user } } = await supabase.auth.getUser();
-  
+
   if (!user) {
     return null;
   }
 
   try {
-    // Récupérer les statistiques depuis la vue tournee_summary
-    const { data: stats, error } = await supabase
-      .from('tournee_summary')
-      .select('calendars_distributed, montant_total')
-      .eq('user_id', user.id);
+    // 1. Récupérer les stats des tournées COMPLÉTÉES (valeurs finales de la table tournees)
+    const { data: completedTournees, error: completedError } = await supabase
+      .from('tournees')
+      .select('calendriers_distribues, montant_collecte')
+      .eq('user_id', user.id)
+      .eq('statut', 'completed');
 
-    if (error) {
-      console.error('Erreur lors de la récupération des statistiques personnelles:', error);
+    if (completedError) {
+      console.error('Erreur lors de la récupération des tournées complétées:', completedError);
       return null;
     }
 
-    const totalCalendarsDistributed = stats?.reduce((sum, stat) => sum + (stat.calendars_distributed || 0), 0) || 0;
-    const totalAmountCollected = stats?.reduce((sum, stat) => sum + (stat.montant_total || 0), 0) || 0;
-    const averagePerCalendar = totalCalendarsDistributed > 0 ? totalAmountCollected / totalCalendarsDistributed : 0;
+    const completedCalendars = completedTournees?.reduce((sum, t) => sum + (t.calendriers_distribues || 0), 0) || 0;
+    const completedAmount = completedTournees?.reduce((sum, t) => sum + (t.montant_collecte || 0), 0) || 0;
+
+    // 2. Récupérer les stats des tournées ACTIVES (transactions en temps réel)
+    const { data: activeTournees, error: activeError } = await supabase
+      .from('tournees')
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('statut', 'active');
+
+    if (activeError) {
+      console.error('Erreur lors de la récupération des tournées actives:', activeError);
+      return null;
+    }
+
+    let activeCalendars = 0;
+    let activeAmount = 0;
+
+    if (activeTournees && activeTournees.length > 0) {
+      const { data: activeSummaries, error: summaryError } = await supabase
+        .from('tournee_summary')
+        .select('calendars_distributed, montant_total')
+        .in('tournee_id', activeTournees.map(t => t.id));
+
+      if (summaryError) {
+        console.error('Erreur lors de la récupération des résumés de tournées actives:', summaryError);
+      } else {
+        activeCalendars = activeSummaries?.reduce((sum, s) => sum + (s.calendars_distributed || 0), 0) || 0;
+        activeAmount = activeSummaries?.reduce((sum, s) => sum + (s.montant_total || 0), 0) || 0;
+      }
+    }
+
+    // 3. Combiner les deux sources
+    const totalCalendarsDistributed = completedCalendars + activeCalendars;
+    const totalAmountCollected = completedAmount + activeAmount;
+    const averagePerCalendar = totalCalendarsDistributed > 0
+      ? totalAmountCollected / totalCalendarsDistributed
+      : 0;
 
     return {
       totalCalendarsDistributed,
