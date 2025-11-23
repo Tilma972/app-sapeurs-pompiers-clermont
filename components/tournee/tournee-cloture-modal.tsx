@@ -6,16 +6,18 @@ import toast from 'react-hot-toast'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { cloturerTourneeAvecRetribution } from '@/app/actions/retribution'
 
 interface ModalClotureProps {
   tourneeId: string
-  onClose: () => void
+  trigger?: React.ReactNode
+  onClose?: () => void
 }
 
-export function TourneeClotureModal({ tourneeId, onClose }: ModalClotureProps) {
+export function TourneeClotureModal({ tourneeId, trigger, onClose }: ModalClotureProps) {
   const router = useRouter()
+  const [open, setOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const [calendriers, setCalendriers] = useState(0)
@@ -28,9 +30,16 @@ export function TourneeClotureModal({ tourneeId, onClose }: ModalClotureProps) {
   // Accepter la clôture même sans vente (tournée infructueuse)
   const isValid = calendriers >= 0 && total >= 0
 
+  const handleOpenChange = (newOpen: boolean) => {
+    setOpen(newOpen)
+    if (!newOpen && onClose) {
+      onClose()
+    }
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    
+
     // Si aucune vente, demander confirmation
     if (calendriers === 0 && total === 0) {
       const confirm = window.confirm(
@@ -38,7 +47,7 @@ export function TourneeClotureModal({ tourneeId, onClose }: ModalClotureProps) {
       )
       if (!confirm) return
     }
-    
+
     if (!isValid) return
     setIsSubmitting(true)
     try {
@@ -52,7 +61,7 @@ export function TourneeClotureModal({ tourneeId, onClose }: ModalClotureProps) {
         return
       }
       toast.success(`🎉 Tournée clôturée ! ${total > 0 ? 'Répartition effectuée selon vos préférences.' : ''}`, { duration: 5000 })
-      onClose()
+      handleOpenChange(false)
       router.push('/calendriers')
       router.refresh()
     } catch (err) {
@@ -64,7 +73,8 @@ export function TourneeClotureModal({ tourneeId, onClose }: ModalClotureProps) {
   }
 
   return (
-    <Dialog open onOpenChange={onClose}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle>🏁 Clôturer ma tournée</DialogTitle>
@@ -120,7 +130,7 @@ export function TourneeClotureModal({ tourneeId, onClose }: ModalClotureProps) {
           )}
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>Annuler</Button>
+            <Button type="button" variant="outline" onClick={() => handleOpenChange(false)} disabled={isSubmitting}>Annuler</Button>
             <Button type="submit" disabled={!isValid || isSubmitting}>{isSubmitting ? 'Clôture en cours...' : 'Valider et clôturer'}</Button>
           </DialogFooter>
         </form>
