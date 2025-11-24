@@ -264,8 +264,8 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
                                             }
 
                                             return (
-                                                <Collapsible key={category.title} defaultOpen={role === "chef_equipe"} className="group/sub-collapsible">
-                                                    <SidebarMenuItem>
+                                                <SidebarMenuItem key={category.title}>
+                                                    <Collapsible defaultOpen={role === "chef_equipe"} className="group/sub-collapsible w-full">
                                                         <CollapsibleTrigger asChild>
                                                             <SidebarMenuButton>
                                                                 <category.icon />
@@ -286,8 +286,8 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
                                                                 ))}
                                                             </SidebarMenuSub>
                                                         </CollapsibleContent>
-                                                    </SidebarMenuItem>
-                                                </Collapsible>
+                                                    </Collapsible>
+                                                </SidebarMenuItem>
                                             );
                                         })}
                                     </SidebarMenu>
