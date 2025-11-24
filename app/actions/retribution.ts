@@ -41,7 +41,7 @@ export async function cloturerTourneeAvecRetribution(data: {
     let equipeId: string | null = tourneeData.equipe_id ?? null
 
     if (enableRetrib === undefined || !equipeId) {
-      const { data: profile, error: profileErr } = await supabase
+      const { data: profile } = await supabase
         .from('profiles')
         .select('team_id, equipes!profiles_team_id_fkey(enable_retribution)')
         .eq('id', tourneeData.user_id)
