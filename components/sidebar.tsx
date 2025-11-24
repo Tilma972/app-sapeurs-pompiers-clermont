@@ -334,6 +334,14 @@ export function Sidebar({ className }: SidebarProps) {
         </div>
       </div>
 
+      {/* Desktop nav */}
+      <div className="hidden sm:flex flex-1 flex-col">
+        <NavList />
+        <div className="p-4 border-t border-border mt-auto">
+          <LogoutButton />
+        </div>
+      </div>
+
       {/* Desktop toggle button - visible when sidebar is closed */}
       {!desktopSidebarOpen && (
         <Button
@@ -354,8 +362,8 @@ export function Sidebar({ className }: SidebarProps) {
             className="hidden sm:block fixed inset-0 bg-black/20 z-40"
             onClick={() => setDesktopSidebarOpen(false)}
           />
-          <div className="hidden sm:flex fixed left-0 top-0 bottom-0 w-64 z-50 bg-card border-r border-border flex-col">
-            <div className="flex h-16 items-center justify-between px-4 sm:px-6 border-b border-border flex-shrink-0">
+          <div className="hidden sm:block fixed left-0 top-0 bottom-0 w-64 z-50 bg-card border-r border-border">
+            <div className="flex h-16 items-center justify-between px-4 sm:px-6 border-b border-border">
               <div className="flex items-center space-x-3">
                 <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
                   <Calendar className="h-5 w-5 text-primary-foreground" />
@@ -374,10 +382,8 @@ export function Sidebar({ className }: SidebarProps) {
                 <Menu className="h-5 w-5" />
               </Button>
             </div>
-            <div className="flex-1 overflow-y-auto">
-              <NavList />
-            </div>
-            <div className="p-4 border-t border-border flex-shrink-0">
+            <NavList />
+            <div className="p-4 border-t border-border mt-auto">
               <LogoutButton />
             </div>
           </div>
