@@ -207,50 +207,155 @@ export async function POST(req: NextRequest) {
     const effectiveName = donorName ?? billingName
     const effectiveEmail = donorEmail ?? billingEmail
 
-    const { data: tx } = await admin
-      .from('support_transactions')
-      .insert({
-        user_id: meta.user_id ?? null,
-        tournee_id: meta.tournee_id ?? null,
-        amount,
-        calendar_accepted: calendarAccepted,
-        payment_method: 'carte',
-        payment_status: 'completed',
-        notes: `Stripe PI - ${paymentIntent.id}`,
-        supporter_name: effectiveName,
-        supporter_email: effectiveEmail,
-        stripe_session_id: paymentIntent.id,
-      })
-      .select('id, amount, supporter_name, supporter_email')
-      .single()
-
-    // Générer un reçu fiscal UNIQUEMENT pour les dons (calendar_accepted: false)
-    if (tx && amount >= 6 && !calendarAccepted) {
-      const { data: rec } = await admin.rpc('issue_receipt', { p_transaction_id: tx.id }).single()
-      const receiptNumber = (rec as { receipt_number?: string } | null)?.receipt_number ?? null
-
-      // Persist receipt generation metadata
-      const receiptUrl = receiptNumber
-        ? `${process.env.NEXT_PUBLIC_SITE_URL}/recu/${receiptNumber}`
-        : null
-      await admin
+    try {
+      const { data: tx, error: insertError } = await admin
         .from('support_transactions')
-        .update({ receipt_generated: new Date().toISOString(), receipt_url: receiptUrl })
-        .eq('id', tx.id)
+        .insert({
+          user_id: meta.user_id ?? null,
+          tournee_id: meta.tournee_id ?? null,
+          amount,
+          calendar_accepted: calendarAccepted,
+          payment_method: 'carte',
+          payment_status: 'completed',
+          notes: `Stripe PI - ${paymentIntent.id}`,
+          supporter_name: effectiveName,
+          supporter_email: effectiveEmail,
+          stripe_session_id: paymentIntent.id,
+        })
+        .select('id, amount, supporter_name, supporter_email')
+        .single()
 
-      if (tx.supporter_email) {
-        const subject = buildSubject({ supporterName: tx.supporter_name as string | null, amount: tx.amount as number, receiptNumber: receiptNumber, transactionType: 'fiscal' })
-        const html = buildHtml({ supporterName: tx.supporter_name as string | null, amount: tx.amount as number, receiptNumber: receiptNumber, transactionType: 'fiscal' })
-        const text = buildText({ supporterName: tx.supporter_name as string | null, amount: tx.amount as number, receiptNumber: receiptNumber, transactionType: 'fiscal' })
-        await sendEmail({ to: tx.supporter_email as string, subject, html, text })
-        await admin
-          .from('support_transactions')
-          .update({ receipt_sent: true })
-          .eq('id', tx.id)
+      if (insertError) {
+        log.error('❌ Échec insertion support_transactions (PI)', {
+          payment_intent_id: paymentIntent.id,
+          error: insertError.message,
+          code: insertError.code,
+          details: insertError.details,
+          hint: insertError.hint,
+          metadata: meta,
+          amount,
+          effectiveName,
+          effectiveEmail
+        })
+        return NextResponse.json(
+          { error: 'Database insertion failed', details: insertError.message },
+          { status: 500 }
+        )
       }
-    }
 
-    log.info('✅ Don Stripe (PI) traité', { payment_intent_id: paymentIntent.id, amount })
+      if (!tx) {
+        log.error('❌ Transaction non créée (PI)', { payment_intent_id: paymentIntent.id })
+        return NextResponse.json(
+          { error: 'Transaction creation failed' },
+          { status: 500 }
+        )
+      }
+
+      log.info('✅ Transaction créée (PI)', {
+        transaction_id: tx.id,
+        payment_intent_id: paymentIntent.id,
+        amount,
+        supporter_name: effectiveName
+      })
+
+      // 1. Email de confirmation TOUJOURS envoyé (pour tous les montants)
+      if (tx.supporter_email) {
+        try {
+          const confirmSubject = calendarAccepted
+            ? `Confirmation de votre soutien de ${amount.toFixed(2)}€`
+            : `Confirmation de votre don de ${amount.toFixed(2)}€`
+          const confirmHtml = buildHtml({
+            supporterName: tx.supporter_name as string | null,
+            amount: tx.amount as number,
+            receiptNumber: null,
+            transactionType: calendarAccepted ? 'soutien' : 'fiscal'
+          })
+          const confirmText = buildText({
+            supporterName: tx.supporter_name as string | null,
+            amount: tx.amount as number,
+            receiptNumber: null,
+            transactionType: calendarAccepted ? 'soutien' : 'fiscal'
+          })
+
+          await sendEmail({
+            to: tx.supporter_email as string,
+            subject: confirmSubject,
+            html: confirmHtml,
+            text: confirmText
+          })
+
+          log.info('✅ Email de confirmation envoyé (PI)', {
+            transaction_id: tx.id,
+            email: tx.supporter_email
+          })
+        } catch (emailErr) {
+          log.error('❌ Échec envoi email de confirmation (PI)', {
+            transaction_id: tx.id,
+            error: (emailErr as Error).message
+          })
+          // Continue execution - email confirmation n'est pas critique
+        }
+      }
+
+      // 2. Reçu fiscal UNIQUEMENT pour les dons >= 6€ (calendar_accepted: false)
+      if (amount >= 6 && !calendarAccepted) {
+        try {
+          const { data: rec, error: receiptError } = await admin.rpc('issue_receipt', { p_transaction_id: tx.id }).single()
+
+          if (receiptError) {
+            log.error('❌ Échec génération reçu fiscal (PI)', {
+              transaction_id: tx.id,
+              error: receiptError.message
+            })
+          } else {
+            const receiptNumber = (rec as { receipt_number?: string } | null)?.receipt_number ?? null
+
+            // Persist receipt generation metadata
+            const receiptUrl = receiptNumber
+              ? `${process.env.NEXT_PUBLIC_SITE_URL}/recu/${receiptNumber}`
+              : null
+            await admin
+              .from('support_transactions')
+              .update({ receipt_generated: new Date().toISOString(), receipt_url: receiptUrl })
+              .eq('id', tx.id)
+
+            if (tx.supporter_email && receiptNumber) {
+              const subject = buildSubject({ supporterName: tx.supporter_name as string | null, amount: tx.amount as number, receiptNumber: receiptNumber, transactionType: 'fiscal' })
+              const html = buildHtml({ supporterName: tx.supporter_name as string | null, amount: tx.amount as number, receiptNumber: receiptNumber, transactionType: 'fiscal' })
+              const text = buildText({ supporterName: tx.supporter_name as string | null, amount: tx.amount as number, receiptNumber: receiptNumber, transactionType: 'fiscal' })
+              await sendEmail({ to: tx.supporter_email as string, subject, html, text })
+              await admin
+                .from('support_transactions')
+                .update({ receipt_sent: true })
+                .eq('id', tx.id)
+
+              log.info('✅ Reçu fiscal envoyé (PI)', {
+                transaction_id: tx.id,
+                receipt_number: receiptNumber
+              })
+            }
+          }
+        } catch (receiptErr) {
+          log.error('❌ Exception génération/envoi reçu fiscal (PI)', {
+            transaction_id: tx.id,
+            error: (receiptErr as Error).message
+          })
+          // Continue execution - le reçu peut être régénéré plus tard
+        }
+      }
+
+      log.info('✅ Don Stripe (PI) traité', { payment_intent_id: paymentIntent.id, amount, transaction_id: tx.id })
+    } catch (err) {
+      log.error('❌ Exception webhook payment_intent.succeeded', {
+        payment_intent_id: paymentIntent.id,
+        error: (err as Error).message,
+        stack: (err as Error).stack
+      })
+      return NextResponse.json(
+        { error: 'Internal server error' },
+        { status: 500 }
+      )
+    }
   }
 
   // Traiter charge.succeeded pour bénéficier de billing_details complets; PI reste en fallback
@@ -306,51 +411,157 @@ export async function POST(req: NextRequest) {
     const donorEmail = charge.billing_details?.email || undefined
     const amount = charge.amount / 100
 
-    const { data: tx } = await admin
-      .from('support_transactions')
-      .insert({
-        user_id: userId,
-        tournee_id: tourneeId,
-        amount,
-        calendar_accepted: calendarGiven,
-        payment_method: 'carte',
-        payment_status: 'completed',
-        stripe_session_id: piId,
-        supporter_name: donorName,
-        supporter_email: donorEmail,
-        notes: `Stripe Charge - ${charge.id}`,
-      })
-      .select('id, amount, supporter_name, supporter_email')
-      .single()
-
-    // Générer un reçu fiscal UNIQUEMENT pour les dons (calendar_accepted: false)
-    if (tx && amount >= 6 && !calendarGiven) {
-      const { data: rec } = await admin.rpc('issue_receipt', { p_transaction_id: tx.id }).single()
-      const receiptNumber = (rec as { receipt_number?: string } | null)?.receipt_number ?? null
-
-      // Persist receipt generation metadata
-      const receiptUrl = receiptNumber
-        ? `${process.env.NEXT_PUBLIC_SITE_URL}/recu/${receiptNumber}`
-        : null
-      await admin
+    try {
+      const { data: tx, error: insertError } = await admin
         .from('support_transactions')
-        .update({ receipt_generated: new Date().toISOString(), receipt_url: receiptUrl })
-        .eq('id', tx.id)
+        .insert({
+          user_id: userId,
+          tournee_id: tourneeId,
+          amount,
+          calendar_accepted: calendarGiven,
+          payment_method: 'carte',
+          payment_status: 'completed',
+          stripe_session_id: piId,
+          supporter_name: donorName,
+          supporter_email: donorEmail,
+          notes: `Stripe Charge - ${charge.id}`,
+        })
+        .select('id, amount, supporter_name, supporter_email')
+        .single()
 
-      if (donorEmail) {
-        const subject = buildSubject({ supporterName: donorName ?? null, amount, receiptNumber, transactionType: 'fiscal' })
-        const html = buildHtml({ supporterName: donorName ?? null, amount, receiptNumber, transactionType: 'fiscal' })
-        const text = buildText({ supporterName: donorName ?? null, amount, receiptNumber, transactionType: 'fiscal' })
-        await sendEmail({ to: donorEmail, subject, html, text })
-        await admin
-          .from('support_transactions')
-          .update({ receipt_sent: true })
-          .eq('id', tx.id)
+      if (insertError) {
+        log.error('❌ Échec insertion support_transactions (Charge)', {
+          charge_id: charge.id,
+          error: insertError.message,
+          code: insertError.code,
+          details: insertError.details,
+          hint: insertError.hint,
+          tourneeId,
+          userId,
+          amount,
+          donorName,
+          donorEmail
+        })
+        return NextResponse.json(
+          { error: 'Database insertion failed', details: insertError.message },
+          { status: 500 }
+        )
       }
-    }
 
-    log.info('✅ Don traité (charge.succeeded)', { chargeId: charge.id, amount })
-    return NextResponse.json({ received: true })
+      if (!tx) {
+        log.error('❌ Transaction non créée (Charge)', { charge_id: charge.id })
+        return NextResponse.json(
+          { error: 'Transaction creation failed' },
+          { status: 500 }
+        )
+      }
+
+      log.info('✅ Transaction créée (Charge)', {
+        transaction_id: tx.id,
+        charge_id: charge.id,
+        amount,
+        supporter_name: donorName
+      })
+
+      // 1. Email de confirmation TOUJOURS envoyé (pour tous les montants)
+      if (donorEmail) {
+        try {
+          const confirmSubject = calendarGiven
+            ? `Confirmation de votre soutien de ${amount.toFixed(2)}€`
+            : `Confirmation de votre don de ${amount.toFixed(2)}€`
+          const confirmHtml = buildHtml({
+            supporterName: donorName ?? null,
+            amount,
+            receiptNumber: null,
+            transactionType: calendarGiven ? 'soutien' : 'fiscal'
+          })
+          const confirmText = buildText({
+            supporterName: donorName ?? null,
+            amount,
+            receiptNumber: null,
+            transactionType: calendarGiven ? 'soutien' : 'fiscal'
+          })
+
+          await sendEmail({
+            to: donorEmail,
+            subject: confirmSubject,
+            html: confirmHtml,
+            text: confirmText
+          })
+
+          log.info('✅ Email de confirmation envoyé (Charge)', {
+            transaction_id: tx.id,
+            email: donorEmail
+          })
+        } catch (emailErr) {
+          log.error('❌ Échec envoi email de confirmation (Charge)', {
+            transaction_id: tx.id,
+            error: (emailErr as Error).message
+          })
+          // Continue execution - email confirmation n'est pas critique
+        }
+      }
+
+      // 2. Reçu fiscal UNIQUEMENT pour les dons >= 6€ (calendar_accepted: false)
+      if (amount >= 6 && !calendarGiven) {
+        try {
+          const { data: rec, error: receiptError } = await admin.rpc('issue_receipt', { p_transaction_id: tx.id }).single()
+
+          if (receiptError) {
+            log.error('❌ Échec génération reçu fiscal (Charge)', {
+              transaction_id: tx.id,
+              error: receiptError.message
+            })
+          } else {
+            const receiptNumber = (rec as { receipt_number?: string } | null)?.receipt_number ?? null
+
+            // Persist receipt generation metadata
+            const receiptUrl = receiptNumber
+              ? `${process.env.NEXT_PUBLIC_SITE_URL}/recu/${receiptNumber}`
+              : null
+            await admin
+              .from('support_transactions')
+              .update({ receipt_generated: new Date().toISOString(), receipt_url: receiptUrl })
+              .eq('id', tx.id)
+
+            if (donorEmail && receiptNumber) {
+              const subject = buildSubject({ supporterName: donorName ?? null, amount, receiptNumber, transactionType: 'fiscal' })
+              const html = buildHtml({ supporterName: donorName ?? null, amount, receiptNumber, transactionType: 'fiscal' })
+              const text = buildText({ supporterName: donorName ?? null, amount, receiptNumber, transactionType: 'fiscal' })
+              await sendEmail({ to: donorEmail, subject, html, text })
+              await admin
+                .from('support_transactions')
+                .update({ receipt_sent: true })
+                .eq('id', tx.id)
+
+              log.info('✅ Reçu fiscal envoyé (Charge)', {
+                transaction_id: tx.id,
+                receipt_number: receiptNumber
+              })
+            }
+          }
+        } catch (receiptErr) {
+          log.error('❌ Exception génération/envoi reçu fiscal (Charge)', {
+            transaction_id: tx.id,
+            error: (receiptErr as Error).message
+          })
+          // Continue execution - le reçu peut être régénéré plus tard
+        }
+      }
+
+      log.info('✅ Don traité (charge.succeeded)', { chargeId: charge.id, amount, transaction_id: tx.id })
+      return NextResponse.json({ received: true })
+    } catch (err) {
+      log.error('❌ Exception webhook charge.succeeded', {
+        charge_id: charge.id,
+        error: (err as Error).message,
+        stack: (err as Error).stack
+      })
+      return NextResponse.json(
+        { error: 'Internal server error' },
+        { status: 500 }
+      )
+    }
   }
 
   return NextResponse.json({ received: true })
