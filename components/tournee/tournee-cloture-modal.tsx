@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import toast from 'react-hot-toast'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -40,6 +40,20 @@ export function TourneeClotureModal({ tourneeId, trigger, onClose }: ModalClotur
     }
   }
 
+  // Helper pour gérer les inputs numériques (remplace virgule par point)
+  const handleNumberInput = (value: string, setter: (v: string) => void) => {
+    // Remplacer virgule par point
+    let val = value.replace(',', '.')
+    // Garder uniquement chiffres et point
+    val = val.replace(/[^0-9.]/g, '')
+    // Éviter plusieurs points
+    const parts = val.split('.')
+    if (parts.length > 2) {
+      val = parts[0] + '.' + parts.slice(1).join('')
+    }
+    setter(val)
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
 
@@ -53,23 +67,27 @@ export function TourneeClotureModal({ tourneeId, trigger, onClose }: ModalClotur
 
     if (!isValid) return
     setIsSubmitting(true)
+    const toastId = toast.loading('Clôture en cours...')
+
     try {
       const res = await cloturerTourneeAvecRetribution({
         tourneeId,
         calendriersVendus: calendriersNum,
         montantTotal: total,
       })
+
       if (!res?.ok) {
-        toast.error(res?.error || 'Erreur lors de la clôture', { duration: 4000 })
+        toast.error(res?.error || 'Erreur lors de la clôture', { id: toastId, duration: 4000 })
         return
       }
-      toast.success(`🎉 Tournée clôturée ! ${total > 0 ? 'Répartition effectuée selon vos préférences.' : ''}`, { duration: 5000 })
+
+      toast.success(`🎉 Tournée clôturée ! ${total > 0 ? 'Répartition effectuée.' : ''}`, { id: toastId, duration: 5000 })
       handleOpenChange(false)
       router.push('/calendriers')
       router.refresh()
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Erreur lors de la clôture'
-      toast.error(message, { duration: 4000 })
+      toast.error(message, { id: toastId, duration: 4000 })
     } finally {
       setIsSubmitting(false)
     }
@@ -110,10 +128,7 @@ export function TourneeClotureModal({ tourneeId, trigger, onClose }: ModalClotur
                 inputMode="decimal"
                 placeholder="0.00"
                 value={especes}
-                onChange={(e) => {
-                  const val = e.target.value.replace(/[^0-9.]/g, '')
-                  setEspeces(val)
-                }}
+                onChange={(e) => handleNumberInput(e.target.value, setEspeces)}
                 required
               />
             </div>
@@ -126,10 +141,7 @@ export function TourneeClotureModal({ tourneeId, trigger, onClose }: ModalClotur
                 inputMode="decimal"
                 placeholder="0.00"
                 value={cheques}
-                onChange={(e) => {
-                  const val = e.target.value.replace(/[^0-9.]/g, '')
-                  setCheques(val)
-                }}
+                onChange={(e) => handleNumberInput(e.target.value, setCheques)}
               />
             </div>
           </div>
