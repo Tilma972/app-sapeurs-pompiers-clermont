@@ -132,7 +132,7 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
     const pathname = usePathname()
     const router = useRouter()
     const [role, setRole] = React.useState<string | null>(null)
-    const { setOpenMobile, isMobile } = useSidebar()
+    const { setOpenMobile, isMobile, setOpen } = useSidebar()
 
     React.useEffect(() => {
         let mounted = true;
@@ -167,6 +167,8 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
     const handleLinkClick = () => {
         if (isMobile) {
             setOpenMobile(false)
+        } else {
+            setOpen(false)
         }
     }
 
