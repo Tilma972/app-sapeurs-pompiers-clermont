@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import toast from 'react-hot-toast'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -20,15 +20,18 @@ export function TourneeClotureModal({ tourneeId, trigger, onClose }: ModalClotur
   const [open, setOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const [calendriers, setCalendriers] = useState(0)
-  const [especes, setEspeces] = useState(0)
-  const [cheques, setCheques] = useState(0)
+  const [calendriers, setCalendriers] = useState('')
+  const [especes, setEspeces] = useState('')
+  const [cheques, setCheques] = useState('')
 
-  const total = Math.max(0, (especes || 0) + (cheques || 0))
+  const calendriersNum = Number(calendriers) || 0
+  const especesNum = Number(especes) || 0
+  const chequesNum = Number(cheques) || 0
+  const total = Math.max(0, especesNum + chequesNum)
   const montantAmicale = total * 0.7
   const montantPompier = total * 0.3
   // Accepter la clôture même sans vente (tournée infructueuse)
-  const isValid = calendriers >= 0 && total >= 0
+  const isValid = calendriersNum >= 0 && total >= 0
 
   const handleOpenChange = (newOpen: boolean) => {
     setOpen(newOpen)
@@ -37,11 +40,25 @@ export function TourneeClotureModal({ tourneeId, trigger, onClose }: ModalClotur
     }
   }
 
+  // Helper pour gérer les inputs numériques (remplace virgule par point)
+  const handleNumberInput = (value: string, setter: (v: string) => void) => {
+    // Remplacer virgule par point
+    let val = value.replace(',', '.')
+    // Garder uniquement chiffres et point
+    val = val.replace(/[^0-9.]/g, '')
+    // Éviter plusieurs points
+    const parts = val.split('.')
+    if (parts.length > 2) {
+      val = parts[0] + '.' + parts.slice(1).join('')
+    }
+    setter(val)
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
 
     // Si aucune vente, demander confirmation
-    if (calendriers === 0 && total === 0) {
+    if (calendriersNum === 0 && total === 0) {
       const confirm = window.confirm(
         '⚠️ Aucune vente enregistrée.\n\nVoulez-vous vraiment clôturer cette tournée sans calendriers ni montant ?'
       )
@@ -50,23 +67,27 @@ export function TourneeClotureModal({ tourneeId, trigger, onClose }: ModalClotur
 
     if (!isValid) return
     setIsSubmitting(true)
+    const toastId = toast.loading('Clôture en cours...')
+
     try {
       const res = await cloturerTourneeAvecRetribution({
         tourneeId,
-        calendriersVendus: calendriers,
+        calendriersVendus: calendriersNum,
         montantTotal: total,
       })
+
       if (!res?.ok) {
-        toast.error(res?.error || 'Erreur lors de la clôture', { duration: 4000 })
+        toast.error(res?.error || 'Erreur lors de la clôture', { id: toastId, duration: 4000 })
         return
       }
-      toast.success(`🎉 Tournée clôturée ! ${total > 0 ? 'Répartition effectuée selon vos préférences.' : ''}`, { duration: 5000 })
+
+      toast.success(`🎉 Tournée clôturée ! ${total > 0 ? 'Répartition effectuée.' : ''}`, { id: toastId, duration: 5000 })
       handleOpenChange(false)
       router.push('/calendriers')
       router.refresh()
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Erreur lors de la clôture'
-      toast.error(message, { duration: 4000 })
+      toast.error(message, { id: toastId, duration: 4000 })
     } finally {
       setIsSubmitting(false)
     }
@@ -85,17 +106,40 @@ export function TourneeClotureModal({ tourneeId, trigger, onClose }: ModalClotur
           <div className="space-y-4">
             <div>
               <Label htmlFor="calendriers">Calendriers vendus</Label>
-              <Input id="calendriers" type="number" min={0} value={calendriers} onChange={(e) => setCalendriers(Number(e.target.value))} required />
+              <Input
+                id="calendriers"
+                type="text"
+                inputMode="numeric"
+                placeholder="0"
+                value={calendriers}
+                onChange={(e) => handleNumberInput(e.target.value, setCalendriers)}
+                required
+              />
             </div>
 
             <div>
               <Label htmlFor="especes">Espèces (€)</Label>
-              <Input id="especes" type="number" step="0.01" min={0} value={especes} onChange={(e) => setEspeces(Number(e.target.value))} required />
+              <Input
+                id="especes"
+                type="text"
+                inputMode="decimal"
+                placeholder="0.00"
+                value={especes}
+                onChange={(e) => handleNumberInput(e.target.value, setEspeces)}
+                required
+              />
             </div>
 
             <div>
               <Label htmlFor="cheques">Montant chèques (€)</Label>
-              <Input id="cheques" type="number" step="0.01" min={0} value={cheques} onChange={(e) => setCheques(Number(e.target.value))} />
+              <Input
+                id="cheques"
+                type="text"
+                inputMode="decimal"
+                placeholder="0.00"
+                value={cheques}
+                onChange={(e) => handleNumberInput(e.target.value, setCheques)}
+              />
             </div>
           </div>
 
