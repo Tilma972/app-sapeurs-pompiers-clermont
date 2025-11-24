@@ -77,7 +77,6 @@ export function Sidebar({ className }: SidebarProps) {
   const pathname = usePathname();
   const [role, setRole] = useState<string | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [desktopSidebarOpen, setDesktopSidebarOpen] = useState(true);
 
   useEffect(() => {
     let mounted = true;
@@ -105,10 +104,9 @@ export function Sidebar({ className }: SidebarProps) {
     };
   }, []);
 
-  // Fermer le menu mobile et desktop lors de la navigation
+  // Fermer le menu mobile lors de la navigation
   useEffect(() => {
     setMobileMenuOpen(false);
-    setDesktopSidebarOpen(false);
   }, [pathname]);
 
   const NavList = () => (
@@ -342,53 +340,13 @@ export function Sidebar({ className }: SidebarProps) {
         </div>
       </div>
 
-      {/* Desktop toggle button - visible when sidebar is closed */}
-      {!desktopSidebarOpen && (
-        <Button
-          variant="outline"
-          size="icon"
-          className="hidden sm:flex fixed left-4 top-4 z-50 bg-card shadow-lg"
-          onClick={() => setDesktopSidebarOpen(true)}
-          aria-label="Ouvrir la sidebar"
-        >
-          <Menu className="h-5 w-5" />
-        </Button>
-      )}
-
-      {/* Desktop overlay - visible when sidebar is open */}
-      {desktopSidebarOpen && (
-        <>
-          <div
-            className="hidden sm:block fixed inset-0 bg-black/20 z-40"
-            onClick={() => setDesktopSidebarOpen(false)}
-          />
-          <div className="hidden sm:block fixed left-0 top-0 bottom-0 w-64 z-50 bg-card border-r border-border">
-            <div className="flex h-16 items-center justify-between px-4 sm:px-6 border-b border-border">
-              <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                  <Calendar className="h-5 w-5 text-primary-foreground" />
-                </div>
-                <div>
-                  <h1 className="text-lg font-semibold text-foreground">Amicale</h1>
-                  <p className="text-xs text-muted-foreground">Sapeurs-Pompiers</p>
-                </div>
-              </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setDesktopSidebarOpen(false)}
-                aria-label="Fermer la sidebar"
-              >
-                <Menu className="h-5 w-5" />
-              </Button>
-            </div>
-            <NavList />
-            <div className="p-4 border-t border-border mt-auto">
-              <LogoutButton />
-            </div>
-          </div>
-        </>
-      )}
+      {/* Desktop nav */}
+      <div className="hidden sm:flex flex-1 flex-col">
+        <NavList />
+        <div className="p-4 border-t border-border mt-auto">
+          <LogoutButton />
+        </div>
+      </div>
     </div>
   );
 }
