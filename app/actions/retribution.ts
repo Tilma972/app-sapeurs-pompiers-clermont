@@ -22,11 +22,21 @@ export async function cloturerTourneeAvecRetribution(data: {
     }
     if (!tournee) return { ok: false, error: 'Tournée introuvable' as const }
 
+    // Type pour accéder aux propriétés de la tournée
+    type TourneeWithEquipe = {
+      equipe_id?: string | null
+      user_id: string
+      statut?: string | null
+      equipes?: { enable_retribution?: boolean } | null
+    }
+
+    const tourneeData = tournee as TourneeWithEquipe
+
     console.log('🔍 DEBUG - Tournée chargée:', {
       tourneeId: data.tourneeId,
-      equipe_id: (tournee as any).equipe_id,
+      equipe_id: tourneeData.equipe_id,
       equipes_data: tournee.equipes,
-      statut: (tournee as any).statut
+      statut: tourneeData.statut
     })
 
     if (tournee.statut && tournee.statut !== 'active') {
@@ -35,7 +45,7 @@ export async function cloturerTourneeAvecRetribution(data: {
 
     // S'assurer que l'équipe est connue et que la rétribution est activée
     let enableRetrib = tournee.equipes?.enable_retribution as boolean | undefined
-    let equipeId: string | null = (tournee as { equipe_id?: string | null }).equipe_id ?? null
+    let equipeId: string | null = tourneeData.equipe_id ?? null
 
     console.log('🔍 DEBUG - État initial:', {
       enableRetrib,
@@ -49,7 +59,7 @@ export async function cloturerTourneeAvecRetribution(data: {
       const { data: profile, error: profileErr } = await supabase
         .from('profiles')
         .select('team_id, equipes(enable_retribution)')
-        .eq('id', (tournee as { user_id: string }).user_id)
+        .eq('id', tourneeData.user_id)
         .single()
 
       console.log('🔍 DEBUG - Profile chargé:', {
@@ -68,7 +78,7 @@ export async function cloturerTourneeAvecRetribution(data: {
       })
 
       // Si la tournée n'a pas d'équipe, la renseigner pour que la RPC fonctionne (join obligatoire)
-      if (!('equipe_id' in tournee) || !(tournee as { equipe_id?: string | null }).equipe_id) {
+      if (!tourneeData.equipe_id) {
         if (equipeId) {
           console.log('🔍 DEBUG - Mise à jour equipe_id sur tournée:', equipeId)
           await supabase.from('tournees').update({ equipe_id: equipeId, updated_at: new Date().toISOString() }).eq('id', data.tourneeId)
@@ -104,7 +114,7 @@ export async function cloturerTourneeAvecRetribution(data: {
 
     // === GAMIFICATION: Attribution d'XP pour calendriers distribués ===
     try {
-      const userId = (tournee as { user_id: string }).user_id
+      const userId = tourneeData.user_id
 
       // XP pour les calendriers distribués (10 XP base + 1 XP par 5€)
       const baseXP = data.calendriersVendus * 10
