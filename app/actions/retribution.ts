@@ -32,13 +32,6 @@ export async function cloturerTourneeAvecRetribution(data: {
 
     const tourneeData = tournee as TourneeWithEquipe
 
-    console.log('🔍 DEBUG - Tournée chargée:', {
-      tourneeId: data.tourneeId,
-      equipe_id: tourneeData.equipe_id,
-      equipes_data: tournee.equipes,
-      statut: tourneeData.statut
-    })
-
     if (tournee.statut && tournee.statut !== 'active') {
       return { ok: false, error: 'Cette tournée est déjà clôturée' as const }
     }
@@ -47,57 +40,27 @@ export async function cloturerTourneeAvecRetribution(data: {
     let enableRetrib = tournee.equipes?.enable_retribution as boolean | undefined
     let equipeId: string | null = tourneeData.equipe_id ?? null
 
-    console.log('🔍 DEBUG - État initial:', {
-      enableRetrib,
-      equipeId,
-      tournee_equipes: tournee.equipes
-    })
-
     if (enableRetrib === undefined || !equipeId) {
-      console.log('🔍 DEBUG - Tentative fallback depuis profile...')
-
       const { data: profile, error: profileErr } = await supabase
         .from('profiles')
         .select('team_id, equipes(enable_retribution)')
         .eq('id', tourneeData.user_id)
         .single()
 
-      console.log('🔍 DEBUG - Profile chargé:', {
-        profile,
-        profileErr
-      })
-
       type ProfileJoin = { team_id?: string | null; equipes?: { enable_retribution?: boolean } | null }
       const p = (profile ?? {}) as ProfileJoin
       enableRetrib = p.equipes?.enable_retribution ?? enableRetrib
       equipeId = p.team_id ?? equipeId
 
-      console.log('🔍 DEBUG - Après fallback:', {
-        enableRetrib,
-        equipeId
-      })
-
       // Si la tournée n'a pas d'équipe, la renseigner pour que la RPC fonctionne (join obligatoire)
       if (!tourneeData.equipe_id) {
         if (equipeId) {
-          console.log('🔍 DEBUG - Mise à jour equipe_id sur tournée:', equipeId)
           await supabase.from('tournees').update({ equipe_id: equipeId, updated_at: new Date().toISOString() }).eq('id', data.tourneeId)
         }
       }
     }
 
-    console.log('🔍 DEBUG - Vérification finale:', {
-      enableRetrib,
-      equipeId,
-      willBlock: !enableRetrib
-    })
-
     if (!enableRetrib) {
-      console.error('❌ BLOCAGE - Rétribution désactivée:', {
-        enableRetrib,
-        equipeId,
-        tourneeId: data.tourneeId
-      })
       return { ok: false, error: 'La rétribution n\'est pas activée pour votre équipe' as const }
     }
 
