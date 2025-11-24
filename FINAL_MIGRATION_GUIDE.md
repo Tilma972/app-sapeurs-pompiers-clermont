@@ -172,7 +172,7 @@ Ce guide contient **2 migrations SQL critiques** à appliquer pour résoudre tou
        SELECT 1 FROM tournees t
        WHERE t.id = support_transactions.tournee_id
        AND t.user_id = auth.uid()
-       AND t.status = 'active'
+       AND t.statut = 'active'
      )
    );
    ```
