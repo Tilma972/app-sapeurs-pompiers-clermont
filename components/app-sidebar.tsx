@@ -132,7 +132,7 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
     const pathname = usePathname()
     const router = useRouter()
     const [role, setRole] = React.useState<string | null>(null)
-    const { setOpenMobile, setOpen, isMobile } = useSidebar()
+    const { setOpenMobile, isMobile } = useSidebar()
 
     React.useEffect(() => {
         let mounted = true;
@@ -165,17 +165,10 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
     }
 
     const handleLinkClick = () => {
-        // Fermer la sidebar sur mobile
         if (isMobile) {
             setOpenMobile(false)
         }
     }
-
-    // Fermer la sidebar lors de la navigation (mobile et desktop)
-    React.useEffect(() => {
-        setOpenMobile(false)
-        setOpen(false)
-    }, [pathname, setOpenMobile, setOpen])
 
     return (
         <Sidebar collapsible="icon" className="bg-background border-r [&>div]:bg-background" {...props}>
