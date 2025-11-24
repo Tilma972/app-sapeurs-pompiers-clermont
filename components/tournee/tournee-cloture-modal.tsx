@@ -96,13 +96,13 @@ export function TourneeClotureModal({ tourneeId, trigger, onClose }: ModalClotur
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
-      <DialogContent className="max-w-lg">
-        <DialogHeader>
+      <DialogContent className="max-w-lg max-h-[90vh] flex flex-col">
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle>🏁 Clôturer ma tournée</DialogTitle>
           <DialogDescription>Saisissez le bilan de votre collecte</DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto space-y-6 pr-1">
           <div className="space-y-4">
             <div>
               <Label htmlFor="calendriers">Calendriers vendus</Label>
@@ -165,18 +165,15 @@ export function TourneeClotureModal({ tourneeId, trigger, onClose }: ModalClotur
           )}
 
           {total > 0 && (
-            <div className="space-y-3">
-              <div>
-                <Label>Répartition de vos {montantPompier.toFixed(2)}€</Label>
-                <p className="text-sm text-muted-foreground">
-                  La part pompier (30%) sera répartie automatiquement entre votre compte et le pot d&apos;équipe
-                  selon vos préférences et le minimum imposé par l&apos;équipe.
-                </p>
-              </div>
+            <div className="space-y-2">
+              <Label className="text-sm">Répartition de vos {montantPompier.toFixed(2)}€</Label>
+              <p className="text-xs text-muted-foreground">
+                Répartition automatique selon vos préférences et le minimum d&apos;équipe.
+              </p>
             </div>
           )}
 
-          <DialogFooter>
+          <DialogFooter className="flex-shrink-0 gap-2 pt-4 pb-safe sticky bottom-0 bg-background border-t mt-6">
             <Button type="button" variant="outline" onClick={() => handleOpenChange(false)} disabled={isSubmitting}>Annuler</Button>
             <Button type="submit" disabled={!isValid || isSubmitting}>{isSubmitting ? 'Clôture en cours...' : 'Valider et clôturer'}</Button>
           </DialogFooter>
