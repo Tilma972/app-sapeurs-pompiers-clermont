@@ -110,7 +110,8 @@ export async function cloturerTourneeAvecRetribution(data: {
       console.error('Erreur gamification (non-bloquante):', gamificationError)
     }
 
-  revalidatePath('/ma-tournee')
+    revalidatePath('/ma-tournee')
+    revalidatePath('/calendriers')
     revalidatePath('/dashboard/mon-compte')
     return { ok: true as const, result }
   } catch (err) {
