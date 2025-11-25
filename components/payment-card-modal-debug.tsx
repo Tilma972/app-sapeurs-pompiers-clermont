@@ -60,8 +60,12 @@ export function PaymentCardModalDebug({ tourneeId, trigger }: { tourneeId: strin
         const message = `Paiement confirmé ${amountLabel}${nameLabel}`.trim()
         console.log('✅ Displaying toast:', message)
         toast.success(message, { duration: 5000, position: 'top-center' })
-        console.log('🚪 Closing modal')
-        setOpen(false)
+        console.log('⏱️ Waiting 300ms before closing modal')
+        // Delay modal closing to let toast display
+        setTimeout(() => {
+          console.log('🚪 Closing modal')
+          setOpen(false)
+        }, 300)
       })
       .subscribe((status) => {
         console.log('📡 Realtime subscription status:', status)
@@ -107,8 +111,12 @@ export function PaymentCardModalDebug({ tourneeId, trigger }: { tourneeId: strin
         const message = `Paiement confirmé ${amt}${name}`.trim()
         console.log('✅ Transaction found via polling, displaying toast:', message)
         toast.success(message, { duration: 5000, position: 'top-center' })
-        console.log('🚪 Closing modal')
-        setOpen(false)
+        console.log('⏱️ Waiting 300ms before closing modal')
+        // Delay modal closing to let toast display
+        setTimeout(() => {
+          console.log('🚪 Closing modal')
+          setOpen(false)
+        }, 300)
       }
     }
 
