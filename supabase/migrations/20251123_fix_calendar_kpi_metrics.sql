@@ -3,13 +3,15 @@
 -- Les KPI de la page calendrier doivent refléter l'activité complète (tournées actives + complétées)
 --
 -- PROBLÈME IDENTIFIÉ:
--- - Les tournées complétées manuellement (avec valeurs globales) n'ont pas de transactions individuelles
--- - La vue actuelle utilise uniquement tournee_summary (basé sur support_transactions)
--- - Les statistiques ignorent donc les tournées clôturées manuellement
+-- - La vue actuelle ne comptait que les tournées avec statut='completed'
+-- - Les champs calendriers_distribues et montant_collecte dans la table tournees
+--   peuvent être incorrects (ex: clôture manuelle avec 0 alors que des transactions existent)
+-- - Les statistiques ignoraient donc les tournées actives ET les vraies transactions
 --
 -- SOLUTION:
--- - Tournées complétées: utiliser calendriers_distribues et montant_collecte de la table tournees
--- - Tournées actives: utiliser les transactions en temps réel via tournee_summary
+-- - Utiliser UNIQUEMENT tournee_summary comme source de vérité
+-- - Cette vue agrège les vraies transactions de support_transactions
+-- - Fonctionne pour TOUTES les tournées (actives ET complétées)
 
 -- Drop et recréation de la vue profiles_with_equipe_view
 DROP VIEW IF EXISTS public.profiles_with_equipe_view CASCADE;
@@ -45,42 +47,27 @@ FROM public.profiles p
 LEFT JOIN public.equipes e ON e.id = p.team_id
 LEFT JOIN public.profiles ce ON ce.id = e.chef_equipe_id
 LEFT JOIN (
+    -- Source de vérité unique: tournee_summary qui agrège les vraies transactions
+    -- Fonctionne pour TOUTES les tournées (actives ET complétées)
     SELECT
-        user_id,
-        -- Somme des calendriers: tournées complétées (valeur finale) + tournées actives (transactions)
-        SUM(calendriers_distribues) as calendriers_distribues,
-        SUM(montant_collecte) as montant_collecte,
-        COUNT(*) as nombre_tournees,
+        t.user_id,
+        SUM(COALESCE(ts.calendars_distributed, 0)) as calendriers_distribues,
+        SUM(COALESCE(ts.montant_total, 0)) as montant_collecte,
+        COUNT(DISTINCT t.id) as nombre_tournees,
         CASE
-            WHEN SUM(calendriers_distribues) > 0 THEN
-                ROUND(SUM(montant_collecte) / SUM(calendriers_distribues), 2)
+            WHEN SUM(COALESCE(ts.calendars_distributed, 0)) > 0 THEN
+                ROUND(SUM(COALESCE(ts.montant_total, 0)) / SUM(COALESCE(ts.calendars_distributed, 0)), 2)
             ELSE 0
         END as moyenne_par_calendrier
-    FROM (
-        -- Tournées COMPLÉTÉES: utiliser les valeurs finales de la table tournees
-        SELECT
-            t.user_id,
-            COALESCE(t.calendriers_distribues, 0) as calendriers_distribues,
-            COALESCE(t.montant_collecte, 0) as montant_collecte
-        FROM public.tournees t
-        WHERE t.statut = 'completed'
-
-        UNION ALL
-
-        -- Tournées ACTIVES: utiliser les transactions en temps réel
-        SELECT
-            t.user_id,
-            COALESCE(ts.calendars_distributed, 0) as calendriers_distribues,
-            COALESCE(ts.montant_total, 0) as montant_collecte
-        FROM public.tournees t
-        LEFT JOIN public.tournee_summary ts ON ts.tournee_id = t.id
-        WHERE t.statut = 'active'
-    ) combined_stats
-    GROUP BY user_id
+    FROM public.tournees t
+    LEFT JOIN public.tournee_summary ts ON ts.tournee_id = t.id
+    -- Inclure TOUTES les tournées (actives ET complétées)
+    WHERE t.statut IN ('active', 'completed')
+    GROUP BY t.user_id
 ) stats ON stats.user_id = p.id;
 
 -- Permissions
 GRANT SELECT ON public.profiles_with_equipe_view TO authenticated;
 
 -- Commentaire
-COMMENT ON VIEW public.profiles_with_equipe_view IS 'Vue des profils avec informations d''équipe et statistiques personnelles (tournées complétées depuis table tournees + tournées actives depuis transactions)';
+COMMENT ON VIEW public.profiles_with_equipe_view IS 'Vue des profils avec informations d''équipe et statistiques personnelles (source unique: tournee_summary pour toutes les tournées)';
