@@ -368,8 +368,9 @@ export async function getActiveTourneeWithTransactions(): Promise<{
 
 /**
  * Récupère les statistiques personnelles de l'utilisateur
- * IMPORTANT: Combine les tournées complétées (valeurs finales de la table tournees)
- * et les tournées actives (transactions en temps réel via tournee_summary)
+ * IMPORTANT: Utilise tournee_summary comme source de vérité unique
+ * Cette vue agrège les vraies transactions de support_transactions
+ * et fonctionne pour TOUTES les tournées (actives ET complétées)
  */
 export async function getUserPersonalStats(): Promise<{
   totalCalendarsDistributed: number;
@@ -385,53 +386,39 @@ export async function getUserPersonalStats(): Promise<{
   }
 
   try {
-    // 1. Récupérer les stats des tournées COMPLÉTÉES (valeurs finales de la table tournees)
-    const { data: completedTournees, error: completedError } = await supabase
-      .from('tournees')
-      .select('calendriers_distribues, montant_collecte')
-      .eq('user_id', user.id)
-      .eq('statut', 'completed');
-
-    if (completedError) {
-      console.error('Erreur lors de la récupération des tournées complétées:', completedError);
-      return null;
-    }
-
-    const completedCalendars = completedTournees?.reduce((sum, t) => sum + (t.calendriers_distribues || 0), 0) || 0;
-    const completedAmount = completedTournees?.reduce((sum, t) => sum + (t.montant_collecte || 0), 0) || 0;
-
-    // 2. Récupérer les stats des tournées ACTIVES (transactions en temps réel)
-    const { data: activeTournees, error: activeError } = await supabase
+    // Récupérer toutes les tournées (actives ET complétées) de l'utilisateur
+    const { data: tournees, error: tourneesError } = await supabase
       .from('tournees')
       .select('id')
       .eq('user_id', user.id)
-      .eq('statut', 'active');
+      .in('statut', ['active', 'completed']);
 
-    if (activeError) {
-      console.error('Erreur lors de la récupération des tournées actives:', activeError);
+    if (tourneesError) {
+      console.error('Erreur lors de la récupération des tournées:', tourneesError);
       return null;
     }
 
-    let activeCalendars = 0;
-    let activeAmount = 0;
-
-    if (activeTournees && activeTournees.length > 0) {
-      const { data: activeSummaries, error: summaryError } = await supabase
-        .from('tournee_summary')
-        .select('calendars_distributed, montant_total')
-        .in('tournee_id', activeTournees.map(t => t.id));
-
-      if (summaryError) {
-        console.error('Erreur lors de la récupération des résumés de tournées actives:', summaryError);
-      } else {
-        activeCalendars = activeSummaries?.reduce((sum, s) => sum + (s.calendars_distributed || 0), 0) || 0;
-        activeAmount = activeSummaries?.reduce((sum, s) => sum + (s.montant_total || 0), 0) || 0;
-      }
+    if (!tournees || tournees.length === 0) {
+      return {
+        totalCalendarsDistributed: 0,
+        totalAmountCollected: 0,
+        averagePerCalendar: 0
+      };
     }
 
-    // 3. Combiner les deux sources
-    const totalCalendarsDistributed = completedCalendars + activeCalendars;
-    const totalAmountCollected = completedAmount + activeAmount;
+    // Récupérer les stats depuis tournee_summary (source de vérité)
+    const { data: summaries, error: summaryError } = await supabase
+      .from('tournee_summary')
+      .select('calendars_distributed, montant_total')
+      .in('tournee_id', tournees.map(t => t.id));
+
+    if (summaryError) {
+      console.error('Erreur lors de la récupération des résumés:', summaryError);
+      return null;
+    }
+
+    const totalCalendarsDistributed = summaries?.reduce((sum, s) => sum + (s.calendars_distributed || 0), 0) || 0;
+    const totalAmountCollected = summaries?.reduce((sum, s) => sum + (s.montant_total || 0), 0) || 0;
     const averagePerCalendar = totalCalendarsDistributed > 0
       ? totalAmountCollected / totalCalendarsDistributed
       : 0;
@@ -465,31 +452,48 @@ export async function getUserHistory(): Promise<{
   }
 
   try {
-    // Récupérer les 3 dernières tournées terminées avec leurs statistiques
-    const { data: tournees, error } = await supabase
+    // Récupérer les 3 dernières tournées terminées
+    const { data: tournees, error: tourneesError } = await supabase
       .from('tournees')
-      .select(`
-        id,
-        date_fin,
-        calendriers_distribues,
-        montant_collecte
-      `)
+      .select('id, date_fin, date_debut')
       .eq('user_id', user.id)
       .eq('statut', 'completed')
       .order('date_fin', { ascending: false })
       .limit(3);
 
-    if (error) {
-      console.error('Erreur lors de la récupération de l\'historique:', error);
+    if (tourneesError) {
+      console.error('Erreur lors de la récupération de l\'historique:', tourneesError);
       return [];
     }
 
-    return tournees?.map((tournee: any) => ({ // eslint-disable-line @typescript-eslint/no-explicit-any
-      id: tournee.id,
-      date: tournee.date_fin || tournee.date_debut || new Date().toISOString(),
-      calendarsDistributed: tournee.calendriers_distribues || 0,
-      amountCollected: tournee.montant_collecte || 0
-    })) || [];
+    if (!tournees || tournees.length === 0) {
+      return [];
+    }
+
+    // Récupérer les stats depuis tournee_summary (source de vérité)
+    const { data: summaries, error: summaryError } = await supabase
+      .from('tournee_summary')
+      .select('tournee_id, calendars_distributed, montant_total')
+      .in('tournee_id', tournees.map(t => t.id));
+
+    if (summaryError) {
+      console.error('Erreur lors de la récupération des résumés:', summaryError);
+    }
+
+    // Créer un map pour accès rapide aux stats
+    const statsMap = new Map(
+      summaries?.map(s => [s.tournee_id, s]) || []
+    );
+
+    return tournees.map((tournee: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+      const stats = statsMap.get(tournee.id);
+      return {
+        id: tournee.id,
+        date: tournee.date_fin || tournee.date_debut || new Date().toISOString(),
+        calendarsDistributed: stats?.calendars_distributed || 0,
+        amountCollected: stats?.montant_total || 0
+      };
+    });
   } catch (error) {
     console.error('Erreur dans getUserHistory:', error);
     return [];
@@ -517,7 +521,7 @@ export async function getLastCompletedTourneeSummary(): Promise<{
     // Dernière tournée terminée
     const { data: tournee, error: tourneeError } = await supabase
       .from('tournees')
-      .select('id, date_fin, date_debut, calendriers_distribues, montant_collecte')
+      .select('id, date_fin, date_debut')
       .eq('user_id', user.id)
       .eq('statut', 'completed')
       .order('date_fin', { ascending: false })
@@ -531,6 +535,17 @@ export async function getLastCompletedTourneeSummary(): Promise<{
 
     if (!tournee) return null;
 
+    // Récupérer les stats depuis tournee_summary (source de vérité)
+    const { data: summary, error: summaryError } = await supabase
+      .from('tournee_summary')
+      .select('calendars_distributed, montant_total')
+      .eq('tournee_id', tournee.id)
+      .single();
+
+    if (summaryError && summaryError.code !== 'PGRST116') {
+      console.error('[getLastCompletedTourneeSummary] Erreur résumé:', summaryError);
+    }
+
     // Compter les reçus émis pour cette tournée
     const { count: receiptsCount } = await supabase
       .from('support_transactions')
@@ -541,8 +556,8 @@ export async function getLastCompletedTourneeSummary(): Promise<{
     return {
       id: tournee.id,
       date: tournee.date_fin || tournee.date_debut || new Date().toISOString(),
-      calendarsDistributed: tournee.calendriers_distribues || 0,
-      amountCollected: tournee.montant_collecte || 0,
+      calendarsDistributed: summary?.calendars_distributed || 0,
+      amountCollected: summary?.montant_total || 0,
       receiptsCount: receiptsCount || 0,
     };
   } catch (error) {
