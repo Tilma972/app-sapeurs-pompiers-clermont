@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { createClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
 import { getActiveTourneeWithTransactions } from "@/lib/supabase/tournee"
-import { PaymentCardModal } from "@/components/payment-card-modal"
+import { PaymentCardModalDebug } from "@/components/payment-card-modal-debug"
 import { ReceiptGenerationModal } from "@/components/receipt-generation-modal"
 import { TourneeClotureModal } from "@/components/tournee/tournee-cloture-modal"
 
@@ -77,7 +77,7 @@ export default async function MaTourneePage() {
 
         {/* Gros boutons tactiles - Layout optimisé */}
         <div className="grid grid-cols-1 gap-3 sm:gap-4 mt-4">
-          <PaymentCardModal
+          <PaymentCardModalDebug
             tourneeId={tournee.id}
             trigger={
               <Button size="lg" className="h-20 sm:h-24 text-base sm:text-lg w-full">
