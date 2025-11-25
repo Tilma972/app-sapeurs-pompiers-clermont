@@ -10,7 +10,7 @@ import QRCode from 'react-qr-code'
 import { createPaymentIntent } from "@/app/actions/create-payment-intent"
 import { Checkbox } from "@/components/ui/checkbox"
 import { createClient } from "@/lib/supabase/client"
-import { toast } from "react-hot-toast"
+import { toast } from "sonner"
 
 export function PaymentCardModal({ tourneeId, trigger }: { tourneeId: string; trigger?: ReactNode }) {
   const [open, setOpen] = useState(false)
@@ -49,8 +49,12 @@ export function PaymentCardModal({ tourneeId, trigger }: { tourneeId: string; tr
         const name = payload?.new?.supporter_name ?? null
         const amountLabel = typeof amt === 'number' ? `${amt.toFixed(2)}€` : ''
         const nameLabel = name ? ` • ${name}` : ''
-        toast.success(`Paiement confirmé ${amountLabel}${nameLabel}`.trim())
-        setOpen(false)
+        toast.success(`Paiement confirmé ${amountLabel}${nameLabel}`.trim(), {
+          duration: 4000,
+          position: 'top-center',
+        })
+        // Delay modal closing to let toast display
+        setTimeout(() => setOpen(false), 300)
       })
       .subscribe()
 
@@ -76,8 +80,12 @@ export function PaymentCardModal({ tourneeId, trigger }: { tourneeId: string; tr
       if (!cancelled && row) {
         const amt = typeof row.amount === 'number' ? `${row.amount.toFixed(2)}€` : ''
         const name = row.supporter_name ? ` • ${row.supporter_name}` : ''
-        toast.success(`Paiement confirmé ${amt}${name}`.trim())
-        setOpen(false)
+        toast.success(`Paiement confirmé ${amt}${name}`.trim(), {
+          duration: 4000,
+          position: 'top-center',
+        })
+        // Delay modal closing to let toast display
+        setTimeout(() => setOpen(false), 300)
       }
     }
 
