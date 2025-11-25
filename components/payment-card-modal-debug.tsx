@@ -10,7 +10,7 @@ import QRCode from 'react-qr-code'
 import { createPaymentIntent } from "@/app/actions/create-payment-intent"
 import { Checkbox } from "@/components/ui/checkbox"
 import { createClient } from "@/lib/supabase/client"
-import { toast } from "react-hot-toast"
+import { toast } from "sonner"
 
 export function PaymentCardModalDebug({ tourneeId, trigger }: { tourneeId: string; trigger?: ReactNode }) {
   const [open, setOpen] = useState(false)
@@ -59,7 +59,7 @@ export function PaymentCardModalDebug({ tourneeId, trigger }: { tourneeId: strin
         const nameLabel = name ? ` • ${name}` : ''
         const message = `Paiement confirmé ${amountLabel}${nameLabel}`.trim()
         console.log('✅ Displaying toast:', message)
-        toast.success(message, { duration: 5000 })
+        toast.success(message, { duration: 5000, position: 'top-center' })
         console.log('🚪 Closing modal')
         setOpen(false)
       })
@@ -106,7 +106,7 @@ export function PaymentCardModalDebug({ tourneeId, trigger }: { tourneeId: strin
         const name = row.supporter_name ? ` • ${row.supporter_name}` : ''
         const message = `Paiement confirmé ${amt}${name}`.trim()
         console.log('✅ Transaction found via polling, displaying toast:', message)
-        toast.success(message, { duration: 5000 })
+        toast.success(message, { duration: 5000, position: 'top-center' })
         console.log('🚪 Closing modal')
         setOpen(false)
       }
