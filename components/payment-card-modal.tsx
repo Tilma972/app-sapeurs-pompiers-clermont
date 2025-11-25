@@ -10,7 +10,7 @@ import QRCode from 'react-qr-code'
 import { createPaymentIntent } from "@/app/actions/create-payment-intent"
 import { Checkbox } from "@/components/ui/checkbox"
 import { createClient } from "@/lib/supabase/client"
-import { toast } from "react-hot-toast"
+import { toast } from "sonner"
 
 export function PaymentCardModal({ tourneeId, trigger }: { tourneeId: string; trigger?: ReactNode }) {
   const [open, setOpen] = useState(false)
