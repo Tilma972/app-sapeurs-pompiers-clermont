@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { createClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
 import { getActiveTourneeWithTransactions } from "@/lib/supabase/tournee"
-import { PaymentCardModal } from "@/components/payment-card-modal-debug"
+import { PaymentCardModal } from "@/components/payment-card-modal"
 import { ReceiptGenerationModal } from "@/components/receipt-generation-modal"
 import { TourneeClotureModal } from "@/components/tournee/tournee-cloture-modal"
 
