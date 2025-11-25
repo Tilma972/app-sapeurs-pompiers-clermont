@@ -72,7 +72,7 @@ USING (
     SELECT 1 FROM tournees t
     WHERE t.id = support_transactions.tournee_id
     AND t.user_id = auth.uid()
-    AND t.status = 'active'
+    AND t.statut = 'active'
   )
 );
 
