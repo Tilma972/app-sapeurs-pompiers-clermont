@@ -123,29 +123,30 @@ export function TourneeClotureModal({ tourneeId, trigger, onClose }: ModalClotur
           <DialogDescription>Saisissez le bilan de votre collecte</DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-4">
           {isLoading ? (
-            <div className="text-center py-4 text-muted-foreground">
-              Chargement des transactions...
+            <div className="text-center py-4 text-muted-foreground text-sm">
+              Chargement...
             </div>
           ) : (
             <>
-              {/* Afficher les transactions carte bleue en lecture seule */}
+              {/* Afficher les transactions carte bleue de façon compacte */}
               {(calendriersCarteBleue > 0 || montantCarteBleue > 0) && (
-                <div className="bg-blue-50 dark:bg-blue-950/30 p-3 rounded-lg border border-blue-200 dark:border-blue-800">
-                  <p className="text-xs font-medium text-blue-900 dark:text-blue-100 mb-1">
-                    💳 Paiements par carte bleue (QR code)
-                  </p>
-                  <div className="flex justify-between text-sm text-blue-700 dark:text-blue-300">
-                    <span>{calendriersCarteBleue} calendrier{calendriersCarteBleue > 1 ? 's' : ''}</span>
-                    <span>{montantCarteBleue.toFixed(2)}€</span>
+                <div className="bg-blue-50 dark:bg-blue-950/30 p-2.5 rounded-lg border border-blue-200 dark:border-blue-800">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-blue-900 dark:text-blue-100 font-medium">💳 Carte bleue</span>
+                    <span className="text-blue-700 dark:text-blue-300">
+                      {calendriersCarteBleue} cal. · {montantCarteBleue.toFixed(2)}€
+                    </span>
                   </div>
                 </div>
               )}
 
-              <div className="space-y-4">
+              <div className="space-y-3">
                 <div>
-                  <Label htmlFor="calendriers">Calendriers vendus (espèces/chèques)</Label>
+                  <Label htmlFor="calendriers" className="text-sm">
+                    Calendriers vendus {calendriersCarteBleue > 0 ? '(espèces/chèques)' : ''}
+                  </Label>
                   <Input
                     id="calendriers"
                     type="text"
@@ -157,86 +158,85 @@ export function TourneeClotureModal({ tourneeId, trigger, onClose }: ModalClotur
                       setCalendriers(val)
                     }}
                     required
+                    className="h-11"
                   />
-                  {calendriersCarteBleue > 0 && (
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Total avec carte bleue : {totalCalendriers} calendriers
-                    </p>
-                  )}
                 </div>
 
-            <div>
-              <Label htmlFor="especes">Espèces (€)</Label>
-              <Input
-                id="especes"
-                type="text"
-                inputMode="decimal"
-                placeholder="0.00"
-                value={especes}
-                onChange={(e) => {
-                  const val = e.target.value.replace(/[^0-9.]/g, '')
-                  setEspeces(val)
-                }}
-                required
-              />
-            </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <Label htmlFor="especes" className="text-sm">Espèces (€)</Label>
+                    <Input
+                      id="especes"
+                      type="text"
+                      inputMode="decimal"
+                      placeholder="0.00"
+                      value={especes}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/[^0-9.]/g, '')
+                        setEspeces(val)
+                      }}
+                      required
+                      className="h-11"
+                    />
+                  </div>
 
-                <div>
-                  <Label htmlFor="cheques">Montant chèques (€)</Label>
-                  <Input
-                    id="cheques"
-                    type="text"
-                    inputMode="decimal"
-                    placeholder="0.00"
-                    value={cheques}
-                    onChange={(e) => {
-                      const val = e.target.value.replace(/[^0-9.]/g, '')
-                      setCheques(val)
-                    }}
-                  />
-                  {montantCarteBleue > 0 && (
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Total avec carte bleue : {total.toFixed(2)}€
-                    </p>
-                  )}
+                  <div>
+                    <Label htmlFor="cheques" className="text-sm">Chèques (€)</Label>
+                    <Input
+                      id="cheques"
+                      type="text"
+                      inputMode="decimal"
+                      placeholder="0.00"
+                      value={cheques}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/[^0-9.]/g, '')
+                        setCheques(val)
+                      }}
+                      className="h-11"
+                    />
+                  </div>
                 </div>
               </div>
             </>
           )}
 
           {total > 0 && (
-            <div className="bg-muted p-4 rounded-lg space-y-2">
-              <div className="flex justify-between font-semibold">
+            <div className="bg-muted p-3 rounded-lg space-y-1.5">
+              <div className="flex justify-between font-semibold text-sm">
                 <span>Total collecté</span>
                 <span>{total.toFixed(2)}€</span>
               </div>
-              <div className="h-px bg-border my-2" />
-              <div className="flex justify-between text-sm">
-                <span>→ Amicale (70%)</span>
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>Amicale (70%)</span>
                 <span>{montantAmicale.toFixed(2)}€</span>
               </div>
-              <div className="flex justify-between text-sm font-medium">
-                <span>→ Pompier (30%)</span>
+              <div className="flex justify-between text-xs font-medium">
+                <span>Vous (30%)</span>
                 <span>{montantPompier.toFixed(2)}€</span>
               </div>
+              <p className="text-xs text-muted-foreground pt-1">
+                Réparti selon vos préférences pot/perso
+              </p>
             </div>
           )}
 
-          {total > 0 && (
-            <div className="space-y-3">
-              <div>
-                <Label>Répartition de vos {montantPompier.toFixed(2)}€</Label>
-                <p className="text-sm text-muted-foreground">
-                  La part pompier (30%) sera répartie automatiquement entre votre compte et le pot d&apos;équipe
-                  selon vos préférences et le minimum imposé par l&apos;équipe.
-                </p>
-              </div>
-            </div>
-          )}
-
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => handleOpenChange(false)} disabled={isSubmitting}>Annuler</Button>
-            <Button type="submit" disabled={!isValid || isSubmitting}>{isSubmitting ? 'Clôture en cours...' : 'Valider et clôturer'}</Button>
+          <DialogFooter className="gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => handleOpenChange(false)}
+              disabled={isSubmitting}
+              className="flex-1"
+            >
+              Annuler
+            </Button>
+            <Button
+              type="submit"
+              disabled={!isValid || isSubmitting}
+              className="flex-1"
+            >
+              {isSubmitting ? 'Clôture...' : 'Clôturer'}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>
