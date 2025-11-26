@@ -122,8 +122,12 @@ export function TourneeClotureModal({ tourneeId, trigger, onClose }: ModalClotur
 
       toast.success(`🎉 Tournée clôturée ! ${total > 0 ? 'Répartition effectuée.' : ''}`, { id: toastId, duration: 5000 })
       handleOpenChange(false)
-      router.push('/calendriers')
-      router.refresh()
+
+      // Attendre un peu pour laisser le toast s'afficher avant la redirection
+      setTimeout(() => {
+        router.push('/calendriers')
+        router.refresh()
+      }, 500)
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Erreur lors de la clôture'
       toast.error(message, { id: toastId, duration: 4000 })
