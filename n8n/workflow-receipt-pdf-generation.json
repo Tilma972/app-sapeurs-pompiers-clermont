@@ -1,0 +1,344 @@
+{
+  "name": "Receipt PDF Generation",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "receipt-pdf",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "webhookId": "auto-generated"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract and validate webhook payload\nconst payload = $input.item.json;\n\n// Validation\nif (!payload.transaction_id || !payload.receipt_number) {\n  throw new Error('Missing required fields: transaction_id or receipt_number');\n}\n\nif (payload.calendar_accepted === true) {\n  throw new Error('Calendar transactions do not generate fiscal receipts');\n}\n\nif (payload.amount < 6) {\n  throw new Error('Amount must be >= 6€ for fiscal receipt');\n}\n\n// Return clean data structure\nreturn {\n  transactionId: payload.transaction_id,\n  receiptNumber: payload.receipt_number,\n  amount: parseFloat(payload.amount),\n  paymentMethod: payload.payment_method,\n  createdAt: payload.created_at,\n  donor: {\n    email: payload.donor.email,\n    name: payload.donor.name || `${payload.donor.first_name || ''} ${payload.donor.last_name || ''}`.trim(),\n    firstName: payload.donor.first_name,\n    lastName: payload.donor.last_name,\n    address: payload.donor.address,\n    zip: payload.donor.zip,\n    city: payload.donor.city\n  },\n  receiptUrl: payload.receipt_url,\n  userId: payload.user_id,\n  tourneeId: payload.tournee_id\n};"
+      },
+      "id": "extract-data",
+      "name": "Extract & Validate Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/support_transactions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "id",
+              "value": "=eq.{{ $json.transactionId }}"
+            },
+            {
+              "name": "select",
+              "value": "*"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": false,
+              "responseFormat": "json"
+            }
+          }
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_ANON_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.SUPABASE_ANON_KEY }}"
+            }
+          ]
+        }
+      },
+      "id": "fetch-transaction",
+      "name": "Fetch Transaction (Supabase)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get data from previous nodes\nconst extractedData = $('Extract & Validate Data').item.json;\nconst transaction = $input.item.json[0];\n\nif (!transaction) {\n  throw new Error('Transaction not found in Supabase');\n}\n\n// Calculate tax reduction (66%)\nconst taxReduction = (extractedData.amount * 0.66).toFixed(2);\n\n// Format date\nconst date = new Date(extractedData.createdAt);\nconst formattedDate = date.toLocaleDateString('fr-FR', {\n  year: 'numeric',\n  month: 'long',\n  day: 'numeric'\n});\n\n// Build HTML receipt\nconst html = `<!DOCTYPE html>\n<html lang=\"fr\">\n<head>\n  <meta charset=\"UTF-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n  <title>Reçu Fiscal - ${extractedData.receiptNumber}</title>\n  <style>\n    * {\n      margin: 0;\n      padding: 0;\n      box-sizing: border-box;\n    }\n    body {\n      font-family: 'Arial', sans-serif;\n      padding: 60px 40px;\n      color: #333;\n      line-height: 1.6;\n    }\n    .container {\n      max-width: 800px;\n      margin: 0 auto;\n    }\n    .header {\n      text-align: center;\n      margin-bottom: 50px;\n      border-bottom: 3px solid #dc2626;\n      padding-bottom: 30px;\n    }\n    .header h1 {\n      color: #dc2626;\n      font-size: 36px;\n      margin-bottom: 10px;\n      text-transform: uppercase;\n      letter-spacing: 2px;\n    }\n    .receipt-number {\n      font-size: 18px;\n      color: #666;\n      font-weight: bold;\n    }\n    .org-info {\n      background-color: #f9fafb;\n      padding: 25px;\n      border-radius: 8px;\n      margin-bottom: 30px;\n      border-left: 4px solid #dc2626;\n    }\n    .org-info h2 {\n      color: #dc2626;\n      font-size: 20px;\n      margin-bottom: 15px;\n    }\n    .org-info p {\n      margin-bottom: 8px;\n      font-size: 14px;\n    }\n    .donor-section {\n      margin-bottom: 30px;\n    }\n    .donor-section h3 {\n      color: #1f2937;\n      font-size: 18px;\n      margin-bottom: 15px;\n      border-bottom: 2px solid #e5e7eb;\n      padding-bottom: 8px;\n    }\n    .info-grid {\n      display: grid;\n      grid-template-columns: 200px 1fr;\n      gap: 12px;\n      margin-bottom: 20px;\n    }\n    .info-label {\n      font-weight: bold;\n      color: #4b5563;\n    }\n    .info-value {\n      color: #1f2937;\n    }\n    .amount-box {\n      background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);\n      color: white;\n      padding: 25px;\n      border-radius: 8px;\n      margin: 30px 0;\n      text-align: center;\n    }\n    .amount-box .label {\n      font-size: 16px;\n      margin-bottom: 10px;\n      opacity: 0.9;\n    }\n    .amount-box .value {\n      font-size: 42px;\n      font-weight: bold;\n      margin-bottom: 15px;\n    }\n    .tax-info {\n      background-color: #fef2f2;\n      border: 2px solid #dc2626;\n      padding: 20px;\n      border-radius: 8px;\n      margin: 30px 0;\n    }\n    .tax-info h3 {\n      color: #dc2626;\n      margin-bottom: 15px;\n      font-size: 18px;\n    }\n    .tax-info p {\n      margin-bottom: 10px;\n      font-size: 14px;\n    }\n    .tax-amount {\n      font-size: 28px;\n      font-weight: bold;\n      color: #dc2626;\n      margin-top: 15px;\n    }\n    .legal {\n      background-color: #f9fafb;\n      padding: 20px;\n      border-radius: 8px;\n      margin-top: 40px;\n      font-size: 12px;\n      color: #6b7280;\n      line-height: 1.8;\n    }\n    .legal h4 {\n      color: #374151;\n      margin-bottom: 12px;\n      font-size: 14px;\n    }\n    .footer {\n      margin-top: 50px;\n      padding-top: 30px;\n      border-top: 2px solid #e5e7eb;\n      text-align: center;\n      color: #6b7280;\n      font-size: 12px;\n    }\n    .signature-section {\n      margin-top: 50px;\n      text-align: right;\n    }\n    .signature-line {\n      display: inline-block;\n      border-top: 2px solid #333;\n      padding-top: 10px;\n      margin-top: 60px;\n      min-width: 250px;\n      text-align: center;\n      font-size: 14px;\n    }\n  </style>\n</head>\n<body>\n  <div class=\"container\">\n    <!-- Header -->\n    <div class=\"header\">\n      <h1>Reçu Fiscal</h1>\n      <p class=\"receipt-number\">N° ${extractedData.receiptNumber}</p>\n    </div>\n\n    <!-- Organization Info -->\n    <div class=\"org-info\">\n      <h2>Organisme Bénéficiaire</h2>\n      <p><strong>Association des Sapeurs-Pompiers de Clermont</strong></p>\n      <p>Association loi 1901 d'intérêt général</p>\n      <p>Habilitation à recevoir des dons ouvrant droit à réduction d'impôt</p>\n    </div>\n\n    <!-- Donor Section -->\n    <div class=\"donor-section\">\n      <h3>Informations du Donateur</h3>\n      <div class=\"info-grid\">\n        <div class=\"info-label\">Nom complet :</div>\n        <div class=\"info-value\">${extractedData.donor.name || 'Non renseigné'}</div>\n        \n        <div class=\"info-label\">Adresse email :</div>\n        <div class=\"info-value\">${extractedData.donor.email}</div>\n        \n        ${extractedData.donor.address ? `\n        <div class=\"info-label\">Adresse :</div>\n        <div class=\"info-value\">${extractedData.donor.address}</div>\n        ` : ''}\n        \n        ${extractedData.donor.zip && extractedData.donor.city ? `\n        <div class=\"info-label\">Ville :</div>\n        <div class=\"info-value\">${extractedData.donor.zip} ${extractedData.donor.city}</div>\n        ` : ''}\n      </div>\n    </div>\n\n    <!-- Donation Amount -->\n    <div class=\"amount-box\">\n      <div class=\"label\">Montant du Don</div>\n      <div class=\"value\">${extractedData.amount.toFixed(2)} €</div>\n      <div class=\"label\">Date : ${formattedDate}</div>\n    </div>\n\n    <!-- Transaction Details -->\n    <div class=\"donor-section\">\n      <h3>Détails de la Transaction</h3>\n      <div class=\"info-grid\">\n        <div class=\"info-label\">Mode de paiement :</div>\n        <div class=\"info-value\">${extractedData.paymentMethod === 'card' ? 'Carte bancaire' : extractedData.paymentMethod === 'cash' ? 'Espèces' : extractedData.paymentMethod || 'Non renseigné'}</div>\n        \n        <div class=\"info-label\">Date de la transaction :</div>\n        <div class=\"info-value\">${formattedDate}</div>\n      </div>\n    </div>\n\n    <!-- Tax Reduction Info -->\n    <div class=\"tax-info\">\n      <h3>🎯 Avantage Fiscal</h3>\n      <p>Conformément à l'article 200 du Code Général des Impôts, ce don ouvre droit à une réduction d'impôt sur le revenu égale à <strong>66% du montant versé</strong>, dans la limite de 20% du revenu imposable.</p>\n      <p>Pour ce don de <strong>${extractedData.amount.toFixed(2)} €</strong>, vous bénéficiez d'une réduction d'impôt de :</p>\n      <div class=\"tax-amount\">${taxReduction} €</div>\n      <p style=\"margin-top: 15px; font-size: 13px; font-style: italic;\">Soit un coût réel de ${(extractedData.amount - taxReduction).toFixed(2)} € après réduction fiscale.</p>\n    </div>\n\n    <!-- Legal Notice -->\n    <div class=\"legal\">\n      <h4>Mentions Légales</h4>\n      <p>\n        Ce reçu fiscal est délivré conformément aux dispositions de l'article 200 du Code Général des Impôts.\n        Il atteste du versement d'un don au profit de l'Association des Sapeurs-Pompiers de Clermont,\n        organisme d'intérêt général habilité à recevoir des dons ouvrant droit à réduction d'impôt.\n      </p>\n      <p>\n        <strong>Important :</strong> Conservez ce reçu précieusement. Il vous sera demandé par l'administration fiscale\n        en cas de contrôle. Ce document ne peut être remplacé qu'en cas de perte justifiée.\n      </p>\n      <p>\n        En application de l'article 238 bis du Code Général des Impôts, si vous bénéficiez d'une contrepartie\n        en échange de votre don (bien, service, avantage), seule la fraction du versement excédant la valeur\n        de cette contrepartie ouvre droit à réduction d'impôt.\n      </p>\n    </div>\n\n    <!-- Signature -->\n    <div class=\"signature-section\">\n      <p style=\"margin-bottom: 10px;\">Fait à Clermont,</p>\n      <p>Le ${formattedDate}</p>\n      <div class=\"signature-line\">\n        Le Président de l'Association\n      </div>\n    </div>\n\n    <!-- Footer -->\n    <div class=\"footer\">\n      <p><strong>Association des Sapeurs-Pompiers de Clermont</strong></p>\n      <p>Document généré automatiquement le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().toLocaleTimeString('fr-FR')}</p>\n      <p>Pour toute question : contact@sapeurs-pompiers-clermont.fr</p>\n    </div>\n  </div>\n</body>\n</html>`;\n\nreturn {\n  html,\n  transaction: extractedData,\n  taxReduction,\n  formattedDate\n};"
+      },
+      "id": "build-html",
+      "name": "Build HTML Receipt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [850, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.GOTENBERG_URL }}/forms/chromium/convert/html",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "files",
+              "value": "={{ $json.html }}"
+            },
+            {
+              "name": "marginTop",
+              "value": "0.5"
+            },
+            {
+              "name": "marginBottom",
+              "value": "0.5"
+            },
+            {
+              "name": "marginLeft",
+              "value": "0.5"
+            },
+            {
+              "name": "marginRight",
+              "value": "0.5"
+            },
+            {
+              "name": "paperWidth",
+              "value": "8.27"
+            },
+            {
+              "name": "paperHeight",
+              "value": "11.7"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "id": "gotenberg-convert",
+      "name": "Gotenberg: HTML to PDF",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1050, 300]
+    },
+    {
+      "parameters": {
+        "operation": "upload",
+        "bucketName": "receipts",
+        "fileName": "={{ $('Extract & Validate Data').item.json.receiptNumber }}.pdf",
+        "binaryData": true,
+        "additionalFields": {
+          "contentType": "application/pdf"
+        }
+      },
+      "id": "minio-upload",
+      "name": "Minio: Upload PDF",
+      "type": "n8n-nodes-base.s3",
+      "typeVersion": 1,
+      "position": [1250, 300],
+      "credentials": {
+        "s3": {
+          "id": "minio-credentials",
+          "name": "Minio S3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/receipts",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "transaction_id",
+              "value": "=eq.{{ $('Extract & Validate Data').item.json.transactionId }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_SERVICE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.SUPABASE_SERVICE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=minimal"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"pdf_url\": \"{{ $('Minio: Upload PDF').item.json.path }}\",\n  \"status\": \"completed\",\n  \"pdf_generated_at\": \"{{ new Date().toISOString() }}\"\n}",
+        "options": {}
+      },
+      "id": "update-receipt",
+      "name": "Update Receipt (Supabase)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1450, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"success\": true,\n  \"receipt_number\": \"{{ $('Extract & Validate Data').item.json.receiptNumber }}\",\n  \"transaction_id\": \"{{ $('Extract & Validate Data').item.json.transactionId }}\",\n  \"pdf_url\": \"{{ $('Minio: Upload PDF').item.json.path }}\",\n  \"processed_at\": \"{{ new Date().toISOString() }}\"\n}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          }
+        }
+      },
+      "id": "webhook-response",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1650, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.error }}",
+              "operation": "isNotEmpty"
+            }
+          ]
+        }
+      },
+      "id": "error-check",
+      "name": "Error Check",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [1650, 500]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"success\": false,\n  \"error\": \"{{ $json.error || 'Unknown error' }}\",\n  \"transaction_id\": \"{{ $('Extract & Validate Data').item.json.transactionId }}\"\n}",
+        "options": {
+          "responseCode": 500
+        }
+      },
+      "id": "error-response",
+      "name": "Error Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1850, 500]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Extract & Validate Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract & Validate Data": {
+      "main": [
+        [
+          {
+            "node": "Fetch Transaction (Supabase)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Transaction (Supabase)": {
+      "main": [
+        [
+          {
+            "node": "Build HTML Receipt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build HTML Receipt": {
+      "main": [
+        [
+          {
+            "node": "Gotenberg: HTML to PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gotenberg: HTML to PDF": {
+      "main": [
+        [
+          {
+            "node": "Minio: Upload PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Minio: Upload PDF": {
+      "main": [
+        [
+          {
+            "node": "Update Receipt (Supabase)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Receipt (Supabase)": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 1,
+  "updatedAt": "2025-11-18T00:00:00.000Z",
+  "versionId": "1"
+}
