@@ -1,12 +1,18 @@
--- Migration: Fix Equipes Stats View to Include Card Transactions
--- Description: Mise à jour de equipes_stats_view avec approche hybride
--- tournee_summary est VIDE si pas de transactions carte bleue
+-- Migration: Fix Equipes Stats View - Version Simplifiée
+-- Description: Mise à jour de equipes_stats_view pour utiliser uniquement la table tournees
+-- Les statistiques d'équipe reflètent l'activité après clôture (seules les tournées complétées comptent)
+--
+-- SOLUTION SIMPLIFIÉE:
+-- - Le modal de clôture additionne déjà carte bleue + espèces + chèques
+-- - Ces totaux complets sont enregistrés dans tournees.calendriers_distribues et montant_collecte
+-- - Les tournées actives affichent 0 jusqu'à leur clôture (suffisant pour les besoins)
+-- - Une seule source de vérité: la table tournees
 
 -- Drop et recréation de la vue equipes_stats_view
 DROP VIEW IF EXISTS public.equipes_ranking_view CASCADE;
 DROP VIEW IF EXISTS public.equipes_stats_view CASCADE;
 
--- Vue pour les statistiques d'équipes avec progression (VERSION CORRIGÉE)
+-- Vue pour les statistiques d'équipes avec progression (VERSION SIMPLIFIÉE)
 CREATE OR REPLACE VIEW public.equipes_stats_view AS
 SELECT
     e.id as equipe_id,
@@ -20,7 +26,7 @@ SELECT
     e.chef_equipe_id,
     ce.full_name as chef_equipe_nom,
 
-    -- Statistiques calculées (approche hybride)
+    -- Statistiques calculées (depuis la table tournees uniquement)
     COALESCE(stats.calendriers_distribues, 0) as calendriers_distribues,
     COALESCE(stats.montant_collecte, 0) as montant_collecte,
     COALESCE(stats.nombre_tournees, 0) as nombre_tournees,
@@ -51,39 +57,14 @@ FROM public.equipes e
 LEFT JOIN (
     SELECT
         p.team_id,
-        SUM(combined.calendriers_distribues) as calendriers_distribues,
-        SUM(combined.montant_collecte) as montant_collecte,
-        COUNT(DISTINCT combined.tournee_id) as nombre_tournees,
-        COUNT(DISTINCT CASE WHEN combined.statut = 'active' THEN combined.tournee_id END) as tournees_actives,
-        COUNT(DISTINCT CASE WHEN combined.statut = 'completed' THEN combined.tournee_id END) as tournees_terminees,
-        MAX(combined.date_debut) as derniere_activite
+        SUM(COALESCE(t.calendriers_distribues, 0)) as calendriers_distribues,
+        SUM(COALESCE(t.montant_collecte, 0)) as montant_collecte,
+        COUNT(DISTINCT t.id) as nombre_tournees,
+        COUNT(DISTINCT CASE WHEN t.statut = 'active' THEN t.id END) as tournees_actives,
+        COUNT(DISTINCT CASE WHEN t.statut = 'completed' THEN t.id END) as tournees_terminees,
+        MAX(t.date_debut) as derniere_activite
     FROM public.profiles p
-    INNER JOIN (
-        -- Tournées COMPLÉTÉES: valeurs finales de la table tournees
-        SELECT
-            t.id as tournee_id,
-            t.user_id,
-            t.statut,
-            t.date_debut,
-            COALESCE(t.calendriers_distribues, 0) as calendriers_distribues,
-            COALESCE(t.montant_collecte, 0) as montant_collecte
-        FROM public.tournees t
-        WHERE t.statut = 'completed'
-
-        UNION ALL
-
-        -- Tournées ACTIVES: transactions en temps réel via tournee_summary
-        SELECT
-            t.id as tournee_id,
-            t.user_id,
-            t.statut,
-            t.date_debut,
-            COALESCE(ts.calendars_distributed, 0) as calendriers_distribues,
-            COALESCE(ts.montant_total, 0) as montant_collecte
-        FROM public.tournees t
-        LEFT JOIN public.tournee_summary ts ON ts.tournee_id = t.id
-        WHERE t.statut = 'active'
-    ) combined ON combined.user_id = p.id
+    INNER JOIN public.tournees t ON t.user_id = p.id
     WHERE p.team_id IS NOT NULL
     GROUP BY p.team_id
 ) stats ON stats.team_id = e.id
@@ -112,5 +93,5 @@ GRANT SELECT ON public.equipes_stats_view TO authenticated;
 GRANT SELECT ON public.equipes_ranking_view TO authenticated;
 
 -- Commentaires
-COMMENT ON VIEW public.equipes_stats_view IS 'Vue des statistiques complètes des équipes (tournées complétées: table tournees, actives: tournee_summary)';
-COMMENT ON VIEW public.equipes_ranking_view IS 'Vue du classement des équipes par performance (approche hybride)';
+COMMENT ON VIEW public.equipes_stats_view IS 'Vue des statistiques complètes des équipes (source unique: table tournees avec totaux complets après clôture)';
+COMMENT ON VIEW public.equipes_ranking_view IS 'Vue du classement des équipes par performance (source unique: table tournees)';
