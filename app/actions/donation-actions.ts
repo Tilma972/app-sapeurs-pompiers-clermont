@@ -10,10 +10,10 @@ import { buildSubject, buildHtml, buildText } from '@/lib/email/receipt-template
 export async function submitSupportTransaction(formData: FormData) {
   const log = createLogger('actions/donation')
   const supabase = await createSupabaseServerClient()
-  
+
   // Récupération de l'utilisateur
   const { data: { user } } = await supabase.auth.getUser()
-  
+
   if (!user) {
     redirect('/auth/login')
   }
@@ -42,31 +42,31 @@ export async function submitSupportTransaction(formData: FormData) {
 
   // Validation des données essentielles (amount déjà validé ci-dessus)
   if (amount <= 0) {
-    return { 
-      success: false, 
-      errors: ['Le montant doit être positif'] 
+    return {
+      success: false,
+      errors: ['Le montant doit être positif']
     }
   }
 
   if (!tournee_id) {
-    return { 
-      success: false, 
-      errors: ['ID de tournée manquant'] 
+    return {
+      success: false,
+      errors: ['ID de tournée manquant']
     }
   }
 
   if (!payment_method || !['especes', 'cheque', 'carte', 'virement'].includes(payment_method)) {
-    return { 
-      success: false, 
-      errors: ['Mode de paiement invalide'] 
+    return {
+      success: false,
+      errors: ['Mode de paiement invalide']
     }
   }
 
   // Validation email pour les dons fiscaux, sauf si on passe en finalisation différée
   if (requested_status !== 'pending_donor_info' && !calendar_accepted && (!supporter_email || !supporter_email.trim())) {
-    return { 
-      success: false, 
-      errors: ['Email obligatoire pour un don fiscal'] 
+    return {
+      success: false,
+      errors: ['Email obligatoire pour un don fiscal']
     }
   }
 
@@ -89,16 +89,16 @@ export async function submitSupportTransaction(formData: FormData) {
 
   if (tourneeError) {
     log.error('Erreur vérification tournée', tourneeError)
-    return { 
-      success: false, 
-      errors: ['Erreur lors de la vérification de la tournée'] 
+    return {
+      success: false,
+      errors: ['Erreur lors de la vérification de la tournée']
     }
   }
 
   if (!tournee) {
-    return { 
-      success: false, 
-      errors: ['Tournée non trouvée, non active ou non autorisée'] 
+    return {
+      success: false,
+      errors: ['Tournée non trouvée, non active ou non autorisée']
     }
   }
 
@@ -117,6 +117,14 @@ export async function submitSupportTransaction(formData: FormData) {
       supporter_name: supporter_name || null,
       supporter_email: supporter_email || null,
       supporter_phone: supporter_phone || null,
+
+      // Nouveaux champs donateur pour le reçu fiscal
+      donor_first_name: (formData.get('donor_first_name') as string) || null,
+      donor_last_name: (formData.get('donor_last_name') as string) || null,
+      donor_address: (formData.get('donor_address') as string) || null,
+      donor_zip: (formData.get('donor_zip') as string) || null,
+      donor_city: (formData.get('donor_city') as string) || null,
+
       consent_email: consent_email,
       payment_method: payment_method,
       notes: notes || null,
@@ -127,7 +135,7 @@ export async function submitSupportTransaction(formData: FormData) {
       created_offline: false
       // created_at et updated_at sont gérés automatiquement par la BDD
     }
-    
+
     // Insertion de la transaction
     const { data: transaction, error: insertError } = await supabase
       .from('support_transactions')
@@ -137,9 +145,9 @@ export async function submitSupportTransaction(formData: FormData) {
 
     if (insertError) {
       log.error('Erreur insertion transaction', insertError)
-      return { 
-        success: false, 
-        errors: ['Erreur lors de la sauvegarde du don. Veuillez réessayer.'] 
+      return {
+        success: false,
+        errors: ['Erreur lors de la sauvegarde du don. Veuillez réessayer.']
       }
     }
 
@@ -182,12 +190,12 @@ export async function submitSupportTransaction(formData: FormData) {
       }
     }
 
-  // Revalidation des pages
-  revalidatePath('/ma-tournee')
+    // Revalidation des pages
+    revalidatePath('/ma-tournee')
     revalidatePath('/dashboard/calendriers')
 
-    return { 
-      success: true, 
+    return {
+      success: true,
       transaction,
       message: `Transaction ${transaction.transaction_type} de ${amount}€ enregistrée avec succès`
     }
@@ -195,9 +203,9 @@ export async function submitSupportTransaction(formData: FormData) {
   } catch (error) {
     const log = createLogger('actions/donation')
     log.error('Erreur serveur complète', { message: (error as Error)?.message })
-    return { 
-      success: false, 
-      errors: ['Une erreur est survenue. Veuillez réessayer.'] 
+    return {
+      success: false,
+      errors: ['Une erreur est survenue. Veuillez réessayer.']
     }
   }
 }
@@ -206,7 +214,7 @@ async function generateReceipt(transactionId: string, supabase: Awaited<ReturnTy
   try {
     // Génération du numéro de reçu
     const { data: receiptNumber } = await supabase.rpc('generate_receipt_number')
-    
+
     if (!receiptNumber) {
       const log = createLogger('actions/donation')
       log.warn('Impossible de générer le numéro de reçu')
@@ -264,9 +272,9 @@ async function generateReceipt(transactionId: string, supabase: Awaited<ReturnTy
 
 export async function cloturerTournee(formData: FormData) {
   const supabase = await createSupabaseServerClient()
-  
+
   const { data: { user } } = await supabase.auth.getUser()
-  
+
   if (!user) {
     redirect('/auth/login')
   }
@@ -289,33 +297,33 @@ export async function cloturerTournee(formData: FormData) {
 
     if (error) {
       console.error('Erreur clôture tournée:', error)
-      return { 
-        success: false, 
-        errors: ['Erreur lors de la clôture'] 
+      return {
+        success: false,
+        errors: ['Erreur lors de la clôture']
       }
     }
 
     if (!data) {
-      return { 
-        success: false, 
-        errors: ['Tournée non trouvée ou non autorisée'] 
+      return {
+        success: false,
+        errors: ['Tournée non trouvée ou non autorisée']
       }
     }
 
-  // Revalidation des pages
-  revalidatePath('/ma-tournee')
+    // Revalidation des pages
+    revalidatePath('/ma-tournee')
     revalidatePath('/dashboard/calendriers')
 
-    return { 
-      success: true, 
+    return {
+      success: true,
       message: 'Tournée clôturée avec succès'
     }
 
   } catch (error) {
     console.error('Erreur serveur:', error)
-    return { 
-      success: false, 
-      errors: ['Erreur serveur inattendue'] 
+    return {
+      success: false,
+      errors: ['Erreur serveur inattendue']
     }
   }
 }
