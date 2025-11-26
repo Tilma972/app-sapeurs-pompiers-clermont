@@ -47,12 +47,12 @@ export function LandingHeader({ user }: LandingHeaderProps) {
                 priority
               />
             </div>
-            <div className="hidden sm:block">
-              <div className="text-lg font-bold text-foreground group-hover:text-primary transition-colors">
-                Amicale SP
+            <div className="block">
+              <div className="text-sm sm:text-lg font-bold text-foreground group-hover:text-primary transition-colors leading-tight">
+                Amicale des Sapeurs-Pompiers
               </div>
-              <p className="text-xs text-muted-foreground">
-                Clermont l&apos;Hérault
+              <p className="text-[10px] sm:text-xs text-muted-foreground">
+                Clermont-l&apos;Hérault
               </p>
             </div>
           </Link>
@@ -87,14 +87,14 @@ export function LandingHeader({ user }: LandingHeaderProps) {
                 <LogoutButton />
               </div>
             ) : (
-              <Button asChild variant="outline" size="sm">
+              <Button asChild variant="outline" size="sm" className="hidden md:inline-flex">
                 <Link href="/auth/login">
                   <LogIn className="h-4 w-4 mr-2" />
                   Se connecter
                 </Link>
               </Button>
             )}
-            
+
             {/* Menu Mobile */}
             <Button
               variant="ghost"
