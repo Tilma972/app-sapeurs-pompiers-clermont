@@ -1,0 +1,471 @@
+{
+  "name": "Receipt PDF Generation",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "receipt-pdf",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "56e69046-5c04-47de-8309-2270ffb7aa9a",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        64,
+        0
+      ],
+      "webhookId": "auto-generated"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Récupération des données brutes\nconst inputData = $input.item.json;\n\n// Gestion intelligente : si les données sont dans 'body', on prend 'body', sinon on prend la racine\nconst payload = inputData.body ? inputData.body : inputData;\n\n// Validation\nif (!payload.transaction_id || !payload.receipt_number) {\n  throw new Error('Missing required fields: transaction_id or receipt_number');\n}\n\nif (payload.calendar_accepted === true) {\n  throw new Error('Calendar transactions do not generate fiscal receipts');\n}\n\nif (payload.amount < 6) {\n  throw new Error('Amount must be >= 6€ for fiscal receipt');\n}\n\n// Return clean data structure\nreturn {\n  transactionId: payload.transaction_id,\n  receiptNumber: payload.receipt_number,\n  amount: parseFloat(payload.amount),\n  paymentMethod: payload.payment_method,\n  createdAt: payload.created_at,\n  donor: {\n    email: payload.donor.email,\n    name: payload.donor.name || `${payload.donor.first_name || ''} ${payload.donor.last_name || ''}`.trim(),\n    firstName: payload.donor.first_name,\n    lastName: payload.donor.last_name,\n    address: payload.donor.address,\n    zip: payload.donor.zip,\n    city: payload.donor.city\n  },\n  receiptUrl: payload.receipt_url,\n  userId: payload.user_id,\n  tourneeId: payload.tournee_id\n};"
+      },
+      "id": "e5d339d6-a9b3-4edc-90ee-17c8686d2803",
+      "name": "Extract & Validate Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Récupération et validation des données\nconst transaction = $input.item.json;\n\n// Sécurité : on vérifie qu'on a bien reçu une transaction\nif (!transaction || !transaction.id) {\n  throw new Error('Transaction not found in Supabase (ID manquant)');\n}\n\n// On récupère les données formatées du nœud précédent pour avoir les jolis noms\nconst extractedData = $('Extract & Validate Data').first().json;\n\n// 2. Calculs métier\nconst taxReduction = (extractedData.amount * 0.66).toFixed(2);\nconst date = new Date(extractedData.createdAt);\nconst formattedDate = date.toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' });\n\n// 3. Construction du HTML (Optimisé 1 Page)\nconst html = `<!DOCTYPE html>\n<html lang=\"fr\">\n<head>\n  <meta charset=\"UTF-8\">\n  <style>\n    @page { margin: 0; }\n    body {\n      font-family: 'Helvetica', 'Arial', sans-serif;\n      margin: 0;\n      padding: 40px 50px;\n      color: #1f2937;\n      font-size: 13px;\n      line-height: 1.5;\n      background: white;\n    }\n    \n    /* Header avec Logo */\n    .header {\n      display: flex;\n      align-items: center;\n      justify-content: space-between;\n      margin-bottom: 40px;\n      border-bottom: 3px solid #b91c1c;\n      padding-bottom: 20px;\n    }\n    .logo-container {\n      display: flex;\n      align-items: center;\n      gap: 15px;\n    }\n    .logo-img {\n      height: 80px; /* Taille idéale pour le logo */\n      width: auto;\n    }\n    .org-title {\n      font-size: 18px;\n      font-weight: bold;\n      color: #b91c1c;\n      line-height: 1.2;\n    }\n    .receipt-info {\n      text-align: right;\n    }\n    .receipt-info h1 {\n      margin: 0;\n      font-size: 28px;\n      text-transform: uppercase;\n      color: #111;\n    }\n    .receipt-number {\n      font-size: 14px;\n      color: #6b7280;\n      font-weight: bold;\n      margin-top: 5px;\n    }\n\n    /* Cerfa Box */\n    .cerfa {\n      background: #f3f4f6;\n      padding: 12px 20px;\n      border-radius: 6px;\n      font-size: 11px;\n      color: #4b5563;\n      margin-bottom: 30px;\n      border-left: 4px solid #b91c1c;\n    }\n\n    /* Grille Bénéficiaire / Donateur */\n    .grid {\n      display: flex;\n      gap: 40px;\n      margin-bottom: 40px;\n    }\n    .col {\n      flex: 1;\n    }\n    .box-title {\n      font-size: 11px;\n      text-transform: uppercase;\n      font-weight: bold;\n      color: #9ca3af;\n      margin-bottom: 8px;\n      border-bottom: 1px solid #e5e7eb;\n      padding-bottom: 4px;\n    }\n    .box-content {\n      font-size: 14px;\n    }\n    .box-content strong {\n      display: block;\n      font-size: 15px;\n      margin-bottom: 4px;\n      color: #111;\n    }\n\n    /* Zone Montant */\n    .amount-box {\n      background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%);\n      color: white;\n      padding: 25px;\n      border-radius: 12px;\n      text-align: center;\n      margin-bottom: 30px;\n      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);\n    }\n    .amount-label {\n      font-size: 14px;\n      text-transform: uppercase;\n      opacity: 0.9;\n      letter-spacing: 1px;\n    }\n    .amount-value {\n      font-size: 42px;\n      font-weight: 800;\n      margin: 10px 0;\n    }\n    .amount-details {\n      font-size: 13px;\n      opacity: 0.9;\n      border-top: 1px solid rgba(255,255,255,0.2);\n      display: inline-block;\n      padding-top: 10px;\n      margin-top: 5px;\n    }\n\n    /* Info Fiscale */\n    .fiscal-info {\n      border: 1px solid #e5e7eb;\n      padding: 20px;\n      border-radius: 8px;\n      margin-bottom: 40px;\n      font-size: 12px;\n      color: #4b5563;\n    }\n    .fiscal-highlight {\n      color: #b91c1c;\n      font-weight: bold;\n    }\n\n    /* Signature */\n    .footer-row {\n      display: flex;\n      justify-content: flex-end;\n    }\n    .signature-block {\n      text-align: center;\n      width: 250px;\n    }\n    .location {\n      font-size: 13px;\n      margin-bottom: 15px;\n    }\n    .role {\n      font-weight: bold;\n      font-size: 14px;\n      margin-top: 50px; /* Espace pour signer si pas d'image */\n      border-top: 1px solid #333;\n      padding-top: 10px;\n    }\n\n    /* Pied de page */\n    .legal-footer {\n      margin-top: 60px;\n      text-align: center;\n      font-size: 10px;\n      color: #9ca3af;\n      border-top: 1px solid #f3f4f6;\n      padding-top: 20px;\n    }\n  </style>\n</head>\n<body>\n\n  <div class=\"header\">\n    <div class=\"logo-container\">\n      <img src=\"https://npyfregghvnmqxwgkfea.supabase.co/storage/v1/object/public/logo/logo_amicale.png\" class=\"logo-img\" alt=\"Logo Amicale\">\n      <div class=\"org-title\">\n        AMICALE DES<br>SAPEURS-POMPIERS<br>DE CLERMONT\n      </div>\n    </div>\n    <div class=\"receipt-info\">\n      <h1>REÇU FISCAL</h1>\n      <div class=\"receipt-number\">Réf. ${extractedData.receiptNumber}</div>\n    </div>\n  </div>\n\n  <div class=\"cerfa\">\n    <strong>Article 200 du Code Général des Impôts</strong><br>\n    Reçu au titre des dons à certains organismes d'intérêt général habilités à délivrer des reçus fiscaux.\n  </div>\n\n  <div class=\"grid\">\n    <div class=\"col\">\n      <div class=\"box-title\">Organisme Bénéficiaire</div>\n      <div class=\"box-content\">\n        <strong>Amicale SP Clermont</strong>\n        Centre de Secours<br>\n        34800 Clermont-l'Hérault<br>\n        <span style=\"color: #666; font-size: 12px;\">Association Loi 1901 - But non lucratif</span>\n      </div>\n    </div>\n    <div class=\"col\">\n      <div class=\"box-title\">Donateur</div>\n      <div class=\"box-content\">\n        <strong>${extractedData.donor.name || 'Non renseigné'}</strong>\n        ${extractedData.donor.address || ''}<br>\n        ${extractedData.donor.zip || ''} ${extractedData.donor.city || ''}<br>\n        <span style=\"color: #666;\">${extractedData.donor.email}</span>\n      </div>\n    </div>\n  </div>\n\n  <div class=\"amount-box\">\n    <div class=\"amount-label\">Montant du Don</div>\n    <div class=\"amount-value\">${extractedData.amount.toFixed(2)} €</div>\n    <div class=\"amount-details\">\n      Reçu le ${formattedDate} &nbsp;•&nbsp; Moyen de paiement : ${\n  ['card', 'carte', 'cb', 'stripe', 'carte_bancaire'].includes((extractedData.paymentMethod || '').toLowerCase()) ? 'Carte Bancaire' :\n  ['cash', 'especes', 'esp', 'liquide'].includes((extractedData.paymentMethod || '').toLowerCase()) ? 'Espèces' :\n  ['cheque', 'chq'].includes((extractedData.paymentMethod || '').toLowerCase()) ? 'Chèque' :\n  (extractedData.paymentMethod || 'Non spécifié')\n}\n    </div>\n  </div>\n\n  <div class=\"fiscal-info\">\n    <p style=\"margin: 0 0 10px 0;\">\n      L'Amicale certifie que ce don n'a aucune contrepartie directe ou indirecte sous forme de bien ou de prestation de services.\n    </p>\n    <p style=\"margin: 0;\">\n      👉 Ce don ouvre droit à une réduction d'impôt de <strong>66%</strong>, soit une économie fiscale de <span class=\"fiscal-highlight\">${taxReduction} €</span>.\n      Coût réel après réduction : <strong>${(extractedData.amount - parseFloat(taxReduction)).toFixed(2)} €</strong>.\n    </p>\n  </div>\n\n  <div class=\"footer-row\">\n    <div class=\"signature-block\">\n      <div class=\"location\">Fait à Clermont-l'Hérault, le ${formattedDate}</div>\n      <!-- <img src=\"URL_SIGNATURE\" style=\"height: 50px; display: block; margin: 0 auto;\"> -->\n      <div class=\"role\">Le Président</div>\n    </div>\n  </div>\n\n  <div class=\"legal-footer\">\n    Document généré automatiquement via n8n - Ne pas jeter sur la voie publique - Transaction ID: ${extractedData.transactionId}\n  </div>\n\n</body>\n</html>`;\n\n// Conversion binaire pour le nœud Gotenberg suivant\nconst buffer = Buffer.from(html, 'utf8');\nconst base64Data = buffer.toString('base64');\n\n// On retourne directement le binaire pour simplifier (plus besoin du nœud \"Convert to Binary\" après)\n// Mais si tu veux garder ton nœud séparé, retourne juste { html } ici.\nreturn {\n  html, // Pour debug\n  transaction: extractedData\n};\n"
+      },
+      "id": "d93f8e53-e767-4e3b-8faf-2e155e0b467a",
+      "name": "Build HTML Receipt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        608,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "upload",
+        "bucketName": "receipts",
+        "fileName": "={{ $('Extract & Validate Data').item.json.receiptNumber }}.pdf",
+        "additionalFields": {}
+      },
+      "id": "3732dd56-4f83-41be-8884-7ee35ec9f75b",
+      "name": "Minio: Upload PDF",
+      "type": "n8n-nodes-base.s3",
+      "typeVersion": 1,
+      "position": [
+        1216,
+        0
+      ],
+      "alwaysOutputData": false,
+      "credentials": {
+        "s3": {
+          "id": "B0YOEDsLn1a35QZV",
+          "name": "Minio account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"success\": true,\n  \"receipt_number\": \"{{ $('Extract & Validate Data').item.json.receiptNumber }}\",\n  \"transaction_id\": \"{{ $('Extract & Validate Data').item.json.transactionId }}\",\n  \"pdf_url\": \"{{ $('Minio: Upload PDF').item.json.path }}\",\n  \"processed_at\": \"{{ new Date().toISOString() }}\"\n}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          }
+        }
+      },
+      "id": "628c11bb-e242-4410-ab32-5ec1602f371c",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1648,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.error }}",
+              "operation": "isNotEmpty"
+            }
+          ]
+        }
+      },
+      "id": "84e96162-5967-4bba-a181-9ecc2af72f76",
+      "name": "Error Check",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        1408,
+        208
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"success\": false,\n  \"error\": \"{{ $json.error || 'Unknown error' }}\",\n  \"transaction_id\": \"{{ $('Extract & Validate Data').item.json.transactionId }}\"\n}",
+        "options": {
+          "responseCode": 500
+        }
+      },
+      "id": "69ebd2f1-94eb-4836-92db-94a841de0be9",
+      "name": "Error Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1600,
+        208
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "support_transactions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "keyValue": "={{ $('Extract & Validate Data').item.json.transactionId }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        432,
+        0
+      ],
+      "id": "34661c2d-460b-43ec-8e35-e5b66abd2389",
+      "name": "Fetch Transaction (Supabase)",
+      "credentials": {
+        "supabaseApi": {
+          "id": "GmIueoSeOR8yfk2b",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Récupération des données\nconst items = $input.all();\nconst htmlContent = items[0].json.html; // <--- CORRIGÉ ICI (html au lieu de htmlContent)\n\nif (!htmlContent) {\n  throw new Error('HTML manquant dans les données (vérifier la sortie du nœud précédent)');\n}\n\n// Conversion en binaire pour Gotenberg\nconst buffer = Buffer.from(htmlContent, 'utf8');\nconst base64Data = buffer.toString('base64');\n\nreturn [{\n  json: items[0].json, // On garde les métadonnées (transactionId, etc.)\n  binary: {\n    data: {\n      data: base64Data,\n      fileName: \"index.html\", // Gotenberg a besoin de ce nom spécifique\n      mimeType: \"text/html\"\n    }\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        784,
+        0
+      ],
+      "id": "3013905c-4e35-4ba8-b053-453baa5f9b82",
+      "name": "Convert to Binary"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://gotenberg.dsolution-ia.fr/forms/chromium/convert/html",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "file",
+              "inputDataFieldName": "data"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        960,
+        0
+      ],
+      "id": "214c4a0d-6378-4efa-93f3-efd5d42d4ddf",
+      "name": "Gotenberg: HTML to PDF",
+      "alwaysOutputData": false,
+      "retryOnFail": true,
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "ZqqBwZymZkCpaOCs",
+          "name": "Gotenberg credential"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "receipts",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "pdf_url",
+              "fieldValue": "=https://s3.dsolution-ia.fr/receipts/{{ $('Extract & Validate Data').item.json.receiptNumber }}.pdf"
+            },
+            {
+              "fieldId": "pdf_storage_path",
+              "fieldValue": "={{ $('Extract & Validate Data').item.json.receiptNumber }}.pdf"
+            },
+            {
+              "fieldId": "status",
+              "fieldValue": "completed"
+            },
+            {
+              "fieldId": "pdf_generated",
+              "fieldValue": "true"
+            },
+            {
+              "fieldId": "generated_at",
+              "fieldValue": "={{ new Date().toISOString() }}"
+            },
+            {
+              "fieldId": "transaction_id",
+              "fieldValue": "={{ $('Extract & Validate Data').item.json.transactionId }}"
+            },
+            {
+              "fieldId": "receipt_number",
+              "fieldValue": "={{ $('Extract & Validate Data').item.json.receiptNumber }}"
+            },
+            {
+              "fieldId": "fiscal_year",
+              "fieldValue": "2025"
+            },
+            {
+              "fieldId": "sequence_number",
+              "fieldValue": "0"
+            },
+            {
+              "fieldId": "receipt_type",
+              "fieldValue": "fiscal"
+            },
+            {
+              "fieldId": "email_sent",
+              "fieldValue": "true"
+            },
+            {
+              "fieldId": "email_sent_at",
+              "fieldValue": "={{ new Date().toISOString() }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1440,
+        0
+      ],
+      "id": "d87216bf-fdbd-4915-b9ca-7a4786b25aca",
+      "name": "Create a row",
+      "alwaysOutputData": false,
+      "credentials": {
+        "supabaseApi": {
+          "id": "GmIueoSeOR8yfk2b",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "tilma972@gmail.com",
+        "subject": "Votre reçu fiscal - Amicale des Sapeurs-Pompiers",
+        "message": "=<div style=\"font-family: Helvetica, Arial, sans-serif; color: #333; line-height: 1.6;\">      <p>Bonjour <strong>{{ $('Extract & Validate Data').item.json.donor.firstName || 'Cher donateur' }}</strong>,</p>    <p>Au nom de l'ensemble des Sapeurs-Pompiers de Clermont-l'Hérault, je tiens à vous remercier chaleureusement pour votre don de <strong>{{ $('Extract & Validate Data').item.json.amount }} €</strong>.</p>    <p>Votre soutien est précieux pour le fonctionnement de notre Amicale et nous permet de mener à bien nos actions sociales et de solidarité tout au long de l'année.</p>    <p>📄 <strong>Vous trouverez ci-joint votre reçu fiscal (Cerfa) au format PDF.</strong><br>   <em>Ce document vous permet de bénéficier d'une réduction d'impôt de 66% du montant de votre don. Conservez-le précieusement pour votre prochaine déclaration.</em></p>    <hr style=\"border: 0; border-top: 1px solid #eee; margin: 20px 0;\">    <p style=\"font-size: 12px; color: #666;\">     <strong>Amicale des Sapeurs-Pompiers de Clermont</strong><br>     Centre de Secours<br>     34800 Clermont-l'Hérault<br>     <a href=\"mailto:contact@pompiers34800.com\" style=\"color: #b91c1c; text-decoration: none;\">contact@sapeurs-pompiers-clermont.fr</a>   </p>      <p style=\"font-size: 11px; color: #999; font-style: italic;\">     Ceci est un message automatique, merci de ne pas y répondre directement sauf si vous souhaitez contacter l'Amicale.   </p> </div>",
+        "options": {
+          "appendAttribution": false,
+          "attachmentsUi": {
+            "attachmentsBinary": [
+              {}
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1216,
+        -224
+      ],
+      "id": "ae5b6bc4-d80e-4986-afb7-0ebbfc45b0dc",
+      "name": "Send a message",
+      "webhookId": "6da00b36-5165-4f8b-af83-1159fd2d9e56",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "6NgvyrhAFKLsZ7O5",
+          "name": "Pompiers"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "Webhook Trigger": [
+      {
+        "json": {
+          "headers": {
+            "host": "n8n.dsolution-ia.fr",
+            "user-agent": "Mozilla/5.0 (Windows NT; Windows NT 10.0; fr-FR) WindowsPowerShell/5.1.26100.7019",
+            "content-length": "530",
+            "content-type": "application/json",
+            "x-forwarded-for": "85.69.127.165",
+            "x-forwarded-host": "n8n.dsolution-ia.fr",
+            "x-forwarded-port": "443",
+            "x-forwarded-proto": "https",
+            "x-forwarded-server": "86e8109471fa",
+            "x-real-ip": "85.69.127.165",
+            "accept-encoding": "gzip"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "payment_method": "carte",
+            "donor": {
+              "city": "Clermont-l'H�rault",
+              "first_name": "Alice",
+              "address": "1 Place de la Mairie",
+              "email": "test.cb@example.com",
+              "zip": "34800",
+              "last_name": "Durand"
+            },
+            "amount": 50,
+            "created_at": "2025-11-26T10:49:00.626Z",
+            "transaction_id": "a1c8adf9-8e88-4b3f-be54-f60169d0480f",
+            "receipt_number": "REC-TEST-CB-1237"
+          },
+          "webhookUrl": "https://n8n.dsolution-ia.fr/webhook/receipt-pdf",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Extract & Validate Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract & Validate Data": {
+      "main": [
+        [
+          {
+            "node": "Fetch Transaction (Supabase)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build HTML Receipt": {
+      "main": [
+        [
+          {
+            "node": "Convert to Binary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Minio: Upload PDF": {
+      "main": [
+        [
+          {
+            "node": "Create a row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Transaction (Supabase)": {
+      "main": [
+        [
+          {
+            "node": "Build HTML Receipt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to Binary": {
+      "main": [
+        [
+          {
+            "node": "Gotenberg: HTML to PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gotenberg: HTML to PDF": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Minio: Upload PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a row": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "versionId": "6b285eaf-ae02-4f32-9cf4-f250168251be",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "8ab184e9b85db7486a006de55f7b127638b3f5b96c6cde5edbc7605d54db0ecd"
+  },
+  "id": "D0Ck0NQn8gTwX3wM",
+  "tags": []
+}
