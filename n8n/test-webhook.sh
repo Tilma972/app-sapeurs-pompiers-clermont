@@ -29,25 +29,19 @@ echo ""
 # Payload JSON de test
 PAYLOAD=$(cat <<EOF
 {
-  "event": "receipt.generate",
-  "transaction_id": "01234567-89ab-cdef-0123-456789abcdef",
-  "receipt_number": "2025-TEST-001",
-  "amount": 50,
+  "transaction_id": "a1c8adf9-8e88-4b3f-be54-f60169d0480f",
+  "receipt_number": "REC-TEST-CB-1237",
+  "amount": 50.00,
   "payment_method": "card",
-  "calendar_accepted": false,
-  "created_at": "$(date -u +%Y-%m-%dT%H:%M:%S.000Z)",
+  "created_at": "2025-11-26T10:49:00.626Z",
   "donor": {
-    "email": "test.webhook@example.com",
-    "name": "Test Webhook",
-    "first_name": "Test",
-    "last_name": "Webhook",
-    "address": "12 Rue du Test",
-    "zip": "63000",
-    "city": "Clermont-Ferrand"
-  },
-  "receipt_url": "https://test.com/recu/2025-TEST-001",
-  "user_id": "98765432-10fe-dcba-9876-543210fedcba",
-  "tournee_id": "abcd1234-5678-90ef-ghij-klmnopqrstuv"
+    "email": "test.cb@example.com",
+    "first_name": "Alice",
+    "last_name": "Durand",
+    "address": "1 Place de la Mairie",
+    "zip": "34800",
+    "city": "Clermont-l'Hérault"
+  }
 }
 EOF
 )

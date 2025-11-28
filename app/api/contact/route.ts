@@ -1,5 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { NextResponse } from "next/server";
+import { sendEmail } from "@/lib/email/resend-client";
 
 export async function POST(request: Request) {
   try {
@@ -53,8 +54,22 @@ export async function POST(request: Request) {
       );
     }
 
-    // TODO: Optionnel - Envoyer une notification par email aux admins
-    // Vous pouvez utiliser Resend, SendGrid, ou un autre service d'emailing
+    // Envoi de l'email de notification aux admins
+    const adminEmail = process.env.CONTACT_EMAIL || process.env.RESEND_FROM || "contact@amicale-sp.fr";
+
+    await sendEmail({
+      to: adminEmail,
+      subject: `[Contact] ${subject}`,
+      html: `
+        <h2>Nouveau message de contact</h2>
+        <p><strong>De:</strong> ${name} (<a href="mailto:${email}">${email}</a>)</p>
+        <p><strong>Sujet:</strong> ${subject}</p>
+        <hr />
+        <h3>Message:</h3>
+        <p style="white-space: pre-wrap;">${message}</p>
+      `,
+      replyTo: email
+    });
 
     return NextResponse.json(
       {
