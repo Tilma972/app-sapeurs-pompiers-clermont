@@ -29,7 +29,9 @@ export function PaymentCardModal({ tourneeId, trigger }: { tourneeId: string; tr
     if (url) setCheckoutUrl(url)
     const cs = (res as { clientSecret?: string }).clientSecret
     if (cs && cs.includes('_secret_')) {
-      setPiId(cs.split('_secret_')[0])
+      const newPiId = cs.split('_secret_')[0]
+      console.log('🎬 PaymentCardModal: Génération QR avec PI:', newPiId)
+      setPiId(newPiId)
     }
   }
 
@@ -45,18 +47,24 @@ export function PaymentCardModal({ tourneeId, trigger }: { tourneeId: string; tr
         table: 'support_transactions',
         filter: `stripe_session_id=eq.${piId}`,
       }, (payload: { new?: { amount?: number | null; supporter_name?: string | null } }) => {
+        console.log('🔔 Realtime INSERT received:', payload)
         const amt = payload?.new?.amount ?? null
         const name = payload?.new?.supporter_name ?? null
         const amountLabel = typeof amt === 'number' ? `${amt.toFixed(2)}€` : ''
         const nameLabel = name ? ` • ${name}` : ''
-        toast.success(`Paiement confirmé ${amountLabel}${nameLabel}`.trim(), {
+        const message = `Paiement confirmé ${amountLabel}${nameLabel}`.trim()
+        console.log('✅ Affichage toast (Realtime):', message)
+        toast.success(message, {
           duration: 4000,
           position: 'top-center',
         })
         // Delay modal closing to let toast display
+        console.log('🚪 Closing modal in 300ms')
         setTimeout(() => setOpen(false), 300)
       })
-      .subscribe()
+      .subscribe((status) => {
+        console.log('📡 Realtime subscription status:', status)
+      })
 
     return () => {
       supabase.removeChannel(channel)
@@ -70,6 +78,7 @@ export function PaymentCardModal({ tourneeId, trigger }: { tourneeId: string; tr
     let cancelled = false
 
     const check = async () => {
+      console.log('🔍 Polling check...')
       const { data } = await supabase
         .from('support_transactions')
         .select('id, amount, supporter_name')
@@ -77,14 +86,18 @@ export function PaymentCardModal({ tourneeId, trigger }: { tourneeId: string; tr
         .maybeSingle()
       type TxRow = { id: string; amount: number | null; supporter_name: string | null }
       const row = data as TxRow | null
+      console.log('📊 Polling result:', row ? 'Found transaction' : 'null')
       if (!cancelled && row) {
         const amt = typeof row.amount === 'number' ? `${row.amount.toFixed(2)}€` : ''
         const name = row.supporter_name ? ` • ${row.supporter_name}` : ''
-        toast.success(`Paiement confirmé ${amt}${name}`.trim(), {
+        const message = `Paiement confirmé ${amt}${name}`.trim()
+        console.log('✅ Transaction found via polling, displaying toast:', message)
+        toast.success(message, {
           duration: 4000,
           position: 'top-center',
         })
         // Delay modal closing to let toast display
+        console.log('🚪 Closing modal in 300ms')
         setTimeout(() => setOpen(false), 300)
       }
     }
