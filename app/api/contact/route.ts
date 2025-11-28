@@ -55,7 +55,10 @@ export async function POST(request: Request) {
     }
 
     // Envoi de l'email de notification aux admins
-    const adminEmail = process.env.CONTACT_EMAIL || process.env.RESEND_FROM || "contact@amicale-sp.fr";
+    let adminEmail = process.env.CONTACT_EMAIL || process.env.RESEND_FROM || "contact@pompiers34800.com";
+    adminEmail = adminEmail.trim();
+
+    console.log("Tentative d'envoi d'email de contact à:", adminEmail);
 
     await sendEmail({
       to: adminEmail,
