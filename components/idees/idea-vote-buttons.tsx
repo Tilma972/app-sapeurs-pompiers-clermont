@@ -5,12 +5,14 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ThumbsUp, ThumbsDown, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { voteIdeaAction } from "@/app/idees/actions";
 import toast from "react-hot-toast";
+import { createClient } from "@/lib/supabase/client";
+import { useRealtimeVotes } from "@/hooks/use-realtime-votes";
 import type { VoteType } from "@/lib/types/ideas.types";
 
 interface IdeaVoteButtonsProps {
@@ -18,6 +20,7 @@ interface IdeaVoteButtonsProps {
   initialVotesCount: number;
   initialUserVote: VoteType | null;
   onVoteChange?: (newCount: number) => void;
+  enableRealtime?: boolean; // Feature flag pour activer/désactiver realtime
 }
 
 export function IdeaVoteButtons({
@@ -25,10 +28,45 @@ export function IdeaVoteButtons({
   initialVotesCount,
   initialUserVote,
   onVoteChange,
+  enableRealtime = true, // Activé par défaut
 }: IdeaVoteButtonsProps) {
   const [votesCount, setVotesCount] = useState(initialVotesCount);
   const [userVote, setUserVote] = useState<VoteType | null>(initialUserVote);
   const [loading, setLoading] = useState(false);
+  const [userId, setUserId] = useState<string | undefined>();
+
+  // Récupérer l'userId au montage
+  useEffect(() => {
+    const getUserId = async () => {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      setUserId(user?.id);
+    };
+    getUserId();
+  }, []);
+
+  // Synchroniser le state avec les props quand elles changent (après revalidation)
+  useEffect(() => {
+    setVotesCount(initialVotesCount);
+  }, [initialVotesCount]);
+
+  useEffect(() => {
+    setUserVote(initialUserVote);
+  }, [initialUserVote]);
+
+  // Hook Realtime pour synchroniser les votes en temps réel
+  useRealtimeVotes({
+    ideaId,
+    userId,
+    onVoteChange: (newCount, newUserVote) => {
+      if (enableRealtime && !loading) {
+        // Ne pas écraser pendant une opération optimistic UI
+        setVotesCount(newCount);
+        setUserVote(newUserVote);
+        onVoteChange?.(newCount);
+      }
+    },
+  });
 
   const handleVote = async (voteType: VoteType) => {
     if (loading) return;
@@ -67,9 +105,16 @@ export function IdeaVoteButtons({
         throw new Error(result.error || "Erreur lors du vote");
       }
 
-      // Si le résultat indique que le vote a été retiré
+      // Mettre à jour avec les vraies valeurs du serveur
+      if (result.votesCount !== undefined) {
+        setVotesCount(result.votesCount);
+        onVoteChange?.(result.votesCount);
+      }
+
       if (result.action === "removed") {
         setUserVote(null);
+      } else if (result.voteType) {
+        setUserVote(result.voteType);
       }
 
     } catch (error: unknown) {
