@@ -53,9 +53,21 @@ export async function voteIdeaAction(ideaId: string, voteType: VoteType) {
           return { success: false, error: "Erreur lors de la suppression du vote" };
         }
 
+        // Récupérer le nouveau count après suppression
+        const { data: updatedIdea } = await supabase
+          .from('ideas')
+          .select('votes_count')
+          .eq('id', ideaId)
+          .single();
+
         revalidatePath('/idees');
         revalidatePath(`/idees/${ideaId}`);
-        return { success: true, action: 'removed', voteType: null };
+        return {
+          success: true,
+          action: 'removed',
+          voteType: null,
+          votesCount: updatedIdea?.votes_count || 0
+        };
       } else {
         // Type différent → Changer le vote
         const { error } = await supabase
@@ -68,9 +80,21 @@ export async function voteIdeaAction(ideaId: string, voteType: VoteType) {
           return { success: false, error: "Erreur lors de la modification du vote" };
         }
 
+        // Récupérer le nouveau count après modification
+        const { data: updatedIdea } = await supabase
+          .from('ideas')
+          .select('votes_count')
+          .eq('id', ideaId)
+          .single();
+
         revalidatePath('/idees');
         revalidatePath(`/idees/${ideaId}`);
-        return { success: true, action: 'updated', voteType };
+        return {
+          success: true,
+          action: 'updated',
+          voteType,
+          votesCount: updatedIdea?.votes_count || 0
+        };
       }
     } else {
       // Pas de vote existant → Créer
@@ -87,9 +111,21 @@ export async function voteIdeaAction(ideaId: string, voteType: VoteType) {
         return { success: false, error: "Erreur lors de la création du vote" };
       }
 
+      // Récupérer le nouveau count après création
+      const { data: updatedIdea } = await supabase
+        .from('ideas')
+        .select('votes_count')
+        .eq('id', ideaId)
+        .single();
+
       revalidatePath('/idees');
       revalidatePath(`/idees/${ideaId}`);
-      return { success: true, action: 'created', voteType };
+      return {
+        success: true,
+        action: 'created',
+        voteType,
+        votesCount: updatedIdea?.votes_count || 0
+      };
     }
   } catch (error) {
     console.error("voteIdeaAction error:", error);
