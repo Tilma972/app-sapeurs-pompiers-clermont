@@ -5,7 +5,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ThumbsUp, ThumbsDown, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -29,6 +29,15 @@ export function IdeaVoteButtons({
   const [votesCount, setVotesCount] = useState(initialVotesCount);
   const [userVote, setUserVote] = useState<VoteType | null>(initialUserVote);
   const [loading, setLoading] = useState(false);
+
+  // Synchroniser le state avec les props quand elles changent (après revalidation)
+  useEffect(() => {
+    setVotesCount(initialVotesCount);
+  }, [initialVotesCount]);
+
+  useEffect(() => {
+    setUserVote(initialUserVote);
+  }, [initialUserVote]);
 
   const handleVote = async (voteType: VoteType) => {
     if (loading) return;
@@ -67,9 +76,16 @@ export function IdeaVoteButtons({
         throw new Error(result.error || "Erreur lors du vote");
       }
 
-      // Si le résultat indique que le vote a été retiré
+      // Mettre à jour avec les vraies valeurs du serveur
+      if (result.votesCount !== undefined) {
+        setVotesCount(result.votesCount);
+        onVoteChange?.(result.votesCount);
+      }
+
       if (result.action === "removed") {
         setUserVote(null);
+      } else if (result.voteType) {
+        setUserVote(result.voteType);
       }
 
     } catch (error: unknown) {
