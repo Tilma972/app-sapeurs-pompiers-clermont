@@ -9,8 +9,9 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { getAnnonceById, addToFavorites, removeFromFavorites } from "@/lib/supabase/annonces"
+import { getAnnonceById, isFavorited } from "@/lib/supabase/annonces"
 import { PwaContainer } from "@/components/layouts/pwa/pwa-container"
+import { FavoriteButton } from "@/components/annonces/favorite-button"
 
 interface Annonce {
   id: string
@@ -117,9 +118,9 @@ const getStatutBadge = (statut: string) => {
 export default function AnnonceDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter()
   const [selectedPhoto, setSelectedPhoto] = useState(0)
-  const [isFavorite, setIsFavorite] = useState(false)
   const [annonce, setAnnonce] = useState<Annonce | null>(null)
   const [loading, setLoading] = useState(true)
+  const [initialIsFavorite, setInitialIsFavorite] = useState(false)
 
   const { id } = use(params)
 
@@ -131,8 +132,11 @@ export default function AnnonceDetailPage({ params }: { params: Promise<{ id: st
   const loadAnnonce = async () => {
     try {
       setLoading(true)
-      const data = await getAnnonceById(id)
-      
+      const [data, favoriteStatus] = await Promise.all([
+        getAnnonceById(id),
+        isFavorited(id)
+      ])
+
       // Transformer pour correspondre à l'interface
       const transformedData: Annonce = {
         id: data.id,
@@ -158,27 +162,14 @@ export default function AnnonceDetailPage({ params }: { params: Promise<{ id: st
         },
         localisation: data.localisation,
       }
-      
+
       setAnnonce(transformedData)
+      setInitialIsFavorite(favoriteStatus)
     } catch (error) {
       console.error("Erreur lors du chargement de l'annonce:", error)
       setAnnonce(null)
     } finally {
       setLoading(false)
-    }
-  }
-
-  const toggleFavorite = async () => {
-    try {
-      if (isFavorite) {
-        await removeFromFavorites(id)
-        setIsFavorite(false)
-      } else {
-        await addToFavorites(id)
-        setIsFavorite(true)
-      }
-    } catch (error) {
-      console.error("Erreur lors de la gestion des favoris:", error)
     }
   }
 
@@ -225,13 +216,13 @@ export default function AnnonceDetailPage({ params }: { params: Promise<{ id: st
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div className="flex items-center gap-2">
-            <Button
+            <FavoriteButton
+              annonceId={annonce.id}
+              initialIsFavorite={initialIsFavorite}
+              initialFavoritesCount={annonce.favoris}
               variant="ghost"
               size="icon"
-              onClick={toggleFavorite}
-            >
-              <Heart className={`h-5 w-5 ${isFavorite ? "fill-red-500 text-red-500" : ""}`} />
-            </Button>
+            />
             <Button variant="ghost" size="icon">
               <Share2 className="h-5 w-5" />
             </Button>
