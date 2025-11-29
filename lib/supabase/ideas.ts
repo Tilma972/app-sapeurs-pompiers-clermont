@@ -142,12 +142,15 @@ export async function getIdeaById(ideaId: string) {
     userVote = voteData?.vote_type || null;
   }
 
-  // Incrémenter vues
+  // Incrémenter vues via RPC (bypass RLS)
   if (data) {
-    await supabase
-      .from('ideas')
-      .update({ views_count: (data.views_count || 0) + 1 })
-      .eq('id', ideaId);
+    const { error: viewError } = await supabase
+      .rpc('increment_idea_views', { target_idea_id: ideaId });
+
+    if (viewError) {
+      console.error('Error incrementing views:', viewError);
+      // Ne pas throw - l'échec du compteur de vues ne doit pas bloquer l'affichage
+    }
   }
 
   return {
