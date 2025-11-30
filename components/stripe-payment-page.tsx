@@ -156,16 +156,18 @@ function PaymentAmountDisplay({ clientSecret }: { clientSecret: string }) {
           {calendarGiven ? 'Montant de votre soutien' : 'Montant de votre don'}
         </p>
         <p className="text-5xl font-bold mb-2">{amount.toFixed(2)} €</p>
-        {!calendarGiven && amount >= 6 && (
-          <p className="text-sm opacity-90">
-            ✅ Reçu fiscal éligible à 66% de réduction d&apos;impôts
-          </p>
-        )}
-        {calendarGiven && (
-          <p className="text-sm opacity-90">
-            📅 Avec calendrier
-          </p>
-        )}
+        <div className="space-y-1">
+          {amount >= 6 && (
+            <p className="text-sm opacity-90">
+              ✅ Reçu fiscal éligible à 66% de réduction d&apos;impôts
+            </p>
+          )}
+          {calendarGiven && (
+            <p className="text-sm opacity-90">
+              📅 Avec calendrier
+            </p>
+          )}
+        </div>
       </div>
     </div>
   )
