@@ -120,6 +120,57 @@ function PaymentForm({ onSuccess }: { onSuccess: () => void }) {
   )
 }
 
+function PaymentAmountDisplay({ clientSecret }: { clientSecret: string }) {
+  const stripe = useStripe()
+  const [amount, setAmount] = useState<number | null>(null)
+  const [calendarGiven, setCalendarGiven] = useState<boolean>(false)
+
+  useEffect(() => {
+    if (!stripe || !clientSecret) return
+
+    stripe.retrievePaymentIntent(clientSecret).then(({ paymentIntent }) => {
+      if (paymentIntent && paymentIntent.amount) {
+        setAmount(paymentIntent.amount / 100) // Convert cents to euros
+        setCalendarGiven(paymentIntent.metadata?.calendar_given === 'true')
+      }
+    }).catch((err) => {
+      console.error('Error retrieving payment intent:', err)
+    })
+  }, [stripe, clientSecret])
+
+  if (amount === null) {
+    return (
+      <div className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl p-6 mb-6 text-center">
+        <div className="flex items-center justify-center gap-2">
+          <Loader2 className="h-5 w-5 animate-spin" />
+          <span className="text-lg font-semibold">Chargement du montant...</span>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl p-6 mb-6">
+      <div className="text-center">
+        <p className="text-sm font-medium mb-2 opacity-90">
+          {calendarGiven ? 'Montant de votre soutien' : 'Montant de votre don'}
+        </p>
+        <p className="text-5xl font-bold mb-2">{amount.toFixed(2)} €</p>
+        {!calendarGiven && amount >= 6 && (
+          <p className="text-sm opacity-90">
+            ✅ Reçu fiscal éligible à 66% de réduction d&apos;impôts
+          </p>
+        )}
+        {calendarGiven && (
+          <p className="text-sm opacity-90">
+            📅 Avec calendrier
+          </p>
+        )}
+      </div>
+    </div>
+  )
+}
+
 export function StripePaymentPage({ clientSecret }: { clientSecret: string }) {
   const [mounted, setMounted] = useState(false)
 
@@ -159,6 +210,7 @@ export function StripePaymentPage({ clientSecret }: { clientSecret: string }) {
             loader: 'auto',
           }}
         >
+          <PaymentAmountDisplay clientSecret={clientSecret} />
           <PaymentForm onSuccess={() => { /* Redirect handled by Stripe */ }} />
         </Elements>
 
