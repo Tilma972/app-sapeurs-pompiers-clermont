@@ -131,7 +131,9 @@ function PaymentAmountDisplay({ clientSecret }: { clientSecret: string }) {
     stripe.retrievePaymentIntent(clientSecret).then(({ paymentIntent }) => {
       if (paymentIntent && paymentIntent.amount) {
         setAmount(paymentIntent.amount / 100) // Convert cents to euros
-        setCalendarGiven(paymentIntent.metadata?.calendar_given === 'true')
+        // Cast to any to access metadata (Stripe types don't include it properly)
+        const metadata = (paymentIntent as any).metadata as Record<string, string> | undefined
+        setCalendarGiven(metadata?.calendar_given === 'true')
       }
     }).catch((err) => {
       console.error('Error retrieving payment intent:', err)
