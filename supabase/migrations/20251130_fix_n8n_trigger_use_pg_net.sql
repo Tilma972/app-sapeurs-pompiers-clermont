@@ -29,14 +29,16 @@ BEGIN
     RETURN NEW;
   END IF;
 
-  -- IMPORTANT FILTER: Only process tax-deductible donations >= 6€
-  -- calendar_accepted = false → Tax-deductible donation (no calendar given)
-  -- calendar_accepted = true → Support with calendar (NOT eligible for tax receipt)
-  IF NEW.amount < 6 OR NEW.supporter_email IS NULL OR NEW.calendar_accepted = true THEN
+  -- IMPORTANT FILTER: All donations >= 6€ with valid email
+  -- Note: Calendar value (~1.33€) is a valid counterpart under French law
+  -- Donations WITH calendar are still eligible for tax receipt
+  -- (counterpart < 25% of donation AND < 73€)
+  -- The deductible amount will be: amount - (calendar_accepted ? 1.33 : 0)
+  IF NEW.amount < 6 OR NEW.supporter_email IS NULL THEN
     RETURN NEW;
   END IF;
 
-  -- Build JSON payload with all donor information
+  -- Build JSON payload with all donor information and fiscal calculations
   payload := jsonb_build_object(
     'event', 'receipt.generate',
     'transaction_id', NEW.id,
@@ -44,6 +46,7 @@ BEGIN
     'amount', NEW.amount,
     'payment_method', NEW.payment_method,
     'calendar_accepted', NEW.calendar_accepted,
+    'calendar_value', 1.33,  -- Value of the counterpart (calendar)
     'created_at', NEW.created_at,
     'donor', jsonb_build_object(
       'email', NEW.supporter_email,
@@ -56,7 +59,16 @@ BEGIN
     ),
     'receipt_url', NEW.receipt_url,
     'user_id', NEW.user_id,
-    'tournee_id', NEW.tournee_id
+    'tournee_id', NEW.tournee_id,
+    -- Fiscal calculations for the PDF
+    'deductible_amount', CASE
+      WHEN NEW.calendar_accepted = true THEN NEW.amount - 1.33
+      ELSE NEW.amount
+    END,
+    'tax_reduction', CASE
+      WHEN NEW.calendar_accepted = true THEN ROUND((NEW.amount - 1.33) * 0.66, 2)
+      ELSE ROUND(NEW.amount * 0.66, 2)
+    END
   );
 
   -- Send POST request via pg_net (asynchronous, non-blocking)
@@ -86,7 +98,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
-COMMENT ON FUNCTION trigger_n8n_pdf_generation() IS 'Envoie un webhook POST asynchrone vers n8n via pg_net pour générer le PDF du reçu fiscal via Gotenberg. Filtre: amount >= 6€ AND calendar_accepted = false (don fiscal uniquement)';
+COMMENT ON FUNCTION trigger_n8n_pdf_generation() IS 'Envoie un webhook POST asynchrone vers n8n via pg_net pour générer le PDF du reçu fiscal via Gotenberg. Filtre: amount >= 6€ (avec ou sans calendrier). Le montant déductible est calculé en fonction de calendar_accepted (valeur calendrier = 1,33€)';
 
 -- =====================================================
 -- 3. VERIFY TRIGGER IS STILL ACTIVE
