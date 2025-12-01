@@ -131,7 +131,7 @@ function PaymentAmountDisplay({ clientSecret }: { clientSecret: string }) {
     stripe.retrievePaymentIntent(clientSecret).then(({ paymentIntent }) => {
       if (paymentIntent && paymentIntent.amount) {
         setAmount(paymentIntent.amount / 100) // Convert cents to euros
-        // Cast to any to access metadata (Stripe types don't include it properly)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const metadata = (paymentIntent as any).metadata as Record<string, string> | undefined
         setCalendarGiven(metadata?.calendar_given === 'true')
       }
