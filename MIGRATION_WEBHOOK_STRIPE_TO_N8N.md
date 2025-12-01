@@ -72,7 +72,20 @@ n8n génère PDF via Gotenberg
 
 **Si n8n est HS pendant plusieurs heures :**
 
-### Étape 1 : Réactiver Resend
+### Étape 1 : Réactiver l'import buildSubject
+
+**Ligne 6 de `app/api/webhooks/stripe/route.ts` :**
+
+```typescript
+// Avant (actuel)
+import { buildHtml, buildText } from '@/lib/email/receipt-templates'
+
+// Après (rollback)
+import { buildSubject, buildHtml, buildText } from '@/lib/email/receipt-templates'
+```
+
+### Étape 2 : Décommenter le code de génération de reçu
+
 Décommenter les 3 blocs de code dans `app/api/webhooks/stripe/route.ts` :
 
 ```typescript
@@ -83,7 +96,7 @@ Décommenter les 3 blocs de code dans `app/api/webhooks/stripe/route.ts` :
 // Supprimer les /* et */ pour réactiver
 ```
 
-### Étape 2 : Redéployer
+### Étape 3 : Redéployer
 ```bash
 git add app/api/webhooks/stripe/route.ts
 git commit -m "Rollback: réactivation Resend (n8n HS)"
@@ -91,7 +104,7 @@ git push origin main
 # Déployer sur Vercel/production
 ```
 
-### Étape 3 : Traiter les transactions manquantes
+### Étape 4 : Traiter les transactions manquantes
 ```sql
 -- Générer manuellement les reçus HTML pour les transactions sans PDF
 SELECT * FROM issue_receipt('<transaction_id>');
