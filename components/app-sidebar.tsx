@@ -98,6 +98,7 @@ const data = {
             title: "Gestion",
             icon: Wallet,
             items: [
+                { title: "Commandes", url: "/admin/commandes" },
                 { title: "Partenaires", url: "/admin/partenaires" },
                 { title: "Avantages", url: "/admin/avantages" },
                 { title: "Produits", url: "/admin/produits" },
