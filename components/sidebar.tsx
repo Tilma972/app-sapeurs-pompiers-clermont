@@ -53,7 +53,7 @@ const adminNavigation = {
   ],
   boutique: [
     { name: "Produits", href: "/dashboard/produits", icon: ShoppingBag },
-    { name: "Commandes", href: "/dashboard/admin/commandes", icon: FileText },
+    { name: "Commandes", href: "/admin/commandes", icon: FileText },
   ],
   landingPage: [
     { name: "Partenaires", href: "/dashboard/admin/partenaires", icon: Gift },
