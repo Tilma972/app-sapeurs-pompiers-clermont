@@ -22,18 +22,20 @@ import {
 
 // --- Types ---
 interface TeamStats {
-  team_id: string;
-  team_name: string;
-  total_amount: number;
-  total_calendars: number;
-  member_count: number;
+  id: string;
+  name: string;
+  goalTotal: number;
+  achieved: number;
+  amountCollected: number;
   rank?: number;
   previous_rank?: number;
 }
 
+export type Team = TeamStats;
+
 interface TeamsLeaderboardProgressProps {
   teams: TeamStats[];
-  globalTarget?: number;
+  className?: string;
   maxItems?: number;
 }
 
@@ -55,8 +57,8 @@ const getTrendIcon = (rank: number, previousRank?: number) => {
 };
 
 const calculateMetrics = (team: TeamStats) => {
-  const avg = team.total_calendars > 0 
-    ? (team.total_amount / team.total_calendars)
+  const avg = team.achieved > 0 
+    ? (team.amountCollected / team.achieved)
     : 0;
 
   // Logique de couleur fine (Rule of 10/11/12)
@@ -78,14 +80,14 @@ const TeamCard = ({ team, maxAmount, metrics }: {
   maxAmount: number;
   metrics: ReturnType<typeof calculateMetrics>;
 }) => {
-  const progressValue = maxAmount > 0 ? (team.total_amount / maxAmount) * 100 : 0;
+  const progressValue = maxAmount > 0 ? (team.amountCollected / maxAmount) * 100 : 0;
   const { averagePerCalendar, colorClass } = metrics;
 
   return (
     <article 
       className="mb-4 p-4 rounded-lg border border-slate-200 bg-white shadow-sm hover:shadow-md transition-all duration-200"
       role="listitem"
-      aria-label={`${team.team_name} - Rang ${team.rank}`}
+      aria-label={`${team.name} - Rang ${team.rank}`}
     >
       {/* En-tête Responsive (Mobile First) */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-3 gap-2">
@@ -94,10 +96,10 @@ const TeamCard = ({ team, maxAmount, metrics }: {
             {getRankIcon(team.rank || 0)}
           </div>
           <div className="min-w-0 flex-1">
-            <h3 className="font-bold text-slate-800 text-lg truncate">{team.team_name}</h3>
+            <h3 className="font-bold text-slate-800 text-lg truncate">{team.name}</h3>
             <div className="flex items-center text-xs text-slate-500 space-x-2 flex-wrap">
               <span className="flex items-center whitespace-nowrap">
-                <Users className="h-3 w-3 mr-1" /> {team.member_count} membres
+                <Users className="h-3 w-3 mr-1" /> {team.achieved}/{team.goalTotal} calendriers
               </span>
               {getTrendIcon(team.rank || 0, team.previous_rank)}
             </div>
@@ -106,7 +108,7 @@ const TeamCard = ({ team, maxAmount, metrics }: {
         
         {/* Montant à droite (aligné à gauche sur mobile, droite sur desktop) */}
         <div className="flex flex-row sm:flex-col justify-between sm:text-right items-end w-full sm:w-auto pl-11 sm:pl-0 mt-1 sm:mt-0">
-           <div className="text-2xl font-bold text-slate-900">{team.total_amount.toLocaleString('fr-FR')} €</div>
+           <div className="text-2xl font-bold text-slate-900">{team.amountCollected.toLocaleString('fr-FR')} €</div>
            <div className="text-xs text-slate-500 font-medium">Collecté</div>
         </div>
       </div>
@@ -136,7 +138,7 @@ const TeamCard = ({ team, maxAmount, metrics }: {
             <Calendar className="h-3 w-3 mr-1" aria-hidden="true" /> Calendriers
           </span>
           <span className="text-sm font-semibold text-slate-700">
-            {team.total_calendars} unités
+            {team.achieved} / {team.goalTotal}
           </span>
         </div>
 
@@ -150,7 +152,7 @@ const TeamCard = ({ team, maxAmount, metrics }: {
                 </span>
               </TooltipTrigger>
               <TooltipContent side="top">
-                <p className="text-xs">Total collecté ÷ Calendriers</p>
+                <p className="text-xs">Total collecté ÷ Calendriers distribués</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -165,14 +167,15 @@ const TeamCard = ({ team, maxAmount, metrics }: {
 };
 
 // --- Composant Principal ---
-export default function TeamsLeaderboardProgress({ 
+export function TeamsLeaderboardProgress({ 
   teams, 
+  className,
   maxItems = 10
 }: TeamsLeaderboardProgressProps) {
   // Tri et optimisation avec useMemo
   const sortedTeamsWithMetrics = useMemo(() => {
     return [...teams]
-      .sort((a, b) => b.total_amount - a.total_amount)
+      .sort((a, b) => b.amountCollected - a.amountCollected)
       .slice(0, maxItems)
       .map((team, index) => ({
         team: { ...team, rank: index + 1 },
@@ -181,12 +184,12 @@ export default function TeamsLeaderboardProgress({
   }, [teams, maxItems]);
 
   const maxAmount = sortedTeamsWithMetrics.length > 0 
-    ? sortedTeamsWithMetrics[0].team.total_amount 
+    ? sortedTeamsWithMetrics[0].team.amountCollected 
     : 1;
 
   if (sortedTeamsWithMetrics.length === 0) {
     return (
-      <Card className="w-full bg-slate-50 border-none shadow-none">
+      <Card className={`w-full bg-slate-50 border-none shadow-none ${className || ''}`}>
         <CardHeader className="pb-2 px-0">
           <CardTitle className="flex items-center text-xl font-bold text-slate-800">
             <Trophy className="h-6 w-6 mr-2 text-yellow-500" />
@@ -203,7 +206,7 @@ export default function TeamsLeaderboardProgress({
   }
 
   return (
-    <Card className="w-full bg-slate-50 border-none shadow-none">
+    <Card className={`w-full bg-slate-50 border-none shadow-none ${className || ''}`}>
       <CardHeader className="pb-2 px-0">
         <CardTitle className="flex items-center text-xl font-bold text-slate-800">
           <Trophy className="h-6 w-6 mr-2 text-yellow-500" aria-hidden="true" />
@@ -214,7 +217,7 @@ export default function TeamsLeaderboardProgress({
         <div className="flex flex-col space-y-2">
           {sortedTeamsWithMetrics.map(({ team, metrics }) => (
             <TeamCard 
-              key={team.team_id} 
+              key={team.id} 
               team={team}
               maxAmount={maxAmount}
               metrics={metrics}
