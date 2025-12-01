@@ -3,7 +3,8 @@ import { getStripe } from '@/lib/stripe/client'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createLogger } from '@/lib/log'
 import { sendEmail } from '@/lib/email/resend-client'
-import { buildSubject, buildHtml, buildText } from '@/lib/email/receipt-templates'
+import { buildHtml, buildText } from '@/lib/email/receipt-templates'
+// Note: buildSubject commenté car génération de reçu fiscal désactivée (voir lignes 110-134, 370-414, 592-636)
 
 const log = createLogger('webhook/stripe')
 
