@@ -1,224 +1,227 @@
-"use client"
+'use client';
 
-import { useMemo, useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Calendar, Euro } from "lucide-react"
-import { MedalIcon } from "@/components/icons/medal"
+import React, { useMemo } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
+import {
+  Trophy,
+  TrendingUp,
+  Users,
+  Calendar,
+  Award,
+  Calculator,
+  TrendingDown,
+  Minus,
+} from 'lucide-react';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
-export interface Team {
-  id: string
-  name: string
-  goalTotal: number
-  achieved: number
-  amountCollected: number
+// --- Types ---
+interface TeamStats {
+  team_id: string;
+  team_name: string;
+  total_amount: number;
+  total_calendars: number;
+  member_count: number;
+  rank?: number;
+  previous_rank?: number;
 }
 
 interface TeamsLeaderboardProgressProps {
-  teams: Team[]
-  className?: string
-  maxItems?: number // défaut 5
+  teams: TeamStats[];
+  globalTarget?: number;
+  maxItems?: number;
 }
 
-export function TeamsLeaderboardProgress({
-  teams,
-  className,
-  maxItems = 5,
-}: TeamsLeaderboardProgressProps) {
-  const [viewMode, setViewMode] = useState<"calendars" | "amount">("calendars")
+// --- Helpers ---
+const getRankIcon = (rank: number) => {
+  switch (rank) {
+    case 1: return <Trophy className="h-6 w-6 text-yellow-500" aria-label="1ère place" />;
+    case 2: return <Award className="h-6 w-6 text-gray-400" aria-label="2e place" />;
+    case 3: return <Award className="h-6 w-6 text-amber-600" aria-label="3e place" />;
+    default: return <span className="text-xl font-bold text-slate-500" aria-label={`${rank}e place`}>#{rank}</span>;
+  }
+};
 
-  const sortedTeams = useMemo(() => {
-    return [...teams]
-      .map((team) => {
-        const pct =
-          team.goalTotal > 0 ? Math.min((team.achieved / team.goalTotal) * 100, 100) : 0
-        return { ...team, percentage: pct }
-      })
-      .sort((a, b) => b.percentage - a.percentage)
-      .slice(0, maxItems)
-  }, [teams, maxItems])
+const getTrendIcon = (rank: number, previousRank?: number) => {
+  if (!previousRank) return null;
+  if (rank < previousRank) return <TrendingUp className="h-4 w-4 text-green-500" aria-label="En progression" />;
+  if (rank > previousRank) return <TrendingDown className="h-4 w-4 text-red-500" aria-label="En déclin" />;
+  return <Minus className="h-4 w-4 text-slate-300" aria-label="Stable" />;
+};
 
-  const formatCurrency = (amount: number) =>
-    new Intl.NumberFormat("fr-FR", {
-      style: "currency",
-      currency: "EUR",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount)
+const calculateMetrics = (team: TeamStats) => {
+  const avg = team.total_calendars > 0 
+    ? (team.total_amount / team.total_calendars)
+    : 0;
+
+  // Logique de couleur fine (Rule of 10/11/12)
+  let colorClass = "text-slate-700"; 
+  if (avg < 10) colorClass = "text-orange-600 font-medium";      // < 10€
+  else if (avg >= 10 && avg < 11) colorClass = "text-slate-600 font-medium";  // 10-11€
+  else if (avg >= 11 && avg < 12) colorClass = "text-emerald-600 font-bold";  // 11-12€
+  else if (avg >= 12) colorClass = "text-green-700 font-extrabold";           // > 12€
+
+  return {
+    averagePerCalendar: avg.toFixed(2),
+    colorClass
+  };
+};
+
+// --- Sous-Composant TeamCard ---
+const TeamCard = ({ team, maxAmount, metrics }: { 
+  team: TeamStats; 
+  maxAmount: number;
+  metrics: ReturnType<typeof calculateMetrics>;
+}) => {
+  const progressValue = maxAmount > 0 ? (team.total_amount / maxAmount) * 100 : 0;
+  const { averagePerCalendar, colorClass } = metrics;
 
   return (
-    <Card className={className} role="region" aria-label="Classement des équipes">
-      <CardHeader className="pb-3">
-        {/* On small screens stack title + toggle; on larger screens keep them on a row */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-          <div className="min-w-0">
-            <CardTitle className="text-lg truncate">Classement des équipes</CardTitle>
+    <article 
+      className="mb-4 p-4 rounded-lg border border-slate-200 bg-white shadow-sm hover:shadow-md transition-all duration-200"
+      role="listitem"
+      aria-label={`${team.team_name} - Rang ${team.rank}`}
+    >
+      {/* En-tête Responsive (Mobile First) */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-3 gap-2">
+        <div className="flex items-center space-x-3 min-w-0 w-full sm:w-auto">
+          <div className="flex-shrink-0 w-8 sm:w-10 text-center">
+            {getRankIcon(team.rank || 0)}
           </div>
-
-          {/* Toggle: placed under title on mobile (mt-2), on the right on sm+ */}
-          <div
-            className="flex gap-1 rounded-lg bg-muted p-1 flex-shrink-0 mt-2 sm:mt-0"
-            role="tablist"
-            aria-label="Choix de métrique"
-          >
-            <Button
-              role="tab"
-              aria-selected={viewMode === "calendars"}
-              variant={viewMode === "calendars" ? "default" : "ghost"}
-              size="sm"
-              onClick={() => setViewMode("calendars")}
-              className="h-9 px-3 text-xs"
-            >
-              <Calendar className="mr-1 h-3.5 w-3.5" aria-hidden="true" />
-              Calendriers
-            </Button>
-            <Button
-              role="tab"
-              aria-selected={viewMode === "amount"}
-              variant={viewMode === "amount" ? "default" : "ghost"}
-              size="sm"
-              onClick={() => setViewMode("amount")}
-              className="h-9 px-3 text-xs"
-            >
-              <Euro className="mr-1 h-3.5 w-3.5" aria-hidden="true" />
-              Montant
-            </Button>
+          <div className="min-w-0 flex-1">
+            <h3 className="font-bold text-slate-800 text-lg truncate">{team.team_name}</h3>
+            <div className="flex items-center text-xs text-slate-500 space-x-2 flex-wrap">
+              <span className="flex items-center whitespace-nowrap">
+                <Users className="h-3 w-3 mr-1" /> {team.member_count} membres
+              </span>
+              {getTrendIcon(team.rank || 0, team.previous_rank)}
+            </div>
           </div>
         </div>
+        
+        {/* Montant à droite (aligné à gauche sur mobile, droite sur desktop) */}
+        <div className="flex flex-row sm:flex-col justify-between sm:text-right items-end w-full sm:w-auto pl-11 sm:pl-0 mt-1 sm:mt-0">
+           <div className="text-2xl font-bold text-slate-900">{team.total_amount.toLocaleString('fr-FR')} €</div>
+           <div className="text-xs text-slate-500 font-medium">Collecté</div>
+        </div>
+      </div>
+
+      {/* Barre de progression */}
+      <div className="mb-3">
+        <div className="flex justify-between text-xs text-slate-400 mb-1">
+          <span>Performance relative</span>
+          <span>{Math.round(progressValue)}% du leader</span>
+        </div>
+        <Progress 
+          value={progressValue} 
+          className="h-2" 
+          indicatorClassName={
+            team.rank === 1 ? "bg-yellow-500" : 
+            team.rank === 2 ? "bg-slate-400" : 
+            team.rank === 3 ? "bg-amber-600" : "bg-slate-600"
+          } 
+        />
+      </div>
+
+      {/* Métriques Clés (Grille responsive) */}
+      <div className="grid grid-cols-2 gap-4 mt-4 pt-4 border-t border-slate-100">
+        {/* Calendriers Distribués */}
+        <div className="flex flex-col">
+          <span className="text-[10px] uppercase tracking-wide text-slate-400 font-semibold flex items-center mb-1">
+            <Calendar className="h-3 w-3 mr-1" aria-hidden="true" /> Calendriers
+          </span>
+          <span className="text-sm font-semibold text-slate-700">
+            {team.total_calendars} unités
+          </span>
+        </div>
+
+        {/* Moyenne Unitaire */}
+        <div className="flex flex-col">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="text-[10px] uppercase tracking-wide text-slate-400 font-semibold flex items-center mb-1 cursor-help">
+                  <Calculator className="h-3 w-3 mr-1" aria-hidden="true" /> Moyenne Unitaire
+                </span>
+              </TooltipTrigger>
+              <TooltipContent side="top">
+                <p className="text-xs">Total collecté ÷ Calendriers</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          
+          <span className={`text-sm ${colorClass}`}>
+            {averagePerCalendar} € <span className="text-xs font-normal text-slate-400">/ cal.</span>
+          </span>
+        </div>
+      </div>
+    </article>
+  );
+};
+
+// --- Composant Principal ---
+export default function TeamsLeaderboardProgress({ 
+  teams, 
+  maxItems = 10
+}: TeamsLeaderboardProgressProps) {
+  // Tri et optimisation avec useMemo
+  const sortedTeamsWithMetrics = useMemo(() => {
+    return [...teams]
+      .sort((a, b) => b.total_amount - a.total_amount)
+      .slice(0, maxItems)
+      .map((team, index) => ({
+        team: { ...team, rank: index + 1 },
+        metrics: calculateMetrics(team)
+      }));
+  }, [teams, maxItems]);
+
+  const maxAmount = sortedTeamsWithMetrics.length > 0 
+    ? sortedTeamsWithMetrics[0].team.total_amount 
+    : 1;
+
+  if (sortedTeamsWithMetrics.length === 0) {
+    return (
+      <Card className="w-full bg-slate-50 border-none shadow-none">
+        <CardHeader className="pb-2 px-0">
+          <CardTitle className="flex items-center text-xl font-bold text-slate-800">
+            <Trophy className="h-6 w-6 mr-2 text-yellow-500" />
+            Classement des Équipes
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="px-0">
+          <div className="text-center py-8 text-slate-400 italic">
+            Aucune donnée d&apos;équipe disponible pour le moment.
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className="w-full bg-slate-50 border-none shadow-none">
+      <CardHeader className="pb-2 px-0">
+        <CardTitle className="flex items-center text-xl font-bold text-slate-800">
+          <Trophy className="h-6 w-6 mr-2 text-yellow-500" aria-hidden="true" />
+          Classement des Équipes
+        </CardTitle>
       </CardHeader>
-
-      <CardContent className="space-y-3" role="list" aria-label="Équipes triées par progression">
-        {sortedTeams.map((team, index) => {
-          const rawPct = team.goalTotal > 0 ? (team.achieved / team.goalTotal) * 100 : 0
-          const clampedPct = Math.min(rawPct, 100)
-          const isOverGoal = rawPct > 100
-          const overPct = Math.max(0, Math.round(rawPct - 100))
-
-          const progressLabel =
-            viewMode === "calendars"
-              ? `${team.achieved}/${team.goalTotal} (${Math.round(clampedPct)}%)`
-              : `${formatCurrency(team.amountCollected)} — ${team.achieved}/${team.goalTotal} (${Math.round(
-                  clampedPct,
-                )}%)`
-
-          return (
-            <div
-              key={team.id}
-              role="listitem"
-              aria-label={`${index + 1}. ${team.name}`}
-              className="space-y-1.5"
-            >
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex min-w-0 flex-1 items-center gap-2">
-                  {/* Medal badges for top 3, simple index for others */}
-                  {index === 0 ? (
-                    <span
-                      className="inline-flex items-center justify-center h-6 w-6 rounded-full text-xs font-semibold"
-                      aria-hidden="true"
-                      style={{
-                        backgroundColor: "var(--badge-gold-bg, #f5d042)",
-                        color: "var(--badge-gold-fg, #7a5500)",
-                      }}
-                    >
-                      <MedalIcon className="h-4 w-4" title={`Médaille d'or — ${team.name}`} />
-                      <span className="sr-only">{`1er — Médaille d'or, ${team.name}`}</span>
-                    </span>
-                  ) : index === 1 ? (
-                    <span
-                      className="inline-flex items-center justify-center h-6 w-6 rounded-full text-xs font-semibold"
-                      aria-hidden="true"
-                      style={{
-                        backgroundColor: "var(--badge-silver-bg, #e6e9ee)",
-                        color: "var(--badge-silver-fg, #3b3f46)",
-                      }}
-                    >
-                      <MedalIcon className="h-4 w-4" title={`Médaille d'argent — ${team.name}`} />
-                      <span className="sr-only">{`2e — Médaille d'argent, ${team.name}`}</span>
-                    </span>
-                  ) : index === 2 ? (
-                    <span
-                      className="inline-flex items-center justify-center h-6 w-6 rounded-full text-xs font-semibold"
-                      aria-hidden="true"
-                      style={{
-                        backgroundColor: "var(--badge-bronze-bg, #b4764a)",
-                        color: "var(--badge-bronze-fg, #ffffff)",
-                      }}
-                    >
-                      <MedalIcon className="h-4 w-4" title={`Médaille de bronze — ${team.name}`} />
-                      <span className="sr-only">{`3e — Médaille de bronze, ${team.name}`}</span>
-                    </span>
-                  ) : (
-                    /* no numeric prefix for ranks beyond top 3 (remove 4,5 etc.) */
-                    <span className="w-6" aria-hidden="true" />
-                  )}
-                  <span className="truncate text-sm font-medium">{team.name}</span>
-                </div>
-
-                <div className="flex shrink-0 items-center gap-2">
-                  {viewMode === "calendars" ? (
-                    <>
-                      <span className="text-xs text-muted-foreground">
-                        {team.achieved}/{team.goalTotal}
-                      </span>
-                      <span
-                        className={`text-sm font-semibold ${
-                          isOverGoal ? "text-green-600" : "text-foreground"
-                        }`}
-                        aria-label={`Progression ${Math.round(clampedPct)}%${
-                          isOverGoal ? `, dépassement de ${overPct}%` : ""
-                        }`}
-                      >
-                        {Math.round(clampedPct)}%
-                      </span>
-                      {isOverGoal && (
-                        <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">
-                          +{overPct}%
-                        </Badge>
-                      )}
-                    </>
-                  ) : (
-                    <span className="text-sm font-semibold">{formatCurrency(team.amountCollected)}</span>
-                  )}
-                </div>
-
-                {/* Visually-hidden progress text for screen readers */}
-                <span className="sr-only">{progressLabel}</span>
-              </div>
-
-              {/* Micro bullet bar déterminée (piste vs indicateur) */}
-              <div
-                className="relative h-2 w-full overflow-hidden rounded-full"
-                role="progressbar"
-                aria-valuemin={0}
-                aria-valuemax={100}
-                aria-valuenow={Math.round(Math.min(rawPct, 100))}
-                aria-label={progressLabel}
-              >
-                {/* Track (piste) à contraste suffisant */}
-                <div className="absolute inset-0 bg-muted" />
-
-                {/* Indicator (barre de progression) */}
-                <div
-                  className={`absolute left-0 top-0 h-full rounded-full transition-[width] duration-300 ${
-                    isOverGoal ? "bg-green-600" : "bg-primary"
-                  }`}
-                  style={{ width: `${clampedPct}%` }}
-                />
-
-                {/* Marqueur d'objectif (stop indicator visuel côté droit) */}
-                {!isOverGoal && (
-                  <div className="absolute right-0 top-0 h-full w-px bg-foreground/40" aria-hidden="true" />
-                )}
-              </div>
-            </div>
-          )
-        })}
-
-        {sortedTeams.length === 0 && (
-          <div className="py-8 text-center text-sm text-muted-foreground">Aucune équipe disponible</div>
-        )}
+      <CardContent className="px-0" role="list" aria-label="Classement des équipes">
+        <div className="flex flex-col space-y-2">
+          {sortedTeamsWithMetrics.map(({ team, metrics }) => (
+            <TeamCard 
+              key={team.team_id} 
+              team={team}
+              maxAmount={maxAmount}
+              metrics={metrics}
+            />
+          ))}
+        </div>
       </CardContent>
     </Card>
-  )
+  );
 }
