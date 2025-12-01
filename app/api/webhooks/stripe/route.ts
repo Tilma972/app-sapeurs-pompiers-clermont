@@ -4,6 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { createLogger } from '@/lib/log'
 import { sendEmail } from '@/lib/email/resend-client'
 import { buildHtml, buildText } from '@/lib/email/receipt-templates'
+import { buildBoutiqueSubject, buildBoutiqueHtml, buildBoutiqueText } from '@/lib/email/boutique-templates'
 import { sendToN8n } from '@/lib/n8n/send-receipt'
 
 // Note: buildSubject commenté car génération de reçu fiscal désactivée (voir lignes 110-134, 370-414, 592-636)
@@ -52,13 +53,35 @@ export async function POST(req: NextRequest) {
       id: string
       amount_total?: number | null
       customer_details?: { email?: string | null; name?: string | null } | null
-      metadata?: { tournee_id?: string; calendar_given?: string; user_id?: string; source?: string }
+      metadata?: { 
+        tournee_id?: string
+        calendar_given?: string
+        user_id?: string
+        source?: string
+        items?: string  // JSON string des articles boutique
+        customer_name?: string
+      }
     }
 
     const admin = createAdminClient()
     const amount = (session.amount_total ?? 0) / 100
     const donorEmail = session.customer_details?.email ?? null
-    const donorName = session.customer_details?.name ?? null
+    const donorName = session.customer_details?.name ?? session.metadata?.customer_name ?? null
+
+    // Parser les items de la boutique si présents
+    type BoutiqueItem = { id: string; name: string; qty: number; price?: number }
+    let boutiqueItems: BoutiqueItem[] = []
+    if (session.metadata?.items) {
+      try {
+        boutiqueItems = JSON.parse(session.metadata.items) as BoutiqueItem[]
+        log.info('📦 Items boutique parsés', { count: boutiqueItems.length, items: boutiqueItems })
+      } catch (parseErr) {
+        log.warn('⚠️ Impossible de parser metadata.items', { 
+          raw: session.metadata.items, 
+          error: (parseErr as Error).message 
+        })
+      }
+    }
 
     // Idempotence by stripe_session_id
     const { data: existing } = await admin
@@ -81,34 +104,101 @@ export async function POST(req: NextRequest) {
         notes = 'Boutique (Stripe Checkout)'
       }
 
+      // Préparer les données d'insertion
+      const insertData: Record<string, unknown> = {
+        user_id: userId,
+        tournee_id: tourneeId,
+        amount,
+        calendar_accepted: calendarAccepted,
+        payment_method: 'carte',
+        payment_status: 'completed',
+        stripe_session_id: session.id,
+        supporter_email: donorEmail,
+        supporter_name: donorName,
+        notes,
+        source, // Nouvelle colonne
+      }
+
+      // Ajouter order_status pour les commandes boutique
+      if (source === 'boutique') {
+        insertData.order_status = 'pending'
+      }
+
       const { data: tx } = await admin
         .from('support_transactions')
-        .insert({
-          user_id: userId,
-          tournee_id: tourneeId,
-          amount,
-          calendar_accepted: calendarAccepted,
-          payment_method: 'carte',
-          payment_status: 'completed',
-          stripe_session_id: session.id,
-          supporter_email: donorEmail,
-          supporter_name: donorName,
-          notes,
-        })
+        .insert(insertData)
         .select('id, amount, supporter_name, supporter_email')
         .single()
 
+      // =====================================================
+      // INSERTION DES ARTICLES BOUTIQUE DANS ORDER_ITEMS
+      // =====================================================
+      if (tx && source === 'boutique' && boutiqueItems.length > 0) {
+        try {
+          // Récupérer les infos produits depuis la DB pour avoir les prix et images
+          const productIds = boutiqueItems.map(item => item.id)
+          const { data: products } = await admin
+            .from('products')
+            .select('id, name, price, image_url, description')
+            .in('id', productIds)
+
+          const productsMap = new Map(products?.map(p => [p.id, p]) || [])
+
+          // Préparer les items à insérer
+          const orderItemsToInsert = boutiqueItems.map(item => {
+            const product = productsMap.get(item.id)
+            return {
+              transaction_id: tx.id,
+              product_id: item.id,
+              name: item.name || product?.name || 'Produit inconnu',
+              description: product?.description || null,
+              quantity: item.qty,
+              unit_price: item.price || product?.price || 0,
+              image_url: product?.image_url || null,
+            }
+          })
+
+          const { error: itemsError } = await admin
+            .from('order_items')
+            .insert(orderItemsToInsert)
+
+          if (itemsError) {
+            log.error('❌ Échec insertion order_items', {
+              transaction_id: tx.id,
+              error: itemsError.message,
+              items: orderItemsToInsert
+            })
+          } else {
+            log.info('✅ Articles boutique enregistrés', {
+              transaction_id: tx.id,
+              items_count: orderItemsToInsert.length
+            })
+          }
+
+          // Créer l'entrée initiale dans order_status_history
+          await admin
+            .from('order_status_history')
+            .insert({
+              transaction_id: tx.id,
+              status: 'pending',
+              notes: 'Commande créée via Stripe Checkout'
+            })
+
+        } catch (itemsErr) {
+          log.error('❌ Exception insertion articles boutique', {
+            transaction_id: tx.id,
+            error: (itemsErr as Error).message
+          })
+        }
+      }
+
       // ========================================================================
-      // REÇU FISCAL - DÉSACTIVÉ (géré par trigger n8n → Gotenberg → PDF)
+      // REÇU FISCAL - Code legacy désactivé
       // ========================================================================
-      // Les reçus fiscaux PDF sont maintenant générés automatiquement par :
-      //   1. Trigger PostgreSQL détecte INSERT dans support_transactions
-      //   2. Envoie webhook à n8n via pg_net
-      //   3. n8n génère PDF via Gotenberg
-      //   4. n8n envoie email avec PDF en pièce jointe
+      // Les reçus fiscaux PDF sont maintenant générés via appel direct à N8N
+      // (voir sendToN8n ci-dessous). Le trigger PostgreSQL n'est plus utilisé.
       //
-      // ROLLBACK : Si n8n est HS pendant >24h, décommenter le code ci-dessous
-      //            et redéployer l'application
+      // TODO: Supprimer le trigger support_transactions_n8n_webhook_trigger
       // ========================================================================
       /*
       if (tx && amount >= 6 && !calendarAccepted) {
@@ -139,23 +229,90 @@ export async function POST(req: NextRequest) {
       // Email de confirmation immédiat (tous les montants)
       if (tx && donorEmail) {
         try {
-          const confirmSubject = calendarAccepted
-            ? `Merci pour votre soutien de ${amount.toFixed(2)}€`
-            : `Merci pour votre don de ${amount.toFixed(2)}€`
+          let confirmSubject: string
+          let confirmHtml: string
+          let confirmText: string
 
-          const confirmHtml = buildHtml({
-            supporterName: tx.supporter_name as string | null,
-            amount: tx.amount as number,
-            receiptNumber: null,
-            transactionType: calendarAccepted ? 'soutien' : 'fiscal'
-          })
+          if (source === 'boutique' && boutiqueItems.length > 0) {
+            // =====================================================
+            // EMAIL BOUTIQUE - Template style Shopify
+            // =====================================================
+            // Récupérer les prix depuis la DB pour les items
+            const productIds = boutiqueItems.map(item => item.id)
+            const { data: products } = await admin
+              .from('products')
+              .select('id, price, image_url')
+              .in('id', productIds)
 
-          const confirmText = buildText({
-            supporterName: tx.supporter_name as string | null,
-            amount: tx.amount as number,
-            receiptNumber: null,
-            transactionType: calendarAccepted ? 'soutien' : 'fiscal'
-          })
+            const productsMap = new Map(products?.map(p => [p.id, p]) || [])
+
+            const emailItems = boutiqueItems.map(item => {
+              const product = productsMap.get(item.id)
+              const unitPrice = item.price || product?.price || 0
+              return {
+                name: item.name,
+                quantity: item.qty,
+                unitPrice,
+                totalPrice: unitPrice * item.qty,
+                imageUrl: product?.image_url || undefined
+              }
+            })
+
+            const emailParams = {
+              customerName: tx.supporter_name as string | null,
+              customerEmail: donorEmail,
+              orderNumber: tx.id,
+              items: emailItems,
+              subtotal: amount,
+              total: amount,
+              orderDate: new Date()
+            }
+
+            confirmSubject = buildBoutiqueSubject(emailParams)
+            confirmHtml = buildBoutiqueHtml(emailParams)
+            confirmText = buildBoutiqueText(emailParams)
+
+            log.info('📧 Email boutique préparé', {
+              transaction_id: tx.id,
+              items_count: emailItems.length
+            })
+
+          } else if (source === 'boutique') {
+            // Boutique sans items parsés (fallback)
+            confirmSubject = `Confirmation de votre commande - ${amount.toFixed(2)}€`
+            confirmHtml = buildHtml({
+              supporterName: tx.supporter_name as string | null,
+              amount: tx.amount as number,
+              receiptNumber: null,
+              transactionType: 'soutien'
+            })
+            confirmText = buildText({
+              supporterName: tx.supporter_name as string | null,
+              amount: tx.amount as number,
+              receiptNumber: null,
+              transactionType: 'soutien'
+            })
+
+          } else {
+            // Don classique (landing page ou terrain)
+            const emailType = calendarAccepted ? 'soutien' : 'fiscal'
+            confirmSubject = calendarAccepted
+              ? `Merci pour votre soutien de ${amount.toFixed(2)}€`
+              : `Merci pour votre don de ${amount.toFixed(2)}€`
+
+            confirmHtml = buildHtml({
+              supporterName: tx.supporter_name as string | null,
+              amount: tx.amount as number,
+              receiptNumber: null,
+              transactionType: emailType
+            })
+            confirmText = buildText({
+              supporterName: tx.supporter_name as string | null,
+              amount: tx.amount as number,
+              receiptNumber: null,
+              transactionType: emailType
+            })
+          }
 
           await sendEmail({
             to: donorEmail,
@@ -167,7 +324,8 @@ export async function POST(req: NextRequest) {
           log.info('✅ Email de confirmation envoyé (Checkout)', {
             transaction_id: tx.id,
             email: donorEmail,
-            amount
+            amount,
+            source
           })
         } catch (emailErr) {
           log.error('❌ Échec envoi email de confirmation (Checkout)', {
@@ -178,19 +336,14 @@ export async function POST(req: NextRequest) {
       }
 
       // Appel direct au webhook n8n pour génération du reçu fiscal PDF
-
-      if (tx && amount >= 6 && donorEmail) {
-
+      // IMPORTANT: Pas de reçu fiscal pour la boutique (c'est une vente, pas un don)
+      if (tx && amount >= 6 && donorEmail && source !== 'boutique') {
         try {
-
           log.info('🚀 Appel N8N direct pour génération reçu fiscal (Checkout)...', {
-
             transaction_id: tx.id,
-
             amount,
-
-            calendar_accepted: calendarAccepted
-
+            calendar_accepted: calendarAccepted,
+            source
           })
 
  
@@ -246,6 +399,8 @@ export async function POST(req: NextRequest) {
       // Log pour traçabilité
       if (source === 'landing_page_donation') {
         log.info('✅ Don landing page traité', { sessionId: session.id, amount, donorEmail })
+      } else if (source === 'boutique') {
+        log.info('✅ Commande boutique traitée (pas de reçu fiscal)', { sessionId: session.id, amount, donorEmail })
       }
     }
   }
@@ -419,12 +574,10 @@ export async function POST(req: NextRequest) {
       }
 
       // ========================================================================
-      // 2. REÇU FISCAL - DÉSACTIVÉ (géré par trigger n8n → Gotenberg → PDF)
+      // 2. REÇU FISCAL - Code legacy désactivé (PI)
       // ========================================================================
-      // Les reçus fiscaux PDF sont maintenant générés automatiquement par le
-      // trigger PostgreSQL support_transactions_n8n_webhook_trigger
-      //
-      // ROLLBACK : Si n8n est HS, décommenter le code ci-dessous et redéployer
+      // Les reçus fiscaux PDF sont générés via appel direct à N8N (voir ci-dessous)
+      // TODO: Supprimer le trigger support_transactions_n8n_webhook_trigger
       // ========================================================================
       /*
       if (amount >= 6 && !calendarAccepted) {
@@ -697,12 +850,10 @@ export async function POST(req: NextRequest) {
       }
 
       // ========================================================================
-      // 2. REÇU FISCAL - DÉSACTIVÉ (géré par trigger n8n → Gotenberg → PDF)
+      // 2. REÇU FISCAL - Code legacy désactivé (Charge)
       // ========================================================================
-      // Les reçus fiscaux PDF sont maintenant générés automatiquement par le
-      // trigger PostgreSQL support_transactions_n8n_webhook_trigger
-      //
-      // ROLLBACK : Si n8n est HS, décommenter le code ci-dessous et redéployer
+      // Les reçus fiscaux PDF sont générés via appel direct à N8N (voir ci-dessous)
+      // TODO: Supprimer le trigger support_transactions_n8n_webhook_trigger
       // ========================================================================
       /*
       if (amount >= 6 && !calendarGiven) {
