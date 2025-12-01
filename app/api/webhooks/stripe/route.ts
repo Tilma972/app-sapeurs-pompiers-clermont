@@ -95,13 +95,23 @@ export async function POST(req: NextRequest) {
         .select('id, amount, supporter_name, supporter_email')
         .single()
 
-      // Générer un reçu fiscal UNIQUEMENT pour les dons (calendar_accepted: false)
-      // Boutique et achats avec contrepartie n'ont PAS droit au reçu fiscal
+      // ========================================================================
+      // REÇU FISCAL - DÉSACTIVÉ (géré par trigger n8n → Gotenberg → PDF)
+      // ========================================================================
+      // Les reçus fiscaux PDF sont maintenant générés automatiquement par :
+      //   1. Trigger PostgreSQL détecte INSERT dans support_transactions
+      //   2. Envoie webhook à n8n via pg_net
+      //   3. n8n génère PDF via Gotenberg
+      //   4. n8n envoie email avec PDF en pièce jointe
+      //
+      // ROLLBACK : Si n8n est HS pendant >24h, décommenter le code ci-dessous
+      //            et redéployer l'application
+      // ========================================================================
+      /*
       if (tx && amount >= 6 && !calendarAccepted) {
         const { data: rec } = await admin.rpc('issue_receipt', { p_transaction_id: tx.id }).single()
         const receiptNumber = (rec as { receipt_number?: string } | null)?.receipt_number ?? null
 
-        // Persist receipt generation metadata
         const receiptUrl = receiptNumber
           ? `${process.env.NEXT_PUBLIC_SITE_URL}/recu/${receiptNumber}`
           : null
@@ -120,6 +130,58 @@ export async function POST(req: NextRequest) {
             .update({ receipt_sent: true })
             .eq('id', tx.id)
         }
+      }
+      */
+
+      // Email de confirmation immédiat (tous les montants)
+      if (tx && donorEmail) {
+        try {
+          const confirmSubject = calendarAccepted
+            ? `Merci pour votre soutien de ${amount.toFixed(2)}€`
+            : `Merci pour votre don de ${amount.toFixed(2)}€`
+
+          const confirmHtml = buildHtml({
+            supporterName: tx.supporter_name as string | null,
+            amount: tx.amount as number,
+            receiptNumber: null,
+            transactionType: calendarAccepted ? 'soutien' : 'fiscal'
+          })
+
+          const confirmText = buildText({
+            supporterName: tx.supporter_name as string | null,
+            amount: tx.amount as number,
+            receiptNumber: null,
+            transactionType: calendarAccepted ? 'soutien' : 'fiscal'
+          })
+
+          await sendEmail({
+            to: donorEmail,
+            subject: confirmSubject,
+            html: confirmHtml,
+            text: confirmText
+          })
+
+          log.info('✅ Email de confirmation envoyé (Checkout)', {
+            transaction_id: tx.id,
+            email: donorEmail,
+            amount
+          })
+        } catch (emailErr) {
+          log.error('❌ Échec envoi email de confirmation (Checkout)', {
+            transaction_id: tx.id,
+            error: (emailErr as Error).message
+          })
+        }
+      }
+
+      // Log pour traçabilité du trigger n8n
+      if (tx && amount >= 6) {
+        log.info('📄 Reçu fiscal sera généré par n8n trigger', {
+          transaction_id: tx.id,
+          amount,
+          calendar_accepted: calendarAccepted,
+          trigger: 'support_transactions_n8n_webhook_trigger'
+        })
       }
 
       // Log pour traçabilité
@@ -297,7 +359,15 @@ export async function POST(req: NextRequest) {
         }
       }
 
-      // 2. Reçu fiscal UNIQUEMENT pour les dons >= 6€ (calendar_accepted: false)
+      // ========================================================================
+      // 2. REÇU FISCAL - DÉSACTIVÉ (géré par trigger n8n → Gotenberg → PDF)
+      // ========================================================================
+      // Les reçus fiscaux PDF sont maintenant générés automatiquement par le
+      // trigger PostgreSQL support_transactions_n8n_webhook_trigger
+      //
+      // ROLLBACK : Si n8n est HS, décommenter le code ci-dessous et redéployer
+      // ========================================================================
+      /*
       if (amount >= 6 && !calendarAccepted) {
         try {
           const { data: rec, error: receiptError } = await admin.rpc('issue_receipt', { p_transaction_id: tx.id }).single()
@@ -310,7 +380,6 @@ export async function POST(req: NextRequest) {
           } else {
             const receiptNumber = (rec as { receipt_number?: string } | null)?.receipt_number ?? null
 
-            // Persist receipt generation metadata
             const receiptUrl = receiptNumber
               ? `${process.env.NEXT_PUBLIC_SITE_URL}/recu/${receiptNumber}`
               : null
@@ -340,8 +409,18 @@ export async function POST(req: NextRequest) {
             transaction_id: tx.id,
             error: (receiptErr as Error).message
           })
-          // Continue execution - le reçu peut être régénéré plus tard
         }
+      }
+      */
+
+      // Log pour traçabilité du trigger n8n
+      if (amount >= 6 && tx.supporter_email) {
+        log.info('📄 Reçu fiscal sera généré par n8n trigger (PI)', {
+          transaction_id: tx.id,
+          amount,
+          calendar_accepted: calendarAccepted,
+          trigger: 'support_transactions_n8n_webhook_trigger'
+        })
       }
 
       log.info('✅ Don Stripe (PI) traité', { payment_intent_id: paymentIntent.id, amount, transaction_id: tx.id })
@@ -502,7 +581,15 @@ export async function POST(req: NextRequest) {
         }
       }
 
-      // 2. Reçu fiscal UNIQUEMENT pour les dons >= 6€ (calendar_accepted: false)
+      // ========================================================================
+      // 2. REÇU FISCAL - DÉSACTIVÉ (géré par trigger n8n → Gotenberg → PDF)
+      // ========================================================================
+      // Les reçus fiscaux PDF sont maintenant générés automatiquement par le
+      // trigger PostgreSQL support_transactions_n8n_webhook_trigger
+      //
+      // ROLLBACK : Si n8n est HS, décommenter le code ci-dessous et redéployer
+      // ========================================================================
+      /*
       if (amount >= 6 && !calendarGiven) {
         try {
           const { data: rec, error: receiptError } = await admin.rpc('issue_receipt', { p_transaction_id: tx.id }).single()
@@ -515,7 +602,6 @@ export async function POST(req: NextRequest) {
           } else {
             const receiptNumber = (rec as { receipt_number?: string } | null)?.receipt_number ?? null
 
-            // Persist receipt generation metadata
             const receiptUrl = receiptNumber
               ? `${process.env.NEXT_PUBLIC_SITE_URL}/recu/${receiptNumber}`
               : null
@@ -545,8 +631,18 @@ export async function POST(req: NextRequest) {
             transaction_id: tx.id,
             error: (receiptErr as Error).message
           })
-          // Continue execution - le reçu peut être régénéré plus tard
         }
+      }
+      */
+
+      // Log pour traçabilité du trigger n8n
+      if (amount >= 6 && donorEmail) {
+        log.info('📄 Reçu fiscal sera généré par n8n trigger (Charge)', {
+          transaction_id: tx.id,
+          amount,
+          calendar_accepted: calendarGiven,
+          trigger: 'support_transactions_n8n_webhook_trigger'
+        })
       }
 
       log.info('✅ Don traité (charge.succeeded)', { chargeId: charge.id, amount, transaction_id: tx.id })
