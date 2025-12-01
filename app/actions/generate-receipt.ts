@@ -2,14 +2,14 @@
 
 import { revalidatePath } from "next/cache"
 import { createLogger } from "@/lib/log"
+// import { sendEmail } from "@/lib/email/resend-client" <-- PLUS BESOIN
+// import { buildSubject, buildHtml, buildText } from "@/lib/email/receipt-templates" <-- PLUS BESOIN
+import { sendToN8n } from "@/lib/n8n/send-receipt" // <-- IMPORT AJOUTÉ
 
 async function createSupabaseServerClient() {
   const { createClient } = await import("@/lib/supabase/server")
   return await createClient()
 }
-
-import { sendEmail } from "@/lib/email/resend-client"
-import { buildSubject, buildHtml, buildText } from "@/lib/email/receipt-templates"
 
 export type GenerateReceiptInput = {
   tourneeId: string
@@ -27,7 +27,7 @@ export type GenerateReceiptInput = {
 export async function generateReceiptAction(input: GenerateReceiptInput) {
   const log = createLogger("actions/generate-receipt")
 
-  // Basic validation
+  // Validation
   if (!input || typeof input.amount !== "number" || input.amount <= 0) {
     return { success: false, errors: ["Montant invalide"] }
   }
@@ -42,15 +42,13 @@ export async function generateReceiptAction(input: GenerateReceiptInput) {
   }
 
   const supabase = await createSupabaseServerClient()
-
-  // Enforce auth and RLS ownership
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) {
     return { success: false, errors: ["Authentification requise"] }
   }
 
   try {
-    // Insert transaction (compat: write both legacy and new donor fields)
+    // 1. Insérer la transaction
     const { data: tx, error: txErr } = await supabase
       .from("support_transactions")
       .insert({
@@ -61,11 +59,13 @@ export async function generateReceiptAction(input: GenerateReceiptInput) {
         payment_method: input.paymentMethod,
         supporter_email: input.donorEmail,
         supporter_name: [input.donorFirstName, input.donorLastName].filter(Boolean).join(" ") || null,
+        // Champs spécifiques manuel
         donor_first_name: input.donorFirstName ?? null,
         donor_last_name: input.donorLastName ?? null,
         donor_address: input.donorAddress ?? null,
         donor_zip: input.donorZip ?? null,
         donor_city: input.donorCity ?? null,
+        notes: `Saisie manuelle (${input.paymentMethod})`
       })
       .select("id, amount, supporter_email, supporter_name")
       .single()
@@ -75,82 +75,56 @@ export async function generateReceiptAction(input: GenerateReceiptInput) {
       return { success: false, errors: ["Échec de création de la transaction"] }
     }
 
-    // Issue receipt via RPC (idempotent)
+    // 2. Générer le numéro de reçu (Optionnel : si vous voulez l'afficher tout de suite à l'écran)
+    // Si N8N s'en charge, vous pouvez commenter ce bloc.
+    // Mais le garder permet d'avoir un numéro tout de suite.
     const { data: issued, error: rpcErr } = await supabase
       .rpc("issue_receipt", { p_transaction_id: tx.id })
       .single()
 
-    if (rpcErr || !issued) {
-      log.error("Issue receipt RPC a échoué", { message: rpcErr?.message })
-      return { success: false, errors: ["Échec de génération du reçu (RPC)"] }
+    let receiptNumber: string | null = null
+    
+    if (!rpcErr && issued) {
+       receiptNumber = (issued as { receipt_number?: string })?.receipt_number ?? null
+    } else {
+       log.warn("RPC issue_receipt échoué ou ignoré, N8N s'en chargera peut-être", { error: rpcErr?.message })
     }
 
-    type IssueReceiptRow = { id: string; receipt_number: string }
-    const issuedRow = issued as IssueReceiptRow
-    const receiptNumber: string | undefined = issuedRow?.receipt_number ?? undefined
-
-    // Persist receipt generation metadata on the transaction (mirror webhook)
-    const receiptUrl = receiptNumber
-      ? `${process.env.NEXT_PUBLIC_SITE_URL}/recu/${receiptNumber}`
-      : null
-    await supabase
-      .from("support_transactions")
-      .update({
-        receipt_generated: new Date().toISOString(),
-        receipt_url: receiptUrl,
+    // 3. APPEL N8N DIRECT (Remplace l'envoi d'email local)
+    try {
+      log.info("🚀 Appel N8N pour reçu manuel...", { transaction_id: tx.id })
+      
+      await sendToN8n({
+        transaction_id: tx.id,
+        amount: tx.amount as number,
+        calendar_accepted: !!input.calendarGiven,
+        donor_email: input.donorEmail,
+        donor_name: tx.supporter_name,
+        donor_first_name: input.donorFirstName,
+        donor_last_name: input.donorLastName,
+        donor_address: input.donorAddress,
+        donor_zip: input.donorZip,
+        donor_city: input.donorCity,
+        payment_method: input.paymentMethod,
+        receipt_number: receiptNumber, // On passe le numéro si on l'a déjà généré
+        source: 'manual_entry' // Important pour N8N
       })
-      .eq("id", tx.id)
 
-    // Send email (no attachment yet; HTML includes download link if applicable)
-    const subject = buildSubject({
-      supporterName: tx.supporter_name as string | null,
-      amount: tx.amount as number,
-      receiptNumber: receiptNumber ?? null,
-      transactionType: "fiscal",
-    })
-    const html = buildHtml({
-      supporterName: tx.supporter_name as string | null,
-      amount: tx.amount as number,
-      receiptNumber: receiptNumber ?? null,
-      transactionType: "fiscal",
-    })
-    const text = buildText({
-      supporterName: tx.supporter_name as string | null,
-      amount: tx.amount as number,
-      receiptNumber: receiptNumber ?? null,
-      transactionType: "fiscal",
-    })
-
-  const emailRes = await sendEmail({ to: tx.supporter_email as string, subject, html, text })
-
-    if (!("skipped" in emailRes) && emailRes.success) {
-      // Mark email status on receipts (best-effort)
-      await supabase
-        .from("receipts")
-        .update({
-          email_sent: true,
-          email_sent_at: new Date().toISOString(),
-          email_delivery_status: "sent",
-          status: "sent",
-        })
-        .eq("id", issuedRow.id)
-
-      // Mark email sent on the transaction as well (mirror webhook)
-      await supabase
-        .from("support_transactions")
-        .update({ receipt_sent: true })
-        .eq("id", tx.id)
-
+      log.info("✅ N8N appelé avec succès")
+      
       revalidatePath("/dashboard/ma-tournee")
-      return { success: true, receiptNumber }
+      return { success: true, receiptNumber, message: "Reçu généré et envoyé par email via N8N" }
+
+    } catch (n8nErr) {
+      log.error("❌ Échec appel N8N (Manuel)", { error: (n8nErr as Error).message })
+      return { 
+        success: true, 
+        warning: "email_failed", 
+        receiptNumber, 
+        message: "Transaction sauvée, mais échec envoi N8N. Vérifiez les logs." 
+      }
     }
 
-    // Fallback: email failed or skipped
-    if ("skipped" in emailRes) {
-      return { success: true, warning: "email_disabled", receiptNumber }
-    }
-
-    return { success: true, warning: "email_failed", receiptNumber }
   } catch (e) {
     const err = e as Error
     log.error("Exception generateReceiptAction", { message: err.message })
