@@ -47,6 +47,10 @@ export function TeamsLeaderboardProgress({
       maximumFractionDigits: 0,
     }).format(amount)
 
+  const getAveragePerCalendar = (team: Team) => {
+    return team.achieved > 0 ? (team.amountCollected / team.achieved).toFixed(0) : "0"
+  }
+
   return (
     <Card className={className} role="region" aria-label="Classement des équipes">
       <CardHeader className="pb-3">
@@ -171,6 +175,9 @@ export function TeamsLeaderboardProgress({
                       >
                         {Math.round(clampedPct)}%
                       </span>
+                      <span className="text-xs text-muted-foreground">
+                        {getAveragePerCalendar(team)}€ / cal.
+                      </span>
                       {isOverGoal && (
                         <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">
                           +{overPct}%
@@ -178,7 +185,12 @@ export function TeamsLeaderboardProgress({
                       )}
                     </>
                   ) : (
-                    <span className="text-sm font-semibold">{formatCurrency(team.amountCollected)}</span>
+                    <>
+                      <span className="text-sm font-semibold">{formatCurrency(team.amountCollected)}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {getAveragePerCalendar(team)}€ / cal.
+                      </span>
+                    </>
                   )}
                 </div>
 
