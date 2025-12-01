@@ -368,9 +368,9 @@ export async function getActiveTourneeWithTransactions(): Promise<{
 
 /**
  * Récupère les statistiques personnelles de l'utilisateur
- * IMPORTANT: Utilise tournee_summary comme source de vérité unique
- * Cette vue agrège les vraies transactions de support_transactions
- * et fonctionne pour TOUTES les tournées (actives ET complétées)
+ * IMPORTANT: Utilise tournees comme source de vérité unique
+ * Récupère directement calendriers_distribues et montant_collecte
+ * pour les tournées clôturées uniquement
  */
 export async function getUserPersonalStats(): Promise<{
   totalCalendarsDistributed: number;
@@ -386,42 +386,34 @@ export async function getUserPersonalStats(): Promise<{
   }
 
   try {
-    // Récupérer toutes les tournées (actives ET complétées) de l'utilisateur
-    const { data: tournees, error: tourneesError } = await supabase
+    // ✅ SOLUTION : Récupérer directement depuis tournees (source unique)
+    const { data: tournees, error } = await supabase
       .from('tournees')
-      .select('id')
+      .select('calendriers_distribues, montant_collecte')
       .eq('user_id', user.id)
-      .in('statut', ['active', 'completed']);
+      .eq('statut', 'completed') // Uniquement les tournées clôturées
+      .not('calendriers_distribues', 'is', null)
+      .not('montant_collecte', 'is', null);
 
-    if (tourneesError) {
-      console.error('Erreur lors de la récupération des tournées:', tourneesError);
+    if (error) {
+      console.error('Erreur récupération stats:', error);
       return null;
     }
 
-    if (!tournees || tournees.length === 0) {
-      return {
-        totalCalendarsDistributed: 0,
-        totalAmountCollected: 0,
-        averagePerCalendar: 0
-      };
-    }
+    const totalCalendarsDistributed = tournees?.reduce(
+      (sum, t) => sum + (t.calendriers_distribues || 0),
+      0
+    ) || 0;
 
-    // Récupérer les stats depuis tournee_summary (source de vérité)
-    const { data: summaries, error: summaryError } = await supabase
-      .from('tournee_summary')
-      .select('calendars_distributed, montant_total')
-      .in('tournee_id', tournees.map(t => t.id));
+    const totalAmountCollected = tournees?.reduce(
+      (sum, t) => sum + (t.montant_collecte || 0),
+      0
+    ) || 0;
 
-    if (summaryError) {
-      console.error('Erreur lors de la récupération des résumés:', summaryError);
-      return null;
-    }
-
-    const totalCalendarsDistributed = summaries?.reduce((sum, s) => sum + (s.calendars_distributed || 0), 0) || 0;
-    const totalAmountCollected = summaries?.reduce((sum, s) => sum + (s.montant_total || 0), 0) || 0;
-    const averagePerCalendar = totalCalendarsDistributed > 0
-      ? totalAmountCollected / totalCalendarsDistributed
-      : 0;
+    const averagePerCalendar = 
+      totalCalendarsDistributed > 0 
+        ? totalAmountCollected / totalCalendarsDistributed 
+        : 0;
 
     return {
       totalCalendarsDistributed,
