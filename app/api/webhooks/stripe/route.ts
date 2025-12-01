@@ -3,7 +3,10 @@ import { getStripe } from '@/lib/stripe/client'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createLogger } from '@/lib/log'
 import { sendEmail } from '@/lib/email/resend-client'
-import { buildSubject, buildHtml, buildText } from '@/lib/email/receipt-templates'
+import { buildHtml, buildText } from '@/lib/email/receipt-templates'
+import { sendToN8n } from '@/lib/n8n/send-receipt'
+
+// Note: buildSubject commenté car génération de reçu fiscal désactivée (voir lignes 110-134, 370-414, 592-636)
 
 const log = createLogger('webhook/stripe')
 
@@ -95,13 +98,23 @@ export async function POST(req: NextRequest) {
         .select('id, amount, supporter_name, supporter_email')
         .single()
 
-      // Générer un reçu fiscal UNIQUEMENT pour les dons (calendar_accepted: false)
-      // Boutique et achats avec contrepartie n'ont PAS droit au reçu fiscal
+      // ========================================================================
+      // REÇU FISCAL - DÉSACTIVÉ (géré par trigger n8n → Gotenberg → PDF)
+      // ========================================================================
+      // Les reçus fiscaux PDF sont maintenant générés automatiquement par :
+      //   1. Trigger PostgreSQL détecte INSERT dans support_transactions
+      //   2. Envoie webhook à n8n via pg_net
+      //   3. n8n génère PDF via Gotenberg
+      //   4. n8n envoie email avec PDF en pièce jointe
+      //
+      // ROLLBACK : Si n8n est HS pendant >24h, décommenter le code ci-dessous
+      //            et redéployer l'application
+      // ========================================================================
+      /*
       if (tx && amount >= 6 && !calendarAccepted) {
         const { data: rec } = await admin.rpc('issue_receipt', { p_transaction_id: tx.id }).single()
         const receiptNumber = (rec as { receipt_number?: string } | null)?.receipt_number ?? null
 
-        // Persist receipt generation metadata
         const receiptUrl = receiptNumber
           ? `${process.env.NEXT_PUBLIC_SITE_URL}/recu/${receiptNumber}`
           : null
@@ -120,6 +133,114 @@ export async function POST(req: NextRequest) {
             .update({ receipt_sent: true })
             .eq('id', tx.id)
         }
+      }
+      */
+
+      // Email de confirmation immédiat (tous les montants)
+      if (tx && donorEmail) {
+        try {
+          const confirmSubject = calendarAccepted
+            ? `Merci pour votre soutien de ${amount.toFixed(2)}€`
+            : `Merci pour votre don de ${amount.toFixed(2)}€`
+
+          const confirmHtml = buildHtml({
+            supporterName: tx.supporter_name as string | null,
+            amount: tx.amount as number,
+            receiptNumber: null,
+            transactionType: calendarAccepted ? 'soutien' : 'fiscal'
+          })
+
+          const confirmText = buildText({
+            supporterName: tx.supporter_name as string | null,
+            amount: tx.amount as number,
+            receiptNumber: null,
+            transactionType: calendarAccepted ? 'soutien' : 'fiscal'
+          })
+
+          await sendEmail({
+            to: donorEmail,
+            subject: confirmSubject,
+            html: confirmHtml,
+            text: confirmText
+          })
+
+          log.info('✅ Email de confirmation envoyé (Checkout)', {
+            transaction_id: tx.id,
+            email: donorEmail,
+            amount
+          })
+        } catch (emailErr) {
+          log.error('❌ Échec envoi email de confirmation (Checkout)', {
+            transaction_id: tx.id,
+            error: (emailErr as Error).message
+          })
+        }
+      }
+
+      // Appel direct au webhook n8n pour génération du reçu fiscal PDF
+
+      if (tx && amount >= 6 && donorEmail) {
+
+        try {
+
+          log.info('🚀 Appel N8N direct pour génération reçu fiscal (Checkout)...', {
+
+            transaction_id: tx.id,
+
+            amount,
+
+            calendar_accepted: calendarAccepted
+
+          })
+
+ 
+
+          await sendToN8n({
+
+            transaction_id: tx.id,
+
+            amount: tx.amount as number,
+
+            calendar_accepted: calendarAccepted,
+
+            donor_email: donorEmail,
+
+            donor_name: tx.supporter_name as string | null,
+
+            payment_method: 'carte',
+
+            user_id: userId,
+
+            tournee_id: tourneeId,
+
+            created_at: new Date().toISOString()
+
+          })
+
+ 
+
+          log.info('✅ N8N déclenché avec succès (Checkout)', {
+
+            transaction_id: tx.id
+
+          })
+
+        } catch (n8nErr) {
+
+          log.error('❌ Échec appel N8N (Checkout)', {
+
+            transaction_id: tx.id,
+
+            error: (n8nErr as Error).message
+
+          })
+
+          // L'erreur est loggée mais on ne bloque pas le webhook Stripe
+
+          // Stripe retentera automatiquement le webhook en cas d'échec
+
+        }
+
       }
 
       // Log pour traçabilité
@@ -297,7 +418,15 @@ export async function POST(req: NextRequest) {
         }
       }
 
-      // 2. Reçu fiscal UNIQUEMENT pour les dons >= 6€ (calendar_accepted: false)
+      // ========================================================================
+      // 2. REÇU FISCAL - DÉSACTIVÉ (géré par trigger n8n → Gotenberg → PDF)
+      // ========================================================================
+      // Les reçus fiscaux PDF sont maintenant générés automatiquement par le
+      // trigger PostgreSQL support_transactions_n8n_webhook_trigger
+      //
+      // ROLLBACK : Si n8n est HS, décommenter le code ci-dessous et redéployer
+      // ========================================================================
+      /*
       if (amount >= 6 && !calendarAccepted) {
         try {
           const { data: rec, error: receiptError } = await admin.rpc('issue_receipt', { p_transaction_id: tx.id }).single()
@@ -310,7 +439,6 @@ export async function POST(req: NextRequest) {
           } else {
             const receiptNumber = (rec as { receipt_number?: string } | null)?.receipt_number ?? null
 
-            // Persist receipt generation metadata
             const receiptUrl = receiptNumber
               ? `${process.env.NEXT_PUBLIC_SITE_URL}/recu/${receiptNumber}`
               : null
@@ -340,8 +468,74 @@ export async function POST(req: NextRequest) {
             transaction_id: tx.id,
             error: (receiptErr as Error).message
           })
-          // Continue execution - le reçu peut être régénéré plus tard
         }
+      }
+      */
+
+      // Appel direct au webhook n8n pour génération du reçu fiscal PDF
+
+      if (amount >= 6 && tx.supporter_email) {
+
+        try {
+
+          log.info('🚀 Appel N8N direct pour génération reçu fiscal (PI)...', {
+
+            transaction_id: tx.id,
+
+            amount,
+
+            calendar_accepted: calendarAccepted
+
+          })
+
+ 
+
+          await sendToN8n({
+
+            transaction_id: tx.id,
+
+            amount: tx.amount as number,
+
+            calendar_accepted: calendarAccepted,
+
+            donor_email: tx.supporter_email as string,
+
+            donor_name: tx.supporter_name as string | null,
+
+            payment_method: 'carte',
+
+            user_id: meta.user_id ?? null,
+
+            tournee_id: meta.tournee_id ?? null,
+
+            created_at: new Date().toISOString()
+
+          })
+
+ 
+
+          log.info('✅ N8N déclenché avec succès (PI)', {
+
+            transaction_id: tx.id
+
+          })
+
+        } catch (n8nErr) {
+
+          log.error('❌ Échec appel N8N (PI)', {
+
+            transaction_id: tx.id,
+
+            error: (n8nErr as Error).message
+
+          })
+
+          // L'erreur est loggée mais on ne bloque pas le webhook Stripe
+
+          // Stripe retentera automatiquement le webhook en cas d'échec
+
+        }
+
       }
 
       log.info('✅ Don Stripe (PI) traité', { payment_intent_id: paymentIntent.id, amount, transaction_id: tx.id })
@@ -502,7 +696,15 @@ export async function POST(req: NextRequest) {
         }
       }
 
-      // 2. Reçu fiscal UNIQUEMENT pour les dons >= 6€ (calendar_accepted: false)
+      // ========================================================================
+      // 2. REÇU FISCAL - DÉSACTIVÉ (géré par trigger n8n → Gotenberg → PDF)
+      // ========================================================================
+      // Les reçus fiscaux PDF sont maintenant générés automatiquement par le
+      // trigger PostgreSQL support_transactions_n8n_webhook_trigger
+      //
+      // ROLLBACK : Si n8n est HS, décommenter le code ci-dessous et redéployer
+      // ========================================================================
+      /*
       if (amount >= 6 && !calendarGiven) {
         try {
           const { data: rec, error: receiptError } = await admin.rpc('issue_receipt', { p_transaction_id: tx.id }).single()
@@ -515,7 +717,6 @@ export async function POST(req: NextRequest) {
           } else {
             const receiptNumber = (rec as { receipt_number?: string } | null)?.receipt_number ?? null
 
-            // Persist receipt generation metadata
             const receiptUrl = receiptNumber
               ? `${process.env.NEXT_PUBLIC_SITE_URL}/recu/${receiptNumber}`
               : null
@@ -545,8 +746,74 @@ export async function POST(req: NextRequest) {
             transaction_id: tx.id,
             error: (receiptErr as Error).message
           })
-          // Continue execution - le reçu peut être régénéré plus tard
         }
+      }
+      */
+
+      // Appel direct au webhook n8n pour génération du reçu fiscal PDF
+
+      if (amount >= 6 && donorEmail) {
+
+        try {
+
+          log.info('🚀 Appel N8N direct pour génération reçu fiscal (Charge)...', {
+
+            transaction_id: tx.id,
+
+            amount,
+
+            calendar_accepted: calendarGiven
+
+          })
+
+ 
+
+          await sendToN8n({
+
+            transaction_id: tx.id,
+
+            amount,
+
+            calendar_accepted: calendarGiven,
+
+            donor_email: donorEmail,
+
+            donor_name: donorName ?? null,
+
+            payment_method: 'carte',
+
+            user_id: userId,
+
+            tournee_id: tourneeId,
+
+            created_at: new Date().toISOString()
+
+          })
+
+ 
+
+          log.info('✅ N8N déclenché avec succès (Charge)', {
+
+            transaction_id: tx.id
+
+          })
+
+        } catch (n8nErr) {
+
+          log.error('❌ Échec appel N8N (Charge)', {
+
+            transaction_id: tx.id,
+
+            error: (n8nErr as Error).message
+
+          })
+
+          // L'erreur est loggée mais on ne bloque pas le webhook Stripe
+
+          // Stripe retentera automatiquement le webhook en cas d'échec
+
+        }
+
       }
 
       log.info('✅ Don traité (charge.succeeded)', { chargeId: charge.id, amount, transaction_id: tx.id })
