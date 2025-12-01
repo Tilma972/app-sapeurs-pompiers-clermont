@@ -51,6 +51,14 @@ export function TeamsLeaderboardProgress({
     return team.achieved > 0 ? (team.amountCollected / team.achieved).toFixed(0) : "0"
   }
 
+  const getAverageColorClass = (team: Team) => {
+    const avg = team.achieved > 0 ? team.amountCollected / team.achieved : 0
+    if (avg < 10) return "text-orange-600 font-medium"      // < 10€
+    if (avg >= 10 && avg < 11) return "text-slate-600 font-medium"  // 10-11€
+    if (avg >= 11 && avg < 12) return "text-emerald-600 font-bold"  // 11-12€
+    return "text-green-700 font-extrabold"                   // > 12€
+  }
+
   return (
     <Card className={className} role="region" aria-label="Classement des équipes">
       <CardHeader className="pb-3">
@@ -175,7 +183,7 @@ export function TeamsLeaderboardProgress({
                       >
                         {Math.round(clampedPct)}%
                       </span>
-                      <span className="text-xs text-muted-foreground">
+                      <span className={`text-xs ${getAverageColorClass(team)}`}>
                         {getAveragePerCalendar(team)}€ / cal.
                       </span>
                       {isOverGoal && (
@@ -187,7 +195,7 @@ export function TeamsLeaderboardProgress({
                   ) : (
                     <>
                       <span className="text-sm font-semibold">{formatCurrency(team.amountCollected)}</span>
-                      <span className="text-xs text-muted-foreground">
+                      <span className={`text-xs ${getAverageColorClass(team)}`}>
                         {getAveragePerCalendar(team)}€ / cal.
                       </span>
                     </>
