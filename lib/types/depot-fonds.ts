@@ -63,18 +63,18 @@ export function formatStatutDepot(statut: StatutDemandeDepot): string {
 /**
  * Helper pour déterminer la couleur du badge de statut
  */
-export function getStatutDepotColor(statut: StatutDemandeDepot): 'default' | 'secondary' | 'success' | 'warning' | 'destructive' {
+export function getStatutDepotColor(statut: StatutDemandeDepot): 'default' | 'secondary' | 'destructive' | 'outline' {
   switch (statut) {
     case 'en_attente':
-      return 'default'
+      return 'outline'
     case 'valide':
-      return 'success'
+      return 'default'
     case 'ecart':
-      return 'warning'
+      return 'secondary'
     case 'annule':
       return 'destructive'
     default:
-      return 'default'
+      return 'outline'
   }
 }
 
