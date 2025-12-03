@@ -35,7 +35,10 @@ export default async function AdminCommandesPage() {
       stripe_session_id,
       order_status,
       notes,
-      source
+      source,
+      invoice_number,
+      invoice_url,
+      invoice_sent
     `)
     .eq("source", "boutique")
     .order("created_at", { ascending: false })

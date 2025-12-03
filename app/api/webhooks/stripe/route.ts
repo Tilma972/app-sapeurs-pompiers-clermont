@@ -6,6 +6,7 @@ import { sendEmail } from '@/lib/email/resend-client'
 import { buildHtml, buildText } from '@/lib/email/receipt-templates'
 import { buildBoutiqueSubject, buildBoutiqueHtml, buildBoutiqueText } from '@/lib/email/boutique-templates'
 import { sendToN8n } from '@/lib/n8n/send-receipt'
+import { sendToN8nInvoice, getAssociationInfo } from '@/lib/n8n/send-invoice'
 
 // Note: buildSubject commenté car génération de reçu fiscal désactivée (voir lignes 110-134, 370-414, 592-636)
 
@@ -396,11 +397,77 @@ export async function POST(req: NextRequest) {
 
       }
 
+      // ========================================================================
+      // GÉNÉRATION DE FACTURE POUR LES COMMANDES BOUTIQUE
+      // Contrairement aux dons qui reçoivent un reçu fiscal, les achats boutique
+      // reçoivent une facture HT (association 1901, pas de TVA)
+      // ========================================================================
+      if (tx && source === 'boutique' && donorEmail && boutiqueItems.length > 0) {
+        try {
+          log.info('🧾 Génération facture boutique via N8N...', {
+            transaction_id: tx.id,
+            amount,
+            items_count: boutiqueItems.length
+          })
+
+          // Récupérer les détails produits pour la facture
+          const productIds = boutiqueItems.map(item => item.id)
+          const { data: products } = await admin
+            .from('products')
+            .select('id, price, name')
+            .in('id', productIds)
+
+          const productsMap = new Map(products?.map(p => [p.id, p]) || [])
+
+          const invoiceItems = boutiqueItems.map(item => {
+            const product = productsMap.get(item.id)
+            const unitPrice = item.price || product?.price || 0
+            return {
+              name: item.name || product?.name || 'Article',
+              quantity: item.qty,
+              unit_price: unitPrice,
+              total_price: unitPrice * item.qty
+            }
+          })
+
+          // Récupérer l'adresse de livraison depuis les métadonnées si disponible
+          const shippingAddress = (session.metadata as Record<string, string | undefined>)?.shipping_address || null
+
+          // Générer le numéro de facture
+          const { data: invoiceData } = await admin.rpc('generate_invoice_number').single()
+          const invoiceNumber = (invoiceData as { invoice_number?: string } | null)?.invoice_number || `FAC-${Date.now()}`
+
+          await sendToN8nInvoice({
+            transaction_id: tx.id,
+            invoice_number: invoiceNumber,
+            order_date: new Date().toISOString(),
+            amount: amount,
+            items: invoiceItems,
+            customer: {
+              name: tx.supporter_name as string | null,
+              email: donorEmail,
+              address: shippingAddress
+            },
+            association: getAssociationInfo()
+          })
+
+          log.info('✅ N8N facture déclenché avec succès', {
+            transaction_id: tx.id
+          })
+        } catch (invoiceErr) {
+          log.error('❌ Échec génération facture boutique', {
+            transaction_id: tx.id,
+            error: (invoiceErr as Error).message
+          })
+          // L'erreur est loggée mais on ne bloque pas le webhook
+        }
+      }
+
       // Log pour traçabilité
       if (source === 'landing_page_donation') {
         log.info('✅ Don landing page traité', { sessionId: session.id, amount, donorEmail })
       } else if (source === 'boutique') {
-        log.info('✅ Commande boutique traitée (pas de reçu fiscal)', { sessionId: session.id, amount, donorEmail })
+        log.info('✅ Commande boutique traitée avec facture', { sessionId: session.id, amount, donorEmail })
       }
     }
   }

@@ -17,11 +17,15 @@ import {
   Eye,
   RotateCcw,
   ShoppingBag,
-  AlertCircle
+  AlertCircle,
+  FileText,
+  Download,
+  Send
 } from "lucide-react"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Textarea } from "@/components/ui/textarea"
 import { createClient } from "@/lib/supabase/client"
+import { resendInvoiceAction } from "@/app/actions/resend-invoice"
 import toast from "react-hot-toast"
 
 type OrderItem = {
@@ -46,6 +50,9 @@ type Order = {
   order_status: string | null
   notes: string | null
   source: string | null
+  invoice_number: string | null
+  invoice_url: string | null
+  invoice_sent: boolean | null
   items: OrderItem[]
 }
 
@@ -93,6 +100,7 @@ export function OrdersManagement({ initialOrders, stats }: OrdersManagementProps
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
   const [isDetailOpen, setIsDetailOpen] = useState(false)
   const [isUpdating, setIsUpdating] = useState(false)
+  const [isResendingInvoice, setIsResendingInvoice] = useState(false)
   const [statusNotes, setStatusNotes] = useState("")
 
   // Filter orders
@@ -135,6 +143,24 @@ export function OrdersManagement({ initialOrders, stats }: OrdersManagementProps
     setSelectedOrder(order)
     setStatusNotes("")
     setIsDetailOpen(true)
+  }
+
+  const handleResendInvoice = async () => {
+    if (!selectedOrder) return
+
+    setIsResendingInvoice(true)
+    try {
+      const result = await resendInvoiceAction(selectedOrder.id)
+      if (result.success) {
+        toast.success("Facture renvoyée avec succès")
+      } else {
+        toast.error(result.error || "Erreur lors du renvoi de la facture")
+      }
+    } catch {
+      toast.error("Erreur inattendue")
+    } finally {
+      setIsResendingInvoice(false)
+    }
   }
 
   const handleUpdateStatus = async (newStatus: string) => {
@@ -402,6 +428,48 @@ export function OrdersManagement({ initialOrders, stats }: OrdersManagementProps
               <div className="flex justify-between items-center p-4 bg-primary/5 rounded-lg border-2 border-primary/20">
                 <span className="text-lg font-semibold">Total</span>
                 <span className="text-2xl font-bold text-primary">{formatCurrency(selectedOrder.amount)}</span>
+              </div>
+
+              {/* Facture */}
+              <div className="space-y-3 p-4 border rounded-lg">
+                <h4 className="font-semibold flex items-center gap-2">
+                  <FileText className="h-4 w-4" />
+                  Facture
+                </h4>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  {selectedOrder.invoice_number ? (
+                    <div className="flex items-center gap-2 text-sm">
+                      <Badge variant="outline">{selectedOrder.invoice_number}</Badge>
+                      {selectedOrder.invoice_sent && (
+                        <span className="text-green-600 text-xs">✓ Envoyée</span>
+                      )}
+                    </div>
+                  ) : (
+                    <span className="text-sm text-muted-foreground">Pas encore générée</span>
+                  )}
+                  <div className="flex gap-2 ml-auto">
+                    {selectedOrder.invoice_url && (
+                      <Button size="sm" variant="outline" asChild>
+                        <a href={selectedOrder.invoice_url} target="_blank" rel="noopener noreferrer">
+                          <Download className="h-4 w-4 mr-1" />
+                          Télécharger
+                        </a>
+                      </Button>
+                    )}
+                    <Button 
+                      size="sm" 
+                      variant="secondary"
+                      onClick={handleResendInvoice}
+                      disabled={isResendingInvoice || !selectedOrder.supporter_email}
+                    >
+                      <Send className="h-4 w-4 mr-1" />
+                      {isResendingInvoice ? "Envoi..." : "Renvoyer"}
+                    </Button>
+                  </div>
+                </div>
+                {!selectedOrder.supporter_email && (
+                  <p className="text-xs text-amber-600">⚠️ Pas d&apos;email - impossible d&apos;envoyer la facture</p>
+                )}
               </div>
 
               {/* Status Update */}
