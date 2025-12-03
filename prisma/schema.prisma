@@ -1,0 +1,198 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")  // Transaction Pooler (pour l'app)
+  directUrl = env("DIRECT_URL")    // Session Pooler (pour les migrations/push)
+}
+
+// --- Module Vie de Caserne (Associatif) ---
+
+model Event {
+  id              String             @id @default(uuid())
+  title           String
+  description     String?
+  date            DateTime
+  location        String?
+  type            EventType
+  status          EventStatus        @default(PLANNED)
+  maxParticipants Int?
+  organizerId     String             // ID user Supabase (auth.users.id)
+
+  participants    EventParticipant[]
+  moneyPot        MoneyPot?
+  polls           Poll[]
+
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  @@map("associative_events")
+}
+
+enum EventType {
+  AG
+  SAINTE_BARBE
+  REPAS_GARDE
+  SPORT
+  AUTRE
+}
+
+enum EventStatus {
+  DRAFT
+  PLANNED
+  COMPLETED
+  CANCELLED
+}
+
+model EventParticipant {
+  id       String              @id @default(uuid())
+  eventId  String
+  userId   String
+  status   ParticipationStatus
+  guests   Int                 @default(0)
+
+  event    Event               @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+
+  @@unique([eventId, userId])
+  @@map("associative_event_participants")
+}
+
+enum ParticipationStatus {
+  PRESENT
+  ABSENT
+  ASTREINTE
+}
+
+model MoneyPot {
+  id            String         @id @default(uuid())
+  title         String
+  description   String?
+  targetAmount  Decimal?       @db.Decimal(10, 2)
+  eventId       String?        @unique
+
+  event         Event?         @relation(fields: [eventId], references: [id])
+  contributions Contribution[]
+  status        PotStatus      @default(ACTIVE)
+
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@map("associative_money_pots")
+}
+
+enum PotStatus {
+  ACTIVE
+  CLOSED
+  COMPLETED
+}
+
+model Contribution {
+  id              String             @id @default(uuid())
+  moneyPotId      String
+  userId          String
+  amount          Decimal            @db.Decimal(10, 2)
+  message         String?
+  isAnonymous     Boolean            @default(false)
+  stripePaymentId String?
+  status          ContributionStatus @default(PENDING)
+
+  moneyPot        MoneyPot           @relation(fields: [moneyPotId], references: [id])
+
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  @@map("associative_contributions")
+}
+
+enum ContributionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+model Material {
+  id              String            @id @default(uuid())
+  name            String
+  description     String?
+  inventoryNumber String?           @unique
+  condition       MaterialCondition
+  photoUrl        String?
+  isAvailable     Boolean           @default(true)
+
+  loans           Loan[]
+
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  @@map("associative_materials")
+}
+
+enum MaterialCondition {
+  NEW
+  GOOD
+  USED
+  DAMAGED
+  BROKEN
+}
+
+model Loan {
+  id         String     @id @default(uuid())
+  materialId String
+  userId     String
+  startDate  DateTime
+  endDate    DateTime
+  status     LoanStatus @default(PENDING)
+
+  material   Material   @relation(fields: [materialId], references: [id])
+
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  @@map("associative_loans")
+}
+
+enum LoanStatus {
+  PENDING
+  APPROVED
+  ACTIVE
+  RETURNED
+  OVERDUE
+}
+
+model Poll {
+  id        String     @id @default(uuid())
+  question  String
+  options   Json       // Stocké comme JSONB
+  eventId   String?
+
+  event     Event?     @relation(fields: [eventId], references: [id])
+  votes     PollVote[]
+  expiresAt DateTime?
+
+  createdAt DateTime   @default(now())
+
+  @@map("associative_polls")
+}
+
+model PollVote {
+  id       String   @id @default(uuid())
+  pollId   String
+  userId   String
+  optionId String
+
+  poll     Poll     @relation(fields: [pollId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([pollId, userId])
+  @@map("associative_poll_votes")
+}
