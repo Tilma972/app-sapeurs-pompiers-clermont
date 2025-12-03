@@ -45,12 +45,21 @@ export default async function AdminCommandesPage() {
     console.error("Error fetching orders:", error)
   }
 
+  console.log("DEBUG - Orders found:", orders?.length, orders)
+
   // Fetch order items for each order
   const orderIds = orders?.map(o => o.id) || []
-  const { data: orderItems } = await supabase
+  console.log("DEBUG - Order IDs:", orderIds)
+  
+  const { data: orderItems, error: itemsError } = await supabase
     .from("order_items")
     .select("*")
-    .in("transaction_id", orderIds)
+    .in("transaction_id", orderIds.length > 0 ? orderIds : ['00000000-0000-0000-0000-000000000000'])
+
+  if (itemsError) {
+    console.error("Error fetching order items:", itemsError)
+  }
+  console.log("DEBUG - Order items found:", orderItems?.length, orderItems)
 
   // Group items by transaction_id
   const itemsByOrder = new Map<string, typeof orderItems>()
