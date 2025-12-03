@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 
 
 export type TresorerieKPIs = {
-    montantCollecteMois: number;
+    montantCollecteTotal: number;
     tourneesActives: number;
     demandesEnAttente: number;
     soldeTotalPompiers: number;
@@ -42,21 +42,16 @@ type DemandeVersementResponse = {
  */
 export async function getTresorerieKPIs(): Promise<TresorerieKPIs> {
     const supabase = await createClient();
-    const now = new Date();
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString();
 
     try {
-        // 1. Montant collecté ce mois (tournées terminées)
-        const { data: tourneesMois, error: errorTournees } = await supabase
+        // 1. Montant total collecté (toutes les tournées terminées de la campagne)
+        const { data: tourneesCompleted, error: errorTournees } = await supabase
             .from('tournees')
             .select('montant_collecte')
-            .eq('statut', 'completed')
-            .gte('date_fin', startOfMonth)
-            .lte('date_fin', endOfMonth);
+            .eq('statut', 'completed');
 
         if (errorTournees) throw errorTournees;
-        const montantCollecteMois = tourneesMois?.reduce((sum, t) => sum + (t.montant_collecte || 0), 0) || 0;
+        const montantCollecteTotal = tourneesCompleted?.reduce((sum, t) => sum + (t.montant_collecte || 0), 0) || 0;
 
         // 2. Tournées actives
         const { count: tourneesActives, error: errorActives } = await supabase
@@ -83,7 +78,7 @@ export async function getTresorerieKPIs(): Promise<TresorerieKPIs> {
         const soldeTotalPompiers = comptesSp?.reduce((sum, c) => sum + (c.solde_disponible || 0), 0) || 0;
 
         return {
-            montantCollecteMois,
+            montantCollecteTotal,
             tourneesActives: tourneesActives || 0,
             demandesEnAttente: demandesEnAttente || 0,
             soldeTotalPompiers,
@@ -91,7 +86,7 @@ export async function getTresorerieKPIs(): Promise<TresorerieKPIs> {
     } catch (error) {
         console.error('Erreur lors de la récupération des KPIs trésorerie:', error);
         return {
-            montantCollecteMois: 0,
+            montantCollecteTotal: 0,
             tourneesActives: 0,
             demandesEnAttente: 0,
             soldeTotalPompiers: 0,
