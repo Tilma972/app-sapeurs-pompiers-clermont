@@ -44,32 +44,58 @@ const s3Client = new S3Client({
 
 /**
  * Valide et corrige l'URL de connexion Supabase pour pg_dump
- * Le pooler en mode transaction (port 6543) ne fonctionne pas avec pg_dump
+ * 
+ * Supabase supporte 3 types de connexion:
+ * - Direct connection (db.xxx.supabase.co:5432) - IPv6 only
+ * - Session pooler (aws-x-region.pooler.supabase.com:5432) - IPv4 ✅ Compatible pg_dump
+ * - Transaction pooler (aws-x-region.pooler.supabase.com:6543) - IPv4 ❌ NON compatible
+ * 
+ * Format attendu (Session Pooler):
+ * postgresql://postgres.[PROJECT-REF]:[PASSWORD]@aws-0-eu-north-1.pooler.supabase.com:5432/postgres
  */
 function fixSupabaseUrl(url) {
   if (!url) return url;
 
   console.log('🔍 Vérification de l\'URL de connexion PostgreSQL...');
 
-  // Vérifier si on utilise le pooler (port 6543)
+  // Vérifier si on utilise le pooler en mode Transaction (port 6543)
   if (url.includes(':6543')) {
-    console.log('⚠️  Détection du Connection Pooler Supabase (port 6543)');
+    console.log('⚠️  Détection du Transaction Pooler Supabase (port 6543)');
     console.log('   Ce mode ne fonctionne pas avec pg_dump');
 
-    // Remplacer par le port direct
+    // Remplacer par le port Session Pooler
     const fixedUrl = url.replace(':6543', ':5432');
-    console.log('✅ Conversion automatique vers connexion directe (port 5432)');
+    console.log('✅ Conversion automatique vers Session Pooler (port 5432)');
     console.log('');
 
     return fixedUrl;
   }
 
-  // Vérifier si on utilise bien le port 5432 ou 6543 en mode session
+  // Vérifier le format du username (postgres.PROJECT_REF vs postgres:PASSWORD)
+  const urlMatch = url.match(/postgresql:\/\/([^:@]+)/);
+  if (urlMatch) {
+    const username = urlMatch[1];
+    
+    if (username === 'postgres' && url.includes('pooler.supabase.com')) {
+      console.log('⚠️  Format ancien détecté (postgres:PASSWORD)');
+      console.log('   Le nouveau format Supabase utilise postgres.[PROJECT-REF]');
+      console.log('');
+      console.log('💡 SOLUTION:');
+      console.log('   1. Va sur Supabase Dashboard → Clique "Connect"');
+      console.log('   2. Sélectionne "Session pooler" (port 5432)');
+      console.log('   3. Copie l\'URL complète');
+      console.log('');
+    } else if (username.startsWith('postgres.')) {
+      console.log('✅ Format Session Pooler correct (postgres.[PROJECT-REF])');
+    }
+  }
+
+  // Vérifier si on utilise bien le port 5432
   if (url.includes(':5432')) {
-    console.log('✅ Utilisation de la connexion directe (port 5432)');
+    console.log('✅ Utilisation du port 5432 (Session Pooler compatible)');
     console.log('');
   } else {
-    console.log('ℹ️  Port de connexion détecté');
+    console.log('ℹ️  Port de connexion non standard détecté');
     console.log('');
   }
 
