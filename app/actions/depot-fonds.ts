@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { isTreasurerRole } from '@/lib/config'
 import {
   CreerDemandeDepotInput,
@@ -80,7 +81,8 @@ export async function creerDemandeDepotAction(input: CreerDemandeDepotInput) {
         .single()
 
       if (tresorier) {
-        const { data: tresorierUser } = await supabase.auth.admin.getUserById(tresorier.id)
+        const supabaseAdmin = createAdminClient()
+        const { data: tresorierUser } = await supabaseAdmin.auth.admin.getUserById(tresorier.id)
 
         if (tresorierUser?.user?.email) {
           await sendEmail({
@@ -170,7 +172,8 @@ export async function validerDemandeDepotAction(input: ValiderDemandeDepotInput)
     // Envoyer email à l'utilisateur
     if (demande) {
       try {
-        const { data: userData } = await supabase.auth.admin.getUserById(demande.user_id)
+        const supabaseAdmin = createAdminClient()
+        const { data: userData } = await supabaseAdmin.auth.admin.getUserById(demande.user_id)
 
         if (userData?.user?.email) {
           const ecart = (demande.montant_recu || 0) - demande.montant_a_deposer
