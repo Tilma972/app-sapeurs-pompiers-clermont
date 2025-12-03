@@ -2,8 +2,10 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { isTreasurerRole } from "@/lib/config";
 import { getTresorerieKPIs, getDemandesEnAttente } from "@/lib/supabase/tresorerie";
+import { getToutesDemandesDepot } from "@/lib/supabase/depot-fonds";
 import { TresorerieKPI } from "@/components/tresorerie/tresorerie-kpi";
 import { DemandesEnAttenteListe } from "@/components/tresorerie/demandes-en-attente-liste";
+import { DemandesDepotTable } from "@/components/tresorerie/demandes-depot-table";
 import { PwaContainer } from "@/components/layouts/pwa/pwa-container";
 
 export default async function TresoreriePage() {
@@ -24,9 +26,10 @@ export default async function TresoreriePage() {
   }
 
   // 2. Récupération des données
-  const [kpis, demandesEnAttente] = await Promise.all([
+  const [kpis, demandesEnAttente, demandesDepot] = await Promise.all([
     getTresorerieKPIs(),
     getDemandesEnAttente(),
+    getToutesDemandesDepot(supabase).catch(() => []),
   ]);
 
   return (
@@ -42,7 +45,15 @@ export default async function TresoreriePage() {
         {/* KPIs */}
         <TresorerieKPI kpis={kpis} />
 
-        {/* Demandes en attente */}
+        {/* Demandes de dépôt de fonds */}
+        <div className="space-y-4">
+          <h2 className="text-xl font-semibold tracking-tight">
+            Dépôts de fonds collectés
+          </h2>
+          <DemandesDepotTable demandes={demandesDepot} />
+        </div>
+
+        {/* Demandes de versement en attente */}
         <div className="space-y-4">
           <h2 className="text-xl font-semibold tracking-tight">
             Demandes de versement en attente

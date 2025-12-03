@@ -13,6 +13,8 @@ import { getUserDemandes } from "@/lib/supabase/versement";
 import { getEquipeWithSettingsFromProfile } from "@/lib/supabase/equipes";
 import { RETRIBUTION_CONFIG, PAGINATION_CONFIG, VERSEMENT_CONFIG } from "@/lib/config";
 import { DemandesListe } from "@/components/compte/demandes-liste";
+import { getMontantNonDepose, getDemandesDepotUtilisateur } from "@/lib/supabase/depot-fonds";
+import { DemandesDepotListe } from "@/components/compte/demandes-depot-liste";
 
 export default async function MonComptePage() {
   const supabase = await createClient();
@@ -20,11 +22,13 @@ export default async function MonComptePage() {
   if (!user) redirect("/auth/login");
 
   // Récupération des données via les helpers
-  const [compte, eqWithSettings, mouvements, demandes] = await Promise.all([
+  const [compte, eqWithSettings, mouvements, demandes, montantNonDepose, demandesDepot] = await Promise.all([
     getUserCompte(supabase, user.id),
     getEquipeWithSettingsFromProfile(supabase, user.id),
     getMouvementsRetribution(supabase, user.id, PAGINATION_CONFIG.MOUVEMENTS_RETRIBUTION_LIMIT),
     getUserDemandes(supabase, user.id, 5),
+    getMontantNonDepose(supabase, user.id).catch(() => 0),
+    getDemandesDepotUtilisateur(supabase, user.id).catch(() => []),
   ]);
 
   const recommandationEquipe = eqWithSettings?.pourcentage_recommande_pot ?? RETRIBUTION_CONFIG.RECOMMANDE_POT_EQUIPE_DEFAULT;
@@ -71,12 +75,20 @@ export default async function MonComptePage() {
           </Alert>
         )}
 
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-4 md:grid-cols-3">
           <Card>
             <CardContent className="pt-6">
               <div className="text-sm text-muted-foreground mb-1">💰 Mon solde</div>
               <div className="text-3xl font-bold">{formatCurrency(compte?.solde_disponible)}</div>
               <div className="text-xs text-muted-foreground mt-2">Disponible maintenant</div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="pt-6">
+              <div className="text-sm text-muted-foreground mb-1">🏦 Fonds non déposés</div>
+              <div className="text-3xl font-bold">{formatCurrency(montantNonDepose)}</div>
+              <div className="text-xs text-muted-foreground mt-2">À remettre au trésorier</div>
             </CardContent>
           </Card>
 
@@ -105,6 +117,28 @@ export default async function MonComptePage() {
           </details>
         )}
 
+        {/* Action: Demander un dépôt de fonds */}
+        {montantNonDepose > 0 && (
+          <Card className="border-orange-500/20 bg-orange-50 dark:bg-orange-950/20">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex-1">
+                  <div className="text-sm font-medium mb-1">🏦 Demander un dépôt de fonds</div>
+                  <div className="text-xs text-muted-foreground">
+                    Organisez un RDV pour remettre les {formatCurrency(montantNonDepose)} collectés
+                  </div>
+                </div>
+                <Link href="/mon-compte/demander-depot">
+                  <Button size="sm" className="gap-2" variant="default">
+                    <Plus className="h-4 w-4" />
+                    Demander un dépôt
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Action: Demander un versement */}
         {compte && compte.solde_disponible && compte.solde_disponible >= VERSEMENT_CONFIG.MONTANT_MINIMUM_VERSEMENT && (
           <Card className="border-primary/20 bg-primary/5">
@@ -125,6 +159,17 @@ export default async function MonComptePage() {
               </div>
             </CardContent>
           </Card>
+        )}
+
+        {/* Mes demandes de dépôt de fonds */}
+        {demandesDepot && demandesDepot.length > 0 && (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold">Mes demandes de dépôt</h2>
+              <Badge variant="outline">{demandesDepot.length}</Badge>
+            </div>
+            <DemandesDepotListe demandes={demandesDepot} />
+          </div>
         )}
 
         {/* Mes demandes de versement */}
