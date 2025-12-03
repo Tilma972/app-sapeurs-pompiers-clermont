@@ -103,15 +103,50 @@ function fixSupabaseUrl(url) {
 }
 
 /**
+ * Masque le mot de passe dans une URL pour les logs
+ */
+function maskPassword(url) {
+  return url.replace(/:[^:@]+@/, ':****@');
+}
+
+/**
+ * Extrait les informations de l'URL de connexion pour debug
+ */
+function parseDbUrl(url) {
+  try {
+    const match = url.match(/postgresql:\/\/([^:]+):([^@]+)@([^:]+):(\d+)\/(.+)/);
+    if (match) {
+      return {
+        user: match[1],
+        host: match[3],
+        port: match[4],
+        database: match[5],
+      };
+    }
+  } catch {}
+  return null;
+}
+
+/**
  * Teste la connexion PostgreSQL avant le backup
  */
 async function testConnection(dbUrl) {
   console.log('🔌 Test de connexion à PostgreSQL...');
+  
+  // Afficher les infos de connexion (sans mot de passe)
+  const urlInfo = parseDbUrl(dbUrl);
+  if (urlInfo) {
+    console.log(`   User: ${urlInfo.user}`);
+    console.log(`   Host: ${urlInfo.host}`);
+    console.log(`   Port: ${urlInfo.port}`);
+    console.log(`   Database: ${urlInfo.database}`);
+  }
+  console.log('');
 
   try {
     // Test simple avec psql
     const testCommand = `psql "${dbUrl}" -c "SELECT version();" -t`;
-    const { stdout } = await execPromise(testCommand);
+    const { stdout, stderr } = await execPromise(testCommand);
 
     console.log('✅ Connexion réussie');
     console.log(`   PostgreSQL: ${stdout.trim().substring(0, 80)}...`);
@@ -120,28 +155,47 @@ async function testConnection(dbUrl) {
   } catch (error) {
     console.error('❌ Échec de connexion à PostgreSQL');
     console.error('');
+    
+    // Afficher l'erreur complète (stderr contient souvent plus d'infos)
+    const errorMsg = error.stderr || error.message || String(error);
+    console.error('📋 Détails de l\'erreur:');
+    console.error(`   ${errorMsg.replace(/\n/g, '\n   ')}`);
+    console.error('');
 
     // Messages d'erreur détaillés selon le type d'erreur
-    if (error.message.includes('Tenant or user not found')) {
-      console.error('💡 SOLUTION:');
-      console.error('   1. Vérifiez que vous utilisez la bonne URL de connexion');
-      console.error('   2. Dans Supabase Dashboard → Settings → Database');
-      console.error('   3. Utilisez "Direct connection" (port 5432) ou "Session mode"');
-      console.error('   4. PAS le "Transaction mode" (port 6543)');
+    if (errorMsg.includes('Tenant or user not found') || errorMsg.includes('No such user')) {
+      console.error('💡 PROBLÈME: Project ID incorrect ou format d\'URL invalide');
       console.error('');
-      console.error('   Format attendu:');
-      console.error('   postgresql://postgres.[PROJECT-REF]:[PASSWORD]@aws-0-eu-west-3.pooler.supabase.com:5432/postgres');
+      console.error('   SOLUTION:');
+      console.error('   1. Va sur Supabase Dashboard → Clique "Connect"');
+      console.error('   2. Sélectionne "Session pooler" (port 5432)');
+      console.error('   3. Copie l\'URL EXACTE fournie par Supabase');
       console.error('');
-    } else if (error.message.includes('password authentication failed')) {
-      console.error('💡 SOLUTION:');
-      console.error('   Le mot de passe est incorrect. Vérifiez votre SUPABASE_DB_URL');
+    } else if (errorMsg.includes('password authentication failed')) {
+      console.error('💡 PROBLÈME: Mot de passe incorrect');
       console.error('');
-    } else if (error.message.includes('could not translate host name')) {
-      console.error('💡 SOLUTION:');
-      console.error('   L\'URL est mal formée. Vérifiez le format de SUPABASE_DB_URL');
+      console.error('   SOLUTION:');
+      console.error('   1. Va sur Supabase Dashboard → Settings → Database');
+      console.error('   2. Clique "Reset database password"');
+      console.error('   3. Met à jour le secret SUPABASE_DB_URL avec le nouveau mot de passe');
+      console.error('');
+    } else if (errorMsg.includes('could not translate host name') || errorMsg.includes('Name or service not known')) {
+      console.error('💡 PROBLÈME: Hostname invalide');
+      console.error('');
+      console.error('   SOLUTION:');
+      console.error('   Vérifiez la région dans l\'URL (eu-north-1, eu-west-3, etc.)');
+      console.error(`   URL actuelle: ${maskPassword(dbUrl)}`);
+      console.error('');
+    } else if (errorMsg.includes('timeout') || errorMsg.includes('could not connect')) {
+      console.error('💡 PROBLÈME: Connexion timeout ou bloquée');
+      console.error('');
+      console.error('   SOLUTION:');
+      console.error('   1. Vérifiez que le projet Supabase est actif');
+      console.error('   2. Vérifiez les restrictions IP si activées');
       console.error('');
     } else {
-      console.error(`   Erreur: ${error.message}`);
+      console.error('💡 Erreur non reconnue. Vérifiez l\'URL de connexion:');
+      console.error(`   ${maskPassword(dbUrl)}`);
       console.error('');
     }
 
