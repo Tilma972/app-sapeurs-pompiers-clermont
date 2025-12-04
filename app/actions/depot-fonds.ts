@@ -333,13 +333,6 @@ export async function enregistrerDepotDirectAction(input: EnregistrerDepotDirect
       return { ok: false as const, error: 'Erreur lors de l\'enregistrement du dépôt' }
     }
 
-    // Récupérer les infos utilisateur pour l'email
-    const { data: userProfile } = await supabase
-      .from('profiles')
-      .select('full_name')
-      .eq('id', input.user_id)
-      .single()
-
     // Envoyer email à l'utilisateur
     try {
       const { data: userData } = await supabase.auth.admin.getUserById(input.user_id)
