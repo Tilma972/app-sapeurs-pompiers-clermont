@@ -47,6 +47,12 @@ export interface AnnulerDemandeDepotInput {
   demande_id: string
 }
 
+export interface EnregistrerDepotDirectInput {
+  user_id: string
+  montant_recu: number
+  notes_tresorier?: string
+}
+
 /**
  * Helper pour formater le statut en français
  */
