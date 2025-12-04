@@ -6,6 +6,7 @@ import { getToutesDemandesDepot } from "@/lib/supabase/depot-fonds";
 import { TresorerieKPI } from "@/components/tresorerie/tresorerie-kpi";
 import { DemandesEnAttenteListe } from "@/components/tresorerie/demandes-en-attente-liste";
 import { DemandesDepotTable } from "@/components/tresorerie/demandes-depot-table";
+import { EnregistrerDepotDirectButton } from "@/components/tresorerie/enregistrer-depot-direct-button";
 import { PwaContainer } from "@/components/layouts/pwa/pwa-container";
 
 export default async function TresoreriePage() {
@@ -47,9 +48,12 @@ export default async function TresoreriePage() {
 
         {/* Demandes de dépôt de fonds */}
         <div className="space-y-4">
-          <h2 className="text-xl font-semibold tracking-tight">
-            Dépôts de fonds collectés
-          </h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-semibold tracking-tight">
+              Dépôts de fonds collectés
+            </h2>
+            <EnregistrerDepotDirectButton />
+          </div>
           <DemandesDepotTable demandes={demandesDepot} />
         </div>
 

@@ -7,6 +7,7 @@ import {
   CreerDemandeDepotInput,
   ValiderDemandeDepotInput,
   AnnulerDemandeDepotInput,
+  EnregistrerDepotDirectInput,
 } from '@/lib/types/depot-fonds'
 import { getMontantNonDepose } from '@/lib/supabase/depot-fonds'
 import { sendEmail } from '@/lib/email/resend-client'
@@ -267,6 +268,114 @@ export async function annulerDemandeDepotAction(input: AnnulerDemandeDepotInput)
   } catch (err) {
     console.error('Erreur annulerDemandeDepotAction:', err)
     const msg = (err as Error)?.message || 'Erreur lors de l\'annulation'
+    return { ok: false as const, error: msg }
+  }
+}
+
+/**
+ * Enregistrer un dépôt direct (trésorier uniquement)
+ * Pour les utilisateurs qui viennent en permanence sans demande préalable
+ */
+export async function enregistrerDepotDirectAction(input: EnregistrerDepotDirectInput) {
+  const supabase = await createClient()
+
+  try {
+    // Vérifier l'authentification et le rôle
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+    if (!user) {
+      return { ok: false as const, error: 'Non authentifié' }
+    }
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    if (!profile || !isTreasurerRole(profile.role)) {
+      return { ok: false as const, error: 'Accès réservé aux trésoriers' }
+    }
+
+    // Validations
+    if (input.montant_recu <= 0) {
+      return { ok: false as const, error: 'Le montant doit être supérieur à 0' }
+    }
+
+    // Récupérer le montant non déposé de l'utilisateur
+    const montantNonDepose = await getMontantNonDepose(supabase, input.user_id)
+
+    if (montantNonDepose <= 0) {
+      return {
+        ok: false as const,
+        error: 'Cet utilisateur n\'a pas de fonds à déposer',
+      }
+    }
+
+    // Créer ET valider la demande en une seule fois
+    const { data: demande, error: insertError } = await supabase
+      .from('demandes_depot_fonds')
+      .insert({
+        user_id: input.user_id,
+        montant_a_deposer: input.montant_recu, // On suppose que le montant reçu est correct
+        montant_recu: input.montant_recu,
+        statut: 'valide', // Directement validé
+        valide_par: user.id,
+        valide_le: new Date().toISOString(),
+        notes_tresorier: input.notes_tresorier || null,
+      })
+      .select()
+      .single()
+
+    if (insertError) {
+      console.error('Erreur création dépôt direct:', insertError)
+      return { ok: false as const, error: 'Erreur lors de l\'enregistrement du dépôt' }
+    }
+
+    // Récupérer les infos utilisateur pour l'email
+    const { data: userProfile } = await supabase
+      .from('profiles')
+      .select('full_name')
+      .eq('id', input.user_id)
+      .single()
+
+    // Envoyer email à l'utilisateur
+    try {
+      const { data: userData } = await supabase.auth.admin.getUserById(input.user_id)
+
+      if (userData?.user?.email) {
+        await sendEmail({
+          to: userData.user.email,
+          subject: '✅ Dépôt de fonds enregistré',
+          html: `
+            <h2>Votre dépôt de fonds a été enregistré</h2>
+            <p>Bonjour,</p>
+            <p>Le trésorier a confirmé la réception de vos fonds.</p>
+
+            <div style="background: #f3f4f6; padding: 16px; border-radius: 8px; margin: 16px 0;">
+              <p style="margin: 4px 0;"><strong>Montant reçu:</strong> ${input.montant_recu.toFixed(2)}€</p>
+              <p style="margin: 4px 0;"><strong>Date:</strong> ${new Date().toLocaleDateString('fr-FR')}</p>
+              ${input.notes_tresorier ? `<p style="margin: 4px 0;"><strong>Notes:</strong> ${input.notes_tresorier}</p>` : ''}
+            </div>
+
+            <p>✅ Le dépôt a été enregistré avec succès.</p>
+            <p>Vous pouvez consulter l'historique dans votre compte.</p>
+          `,
+          text: `Dépôt enregistré\n\nMontant reçu: ${input.montant_recu.toFixed(2)}€\nDate: ${new Date().toLocaleDateString('fr-FR')}\n\nLe dépôt a été enregistré avec succès.`,
+        })
+      }
+    } catch (emailError) {
+      console.error('Erreur envoi email utilisateur (non-bloquante):', emailError)
+    }
+
+    revalidatePath('/mon-compte')
+    revalidatePath('/tresorerie')
+
+    return { ok: true as const, demande }
+  } catch (err) {
+    console.error('Erreur enregistrerDepotDirectAction:', err)
+    const msg = (err as Error)?.message || 'Erreur lors de l\'enregistrement'
     return { ok: false as const, error: msg }
   }
 }
