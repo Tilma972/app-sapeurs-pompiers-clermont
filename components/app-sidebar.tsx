@@ -249,14 +249,24 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
                                     <SidebarMenu>
                                         {/* Vue d'ensemble - Admin/Tresorier only */}
                                         {["admin", "tresorier"].includes(role) && (
-                                            <SidebarMenuItem>
-                                                <SidebarMenuButton asChild isActive={pathname === "/admin"}>
-                                                    <Link href="/admin" onClick={handleLinkClick}>
-                                                        <Home />
-                                                        <span>Vue d&apos;ensemble</span>
-                                                    </Link>
-                                                </SidebarMenuButton>
-                                            </SidebarMenuItem>
+                                            <>
+                                                <SidebarMenuItem>
+                                                    <SidebarMenuButton asChild isActive={pathname === "/admin"}>
+                                                        <Link href="/admin" onClick={handleLinkClick}>
+                                                            <Home />
+                                                            <span>Vue d&apos;ensemble</span>
+                                                        </Link>
+                                                    </SidebarMenuButton>
+                                                </SidebarMenuItem>
+                                                <SidebarMenuItem>
+                                                    <SidebarMenuButton asChild isActive={pathname === "/tresorerie"}>
+                                                        <Link href="/tresorerie" onClick={handleLinkClick}>
+                                                            <Wallet />
+                                                            <span>Trésorerie</span>
+                                                        </Link>
+                                                    </SidebarMenuButton>
+                                                </SidebarMenuItem>
+                                            </>
                                         )}
 
                                         {/* Categories */}
