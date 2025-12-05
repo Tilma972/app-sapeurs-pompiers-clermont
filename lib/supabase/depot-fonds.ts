@@ -56,7 +56,7 @@ export async function getDemandeDepotById(
     .from('demandes_depot_fonds')
     .select(`
       *,
-      profiles!demandes_depot_fonds_user_id_fkey(full_name, team),
+      profiles!demandes_depot_fonds_user_id_fkey(full_name),
       validateur:profiles!demandes_depot_fonds_valide_par_fkey(full_name)
     `)
     .eq('id', demandeId)
@@ -68,6 +68,8 @@ export async function getDemandeDepotById(
     throw new Error('Erreur lors de la récupération de la demande')
   }
 
+  // Note: team field is not included to avoid ambiguity with equipes relations
+  // The UI component will need to be updated to not display team info
   return data
 }
 
@@ -85,7 +87,7 @@ export async function getToutesDemandesDepot(
     .from('demandes_depot_fonds')
     .select(`
       *,
-      profiles!demandes_depot_fonds_user_id_fkey(full_name, team),
+      profiles!demandes_depot_fonds_user_id_fkey(full_name),
       validateur:profiles!demandes_depot_fonds_valide_par_fkey(full_name)
     `)
     .order('created_at', { ascending: false })
@@ -105,6 +107,7 @@ export async function getToutesDemandesDepot(
     throw new Error('Erreur lors de la récupération des demandes')
   }
 
+  // Note: team field is not included to avoid ambiguity with equipes relations
   return data || []
 }
 

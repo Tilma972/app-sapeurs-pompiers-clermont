@@ -110,12 +110,12 @@ export async function getDemandesEnAttente(): Promise<DemandeVersement[]> {
         type_versement,
         created_at,
         statut,
-        profiles:user_id (
+        profiles (
           full_name,
           first_name,
           last_name
         ),
-        equipes:equipe_id (
+        equipes (
           nom
         )
       `)

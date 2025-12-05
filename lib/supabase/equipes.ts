@@ -282,7 +282,7 @@ export async function getEquipeSettingsFromProfile(
   try {
     const { data: profile, error } = await supabase
       .from('profiles')
-      .select('team_id, equipes(pourcentage_minimum_pot, pourcentage_recommande_pot)')
+      .select('team_id, equipes!profiles_team_id_fkey(pourcentage_minimum_pot, pourcentage_recommande_pot)')
       .eq('id', userId)
       .single();
 

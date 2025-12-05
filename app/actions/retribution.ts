@@ -12,7 +12,7 @@ export async function cloturerTourneeAvecRetribution(data: {
   try {
     const { data: tournee, error: tourneeErr } = await supabase
       .from('tournees')
-      .select('*, equipes(enable_retribution)')
+      .select('*')
       .eq('id', data.tourneeId)
       .single()
 
@@ -27,7 +27,6 @@ export async function cloturerTourneeAvecRetribution(data: {
       equipe_id?: string | null
       user_id: string
       statut?: string | null
-      equipes?: { enable_retribution?: boolean } | null
     }
 
     const tourneeData = tournee as TourneeWithEquipe
@@ -36,28 +35,24 @@ export async function cloturerTourneeAvecRetribution(data: {
       return { ok: false, error: 'Cette tournée est déjà clôturée' as const }
     }
 
-    // S'assurer que l'équipe est connue et que la rétribution est activée
-    let enableRetrib = tournee.equipes?.enable_retribution as boolean | undefined
+    // Récupérer l'équipe et la configuration de rétribution via le profil utilisateur
+    let enableRetrib: boolean | undefined = undefined
     let equipeId: string | null = tourneeData.equipe_id ?? null
 
-    if (enableRetrib === undefined || !equipeId) {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('team_id, equipes!profiles_team_id_fkey(enable_retribution)')
-        .eq('id', tourneeData.user_id)
-        .single()
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('team_id, equipes!profiles_team_id_fkey(enable_retribution)')
+      .eq('id', tourneeData.user_id)
+      .single()
 
-      type ProfileJoin = { team_id?: string | null; equipes?: { enable_retribution?: boolean } | null }
-      const p = (profile ?? {}) as ProfileJoin
-      enableRetrib = p.equipes?.enable_retribution ?? enableRetrib
-      equipeId = p.team_id ?? equipeId
+    type ProfileJoin = { team_id?: string | null; equipes?: { enable_retribution?: boolean } | null }
+    const p = (profile ?? {}) as ProfileJoin
+    enableRetrib = p.equipes?.enable_retribution ?? enableRetrib
+    equipeId = p.team_id ?? equipeId
 
-      // Si la tournée n'a pas d'équipe, la renseigner pour que la RPC fonctionne (join obligatoire)
-      if (!tourneeData.equipe_id) {
-        if (equipeId) {
-          await supabase.from('tournees').update({ equipe_id: equipeId, updated_at: new Date().toISOString() }).eq('id', data.tourneeId)
-        }
-      }
+    // Si la tournée n'a pas d'équipe, la renseigner pour que la RPC fonctionne (join obligatoire)
+    if (!tourneeData.equipe_id && equipeId) {
+      await supabase.from('tournees').update({ equipe_id: equipeId, updated_at: new Date().toISOString() }).eq('id', data.tourneeId)
     }
 
     if (!enableRetrib) {
@@ -136,7 +131,7 @@ export async function updateRetributionPreference(pourcentage: number) {
   // Vérifier le minimum d'équipe pour l'utilisateur
   const { data: profile, error: profileErr } = await supabase
     .from('profiles')
-    .select('team_id, equipes(pourcentage_minimum_pot)')
+    .select('team_id, equipes!profiles_team_id_fkey(pourcentage_minimum_pot)')
     .eq('id', user.id)
     .single()
 
