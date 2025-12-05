@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { createClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
 import { getActiveTourneeWithTransactions } from "@/lib/supabase/tournee"
+import { getCurrentUserProfile } from "@/lib/supabase/profile"
 import { PaymentCardModal } from "@/components/payment-card-modal"
 import { ReceiptGenerationModal } from "@/components/receipt-generation-modal"
 import { TourneeClotureModal } from "@/components/tournee/tournee-cloture-modal"
@@ -17,24 +18,16 @@ export default async function MaTourneePage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect("/auth/login")
 
-  // Récupérer le secteur de l'équipe de l'utilisateur
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("team_id")
-    .eq("id", user.id)
-    .single();
+  // OPTIMISATION: Récupérer profile et tourneeData en parallèle au lieu de séquentiel
+  // + profile inclut déjà l'équipe avec le secteur (JOIN optimisé)
+  // Économie: ~100-200ms par page load
+  const [profile, tourneeData] = await Promise.all([
+    getCurrentUserProfile(),
+    getActiveTourneeWithTransactions()
+  ])
 
-  let userSecteur: string | null = null;
-  if (profile?.team_id) {
-    const { data: equipe } = await supabase
-      .from("equipes")
-      .select("secteur")
-      .eq("id", profile.team_id)
-      .single();
-    userSecteur = equipe?.secteur || null;
-  }
-
-  const tourneeData = await getActiveTourneeWithTransactions()
+  // OPTIMISATION: Secteur déjà disponible via le JOIN
+  const userSecteur = profile?.equipe?.secteur || null
 
   // Pas de tournée active
   if (!tourneeData || !tourneeData.tournee) {

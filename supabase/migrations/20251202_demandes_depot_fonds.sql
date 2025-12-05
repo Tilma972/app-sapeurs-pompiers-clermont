@@ -39,6 +39,7 @@ CREATE INDEX IF NOT EXISTS demandes_depot_fonds_statut_idx ON public.demandes_de
 CREATE INDEX IF NOT EXISTS demandes_depot_fonds_created_at_idx ON public.demandes_depot_fonds(created_at);
 
 -- Trigger pour mettre à jour automatiquement updated_at
+DROP TRIGGER IF EXISTS demandes_depot_fonds_updated_at ON public.demandes_depot_fonds;
 CREATE TRIGGER demandes_depot_fonds_updated_at
     BEFORE UPDATE ON public.demandes_depot_fonds
     FOR EACH ROW
@@ -48,12 +49,14 @@ CREATE TRIGGER demandes_depot_fonds_updated_at
 ALTER TABLE public.demandes_depot_fonds ENABLE ROW LEVEL SECURITY;
 
 -- Politique RLS: Les utilisateurs peuvent voir leurs propres demandes
+DROP POLICY IF EXISTS "Les utilisateurs peuvent voir leurs propres demandes de dépôt" ON public.demandes_depot_fonds;
 CREATE POLICY "Les utilisateurs peuvent voir leurs propres demandes de dépôt"
     ON public.demandes_depot_fonds
     FOR SELECT
     USING (auth.uid() = user_id);
 
 -- Politique RLS: Les trésoriers peuvent voir toutes les demandes
+DROP POLICY IF EXISTS "Les trésoriers peuvent voir toutes les demandes de dépôt" ON public.demandes_depot_fonds;
 CREATE POLICY "Les trésoriers peuvent voir toutes les demandes de dépôt"
     ON public.demandes_depot_fonds
     FOR SELECT
@@ -66,12 +69,14 @@ CREATE POLICY "Les trésoriers peuvent voir toutes les demandes de dépôt"
     );
 
 -- Politique RLS: Les utilisateurs peuvent créer leurs propres demandes
+DROP POLICY IF EXISTS "Les utilisateurs peuvent créer leurs propres demandes de dépôt" ON public.demandes_depot_fonds;
 CREATE POLICY "Les utilisateurs peuvent créer leurs propres demandes de dépôt"
     ON public.demandes_depot_fonds
     FOR INSERT
     WITH CHECK (auth.uid() = user_id);
 
 -- Politique RLS: Les utilisateurs peuvent annuler leurs propres demandes en attente
+DROP POLICY IF EXISTS "Les utilisateurs peuvent annuler leurs demandes en attente" ON public.demandes_depot_fonds;
 CREATE POLICY "Les utilisateurs peuvent annuler leurs demandes en attente"
     ON public.demandes_depot_fonds
     FOR UPDATE
@@ -79,6 +84,7 @@ CREATE POLICY "Les utilisateurs peuvent annuler leurs demandes en attente"
     WITH CHECK (auth.uid() = user_id AND statut = 'en_attente');
 
 -- Politique RLS: Les trésoriers peuvent mettre à jour toutes les demandes
+DROP POLICY IF EXISTS "Les trésoriers peuvent valider les demandes de dépôt" ON public.demandes_depot_fonds;
 CREATE POLICY "Les trésoriers peuvent valider les demandes de dépôt"
     ON public.demandes_depot_fonds
     FOR UPDATE
