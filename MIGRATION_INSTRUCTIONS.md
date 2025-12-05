@@ -35,6 +35,21 @@ Les erreurs que vous rencontrez sont dues au fait que les migrations SQL n'ont p
 **Ce que cette migration fait :**
 - Permet aux trésoriers de voir tous les comptes SP (pour les KPI)
 
+### 4. Migration paiements CB : Correction calcul montant à déposer ⭐ IMPORTANT
+
+**Fichier :** `supabase/migrations/20251205_fix_montant_non_depose_with_cb.sql`
+
+**Ce que cette migration fait :**
+- ⚠️ **CRITIQUE** : Corrige le calcul du montant à déposer pour tenir compte des paiements par carte bleue
+- Met à jour `get_montant_non_depose()` pour déduire les paiements CB déjà sécurisés via Stripe
+- Ajoute `get_detail_fonds_utilisateur()` pour afficher le détail dans l'UI
+- **Sans cette migration**, les utilisateurs seraient sollicités pour déposer plus d'argent qu'ils n'ont en cash !
+
+**Exemple :**
+- Collecté : 300€ (dont 100€ en CB Stripe + 200€ en cash)
+- **AVANT** : Montant à déposer = 300€ ❌
+- **APRÈS** : Montant à déposer = 200€ ✅ (300€ - 100€ CB)
+
 ## Comment appliquer les migrations sur Supabase
 
 ### Option A : Via l'interface Supabase Dashboard
@@ -47,6 +62,7 @@ Les erreurs que vous rencontrez sont dues au fait que les migrations SQL n'ont p
    - `20251202_demandes_depot_fonds.sql`
    - `20251205_fix_demandes_depot_fonds.sql`
    - `20251205_add_treasurer_access_comptes_sp.sql`
+   - `20251205_fix_montant_non_depose_with_cb.sql` ⭐
 6. Cliquez sur **Run** pour chaque migration
 7. Vérifiez qu'il n'y a pas d'erreurs
 
