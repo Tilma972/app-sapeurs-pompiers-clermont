@@ -1,5 +1,6 @@
 ﻿import { redirect } from "next/navigation";
 import Link from "next/link";
+import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { PwaContainer } from "@/components/layouts/pwa/pwa-container";
 import { DashboardBentoGrid } from "@/components/dashboard/dashboard-bento";
@@ -11,6 +12,7 @@ import { CheckCircle2, AlertCircle } from "lucide-react";
 import { getUserProgression } from "@/lib/supabase/gamification";
 import { ProgressionBar } from "@/components/gamification/progression-bar";
 import { Card } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default async function DashboardPage({
 	searchParams,
@@ -24,38 +26,13 @@ export default async function DashboardPage({
 	// Next.js 15: searchParams est maintenant une Promise
 	const params = await searchParams;
 
-	const [profile, globalStats, approvedPhotosCountRes, ideasCountRes, userProgression] = await Promise.all([
-		getCurrentUserProfile(),
-		getGlobalStats(),
-		supabase.from('gallery_photos').select('*', { count: 'exact', head: true }).eq('status', 'approved'),
-		supabase.from('ideas').select('*', { count: 'exact', head: true }).is('deleted_at', null),
-		getUserProgression(user.id)
-	]);
+	// OPTIMISATION: Charger les données critiques d'abord, le reste en Suspense
+	// Permet d'afficher la page plus rapidement (streaming)
+	const profile = await getCurrentUserProfile();
 
-	// Récupérer le nom de l'équipe si team_id existe
-	let teamName = "Équipe SPP"; // Fallback par défaut
-	if (profile?.team_id) {
-		const { data: equipe } = await supabase
-			.from('equipes')
-			.select('nom')
-			.eq('id', profile.team_id)
-			.single();
-
-		teamName = equipe?.nom || "Équipe SPP";
-	}
-
+	// OPTIMISATION: Nom de l'équipe déjà disponible via le JOIN
+	const teamName = profile?.equipe?.nom || "Équipe SPP";
 	const userName = profile?.full_name || user.email?.split("@")[0] || "Membre";
-	// const allocated = equipe?.calendriers_alloues ?? 0;
-	// const distributed = personal?.totalCalendarsDistributed ?? 0;
-	// const pct = allocated > 0 ? Math.min(100, Math.round((distributed / allocated) * 100)) : 0;
-
-	// Placeholders for future integrations
-	const annoncesCount = undefined;
-	const photosCount = approvedPhotosCountRes.count ?? 0;
-	const ideasCount = ideasCountRes.count ?? 0;
-	const eventsCount = undefined;
-	const offersCount = undefined;
-	const profileComplete = Boolean(profile?.full_name);
 
 	// Détection nouvel utilisateur et profil incomplet
 	const isNewUser = params.welcome === "true";
@@ -108,27 +85,79 @@ export default async function DashboardPage({
 						</Alert>
 					)}
 
-					{/* Widget de progression */}
-					{userProgression && (
-						<Link href="/dashboard/profil">
-							<Card className="hover:shadow-md transition-shadow cursor-pointer border-l-4 border-l-primary">
-								<ProgressionBar progression={userProgression} compact />
-							</Card>
-						</Link>
-					)}
+					{/* OPTIMISATION: Suspense pour streaming progressif */}
+					{/* Progression chargée en parallèle, page s'affiche sans attendre */}
+					<Suspense fallback={
+						<Card className="border-l-4 border-l-primary">
+							<div className="p-4 space-y-2">
+								<Skeleton className="h-5 w-40" />
+								<Skeleton className="h-2 w-full" />
+							</div>
+						</Card>
+					}>
+						<ProgressionWidget userId={user.id} />
+					</Suspense>
 
-					<DashboardBentoGrid
-						annoncesCount={annoncesCount}
-						photosCount={photosCount}
-						ideasCount={ideasCount}
-						eventsCount={eventsCount}
-						offersCount={offersCount}
-						profileComplete={profileComplete}
-						globalCalendarsDistributed={globalStats?.total_calendriers_distribues}
-						userName={userName}
-					/>
+					{/* Stats chargées en streaming */}
+					<Suspense fallback={
+						<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+							{[...Array(6)].map((_, i) => (
+								<Card key={i} className="p-6 space-y-3">
+									<Skeleton className="h-6 w-32" />
+									<Skeleton className="h-10 w-20" />
+								</Card>
+							))}
+						</div>
+					}>
+						<DashboardStats userName={userName} profileComplete={Boolean(profile?.full_name)} />
+					</Suspense>
 				</div>
 			</PwaContainer>
 		</div>
+	);
+}
+
+// OPTIMISATION: Composant async pour streaming avec Suspense
+async function ProgressionWidget({ userId }: { userId: string }) {
+	const userProgression = await getUserProgression(userId);
+
+	if (!userProgression) return null;
+
+	return (
+		<Link href="/dashboard/profil">
+			<Card className="hover:shadow-md transition-shadow cursor-pointer border-l-4 border-l-primary">
+				<ProgressionBar progression={userProgression} compact />
+			</Card>
+		</Link>
+	);
+}
+
+// OPTIMISATION: Composant async pour streaming avec Suspense
+async function DashboardStats({ userName, profileComplete }: { userName: string; profileComplete: boolean }) {
+	const supabase = await createClient();
+
+	const [globalStats, approvedPhotosCountRes, ideasCountRes] = await Promise.all([
+		getGlobalStats(),
+		supabase.from('gallery_photos').select('*', { count: 'exact', head: true }).eq('status', 'approved'),
+		supabase.from('ideas').select('*', { count: 'exact', head: true }).is('deleted_at', null)
+	]);
+
+	const annoncesCount = undefined;
+	const photosCount = approvedPhotosCountRes.count ?? 0;
+	const ideasCount = ideasCountRes.count ?? 0;
+	const eventsCount = undefined;
+	const offersCount = undefined;
+
+	return (
+		<DashboardBentoGrid
+			annoncesCount={annoncesCount}
+			photosCount={photosCount}
+			ideasCount={ideasCount}
+			eventsCount={eventsCount}
+			offersCount={offersCount}
+			profileComplete={profileComplete}
+			globalCalendarsDistributed={globalStats?.total_calendriers_distribues}
+			userName={userName}
+		/>
 	);
 }
