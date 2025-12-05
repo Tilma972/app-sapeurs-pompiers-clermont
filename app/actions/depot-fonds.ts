@@ -338,7 +338,8 @@ export async function enregistrerDepotDirectAction(input: EnregistrerDepotDirect
 
     // Envoyer email à l'utilisateur
     try {
-      const { data: userData } = await supabase.auth.admin.getUserById(input.user_id)
+      const supabaseAdmin = createAdminClient()
+      const { data: userData } = await supabaseAdmin.auth.admin.getUserById(input.user_id)
 
       if (userData?.user?.email) {
         await sendEmail({
