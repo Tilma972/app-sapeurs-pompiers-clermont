@@ -1,216 +1,119 @@
-# 🔧 Instructions pour appliquer la migration critique
+# Instructions pour appliquer les migrations Supabase
 
-**Date:** 2025-11-24
-**Problème résolu:** `column "value" does not exist` lors des paiements QR
+## ⚠️ IMPORTANT : Vous devez appliquer ces migrations pour que le système de dépôt de fonds fonctionne
 
----
+Les erreurs que vous rencontrez sont dues au fait que les migrations SQL n'ont pas encore été appliquées sur votre instance Supabase.
 
-## 🚨 Problème identifié
+## Migrations à appliquer (dans l'ordre)
 
-Les paiements QR échouent à cause d'un **conflit de table** :
+### 1. Migration principale : Système de dépôt de fonds
 
-1. Migration `20251029120000_app_settings.sql` a créé `app_settings` avec :
-   ```sql
-   (id, calendar_price, min_retrocession, ...)
-   ```
+**Fichier :** `supabase/migrations/20251202_demandes_depot_fonds.sql`
 
-2. Migration `20251111_webhook_trigger_n8n_pdf.sql` essaie de créer `app_settings` avec :
-   ```sql
-   (key, value, updated_at)
-   ```
+**Ce que cette migration fait :**
+- Crée la table `demandes_depot_fonds`
+- Ajoute les politiques RLS de base
+- Crée les fonctions SQL :
+  - `get_montant_non_depose(user_id)` : calcule le montant non déposé d'un utilisateur
+  - `valider_demande_depot(...)` : valide une demande de dépôt
 
-3. Le `IF NOT EXISTS` empêche la 2ème migration de s'exécuter
+### 2. Migration corrective : Foreign keys et RLS policies
 
-4. Le trigger `trigger_n8n_pdf_generation()` essaie de lire `app_settings.value` → **ERREUR 42703**
+**Fichier :** `supabase/migrations/20251205_fix_demandes_depot_fonds.sql`
 
----
+**Ce que cette migration fait :**
+- Ajoute les contraintes de foreign key explicites :
+  - `demandes_depot_fonds.user_id → profiles.id`
+  - `demandes_depot_fonds.valide_par → profiles.id`
+- Ajoute la policy RLS permettant aux trésoriers de créer des dépôts directs
+- Met à jour la policy UPDATE pour les trésoriers
 
-## ✅ Solution appliquée
+### 3. Migration RLS comptes : Accès trésorier
 
-Migration `20251124_fix_n8n_webhook_settings.sql` qui :
-- Crée une table séparée `n8n_settings` pour les webhooks N8N
-- Met à jour `get_n8n_webhook_url()` pour utiliser `n8n_settings`
-- Met à jour `set_n8n_webhook_url()` pour utiliser `n8n_settings`
+**Fichier :** `supabase/migrations/20251205_add_treasurer_access_comptes_sp.sql`
 
----
+**Ce que cette migration fait :**
+- Permet aux trésoriers de voir tous les comptes SP (pour les KPI)
 
-## 📋 Comment appliquer la migration
+## Comment appliquer les migrations sur Supabase
 
-### Option 1 : Via le Dashboard Supabase (Recommandé)
+### Option A : Via l'interface Supabase Dashboard
 
-1. **Aller sur le Dashboard Supabase**
-   - https://supabase.com/dashboard/project/YOUR_PROJECT_ID
+1. Connectez-vous à votre dashboard Supabase : https://app.supabase.com
+2. Sélectionnez votre projet
+3. Allez dans **SQL Editor** (icône de base de données dans le menu gauche)
+4. Cliquez sur **New Query**
+5. Copiez-collez le contenu de chaque fichier de migration dans l'ordre :
+   - `20251202_demandes_depot_fonds.sql`
+   - `20251205_fix_demandes_depot_fonds.sql`
+   - `20251205_add_treasurer_access_comptes_sp.sql`
+6. Cliquez sur **Run** pour chaque migration
+7. Vérifiez qu'il n'y a pas d'erreurs
 
-2. **Ouvrir l'éditeur SQL**
-   - Menu gauche → **SQL Editor**
-   - Cliquer sur **New Query**
-
-3. **Copier-coller le contenu de la migration**
-   ```bash
-   cat supabase/migrations/20251124_fix_n8n_webhook_settings.sql
-   ```
-
-4. **Exécuter la requête**
-   - Cliquer sur **Run** ou `Ctrl+Enter`
-
-5. **Vérifier le succès**
-   - Vous devriez voir : "Success. No rows returned"
-
-### Option 2 : Via Supabase CLI
+### Option B : Via la CLI Supabase (recommandé pour production)
 
 ```bash
-# Assurez-vous d'être authentifié
-npx supabase login
+# Assurez-vous d'avoir la CLI Supabase installée
+# npm install -g supabase
 
-# Appliquer la migration
-npx supabase db push --db-url $DATABASE_URL
+# Lier votre projet local à votre projet Supabase
+supabase link --project-ref YOUR_PROJECT_REF
+
+# Appliquer toutes les migrations
+supabase db push
 ```
 
-### Option 3 : Via script SQL direct
+## Vérification que les migrations ont été appliquées
 
-Si vous avez accès direct à PostgreSQL :
-
-```bash
-psql $DATABASE_URL -f supabase/migrations/20251124_fix_n8n_webhook_settings.sql
-```
-
----
-
-## 🧪 Vérification post-migration
-
-### 1. Vérifier que la table n8n_settings existe
-
-Dans l'éditeur SQL Supabase :
+Après avoir appliqué les migrations, vérifiez dans le SQL Editor :
 
 ```sql
-SELECT table_name, column_name, data_type
-FROM information_schema.columns
-WHERE table_name = 'n8n_settings'
-ORDER BY ordinal_position;
-```
+-- Vérifier que la table existe
+SELECT * FROM pg_tables WHERE tablename = 'demandes_depot_fonds';
 
-**Résultat attendu :**
-| table_name    | column_name | data_type                 |
-|---------------|-------------|---------------------------|
-| n8n_settings  | key         | text                      |
-| n8n_settings  | value       | text                      |
-| n8n_settings  | updated_at  | timestamp with time zone  |
+-- Vérifier que les foreign keys existent
+SELECT
+    tc.constraint_name,
+    tc.table_name,
+    kcu.column_name,
+    ccu.table_name AS foreign_table_name,
+    ccu.column_name AS foreign_column_name
+FROM information_schema.table_constraints AS tc
+JOIN information_schema.key_column_usage AS kcu
+  ON tc.constraint_name = kcu.constraint_name
+JOIN information_schema.constraint_column_usage AS ccu
+  ON ccu.constraint_name = tc.constraint_name
+WHERE tc.table_name = 'demandes_depot_fonds'
+  AND tc.constraint_type = 'FOREIGN KEY';
 
-### 2. Vérifier que les fonctions sont à jour
-
-```sql
-SELECT routine_name, routine_definition
+-- Vérifier que les fonctions existent
+SELECT routine_name
 FROM information_schema.routines
-WHERE routine_name IN ('get_n8n_webhook_url', 'set_n8n_webhook_url');
+WHERE routine_schema = 'public'
+  AND routine_name LIKE '%depot%';
 ```
 
-Les fonctions devraient référencer `n8n_settings` et non `app_settings`.
+## Résultat attendu après les migrations
 
-### 3. Tester un paiement QR
+Une fois les migrations appliquées, vous devriez pouvoir :
 
-1. **Générer un QR code** avec montant 2€ et "Calendrier remis"
-2. **Scanner et payer**
-3. **Vérifier les logs** - Vous devriez voir :
-   ```
-   ✅ Transaction créée (PI) | { transaction_id: ..., amount: 2, ... }
-   ✅ Email de confirmation envoyé (PI) | { transaction_id: ..., email: ... }
-   ```
+1. ✅ Créer des demandes de dépôt en tant qu'utilisateur
+2. ✅ Voir toutes les demandes en tant que trésorier
+3. ✅ Enregistrer des dépôts directs en tant que trésorier
+4. ✅ Voir les KPIs correctement dans le dashboard trésorerie
+5. ✅ Calculer automatiquement les montants non déposés
 
-4. **Vérifier la base de données** :
-   ```sql
-   SELECT id, amount, supporter_name, supporter_email, created_at
-   FROM support_transactions
-   ORDER BY created_at DESC
-   LIMIT 5;
-   ```
+## En cas d'erreur lors de l'application des migrations
 
-5. **Vérifier l'email de confirmation** dans votre boîte mail
+Si vous obtenez une erreur indiquant qu'un objet existe déjà :
 
----
+- C'est normal si vous avez déjà appliqué partiellement certaines migrations
+- Les migrations utilisent `CREATE TABLE IF NOT EXISTS` et `DO $$ BEGIN ... END $$` pour être idempotentes
+- Vous pouvez simplement ignorer ces avertissements et passer à la migration suivante
 
-## 📊 Checklist de validation
+## Support
 
-Après avoir appliqué la migration :
-
-- [ ] Table `n8n_settings` créée avec colonnes (key, value, updated_at)
-- [ ] Fonction `get_n8n_webhook_url()` utilise `n8n_settings`
-- [ ] Fonction `set_n8n_webhook_url()` utilise `n8n_settings`
-- [ ] Test de paiement QR réussi (2€)
-- [ ] Transaction enregistrée dans `support_transactions`
-- [ ] Email de confirmation reçu
-- [ ] Toast de confirmation affiché dans le modal
-- [ ] Plus d'erreur "column value does not exist" dans les logs
-
----
-
-## 🔍 Diagnostic en cas de problème
-
-### Si la migration échoue
-
-**Erreur : "table n8n_settings already exists"**
-→ La table existe déjà, vous pouvez passer à l'étape de vérification
-
-**Erreur : "permission denied"**
-→ Assurez-vous d'être connecté avec un compte ayant les droits d'administration
-
-### Si les paiements échouent encore
-
-1. **Vérifier les logs du webhook Stripe :**
-   ```
-   Chercher "webhook/stripe" dans les logs Vercel
-   ```
-
-2. **Vérifier si le trigger s'exécute :**
-   ```sql
-   SELECT tgname, tgenabled
-   FROM pg_trigger
-   WHERE tgrelid = 'support_transactions'::regclass;
-   ```
-
-3. **Tester manuellement la fonction :**
-   ```sql
-   SELECT get_n8n_webhook_url();
-   ```
-   Devrait retourner `NULL` (pas encore configuré) sans erreur
-
----
-
-## 🚀 Après la migration
-
-Une fois la migration appliquée et validée :
-
-1. **Faire un nouveau test de paiement QR** (2€ avec calendrier)
-2. **Vérifier que tout fonctionne** :
-   - ✅ Transaction enregistrée
-   - ✅ Email de confirmation reçu
-   - ✅ Toast affiché
-   - ✅ Pas d'erreur dans les logs
-
-3. **Déployer les changements de code** (déjà sur la branche)
-4. **Surveiller les logs pendant 24h**
-
----
-
-## 💡 Configuration optionnelle du webhook N8N
-
-Si vous souhaitez activer la génération de PDF via N8N (optionnel) :
-
-```sql
-SELECT set_n8n_webhook_url('https://your-n8n-instance.com/webhook/receipt-pdf');
-```
-
-Sinon, le trigger détectera que l'URL n'est pas configurée et continuera normalement sans envoyer de webhook.
-
----
-
-## 📞 Support
-
-Si vous rencontrez des problèmes :
-
-1. Vérifier les logs Vercel/Supabase
-2. Exécuter les requêtes de diagnostic ci-dessus
-3. Vérifier que la migration a bien été appliquée
-
----
-
-**Prêt à appliquer la migration !** 🚀
+Si vous rencontrez des problèmes lors de l'application des migrations, partagez-moi :
+1. Le message d'erreur complet
+2. La migration qui pose problème
+3. Le résultat des requêtes de vérification ci-dessus
