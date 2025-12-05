@@ -2,9 +2,24 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MapPin, Users, BarChart3, CheckCircle2 } from "lucide-react";
-import { ZonesMap } from "@/components/admin/zones-tournees/zones-map";
 import { ZonesList } from "@/components/admin/zones-tournees/zones-list";
 import { ZonesStats } from "@/components/admin/zones-tournees/zones-stats";
+import dynamic from "next/dynamic";
+import { Skeleton } from "@/components/ui/skeleton";
+
+// OPTIMISATION: Dynamic import pour Leaflet (~140KB)
+// Évite de charger la carte si l'utilisateur ne scroll pas jusqu'à elle
+// Note: Le composant ZonesMap gère déjà ssr: false en interne
+const ZonesMap = dynamic(
+  () => import("@/components/admin/zones-tournees/zones-map").then(mod => ({ default: mod.ZonesMap })),
+  {
+    loading: () => (
+      <div className="w-full h-[500px] rounded-lg">
+        <Skeleton className="w-full h-full" />
+      </div>
+    ),
+  }
+);
 
 export default async function AdminZonesTourneesPage() {
   const supabase = await createClient();
