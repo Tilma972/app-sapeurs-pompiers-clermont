@@ -13,8 +13,9 @@ import { getUserDemandes } from "@/lib/supabase/versement";
 import { getEquipeWithSettingsFromProfile } from "@/lib/supabase/equipes";
 import { RETRIBUTION_CONFIG, PAGINATION_CONFIG, VERSEMENT_CONFIG } from "@/lib/config";
 import { DemandesListe } from "@/components/compte/demandes-liste";
-import { getMontantNonDepose, getDemandesDepotUtilisateur } from "@/lib/supabase/depot-fonds";
+import { getMontantNonDepose, getDemandesDepotUtilisateur, getDetailFondsUtilisateur } from "@/lib/supabase/depot-fonds";
 import { DemandesDepotListe } from "@/components/compte/demandes-depot-liste";
+import { DetailFondsCard } from "@/components/compte/detail-fonds-card";
 
 export default async function MonComptePage() {
   const supabase = await createClient();
@@ -22,13 +23,14 @@ export default async function MonComptePage() {
   if (!user) redirect("/auth/login");
 
   // Récupération des données via les helpers
-  const [compte, eqWithSettings, mouvements, demandes, montantNonDepose, demandesDepot] = await Promise.all([
+  const [compte, eqWithSettings, mouvements, demandes, montantNonDepose, demandesDepot, detailFonds] = await Promise.all([
     getUserCompte(supabase, user.id),
     getEquipeWithSettingsFromProfile(supabase, user.id),
     getMouvementsRetribution(supabase, user.id, PAGINATION_CONFIG.MOUVEMENTS_RETRIBUTION_LIMIT),
     getUserDemandes(supabase, user.id, 5),
     getMontantNonDepose(supabase, user.id).catch(() => 0),
     getDemandesDepotUtilisateur(supabase, user.id).catch(() => []),
+    getDetailFondsUtilisateur(supabase, user.id).catch(() => ({ total_collecte: 0, total_cb_valide: 0, total_cash_depose: 0, cash_a_deposer: 0 })),
   ]);
 
   const recommandationEquipe = eqWithSettings?.pourcentage_recommande_pot ?? RETRIBUTION_CONFIG.RECOMMANDE_POT_EQUIPE_DEFAULT;
@@ -100,6 +102,11 @@ export default async function MonComptePage() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Détail des fonds collectés - Affiché uniquement si l'utilisateur a des fonds */}
+        {detailFonds.total_collecte > 0 && (
+          <DetailFondsCard detail={detailFonds} />
+        )}
 
         {/* Pot d'équipe (collapsible) - Affiché seulement si équipe ET pot existent */}
         {eqWithSettings && potEquipe && (
