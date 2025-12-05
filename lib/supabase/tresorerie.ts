@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 
 export type TresorerieKPIs = {
     montantCollecteTotal: number;
-    tourneesActives: number;
+    montantTotalDepose: number;
     demandesEnAttente: number;
     soldeTotalPompiers: number;
 };
@@ -35,13 +35,14 @@ export async function getTresorerieKPIs(): Promise<TresorerieKPIs> {
         if (errorTournees) throw errorTournees;
         const montantCollecteTotal = tourneesCompleted?.reduce((sum, t) => sum + (t.montant_collecte || 0), 0) || 0;
 
-        // 2. Tournées actives
-        const { count: tourneesActives, error: errorActives } = await supabase
-            .from('tournees')
-            .select('*', { count: 'exact', head: true })
-            .eq('statut', 'active');
+        // 2. Montant total déposé (somme des dépôts validés)
+        const { data: depotsValides, error: errorDepots } = await supabase
+            .from('demandes_depot_fonds')
+            .select('montant_recu')
+            .eq('statut', 'valide');
 
-        if (errorActives) throw errorActives;
+        if (errorDepots) throw errorDepots;
+        const montantTotalDepose = depotsValides?.reduce((sum, d) => sum + (d.montant_recu || 0), 0) || 0;
 
         // 3. Demandes en attente
         const { count: demandesEnAttente, error: errorDemandes } = await supabase
@@ -61,7 +62,7 @@ export async function getTresorerieKPIs(): Promise<TresorerieKPIs> {
 
         return {
             montantCollecteTotal,
-            tourneesActives: tourneesActives || 0,
+            montantTotalDepose,
             demandesEnAttente: demandesEnAttente || 0,
             soldeTotalPompiers,
         };
@@ -69,7 +70,7 @@ export async function getTresorerieKPIs(): Promise<TresorerieKPIs> {
         console.error('Erreur lors de la récupération des KPIs trésorerie:', error);
         return {
             montantCollecteTotal: 0,
-            tourneesActives: 0,
+            montantTotalDepose: 0,
             demandesEnAttente: 0,
             soldeTotalPompiers: 0,
         };

@@ -163,10 +163,10 @@ export async function validerDemandeDepotAction(input: ValiderDemandeDepotInput)
       return { ok: false as const, error: error.message || 'Erreur lors de la validation' }
     }
 
-    // Récupérer la demande avec le profil utilisateur pour l'email
+    // Récupérer la demande pour l'email
     const { data: demande } = await supabase
       .from('demandes_depot_fonds')
-      .select('user_id, montant_a_deposer, montant_recu, statut, profiles!demandes_depot_fonds_user_id_fkey(full_name)')
+      .select('user_id, montant_a_deposer, montant_recu, statut')
       .eq('id', input.demande_id)
       .single()
 
