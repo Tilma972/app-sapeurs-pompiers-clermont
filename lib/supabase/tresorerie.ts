@@ -19,24 +19,6 @@ export type DemandeVersement = {
     statut: 'en_attente' | 'en_cours' | 'validee' | 'payee' | 'rejetee';
 };
 
-// Type helper pour la réponse de la requête
-type DemandeVersementResponse = {
-    id: string;
-    user_id: string;
-    montant: number;
-    type_versement: 'virement' | 'carte_cadeau';
-    created_at: string;
-    statut: 'en_attente' | 'en_cours' | 'validee' | 'payee' | 'rejetee';
-    profiles: {
-        full_name: string | null;
-        first_name: string | null;
-        last_name: string | null;
-    } | null;
-    equipes: {
-        nom: string;
-    } | null;
-};
-
 /**
  * Récupère les KPIs pour le dashboard trésorerie
  */
