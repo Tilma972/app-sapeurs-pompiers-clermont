@@ -2,29 +2,39 @@ import { createClient } from "@/lib/supabase/server";
 import { Profile, ProfileUpdate } from "@/lib/types/profile";
 
 /**
- * Récupère le profil de l'utilisateur connecté
+ * Récupère le profil de l'utilisateur connecté avec les données de l'équipe
  * Crée automatiquement le profil s'il n'existe pas
+ * OPTIMISATION: Un seul query au lieu de 2 séquentiels (profile + equipe)
  */
 export async function getCurrentUserProfile(): Promise<Profile | null> {
   const supabase = await createClient();
-  
+
   const { data: { user } } = await supabase.auth.getUser();
-  
+
   if (!user) {
     return null;
   }
 
-  // Essayer de récupérer le profil existant
+  // OPTIMISATION: Récupérer le profil avec les données de l'équipe en un seul query (JOIN)
+  // Économie: ~50-100ms par page load
   const { data: profile, error } = await supabase
     .from('profiles')
-    .select('*')
+    .select(`
+      *,
+      equipe:equipes(
+        id,
+        nom,
+        secteur,
+        calendriers_alloues
+      )
+    `)
     .eq('id', user.id)
     .single();
 
   // Si le profil n'existe pas, le créer automatiquement
   if (error && error.code === 'PGRST116') {
     console.log('Profil non trouvé, création automatique...');
-    
+
     const { data: newProfile, error: createError } = await supabase
       .from('profiles')
       .insert({
