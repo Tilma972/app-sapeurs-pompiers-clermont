@@ -54,6 +54,17 @@ export interface EnregistrerDepotDirectInput {
 }
 
 /**
+ * Détail des fonds d'un utilisateur (breakdown complet)
+ * Retourné par la fonction SQL get_detail_fonds_utilisateur()
+ */
+export interface DetailFondsUtilisateur {
+  total_collecte: number
+  total_cb_valide: number
+  total_cash_depose: number
+  cash_a_deposer: number
+}
+
+/**
  * Helper pour formater le statut en français
  */
 export function formatStatutDepot(statut: StatutDemandeDepot): string {
