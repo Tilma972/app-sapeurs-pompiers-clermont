@@ -19,24 +19,6 @@ export type DemandeVersement = {
     statut: 'en_attente' | 'en_cours' | 'validee' | 'payee' | 'rejetee';
 };
 
-// Type helper pour la réponse de la requête
-type DemandeVersementResponse = {
-    id: string;
-    user_id: string;
-    montant: number;
-    type_versement: 'virement' | 'carte_cadeau';
-    created_at: string;
-    statut: 'en_attente' | 'en_cours' | 'validee' | 'payee' | 'rejetee';
-    profiles: {
-        full_name: string | null;
-        first_name: string | null;
-        last_name: string | null;
-    } | null;
-    equipes: {
-        nom: string;
-    } | null;
-};
-
 /**
  * Récupère les KPIs pour le dashboard trésorerie
  */
@@ -101,40 +83,54 @@ export async function getDemandesEnAttente(): Promise<DemandeVersement[]> {
     const supabase = await createClient();
 
     try {
-        const { data, error } = await supabase
+        // Get demandes_versement
+        const { data: demandes, error: demandesError } = await supabase
             .from('demandes_versement')
-            .select(`
-        id,
-        user_id,
-        montant,
-        type_versement,
-        created_at,
-        statut,
-        profiles:user_id (
-          full_name,
-          first_name,
-          last_name
-        ),
-        equipes:equipe_id (
-          nom
-        )
-      `)
+            .select('id, user_id, montant, type_versement, created_at, statut, equipe_id')
             .eq('statut', 'en_attente')
-            .order('created_at', { ascending: true })
-            .returns<DemandeVersementResponse[]>();
+            .order('created_at', { ascending: true });
 
-        if (error) throw error;
+        if (demandesError) throw demandesError;
+        if (!demandes || demandes.length === 0) return [];
 
-        return (data || []).map((d) => ({
-            id: d.id,
-            user_id: d.user_id,
-            user_name: d.profiles?.full_name || `${d.profiles?.first_name || ''} ${d.profiles?.last_name || ''}`.trim() || 'Inconnu',
-            equipe_nom: d.equipes?.nom || null,
-            montant: d.montant,
-            type_versement: d.type_versement as DemandeVersement['type_versement'],
-            created_at: d.created_at,
-            statut: d.statut as DemandeVersement['statut'],
-        }));
+        // Get unique user_ids and equipe_ids
+        const userIds = [...new Set(demandes.map(d => d.user_id))];
+        const equipeIds = [...new Set(demandes.map(d => d.equipe_id).filter(Boolean))];
+
+        // Fetch profiles
+        const { data: profiles } = await supabase
+            .from('profiles')
+            .select('id, full_name, first_name, last_name')
+            .in('id', userIds);
+
+        // Fetch equipes
+        const { data: equipes } = equipeIds.length > 0
+            ? await supabase
+                .from('equipes')
+                .select('id, nom')
+                .in('id', equipeIds)
+            : { data: [] };
+
+        // Create lookup maps
+        const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
+        const equipeMap = new Map(equipes?.map(e => [e.id, e]) || []);
+
+        // Map results
+        return demandes.map((d) => {
+            const profile = profileMap.get(d.user_id);
+            const equipe = d.equipe_id ? equipeMap.get(d.equipe_id) : null;
+
+            return {
+                id: d.id,
+                user_id: d.user_id,
+                user_name: profile?.full_name || `${profile?.first_name || ''} ${profile?.last_name || ''}`.trim() || 'Inconnu',
+                equipe_nom: equipe?.nom || null,
+                montant: d.montant,
+                type_versement: d.type_versement as DemandeVersement['type_versement'],
+                created_at: d.created_at,
+                statut: d.statut as DemandeVersement['statut'],
+            };
+        });
     } catch (error) {
         console.error('Erreur lors de la récupération des demandes en attente:', error);
         return [];
