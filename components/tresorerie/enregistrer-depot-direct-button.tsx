@@ -196,7 +196,7 @@ export function EnregistrerDepotDirectButton() {
               <SelectTrigger>
                 <SelectValue placeholder={isLoadingUsers ? "Chargement..." : "Sélectionner un utilisateur"} />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="max-h-[300px]">
                 {users.map((user) => (
                   <SelectItem key={user.id} value={user.id}>
                     {user.full_name} ({user.montant_non_depose.toFixed(2)}€ à déposer)
