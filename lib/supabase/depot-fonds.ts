@@ -3,7 +3,7 @@
  */
 
 import { SupabaseClient } from '@supabase/supabase-js'
-import { DemandeDepotFonds, DemandeDepotFondsAvecProfile } from '@/lib/types/depot-fonds'
+import { DemandeDepotFonds, DemandeDepotFondsAvecProfile, DetailFondsUtilisateur } from '@/lib/types/depot-fonds'
 
 /**
  * Récupère le montant total non encore déposé pour un utilisateur
@@ -148,4 +148,35 @@ export async function getMontantTotalEnAttente(
 
   const total = data?.reduce((sum, d) => sum + (d.montant_a_deposer || 0), 0) || 0
   return total
+}
+
+/**
+ * Récupère le détail complet des fonds d'un utilisateur
+ * Utilise la fonction SQL get_detail_fonds_utilisateur() qui retourne un breakdown détaillé
+ */
+export async function getDetailFondsUtilisateur(
+  supabase: SupabaseClient,
+  userId: string
+): Promise<DetailFondsUtilisateur> {
+  const { data, error } = await supabase.rpc('get_detail_fonds_utilisateur', {
+    p_user_id: userId,
+  })
+
+  if (error) {
+    console.error('Erreur get_detail_fonds_utilisateur:', error)
+    // Retourner des valeurs par défaut en cas d'erreur
+    return {
+      total_collecte: 0,
+      total_cb_valide: 0,
+      total_cash_depose: 0,
+      cash_a_deposer: 0,
+    }
+  }
+
+  return data || {
+    total_collecte: 0,
+    total_cb_valide: 0,
+    total_cash_depose: 0,
+    cash_a_deposer: 0,
+  }
 }
