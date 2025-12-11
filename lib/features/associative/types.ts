@@ -2,72 +2,147 @@
 // Types & Interfaces - Module Vie de Caserne
 // ============================================
 
-import type { 
-  Event, 
-  EventParticipant, 
-  MoneyPot, 
-  Contribution, 
-  Material, 
-  Loan, 
-  Poll, 
-  PollVote 
-} from '@prisma/client'
+// Enums
+export type EventType = 'AG' | 'SAINTE_BARBE' | 'REPAS_GARDE' | 'SPORT' | 'AUTRE'
+export type EventStatus = 'DRAFT' | 'PLANNED' | 'COMPLETED' | 'CANCELLED'
+export type ParticipationStatus = 'PRESENT' | 'ABSENT' | 'ASTREINTE'
+export type PotStatus = 'ACTIVE' | 'CLOSED' | 'COMPLETED'
+export type ContributionStatus = 'PENDING' | 'COMPLETED' | 'FAILED' | 'REFUNDED'
+export type MaterialCondition = 'NEW' | 'GOOD' | 'USED' | 'DAMAGED' | 'BROKEN'
+export type LoanStatus = 'PENDING' | 'APPROVED' | 'ACTIVE' | 'RETURNED' | 'OVERDUE'
 
-// Re-export des types Prisma
-export type {
-  Event,
-  EventParticipant,
-  MoneyPot,
-  Contribution,
-  Material,
-  Loan,
-  Poll,
-  PollVote,
+// Models
+export interface Event {
+  id: string
+  title: string
+  description: string | null
+  date: Date
+  location: string | null
+  type: EventType
+  status: EventStatus
+  maxParticipants: number | null
+  organizerId: string
+  createdAt: Date
+  updatedAt: Date
 }
 
-// Enums (déjà dans Prisma, mais utiles côté client)
-export const EventTypeLabels = {
+export interface EventParticipant {
+  id: string
+  eventId: string
+  userId: string
+  status: ParticipationStatus
+  guests: number
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface MoneyPot {
+  id: string
+  title: string
+  description: string | null
+  targetAmount: number | null // Decimal in DB, number in JS
+  eventId: string | null
+  status: PotStatus
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface Contribution {
+  id: string
+  moneyPotId: string
+  userId: string
+  amount: number // Decimal in DB
+  message: string | null
+  isAnonymous: boolean
+  stripePaymentId: string | null
+  status: ContributionStatus
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface Material {
+  id: string
+  name: string
+  description: string | null
+  inventoryNumber: string | null
+  condition: MaterialCondition
+  photoUrl: string | null
+  isAvailable: boolean
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface Loan {
+  id: string
+  materialId: string
+  userId: string
+  startDate: Date
+  endDate: Date
+  status: LoanStatus
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface Poll {
+  id: string
+  question: string
+  options: any // Json in DB
+  eventId: string | null
+  expiresAt: Date | null
+  createdAt: Date
+}
+
+export interface PollVote {
+  id: string
+  pollId: string
+  userId: string
+  optionId: string
+  createdAt: Date
+}
+
+// Labels
+export const EventTypeLabels: Record<EventType, string> = {
   AG: 'Assemblée Générale',
   SAINTE_BARBE: 'Sainte-Barbe',
   REPAS_GARDE: 'Repas de Garde',
   SPORT: 'Activité Sportive',
   AUTRE: 'Autre',
-} as const
+}
 
-export const EventStatusLabels = {
+export const EventStatusLabels: Record<EventStatus, string> = {
   DRAFT: 'Brouillon',
   PLANNED: 'Planifié',
   COMPLETED: 'Terminé',
   CANCELLED: 'Annulé',
-} as const
+}
 
-export const ParticipationStatusLabels = {
+export const ParticipationStatusLabels: Record<ParticipationStatus, string> = {
   PRESENT: 'Présent',
   ABSENT: 'Absent',
   ASTREINTE: 'Astreinte',
-} as const
+}
 
-export const PotStatusLabels = {
+export const PotStatusLabels: Record<PotStatus, string> = {
   ACTIVE: 'En cours',
   CLOSED: 'Clôturée',
   COMPLETED: 'Objectif atteint',
-} as const
+}
 
-export const MaterialConditionLabels = {
+export const MaterialConditionLabels: Record<MaterialCondition, string> = {
   NEW: 'Neuf',
   GOOD: 'Bon état',
   USED: 'Usagé',
   DAMAGED: 'Endommagé',
   BROKEN: 'Hors service',
-} as const
+}
 
-export const LoanStatusLabels = {
+export const LoanStatusLabels: Record<LoanStatus, string> = {
   PENDING: 'En attente',
   APPROVED: 'Approuvé',
   ACTIVE: 'En cours',
   RETURNED: 'Rendu',
   OVERDUE: 'En retard',
-} as const
+}
 
 // Types enrichis avec relations
 export type EventWithDetails = Event & {
@@ -107,7 +182,7 @@ export interface CreateEventInput {
   description?: string
   date: Date
   location?: string
-  type: 'AG' | 'SAINTE_BARBE' | 'REPAS_GARDE' | 'SPORT' | 'AUTRE'
+  type: EventType
   maxParticipants?: number
   createMoneyPot?: boolean
   moneyPotTitle?: string
@@ -116,7 +191,7 @@ export interface CreateEventInput {
 
 export interface UpdateParticipationInput {
   eventId: string
-  status: 'PRESENT' | 'ABSENT' | 'ASTREINTE'
+  status: ParticipationStatus
   guests?: number
 }
 
@@ -138,7 +213,7 @@ export interface CreateMaterialInput {
   name: string
   description?: string
   inventoryNumber?: string
-  condition: 'NEW' | 'GOOD' | 'USED' | 'DAMAGED' | 'BROKEN'
+  condition: MaterialCondition
   photoUrl?: string
 }
 

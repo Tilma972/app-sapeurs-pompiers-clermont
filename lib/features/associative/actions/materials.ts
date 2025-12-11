@@ -6,13 +6,14 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import prisma from '@/lib/prisma'
 import { createClient } from '@/lib/supabase/server'
-import type { 
-  CreateMaterialInput, 
+import type {
+  CreateMaterialInput,
   RequestLoanInput,
-  ActionResult, 
-  MaterialWithLoans 
+  ActionResult,
+  MaterialWithLoans,
+  Material,
+  Loan
 } from '../types'
 
 /**
@@ -27,36 +28,63 @@ async function getCurrentUser() {
   return user
 }
 
+// Helpers
+function mapMaterialDates(m: any): Material {
+  return {
+    ...m,
+    createdAt: new Date(m.createdAt),
+    updatedAt: new Date(m.updatedAt),
+  }
+}
+
+function mapLoanDates(l: any): Loan {
+  return {
+    ...l,
+    startDate: new Date(l.startDate),
+    endDate: new Date(l.endDate),
+    createdAt: new Date(l.createdAt),
+    updatedAt: new Date(l.updatedAt),
+  }
+}
+
 /**
  * Ajouter un nouveau matériel à l'inventaire
  */
 export async function createMaterial(
   input: CreateMaterialInput
 ): Promise<ActionResult<MaterialWithLoans>> {
+  const supabase = await createClient()
   try {
     await getCurrentUser()
 
-    const material = await prisma.material.create({
-      data: {
+    const { data: material, error } = await supabase
+      .from('associative_materials')
+      .insert({
         name: input.name,
         description: input.description,
         inventoryNumber: input.inventoryNumber,
         condition: input.condition,
         photoUrl: input.photoUrl,
         isAvailable: true,
-      },
-      include: {
-        loans: true,
-      }
-    })
+      })
+      .select()
+      .single()
 
-    revalidatePath('/dashboard/vie-caserne/materiel')
-    return { success: true, data: material }
+    if (error || !material) throw new Error(error?.message || 'Erreur création matériel')
+
+    const result: MaterialWithLoans = {
+      ...mapMaterialDates(material),
+      loans: [],
+      currentLoan: null
+    }
+
+    revalidatePath('/associative')
+    return { success: true, data: result }
   } catch (error) {
     console.error('Erreur création matériel:', error)
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Erreur inconnue' 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Erreur inconnue'
     }
   }
 }
@@ -65,26 +93,37 @@ export async function createMaterial(
  * Récupérer tout le matériel avec statut de disponibilité
  */
 export async function getAllMaterials(): Promise<MaterialWithLoans[]> {
-  const materials = await prisma.material.findMany({
-    include: {
-      loans: {
-        where: {
-          status: { in: ['APPROVED', 'ACTIVE'] },
-          endDate: { gte: new Date() }
-        },
-        orderBy: { startDate: 'asc' }
-      }
-    },
-    orderBy: { name: 'asc' }
-  })
+  const supabase = await createClient()
 
-  return materials.map(m => ({
-    ...m,
-    currentLoan: m.loans.find(l => 
-      l.status === 'ACTIVE' || 
-      (l.status === 'APPROVED' && new Date(l.startDate) <= new Date())
-    ) || null
-  }))
+  const { data, error } = await supabase
+    .from('associative_materials')
+    .select(`
+      *,
+      loans:associative_loans(*)
+    `)
+    .order('name', { ascending: true })
+
+  if (error || !data) return []
+
+  return data.map((m: any) => {
+    // Filtrer et trier les prêts pertinents
+    const loans = (m.loans || [])
+      .filter((l: any) =>
+        ['APPROVED', 'ACTIVE'].includes(l.status) &&
+        new Date(l.endDate) >= new Date()
+      )
+      .map(mapLoanDates)
+      .sort((a: Loan, b: Loan) => a.startDate.getTime() - b.startDate.getTime())
+
+    return {
+      ...mapMaterialDates(m),
+      loans,
+      currentLoan: loans.find((l: Loan) =>
+        l.status === 'ACTIVE' ||
+        (l.status === 'APPROVED' && l.startDate <= new Date())
+      ) || null
+    }
+  })
 }
 
 /**
@@ -94,31 +133,39 @@ export async function getAvailableMaterials(
   startDate: Date,
   endDate: Date
 ): Promise<MaterialWithLoans[]> {
-  // Récupérer les matériels qui n'ont pas de prêt actif sur la période
-  const materials = await prisma.material.findMany({
-    where: {
-      isAvailable: true,
-      condition: { not: 'BROKEN' },
-    },
-    include: {
-      loans: {
-        where: {
-          status: { in: ['APPROVED', 'ACTIVE'] },
-          OR: [
-            {
-              startDate: { lte: endDate },
-              endDate: { gte: startDate }
-            }
-          ]
-        }
-      }
-    }
-  })
+  const supabase = await createClient()
 
-  // Filtrer ceux qui n'ont pas de conflit
-  return materials
-    .filter(m => m.loans.length === 0)
-    .map(m => ({ ...m, currentLoan: null }))
+  // Récupérer les matériels qui n'ont pas de prêt actif sur la période
+  // On récupère tout et on filtre en JS car la logique de chevauchement de dates est complexe en simple query Supabase sans RPC
+  const { data, error } = await supabase
+    .from('associative_materials')
+    .select(`
+      *,
+      loans:associative_loans(*)
+    `)
+    .eq('isAvailable', true)
+    .neq('condition', 'BROKEN')
+
+  if (error || !data) return []
+
+  const start = new Date(startDate)
+  const end = new Date(endDate)
+
+  return data
+    .map((m: any) => ({
+      ...mapMaterialDates(m),
+      loans: (m.loans || []).map(mapLoanDates)
+    }))
+    .filter((m: MaterialWithLoans) => {
+      const conflictingLoan = m.loans.find(l =>
+        ['APPROVED', 'ACTIVE'].includes(l.status) &&
+        (
+          (l.startDate <= end && l.endDate >= start)
+        )
+      )
+      return !conflictingLoan
+    })
+    .map((m: MaterialWithLoans) => ({ ...m, currentLoan: null }))
 }
 
 /**
@@ -127,13 +174,16 @@ export async function getAvailableMaterials(
 export async function requestLoan(
   input: RequestLoanInput
 ): Promise<ActionResult> {
+  const supabase = await createClient()
   try {
     const user = await getCurrentUser()
 
     // Vérifier que le matériel existe et est disponible
-    const material = await prisma.material.findUnique({
-      where: { id: input.materialId }
-    })
+    const { data: material } = await supabase
+      .from('associative_materials')
+      .select('*')
+      .eq('id', input.materialId)
+      .single()
 
     if (!material) {
       return { success: false, error: 'Matériel non trouvé' }
@@ -144,37 +194,40 @@ export async function requestLoan(
     }
 
     // Vérifier qu'il n'y a pas de conflit avec un autre prêt
-    const conflictingLoan = await prisma.loan.findFirst({
-      where: {
-        materialId: input.materialId,
-        status: { in: ['APPROVED', 'ACTIVE'] },
-        startDate: { lte: input.endDate },
-        endDate: { gte: input.startDate }
-      }
-    })
+    // On utilise une requête pour vérifier le chevauchement
+    const { data: conflicts } = await supabase
+      .from('associative_loans')
+      .select('id')
+      .eq('materialId', input.materialId)
+      .in('status', ['APPROVED', 'ACTIVE'])
+      .lte('startDate', input.endDate.toISOString())
+      .gte('endDate', input.startDate.toISOString())
+      .limit(1)
 
-    if (conflictingLoan) {
+    if (conflicts && conflicts.length > 0) {
       return { success: false, error: 'Le matériel est déjà réservé pour cette période' }
     }
 
     // Créer la demande de prêt
-    await prisma.loan.create({
-      data: {
+    const { error } = await supabase
+      .from('associative_loans')
+      .insert({
         materialId: input.materialId,
         userId: user.id,
-        startDate: input.startDate,
-        endDate: input.endDate,
+        startDate: input.startDate.toISOString(),
+        endDate: input.endDate.toISOString(),
         status: 'PENDING',
-      }
-    })
+      })
 
-    revalidatePath('/dashboard/vie-caserne/materiel')
+    if (error) throw error
+
+    revalidatePath('/associative')
     return { success: true }
   } catch (error) {
     console.error('Erreur demande emprunt:', error)
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Erreur inconnue' 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Erreur inconnue'
     }
   }
 }
@@ -183,12 +236,15 @@ export async function requestLoan(
  * Approuver un emprunt (admin/bureau)
  */
 export async function approveLoan(loanId: string): Promise<ActionResult> {
+  const supabase = await createClient()
   try {
     await getCurrentUser()
 
-    const loan = await prisma.loan.findUnique({
-      where: { id: loanId }
-    })
+    const { data: loan } = await supabase
+      .from('associative_loans')
+      .select('status')
+      .eq('id', loanId)
+      .single()
 
     if (!loan) {
       return { success: false, error: 'Emprunt non trouvé' }
@@ -198,18 +254,20 @@ export async function approveLoan(loanId: string): Promise<ActionResult> {
       return { success: false, error: 'Cet emprunt a déjà été traité' }
     }
 
-    await prisma.loan.update({
-      where: { id: loanId },
-      data: { status: 'APPROVED' }
-    })
+    const { error } = await supabase
+      .from('associative_loans')
+      .update({ status: 'APPROVED' })
+      .eq('id', loanId)
 
-    revalidatePath('/dashboard/vie-caserne/materiel')
+    if (error) throw error
+
+    revalidatePath('/associative')
     return { success: true }
   } catch (error) {
     console.error('Erreur approbation emprunt:', error)
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Erreur inconnue' 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Erreur inconnue'
     }
   }
 }
@@ -218,19 +276,22 @@ export async function approveLoan(loanId: string): Promise<ActionResult> {
  * Marquer un emprunt comme actif (matériel récupéré)
  */
 export async function activateLoan(loanId: string): Promise<ActionResult> {
+  const supabase = await createClient()
   try {
-    await prisma.loan.update({
-      where: { id: loanId },
-      data: { status: 'ACTIVE' }
-    })
+    const { error } = await supabase
+      .from('associative_loans')
+      .update({ status: 'ACTIVE' })
+      .eq('id', loanId)
 
-    revalidatePath('/dashboard/vie-caserne/materiel')
+    if (error) throw error
+
+    revalidatePath('/associative')
     return { success: true }
   } catch (error) {
     console.error('Erreur activation emprunt:', error)
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Erreur inconnue' 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Erreur inconnue'
     }
   }
 }
@@ -242,39 +303,44 @@ export async function returnLoan(
   loanId: string,
   newCondition?: 'NEW' | 'GOOD' | 'USED' | 'DAMAGED' | 'BROKEN'
 ): Promise<ActionResult> {
+  const supabase = await createClient()
   try {
-    const loan = await prisma.loan.findUnique({
-      where: { id: loanId }
-    })
+    const { data: loan } = await supabase
+      .from('associative_loans')
+      .select('materialId')
+      .eq('id', loanId)
+      .single()
 
     if (!loan) {
       return { success: false, error: 'Emprunt non trouvé' }
     }
 
     // Mettre à jour le prêt
-    await prisma.loan.update({
-      where: { id: loanId },
-      data: { status: 'RETURNED' }
-    })
+    const { error: loanError } = await supabase
+      .from('associative_loans')
+      .update({ status: 'RETURNED' })
+      .eq('id', loanId)
+
+    if (loanError) throw loanError
 
     // Mettre à jour l'état du matériel si spécifié
     if (newCondition) {
-      await prisma.material.update({
-        where: { id: loan.materialId },
-        data: { 
+      await supabase
+        .from('associative_materials')
+        .update({
           condition: newCondition,
           isAvailable: newCondition !== 'BROKEN'
-        }
-      })
+        })
+        .eq('id', loan.materialId)
     }
 
-    revalidatePath('/dashboard/vie-caserne/materiel')
+    revalidatePath('/associative')
     return { success: true }
   } catch (error) {
     console.error('Erreur retour emprunt:', error)
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Erreur inconnue' 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Erreur inconnue'
     }
   }
 }
@@ -283,59 +349,89 @@ export async function returnLoan(
  * Récupérer mes emprunts
  */
 export async function getMyLoans() {
+  const supabase = await createClient()
   const user = await getCurrentUser()
 
-  return prisma.loan.findMany({
-    where: { userId: user.id },
-    include: {
-      material: true,
-    },
-    orderBy: { createdAt: 'desc' }
-  })
+  const { data, error } = await supabase
+    .from('associative_loans')
+    .select(`
+      *,
+      material:associative_materials(*)
+    `)
+    .eq('userId', user.id)
+    .order('createdAt', { ascending: false })
+
+  if (error || !data) return []
+
+  return data.map((l: any) => ({
+    ...mapLoanDates(l),
+    material: mapMaterialDates(l.material)
+  }))
 }
 
 /**
  * Récupérer les emprunts en attente (pour admin)
  */
 export async function getPendingLoans() {
-  return prisma.loan.findMany({
-    where: { status: 'PENDING' },
-    include: {
-      material: true,
-    },
-    orderBy: { createdAt: 'asc' }
-  })
+  const supabase = await createClient()
+
+  const { data, error } = await supabase
+    .from('associative_loans')
+    .select(`
+      *,
+      material:associative_materials(*)
+    `)
+    .eq('status', 'PENDING')
+    .order('createdAt', { ascending: true })
+
+  if (error || !data) return []
+
+  return data.map((l: any) => ({
+    ...mapLoanDates(l),
+    material: mapMaterialDates(l.material)
+  }))
 }
 
 /**
  * Récupérer le calendrier des emprunts pour un matériel
  */
 export async function getMaterialCalendar(materialId: string) {
-  return prisma.loan.findMany({
-    where: {
-      materialId,
-      status: { in: ['APPROVED', 'ACTIVE'] },
-      endDate: { gte: new Date() }
-    },
-    orderBy: { startDate: 'asc' }
-  })
+  const supabase = await createClient()
+
+  const { data, error } = await supabase
+    .from('associative_loans')
+    .select('*')
+    .eq('materialId', materialId)
+    .in('status', ['APPROVED', 'ACTIVE'])
+    .gte('endDate', new Date().toISOString())
+    .order('startDate', { ascending: true })
+
+  if (error || !data) return []
+
+  return data.map(mapLoanDates)
 }
 
 /**
  * Statistiques du matériel
  */
 export async function getMaterialStats() {
+  const supabase = await createClient()
+
   const [total, available, activeLoans, pendingLoans] = await Promise.all([
-    prisma.material.count(),
-    prisma.material.count({ 
-      where: { 
-        isAvailable: true, 
-        condition: { not: 'BROKEN' } 
-      } 
-    }),
-    prisma.loan.count({ where: { status: 'ACTIVE' } }),
-    prisma.loan.count({ where: { status: 'PENDING' } })
+    supabase.from('associative_materials').select('*', { count: 'exact', head: true }),
+    supabase.from('associative_materials').select('*', { count: 'exact', head: true })
+      .eq('isAvailable', true)
+      .neq('condition', 'BROKEN'),
+    supabase.from('associative_loans').select('*', { count: 'exact', head: true })
+      .eq('status', 'ACTIVE'),
+    supabase.from('associative_loans').select('*', { count: 'exact', head: true })
+      .eq('status', 'PENDING')
   ])
 
-  return { total, available, activeLoans, pendingLoans }
+  return {
+    total: total.count || 0,
+    available: available.count || 0,
+    activeLoans: activeLoans.count || 0,
+    pendingLoans: pendingLoans.count || 0
+  }
 }
