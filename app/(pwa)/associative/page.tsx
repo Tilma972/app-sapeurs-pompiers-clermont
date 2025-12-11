@@ -11,9 +11,6 @@ import {
   getActiveMoneyPots,
   getAllMaterials,
   getActivePolls,
-  getEventsStats,
-  getMoneyPotsStats,
-  getMaterialStats,
 } from '@/lib/features/associative'
 
 import {
@@ -21,12 +18,94 @@ import {
   MoneyPotsTab,
   MaterialsTab,
   PollsTab,
-  StatsCards
+  RecentActivitiesFeed,
+  type RecentActivity
 } from '@/components/associative'
 
 export const metadata = {
   title: 'Vie de Caserne | Amicale SP',
   description: 'Gérez les événements, cagnottes et emprunts de matériel de l\'amicale',
+}
+
+// Helper pour créer le feed des nouveautés
+function buildRecentActivities(
+  events: any[],
+  moneyPots: any[],
+  polls: any[]
+): RecentActivity[] {
+  const activities: RecentActivity[] = []
+  const now = new Date()
+  const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+
+  // Nouveaux événements (créés dans les 7 derniers jours)
+  events
+    .filter(e => new Date(e.createdAt) > sevenDaysAgo)
+    .slice(0, 3)
+    .forEach(event => {
+      activities.push({
+        id: `event-${event.id}`,
+        type: 'event',
+        title: event.title,
+        subtitle: `Le ${new Date(event.date).toLocaleDateString('fr-FR')}`,
+        date: new Date(event.createdAt),
+        actionLabel: 'Participer',
+        actionUrl: '/associative#events',
+        metadata: {
+          participants: event.participants?.length || 0
+        }
+      })
+    })
+
+  // Cagnottes actives (nouvelles ou proches de l'objectif)
+  moneyPots
+    .filter(pot => {
+      const isNew = new Date(pot.createdAt) > sevenDaysAgo
+      const progress = pot.targetAmount ? (pot.totalCollected / Number(pot.targetAmount)) * 100 : 0
+      return isNew || progress > 75
+    })
+    .slice(0, 2)
+    .forEach(pot => {
+      const progress = pot.targetAmount ? Math.round((pot.totalCollected / Number(pot.targetAmount)) * 100) : 0
+      activities.push({
+        id: `pot-${pot.id}`,
+        type: 'money_pot',
+        title: pot.title,
+        subtitle: pot.targetAmount ? `${pot.totalCollected}€ / ${pot.targetAmount}€` : undefined,
+        date: new Date(pot.createdAt),
+        actionLabel: 'Contribuer',
+        actionUrl: '/associative#pots',
+        metadata: { progress }
+      })
+    })
+
+  // Sondages actifs (expiration proche)
+  polls
+    .filter(poll => {
+      if (!poll.expiresAt) return false
+      const expiresAt = new Date(poll.expiresAt)
+      const threeDaysFromNow = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000)
+      return expiresAt > now && expiresAt < threeDaysFromNow
+    })
+    .slice(0, 2)
+    .forEach(poll => {
+      activities.push({
+        id: `poll-${poll.id}`,
+        type: 'poll',
+        title: poll.question,
+        subtitle: poll.expiresAt ? `Expire le ${new Date(poll.expiresAt).toLocaleDateString('fr-FR')}` : undefined,
+        date: new Date(poll.createdAt),
+        actionLabel: 'Voter',
+        actionUrl: '/associative#polls',
+        metadata: {
+          votes: poll._count?.votes || 0
+        }
+      })
+    })
+
+  // Tri par date décroissante et limite à 5
+  return activities
+    .sort((a, b) => b.date.getTime() - a.date.getTime())
+    .slice(0, 5)
 }
 
 export default async function AssociativePage() {
@@ -43,18 +122,27 @@ export default async function AssociativePage() {
     moneyPots,
     materials,
     polls,
-    eventsStats,
-    potsStats,
-    materialStats,
   ] = await Promise.all([
     getEvents({ upcoming: true, pageSize: 10 }),
     getActiveMoneyPots(),
     getAllMaterials(),
     getActivePolls(),
-    getEventsStats(),
-    getMoneyPotsStats(),
-    getMaterialStats(),
   ])
+
+  // Construire le feed des nouveautés
+  const recentActivities = buildRecentActivities(
+    eventsData.items,
+    moneyPots,
+    polls
+  )
+
+  // Compter les items actifs pour les badges
+  const upcomingEventsCount = eventsData.items.filter(e =>
+    new Date(e.date) >= new Date() && e.status !== 'CANCELLED'
+  ).length
+  const activePotsCount = moneyPots.length
+  const availableMaterialsCount = materials.filter(m => m.isAvailable).length
+  const activePollsCount = polls.length
 
   return (
     <PwaContainer>
@@ -67,29 +155,37 @@ export default async function AssociativePage() {
           </p>
         </div>
 
-        {/* Stats Overview */}
-        <Suspense fallback={<StatsCardsSkeleton />}>
-          <StatsCards
-            events={eventsStats}
-            pots={potsStats}
-            materials={materialStats}
-          />
+        {/* Recent Activities Feed */}
+        <Suspense fallback={<RecentActivitiesSkeleton />}>
+          <RecentActivitiesFeed activities={recentActivities} />
         </Suspense>
 
-        {/* Tabs */}
+        {/* Tabs with Counters */}
         <Tabs defaultValue="events" className="space-y-6">
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="events" className="flex items-center gap-2">
               📅 <span className="hidden sm:inline">Événements</span>
+              {upcomingEventsCount > 0 && (
+                <span className="ml-1 text-xs">({upcomingEventsCount})</span>
+              )}
             </TabsTrigger>
             <TabsTrigger value="pots" className="flex items-center gap-2">
               💰 <span className="hidden sm:inline">Cagnottes</span>
+              {activePotsCount > 0 && (
+                <span className="ml-1 text-xs">({activePotsCount})</span>
+              )}
             </TabsTrigger>
             <TabsTrigger value="materials" className="flex items-center gap-2">
               📦 <span className="hidden sm:inline">Matériel</span>
+              {availableMaterialsCount > 0 && (
+                <span className="ml-1 text-xs">({availableMaterialsCount})</span>
+              )}
             </TabsTrigger>
             <TabsTrigger value="polls" className="flex items-center gap-2">
               📊 <span className="hidden sm:inline">Sondages</span>
+              {activePollsCount > 0 && (
+                <span className="ml-1 text-xs">({activePollsCount})</span>
+              )}
             </TabsTrigger>
           </TabsList>
 
@@ -120,10 +216,11 @@ export default async function AssociativePage() {
   )
 }
 
-function StatsCardsSkeleton() {
+function RecentActivitiesSkeleton() {
   return (
-    <div className="grid gap-4 md:grid-cols-4">
-      {Array.from({ length: 4 }).map((_, i) => (
+    <div className="space-y-3">
+      <Skeleton className="h-6 w-48" />
+      {Array.from({ length: 3 }).map((_, i) => (
         <Skeleton key={i} className="h-24 rounded-lg" />
       ))}
     </div>
