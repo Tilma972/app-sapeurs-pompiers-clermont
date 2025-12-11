@@ -21,15 +21,19 @@ BEGIN
     WHERE user_id = p_user_id
     AND statut = 'completed';
 
-    -- 2. Total des paiements CB validés (succeeded) pour les tournées de cet utilisateur
+    -- 2. Total des paiements CB validés (completed) pour les tournées de cet utilisateur
     -- Ces montants sont déjà sécurisés via Stripe, pas besoin de les déposer
-    SELECT COALESCE(SUM(cp.amount), 0)
+    -- On utilise support_transactions et on filtre sur source='terrain' ET payment_method='carte'
+    -- (Exclusion des espèces qui génèrent des reçus mais doivent être déposées physiquement)
+    SELECT COALESCE(SUM(st.amount), 0)
     INTO v_total_cb
-    FROM public.card_payments cp
-    INNER JOIN public.tournees t ON t.id = cp.tournee_id
+    FROM public.support_transactions st
+    INNER JOIN public.tournees t ON t.id = st.tournee_id
     WHERE t.user_id = p_user_id
     AND t.statut = 'completed'
-    AND cp.status = 'succeeded';
+    AND st.payment_status = 'completed'
+    AND st.source = 'terrain'
+    AND st.payment_method = 'carte';
 
     -- 3. Total déjà déposé en cash (demandes validées)
     SELECT COALESCE(SUM(montant_recu), 0)
@@ -50,7 +54,7 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 COMMENT ON FUNCTION public.get_montant_non_depose(UUID) IS
 'Calcule le montant cash non encore déposé pour un utilisateur.
 Formule: (Total collecté - Paiements CB validés) - Dépôts cash validés
-Les paiements CB (Stripe) avec status=succeeded sont considérés comme déjà sécurisés.';
+Les paiements CB (Stripe) via support_transactions (source=terrain, method=carte) avec status=completed sont considérés comme déjà sécurisés.';
 
 -- Fonction complémentaire pour obtenir le détail des fonds (optionnel, pour UI améliorée)
 CREATE OR REPLACE FUNCTION public.get_detail_fonds_utilisateur(p_user_id UUID)
@@ -70,13 +74,15 @@ BEGIN
     AND statut = 'completed';
 
     -- 2. Total CB validés
-    SELECT COALESCE(SUM(cp.amount), 0)
+    SELECT COALESCE(SUM(st.amount), 0)
     INTO v_total_cb
-    FROM public.card_payments cp
-    INNER JOIN public.tournees t ON t.id = cp.tournee_id
+    FROM public.support_transactions st
+    INNER JOIN public.tournees t ON t.id = st.tournee_id
     WHERE t.user_id = p_user_id
     AND t.statut = 'completed'
-    AND cp.status = 'succeeded';
+    AND st.payment_status = 'completed'
+    AND st.source = 'terrain'
+    AND st.payment_method = 'carte';
 
     -- 3. Total cash déposé
     SELECT COALESCE(SUM(montant_recu), 0)
