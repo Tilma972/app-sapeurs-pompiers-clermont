@@ -1,5 +1,0 @@
-export { StatsCards } from './stats-cards'
-export { EventsTab } from './events-tab'
-export { MoneyPotsTab } from './money-pots-tab'
-export { MaterialsTab } from './materials-tab'
-export { PollsTab } from './polls-tab'
