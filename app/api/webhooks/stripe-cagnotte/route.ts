@@ -6,7 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { getStripe } from '@/lib/stripe/client'
-import prisma from '@/lib/prisma'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET_CAGNOTTE
 
@@ -34,11 +34,14 @@ export async function POST(request: NextRequest) {
     )
   }
 
+  // Utiliser le client admin pour contourner les RLS (car pas de session utilisateur ici)
+  const supabase = createAdminClient()
+
   try {
     switch (event.type) {
       case 'payment_intent.succeeded': {
         const paymentIntent = event.data.object as Stripe.PaymentIntent
-        
+
         // Vérifier que c'est bien un paiement de cagnotte
         if (paymentIntent.metadata.type !== 'cagnotte') {
           break
@@ -52,37 +55,57 @@ export async function POST(request: NextRequest) {
         }
 
         // Mettre à jour la contribution
-        await prisma.contribution.update({
-          where: { id: contributionId },
-          data: { 
+        const { error: updateError } = await supabase
+          .from('associative_contributions')
+          .update({
             status: 'COMPLETED',
             stripePaymentId: paymentIntent.id,
-          }
-        })
+          })
+          .eq('id', contributionId)
+
+        if (updateError) {
+          console.error('Error updating contribution:', updateError)
+          break
+        }
 
         // Vérifier si l'objectif de la cagnotte est atteint
-        const contribution = await prisma.contribution.findUnique({
-          where: { id: contributionId },
-          include: { moneyPot: true }
-        })
+        const { data: contribution } = await supabase
+          .from('associative_contributions')
+          .select(`
+            moneyPotId,
+            moneyPot:associative_money_pots(targetAmount)
+          `)
+          .eq('id', contributionId)
+          .single()
 
-        if (contribution?.moneyPot?.targetAmount) {
-          const totalCollected = await prisma.contribution.aggregate({
-            where: { 
-              moneyPotId: contribution.moneyPotId,
-              status: 'COMPLETED'
-            },
-            _sum: { amount: true }
-          })
+        if (contribution) {
+          // Supabase JS client can sometimes return an array for nested relations depending on inference
+          // Safe access to handle both object and array
+          const moneyPot = Array.isArray(contribution.moneyPot)
+            ? contribution.moneyPot[0]
+            : contribution.moneyPot
 
-          const total = Number(totalCollected._sum.amount || 0)
-          const target = Number(contribution.moneyPot.targetAmount)
+          if (moneyPot?.targetAmount) {
+            // Calculer le total collecté
+            const { data: contributions } = await supabase
+              .from('associative_contributions')
+              .select('amount')
+              .eq('moneyPotId', contribution.moneyPotId)
+              .eq('status', 'COMPLETED')
 
-          if (total >= target) {
-            await prisma.moneyPot.update({
-              where: { id: contribution.moneyPotId },
-              data: { status: 'COMPLETED' }
-            })
+            const total = (contributions || []).reduce(
+              (sum, c: any) => sum + Number(c.amount),
+              0
+            )
+
+            const target = Number(moneyPot.targetAmount)
+
+            if (total >= target) {
+              await supabase
+                .from('associative_money_pots')
+                .update({ status: 'COMPLETED' })
+                .eq('id', contribution.moneyPotId)
+            }
           }
         }
 
@@ -92,7 +115,7 @@ export async function POST(request: NextRequest) {
 
       case 'payment_intent.payment_failed': {
         const paymentIntent = event.data.object as Stripe.PaymentIntent
-        
+
         if (paymentIntent.metadata.type !== 'cagnotte') {
           break
         }
@@ -100,10 +123,11 @@ export async function POST(request: NextRequest) {
         const contributionId = paymentIntent.metadata.contributionId
 
         if (contributionId) {
-          await prisma.contribution.update({
-            where: { id: contributionId },
-            data: { status: 'FAILED' }
-          })
+          await supabase
+            .from('associative_contributions')
+            .update({ status: 'FAILED' })
+            .eq('id', contributionId)
+
           console.log(`❌ Contribution ${contributionId} échouée`)
         }
         break
@@ -116,15 +140,18 @@ export async function POST(request: NextRequest) {
         if (!paymentIntentId) break
 
         // Trouver la contribution associée
-        const contribution = await prisma.contribution.findFirst({
-          where: { stripePaymentId: paymentIntentId }
-        })
+        const { data: contribution } = await supabase
+          .from('associative_contributions')
+          .select('id')
+          .eq('stripePaymentId', paymentIntentId)
+          .single()
 
         if (contribution) {
-          await prisma.contribution.update({
-            where: { id: contribution.id },
-            data: { status: 'REFUNDED' }
-          })
+          await supabase
+            .from('associative_contributions')
+            .update({ status: 'REFUNDED' })
+            .eq('id', contribution.id)
+
           console.log(`🔄 Contribution ${contribution.id} remboursée`)
         }
         break
