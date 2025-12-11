@@ -7,15 +7,17 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import prisma from '@/lib/prisma'
 import { createClient } from '@/lib/supabase/server'
 import { getStripe } from '@/lib/stripe/client'
-import type { 
-  CreateMoneyPotInput, 
+import type {
+  CreateMoneyPotInput,
   ContributeToPotInput,
-  ActionResult, 
+  ActionResult,
   MoneyPotWithDetails,
-  ContributionPaymentResult 
+  ContributionPaymentResult,
+  MoneyPot,
+  Contribution,
+  Event
 } from '../types'
 
 /**
@@ -30,35 +32,76 @@ async function getCurrentUser() {
   return user
 }
 
+// Helpers pour convertir les dates
+function mapMoneyPotDates(mp: any): MoneyPot {
+  return {
+    ...mp,
+    createdAt: new Date(mp.createdAt),
+    updatedAt: new Date(mp.updatedAt),
+  }
+}
+
+function mapContributionDates(c: any): Contribution {
+  return {
+    ...c,
+    createdAt: new Date(c.createdAt),
+    updatedAt: new Date(c.updatedAt),
+  }
+}
+
+function mapEventDates(e: any): Event {
+  return {
+    ...e,
+    date: new Date(e.date),
+    createdAt: new Date(e.createdAt),
+    updatedAt: new Date(e.updatedAt),
+  }
+}
+
 /**
  * Créer une nouvelle cagnotte
  */
 export async function createMoneyPot(
   input: CreateMoneyPotInput
 ): Promise<ActionResult<MoneyPotWithDetails>> {
+  const supabase = await createClient()
   try {
     await getCurrentUser()
 
-    const pot = await prisma.moneyPot.create({
-      data: {
+    const { data: potData, error } = await supabase
+      .from('associative_money_pots')
+      .insert({
         title: input.title,
         description: input.description,
         targetAmount: input.targetAmount,
         eventId: input.eventId,
-      },
-      include: {
-        event: true,
-        contributions: true,
-      }
-    })
+      })
+      .select(`
+        *,
+        event:associative_events(*)
+      `)
+      .single()
 
-    revalidatePath('/dashboard/vie-caserne')
-    return { success: true, data: pot }
+    if (error || !potData) throw new Error(error?.message || 'Erreur création cagnotte')
+
+    const pot = mapMoneyPotDates(potData)
+    const event = potData.event ? mapEventDates(potData.event) : null
+
+    const result: MoneyPotWithDetails = {
+      ...pot,
+      event,
+      contributions: [],
+      _count: { contributions: 0 },
+      totalCollected: 0
+    }
+
+    revalidatePath('/associative')
+    return { success: true, data: result }
   } catch (error) {
     console.error('Erreur création cagnotte:', error)
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Erreur inconnue' 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Erreur inconnue'
     }
   }
 }
@@ -67,54 +110,78 @@ export async function createMoneyPot(
  * Récupérer toutes les cagnottes actives
  */
 export async function getActiveMoneyPots(): Promise<MoneyPotWithDetails[]> {
-  const pots = await prisma.moneyPot.findMany({
-    where: { status: 'ACTIVE' },
-    include: {
-      event: true,
-      contributions: {
-        where: { status: 'COMPLETED' }
-      },
-      _count: {
-        select: { contributions: true }
-      }
-    },
-    orderBy: { createdAt: 'desc' }
-  })
+  const supabase = await createClient()
 
-  // Calculer le total collecté pour chaque cagnotte
-  return pots.map(pot => ({
-    ...pot,
-    totalCollected: pot.contributions.reduce(
-      (sum, c) => sum + Number(c.amount), 
-      0
-    )
-  }))
+  const { data, error } = await supabase
+    .from('associative_money_pots')
+    .select(`
+      *,
+      event:associative_events(*),
+      contributions:associative_contributions(*)
+    `)
+    .eq('status', 'ACTIVE')
+    .eq('contributions.status', 'COMPLETED')
+    .order('createdAt', { ascending: false })
+
+  if (error || !data) {
+    console.error('Erreur récupération cagnottes:', error)
+    return []
+  }
+
+  return data.map((pot: any) => {
+    const contributions = (pot.contributions || []).map(mapContributionDates)
+    return {
+      ...mapMoneyPotDates(pot),
+      event: pot.event ? mapEventDates(pot.event) : null,
+      contributions,
+      _count: {
+        contributions: contributions.length
+      },
+      totalCollected: contributions.reduce(
+        (sum: number, c: Contribution) => sum + Number(c.amount),
+        0
+      )
+    }
+  })
 }
 
 /**
  * Récupérer une cagnotte par ID
  */
 export async function getMoneyPotById(potId: string): Promise<MoneyPotWithDetails | null> {
-  const pot = await prisma.moneyPot.findUnique({
-    where: { id: potId },
-    include: {
-      event: true,
-      contributions: {
-        where: { status: 'COMPLETED' },
-        orderBy: { createdAt: 'desc' }
-      },
-      _count: {
-        select: { contributions: true }
-      }
-    }
-  })
+  const supabase = await createClient()
 
-  if (!pot) return null
+  const { data: pot, error } = await supabase
+    .from('associative_money_pots')
+    .select(`
+      *,
+      event:associative_events(*),
+      contributions:associative_contributions(*)
+    `)
+    .eq('id', potId)
+    .single()
+
+  if (error || !pot) return null
+
+  // Filtrer les contributions COMPLETED (Supabase ne permet pas de filtrer facilement dans le select imbriqué sur une relation one-to-many sans affecter le parent si on utilise !inner, mais ici c'est left join par défaut)
+  // Cependant, le .select() ramène TOUTES les contributions si on ne filtre pas.
+  // Pour filtrer les relations imbriquées, on peut utiliser des modifiers, mais c'est limité.
+  // Le plus simple est de filtrer en JS ici car le volume de contributions n'est pas énorme.
+
+  const completedContributions = (pot.contributions || [])
+    .filter((c: any) => c.status === 'COMPLETED')
+    .map(mapContributionDates)
+    .sort((a: Contribution, b: Contribution) => b.createdAt.getTime() - a.createdAt.getTime())
 
   return {
-    ...pot,
-    totalCollected: pot.contributions.reduce(
-      (sum, c) => sum + Number(c.amount), 
+    ...mapMoneyPotDates(pot),
+    event: pot.event ? mapEventDates(pot.event) : null,
+    contributions: completedContributions,
+    _count: {
+      contributions: completedContributions.length
+    },
+    totalCollected: completedContributions.reduce(
+      (sum: number, c: Contribution) => sum + Number(c.amount),
       0
     )
   }
@@ -122,27 +189,23 @@ export async function getMoneyPotById(potId: string): Promise<MoneyPotWithDetail
 
 /**
  * ⭐ Contribuer à une cagnotte - Création PaymentIntent Stripe
- * 
- * Cette action :
- * 1. Vérifie que la cagnotte existe et est active
- * 2. Crée un enregistrement de contribution en statut PENDING
- * 3. Crée un PaymentIntent Stripe
- * 4. Retourne le clientSecret pour le paiement côté client
  */
 export async function contributeToPot(
   input: ContributeToPotInput
 ): Promise<ContributionPaymentResult> {
+  const supabase = await createClient()
   try {
     const user = await getCurrentUser()
     const stripe = getStripe()
 
     // 1. Vérifier que la cagnotte existe et est active
-    const pot = await prisma.moneyPot.findUnique({
-      where: { id: input.potId },
-      include: { event: true }
-    })
+    const { data: pot, error: potError } = await supabase
+      .from('associative_money_pots')
+      .select(`*, event:associative_events(*)`)
+      .eq('id', input.potId)
+      .single()
 
-    if (!pot) {
+    if (potError || !pot) {
       return { success: false, error: 'Cagnotte non trouvée' }
     }
 
@@ -156,16 +219,20 @@ export async function contributeToPot(
     }
 
     // 2. Créer la contribution en base (statut PENDING)
-    const contribution = await prisma.contribution.create({
-      data: {
+    const { data: contribution, error: contribError } = await supabase
+      .from('associative_contributions')
+      .insert({
         moneyPotId: input.potId,
         userId: user.id,
         amount: input.amount / 100, // Convertir centimes en euros pour stockage
         message: input.message,
         isAnonymous: input.isAnonymous || false,
         status: 'PENDING',
-      }
-    })
+      })
+      .select()
+      .single()
+
+    if (contribError || !contribution) throw new Error(contribError?.message || 'Erreur création contribution')
 
     // 3. Créer le PaymentIntent Stripe
     const eventTitle = pot.event?.title || pot.title
@@ -184,15 +251,13 @@ export async function contributeToPot(
         isAnonymous: String(input.isAnonymous || false),
       },
       description: `Contribution cagnotte: ${eventTitle}`,
-      // Optionnel: associer au customer Stripe si existant
-      // customer: stripeCustomerId,
     })
 
     // 4. Mettre à jour la contribution avec l'ID Stripe
-    await prisma.contribution.update({
-      where: { id: contribution.id },
-      data: { stripePaymentId: paymentIntent.id }
-    })
+    await supabase
+      .from('associative_contributions')
+      .update({ stripePaymentId: paymentIntent.id })
+      .eq('id', contribution.id)
 
     return {
       success: true,
@@ -201,27 +266,29 @@ export async function contributeToPot(
     }
   } catch (error) {
     console.error('Erreur contribution cagnotte:', error)
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Erreur lors du paiement' 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Erreur lors du paiement'
     }
   }
 }
 
 /**
  * Confirmer une contribution après paiement réussi
- * (Appelé par le webhook Stripe ou après confirmation client)
  */
 export async function confirmContribution(
   contributionId: string,
   stripePaymentId: string
 ): Promise<ActionResult> {
+  const supabase = await createClient()
   try {
-    const contribution = await prisma.contribution.findUnique({
-      where: { id: contributionId }
-    })
+    const { data: contribution, error: contribError } = await supabase
+      .from('associative_contributions')
+      .select('*')
+      .eq('id', contributionId)
+      .single()
 
-    if (!contribution) {
+    if (contribError || !contribution) {
       return { success: false, error: 'Contribution non trouvée' }
     }
 
@@ -230,42 +297,43 @@ export async function confirmContribution(
     }
 
     // Mettre à jour le statut
-    await prisma.contribution.update({
-      where: { id: contributionId },
-      data: { status: 'COMPLETED' }
-    })
+    await supabase
+      .from('associative_contributions')
+      .update({ status: 'COMPLETED' })
+      .eq('id', contributionId)
 
     // Vérifier si l'objectif est atteint
-    const pot = await prisma.moneyPot.findUnique({
-      where: { id: contribution.moneyPotId },
-      include: {
-        contributions: {
-          where: { status: 'COMPLETED' }
-        }
-      }
-    })
+    const { data: pot } = await supabase
+      .from('associative_money_pots')
+      .select(`
+        *,
+        contributions:associative_contributions(*)
+      `)
+      .eq('id', contribution.moneyPotId)
+      .single()
 
     if (pot && pot.targetAmount) {
-      const totalCollected = pot.contributions.reduce(
-        (sum, c) => sum + Number(c.amount), 
+      const completedContributions = (pot.contributions || []).filter((c: any) => c.status === 'COMPLETED')
+      const totalCollected = completedContributions.reduce(
+        (sum: number, c: any) => sum + Number(c.amount),
         0
       )
-      
+
       if (totalCollected >= Number(pot.targetAmount)) {
-        await prisma.moneyPot.update({
-          where: { id: pot.id },
-          data: { status: 'COMPLETED' }
-        })
+        await supabase
+          .from('associative_money_pots')
+          .update({ status: 'COMPLETED' })
+          .eq('id', pot.id)
       }
     }
 
-    revalidatePath('/dashboard/vie-caserne')
+    revalidatePath('/associative')
     return { success: true }
   } catch (error) {
     console.error('Erreur confirmation contribution:', error)
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Erreur inconnue' 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Erreur inconnue'
     }
   }
 }
@@ -274,18 +342,19 @@ export async function confirmContribution(
  * Annuler une contribution (si paiement échoué)
  */
 export async function cancelContribution(contributionId: string): Promise<ActionResult> {
+  const supabase = await createClient()
   try {
-    await prisma.contribution.update({
-      where: { id: contributionId },
-      data: { status: 'FAILED' }
-    })
+    await supabase
+      .from('associative_contributions')
+      .update({ status: 'FAILED' })
+      .eq('id', contributionId)
 
     return { success: true }
   } catch (error) {
     console.error('Erreur annulation contribution:', error)
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Erreur inconnue' 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Erreur inconnue'
     }
   }
 }
@@ -294,13 +363,15 @@ export async function cancelContribution(contributionId: string): Promise<Action
  * Clôturer une cagnotte
  */
 export async function closeMoneyPot(potId: string): Promise<ActionResult> {
+  const supabase = await createClient()
   try {
     const user = await getCurrentUser()
 
-    const pot = await prisma.moneyPot.findUnique({
-      where: { id: potId },
-      include: { event: true }
-    })
+    const { data: pot } = await supabase
+      .from('associative_money_pots')
+      .select(`*, event:associative_events(*)`)
+      .eq('id', potId)
+      .single()
 
     if (!pot) {
       return { success: false, error: 'Cagnotte non trouvée' }
@@ -311,18 +382,18 @@ export async function closeMoneyPot(potId: string): Promise<ActionResult> {
       return { success: false, error: 'Non autorisé' }
     }
 
-    await prisma.moneyPot.update({
-      where: { id: potId },
-      data: { status: 'CLOSED' }
-    })
+    await supabase
+      .from('associative_money_pots')
+      .update({ status: 'CLOSED' })
+      .eq('id', potId)
 
-    revalidatePath('/dashboard/vie-caserne')
+    revalidatePath('/associative')
     return { success: true }
   } catch (error) {
     console.error('Erreur clôture cagnotte:', error)
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Erreur inconnue' 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Erreur inconnue'
     }
   }
 }
@@ -331,38 +402,58 @@ export async function closeMoneyPot(potId: string): Promise<ActionResult> {
  * Obtenir mes contributions
  */
 export async function getMyContributions() {
+  const supabase = await createClient()
   const user = await getCurrentUser()
 
-  return prisma.contribution.findMany({
-    where: { 
-      userId: user.id,
-      status: 'COMPLETED'
-    },
-    include: {
-      moneyPot: {
-        include: { event: true }
-      }
-    },
-    orderBy: { createdAt: 'desc' }
-  })
+  const { data, error } = await supabase
+    .from('associative_contributions')
+    .select(`
+      *,
+      moneyPot:associative_money_pots(
+        *,
+        event:associative_events(*)
+      )
+    `)
+    .eq('userId', user.id)
+    .eq('status', 'COMPLETED')
+    .order('createdAt', { ascending: false })
+
+  if (error || !data) return []
+
+  return data.map((c: any) => ({
+    ...mapContributionDates(c),
+    moneyPot: c.moneyPot ? {
+      ...mapMoneyPotDates(c.moneyPot),
+      event: c.moneyPot.event ? mapEventDates(c.moneyPot.event) : null
+    } : null
+  }))
 }
 
 /**
  * Statistiques des cagnottes
  */
 export async function getMoneyPotsStats() {
-  const [activePots, totalCollected, totalContributions] = await Promise.all([
-    prisma.moneyPot.count({ where: { status: 'ACTIVE' } }),
-    prisma.contribution.aggregate({
-      where: { status: 'COMPLETED' },
-      _sum: { amount: true }
-    }),
-    prisma.contribution.count({ where: { status: 'COMPLETED' } })
+  const supabase = await createClient()
+
+  const [activePotsResult, contributionsResult] = await Promise.all([
+    supabase
+      .from('associative_money_pots')
+      .select('*', { count: 'exact', head: true })
+      .eq('status', 'ACTIVE'),
+    supabase
+      .from('associative_contributions')
+      .select('amount')
+      .eq('status', 'COMPLETED')
   ])
 
+  const totalCollected = (contributionsResult.data || []).reduce(
+    (sum, c) => sum + Number(c.amount),
+    0
+  )
+
   return {
-    activePots,
-    totalCollected: Number(totalCollected._sum.amount || 0),
-    totalContributions,
+    activePots: activePotsResult.count || 0,
+    totalCollected,
+    totalContributions: contributionsResult.data?.length || 0,
   }
 }
