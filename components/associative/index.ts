@@ -17,3 +17,7 @@ export { MoneyPotsTab } from './money-pots-tab'
 export { MaterialsTab } from './materials-tab'
 export { PollsTab } from './polls-tab'
 export { StatsCards } from './stats-cards'
+
+// Feed
+export { RecentActivitiesFeed } from './recent-activities-feed'
+export type { RecentActivity, ActivityType } from './recent-activities-feed'
