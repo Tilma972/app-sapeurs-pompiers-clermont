@@ -3,6 +3,7 @@
 -- UUID: c7a9dc2a-ef93-4e9a-b594-de407daa30d8
 -- Date: 2025-12-13
 -- ========================================
+-- Script corrigé avec le schéma exact des tables
 -- À exécuter dans l'éditeur SQL Supabase
 -- ========================================
 
@@ -28,7 +29,10 @@ SELECT '========== 2. COMPTE PERSONNEL (comptes_sp) ==========' AS section;
 SELECT
   user_id,
   solde_disponible,
+  solde_utilise,
+  solde_bloque,
   total_retributions,
+  total_contributions_equipe,
   pourcentage_pot_equipe_defaut,
   created_at,
   updated_at
@@ -69,10 +73,13 @@ SELECT
   t.date_fin,
   ts.calendars_distributed,
   ts.montant_total,
-  ts.cash_count,
-  ts.cb_count,
-  ts.cash_total,
-  ts.cb_total
+  ts.dons_count,
+  ts.dons_amount,
+  ts.soutiens_count,
+  ts.soutiens_amount,
+  ts.especes_total,
+  ts.cheques_total,
+  ts.cartes_total
 FROM tournee_summary ts
 JOIN tournees t ON t.id = ts.tournee_id
 WHERE t.user_id = 'c7a9dc2a-ef93-4e9a-b594-de407daa30d8'
@@ -90,11 +97,11 @@ SELECT
   st.payment_method,
   st.payment_status,
   st.calendar_accepted,
+  st.calendars_given,
   st.receipt_number,
   st.created_at,
   st.stripe_session_id,
-  t.statut AS tournee_statut,
-  st.deposited_at
+  t.statut AS tournee_statut
 FROM support_transactions st
 JOIN tournees t ON t.id = st.tournee_id
 WHERE t.user_id = 'c7a9dc2a-ef93-4e9a-b594-de407daa30d8'
@@ -115,11 +122,13 @@ SELECT
   t.montant_collecte AS montant_final,
   -- Valeurs calculées depuis support_transactions
   COUNT(st.id) FILTER (WHERE st.calendar_accepted = true) AS nb_calendriers_transactions,
-  COUNT(st.id) FILTER (WHERE st.payment_method = 'cash') AS nb_cash,
-  COUNT(st.id) FILTER (WHERE st.payment_method = 'card') AS nb_cb,
+  COUNT(st.id) FILTER (WHERE st.payment_method = 'especes') AS nb_especes,
+  COUNT(st.id) FILTER (WHERE st.payment_method = 'carte') AS nb_cartes,
+  COUNT(st.id) FILTER (WHERE st.payment_method = 'cheque') AS nb_cheques,
   SUM(st.amount) FILTER (WHERE st.payment_status = 'completed') AS montant_total_transactions,
-  SUM(st.amount) FILTER (WHERE st.payment_method = 'cash' AND st.payment_status = 'completed') AS montant_cash,
-  SUM(st.amount) FILTER (WHERE st.payment_method = 'card' AND st.payment_status = 'completed') AS montant_cb
+  SUM(st.amount) FILTER (WHERE st.payment_method = 'especes' AND st.payment_status = 'completed') AS montant_especes,
+  SUM(st.amount) FILTER (WHERE st.payment_method = 'carte' AND st.payment_status = 'completed') AS montant_cartes,
+  SUM(st.amount) FILTER (WHERE st.payment_method = 'cheque' AND st.payment_status = 'completed') AS montant_cheques
 FROM tournees t
 LEFT JOIN support_transactions st ON st.tournee_id = t.id
 WHERE t.user_id = 'c7a9dc2a-ef93-4e9a-b594-de407daa30d8'
@@ -136,9 +145,12 @@ SELECT
   user_id,
   tournee_id,
   montant_total_collecte,
-  montant_compte_perso,
+  montant_amicale,
+  montant_pompier_total,
+  pourcentage_pot_equipe,
   montant_pot_equipe,
-  pourcentage_pot_applique,
+  montant_compte_perso,
+  statut,
   created_at
 FROM mouvements_retribution
 WHERE user_id = 'c7a9dc2a-ef93-4e9a-b594-de407daa30d8'
@@ -171,11 +183,14 @@ SELECT '========== 9. DEMANDES DÉPÔT FONDS ==========' AS section;
 SELECT
   id,
   user_id,
-  montant_especes,
+  montant_a_deposer,
+  montant_recu,
   statut,
   created_at,
-  date_rdv_souhaitee,
-  updated_at
+  date_depot_prevue,
+  updated_at,
+  notes_utilisateur,
+  notes_tresorier
 FROM demandes_depot_fonds
 WHERE user_id = 'c7a9dc2a-ef93-4e9a-b594-de407daa30d8'
 ORDER BY created_at DESC;
@@ -225,35 +240,51 @@ WITH tournees_user AS (
 SELECT
   -- Total collecté (toutes transactions complétées)
   COALESCE(SUM(st.amount) FILTER (WHERE st.payment_status = 'completed'), 0) AS total_collecte,
-  -- CB validées
-  COALESCE(SUM(st.amount) FILTER (WHERE st.payment_method = 'card' AND st.payment_status = 'completed'), 0) AS total_cb_valide,
-  -- Espèces déposées (marquées comme deposited_at non null)
-  COALESCE(SUM(st.amount) FILTER (WHERE st.payment_method = 'cash' AND st.deposited_at IS NOT NULL), 0) AS total_cash_depose,
-  -- Espèces à déposer (cash sans deposited_at)
-  COALESCE(SUM(st.amount) FILTER (WHERE st.payment_method = 'cash' AND st.deposited_at IS NULL AND st.payment_status = 'completed'), 0) AS cash_a_deposer,
+  -- Cartes validées
+  COALESCE(SUM(st.amount) FILTER (WHERE st.payment_method = 'carte' AND st.payment_status = 'completed'), 0) AS total_cartes_valide,
+  -- Espèces collectées
+  COALESCE(SUM(st.amount) FILTER (WHERE st.payment_method = 'especes' AND st.payment_status = 'completed'), 0) AS total_especes_collecte,
+  -- Chèques collectés
+  COALESCE(SUM(st.amount) FILTER (WHERE st.payment_method = 'cheque' AND st.payment_status = 'completed'), 0) AS total_cheques_collecte,
   -- Nombre de transactions
   COUNT(*) FILTER (WHERE st.payment_status = 'completed') AS nb_transactions
 FROM support_transactions st
 WHERE st.tournee_id IN (SELECT id FROM tournees_user);
 
 -- ========================================
--- 12. ESPÈCES NON DÉPOSÉES (getMontantNonDepose)
+-- 12. ESPÈCES NON DÉPOSÉES
 -- ========================================
-SELECT '========== 12. ESPÈCES NON DÉPOSÉES ==========' AS section;
+SELECT '========== 12. ESPÈCES NON DÉPOSÉES (calcul détaillé) ==========' AS section;
 
 WITH tournees_user AS (
   SELECT id
   FROM tournees
   WHERE user_id = 'c7a9dc2a-ef93-4e9a-b594-de407daa30d8'
+),
+-- Total espèces collectées
+especes_collectees AS (
+  SELECT
+    COALESCE(SUM(st.amount), 0) AS montant
+  FROM support_transactions st
+  WHERE st.tournee_id IN (SELECT id FROM tournees_user)
+    AND st.payment_method = 'especes'
+    AND st.payment_status = 'completed'
+),
+-- Total espèces déjà déposées (via demandes_depot_fonds validées)
+especes_deposees AS (
+  SELECT
+    COALESCE(SUM(ddf.montant_recu), 0) AS montant
+  FROM demandes_depot_fonds ddf
+  WHERE ddf.user_id = 'c7a9dc2a-ef93-4e9a-b594-de407daa30d8'
+    AND ddf.statut IN ('validée', 'completed')
+    AND ddf.montant_recu IS NOT NULL
 )
 SELECT
-  -- Espèces complétées mais non déposées
-  COALESCE(SUM(st.amount), 0) AS montant_non_depose
-FROM support_transactions st
-WHERE st.tournee_id IN (SELECT id FROM tournees_user)
-  AND st.payment_method = 'cash'
-  AND st.payment_status = 'completed'
-  AND st.deposited_at IS NULL;
+  ec.montant AS especes_collectees,
+  ed.montant AS especes_deposees,
+  (ec.montant - ed.montant) AS especes_non_deposees
+FROM especes_collectees ec
+CROSS JOIN especes_deposees ed;
 
 -- ========================================
 -- 13. ANALYSE DÉTAILLÉE DES MONTANTS
@@ -296,3 +327,43 @@ SELECT
     (SELECT SUM(montant_verse) FROM demandes_versement WHERE user_id = 'c7a9dc2a-ef93-4e9a-b594-de407daa30d8' AND statut IN ('completed', 'validée')),
     0
   );
+
+-- ========================================
+-- 14. VÉRIFICATION DES TOURNÉES SANS MOUVEMENT
+-- ========================================
+SELECT '========== 14. TOURNÉES SANS MOUVEMENT DE RÉTRIBUTION ==========' AS section;
+
+SELECT
+  t.id,
+  t.zone,
+  t.statut,
+  t.date_fin,
+  t.montant_collecte,
+  CASE
+    WHEN mr.id IS NULL THEN '❌ MOUVEMENT MANQUANT'
+    ELSE '✅ Mouvement présent'
+  END AS statut_mouvement
+FROM tournees t
+LEFT JOIN mouvements_retribution mr ON mr.tournee_id = t.id
+WHERE t.user_id = 'c7a9dc2a-ef93-4e9a-b594-de407daa30d8'
+  AND t.statut = 'completed'
+ORDER BY t.date_fin DESC;
+
+-- ========================================
+-- 15. COMPARAISON MONTANTS TOURNÉES VS TRANSACTIONS
+-- ========================================
+SELECT '========== 15. COHÉRENCE TOURNÉES <> TRANSACTIONS ==========' AS section;
+
+SELECT
+  t.id,
+  t.zone,
+  t.statut,
+  t.montant_collecte AS montant_stocke_tournee,
+  COALESCE(SUM(st.amount) FILTER (WHERE st.payment_status = 'completed'), 0) AS montant_calcule_transactions,
+  (t.montant_collecte - COALESCE(SUM(st.amount) FILTER (WHERE st.payment_status = 'completed'), 0)) AS ecart
+FROM tournees t
+LEFT JOIN support_transactions st ON st.tournee_id = t.id
+WHERE t.user_id = 'c7a9dc2a-ef93-4e9a-b594-de407daa30d8'
+  AND t.statut = 'completed'
+GROUP BY t.id, t.zone, t.statut, t.montant_collecte
+ORDER BY t.date_debut DESC;
