@@ -19,7 +19,7 @@ export async function getUserCompte(
       .from('comptes_sp')
       .select('solde_disponible, total_retributions, pourcentage_pot_equipe_defaut')
       .eq('user_id', userId)
-      .single();
+      .maybeSingle(); // ✅ Ne lève pas d'erreur si aucun résultat
 
     if (error) {
       throw new DatabaseError('Failed to fetch user compte', error);
