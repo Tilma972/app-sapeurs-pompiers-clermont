@@ -23,7 +23,7 @@ export async function getCurrentUserProfile(): Promise<Profile | null> {
       .from('profiles')
       .select(`
         *,
-        equipe:equipes(
+        equipe:equipes!profiles_team_id_fkey(
           id,
           nom,
           secteur,

@@ -19,13 +19,14 @@ export async function getUserCompte(
       .from('comptes_sp')
       .select('solde_disponible, total_retributions, pourcentage_pot_equipe_defaut')
       .eq('user_id', userId)
-      .single();
+      .maybeSingle();
 
     if (error) {
       throw new DatabaseError('Failed to fetch user compte', error);
     }
 
-    return data as CompteSolde;
+    // maybeSingle() retourne null si aucun résultat (utilisateur sans compte)
+    return data as CompteSolde | null;
   } catch (error) {
     logError(error, {
       component: 'getUserCompte',
