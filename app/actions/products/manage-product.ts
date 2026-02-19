@@ -15,10 +15,12 @@ export type ProductFormData = {
   badge_variant?: "preorder" | "new" | "promo" | null
 }
 
+const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"]
+const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024 // 5 MB
+
 export async function createProduct(data: ProductFormData) {
   const supabase = await createClient()
 
-  // Check if user is admin
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) {
     return { error: "Non authentifié" }
@@ -34,7 +36,6 @@ export async function createProduct(data: ProductFormData) {
     return { error: "Non autorisé" }
   }
 
-  // Determine status based on stock
   let status = "in_stock"
   if (data.stock === 0) {
     status = "out_of_stock"
@@ -63,7 +64,7 @@ export async function createProduct(data: ProductFormData) {
     return { error: "Erreur lors de la création du produit" }
   }
 
-  revalidatePath("/dashboard/produits")
+  revalidatePath("/admin/produits")
   revalidatePath("/boutique")
   return { product }
 }
@@ -75,7 +76,6 @@ export async function updateProduct(data: ProductFormData) {
     return { error: "ID du produit manquant" }
   }
 
-  // Check if user is admin
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) {
     return { error: "Non authentifié" }
@@ -91,7 +91,6 @@ export async function updateProduct(data: ProductFormData) {
     return { error: "Non autorisé" }
   }
 
-  // Determine status based on stock
   let status = "in_stock"
   if (data.stock === 0) {
     status = "out_of_stock"
@@ -121,7 +120,7 @@ export async function updateProduct(data: ProductFormData) {
     return { error: "Erreur lors de la mise à jour du produit" }
   }
 
-  revalidatePath("/dashboard/produits")
+  revalidatePath("/admin/produits")
   revalidatePath("/boutique")
   return { product }
 }
@@ -129,7 +128,6 @@ export async function updateProduct(data: ProductFormData) {
 export async function deleteProduct(productId: string) {
   const supabase = await createClient()
 
-  // Check if user is admin
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) {
     return { error: "Non authentifié" }
@@ -155,7 +153,7 @@ export async function deleteProduct(productId: string) {
     return { error: "Erreur lors de la suppression du produit" }
   }
 
-  revalidatePath("/dashboard/produits")
+  revalidatePath("/admin/produits")
   revalidatePath("/boutique")
   return { success: true }
 }
@@ -163,7 +161,6 @@ export async function deleteProduct(productId: string) {
 export async function uploadProductImage(formData: FormData) {
   const supabase = await createClient()
 
-  // Check if user is admin
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) {
     return { error: "Non authentifié" }
@@ -184,17 +181,26 @@ export async function uploadProductImage(formData: FormData) {
     return { error: "Aucun fichier sélectionné" }
   }
 
-  // Generate unique filename
-  const fileExt = file.name.split(".").pop()
+  // Validation MIME côté serveur (la vérification client-side est contournable)
+  if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+    return { error: "Format non autorisé. Utilisez JPEG, PNG, WebP ou GIF." }
+  }
+
+  // Limite de taille : 5 MB
+  if (file.size > MAX_IMAGE_SIZE_BYTES) {
+    return { error: "Image trop volumineuse (max 5 Mo)." }
+  }
+
+  const fileExt = file.name.split(".").pop()?.toLowerCase() || "jpg"
   const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
   const filePath = `products/${fileName}`
 
-  // Upload to Supabase Storage
   const { error } = await supabase.storage
     .from("landing_page")
     .upload(filePath, file, {
       cacheControl: "3600",
       upsert: false,
+      contentType: file.type,
     })
 
   if (error) {
@@ -202,7 +208,6 @@ export async function uploadProductImage(formData: FormData) {
     return { error: "Erreur lors de l'upload de l'image" }
   }
 
-  // Get public URL
   const { data: { publicUrl } } = supabase.storage
     .from("landing_page")
     .getPublicUrl(filePath)

@@ -61,14 +61,21 @@ export async function handleStripeWebhook(req: NextRequest): Promise<NextRespons
 
   // ========================================================================
   // LOGGING DU WEBHOOK
+  // On récupère l'ID du log inséré pour pouvoir le mettre à jour après traitement.
   // ========================================================================
-  await admin.from('webhook_logs').insert({
-    source: 'stripe',
-    payload: event as unknown as Record<string, unknown>,
-    headers: { signature },
-    status: 'received',
-    event_type: event.type,
-  })
+  const { data: logEntry } = await admin
+    .from('webhook_logs')
+    .insert({
+      source: 'stripe',
+      payload: event as unknown as Record<string, unknown>,
+      headers: { signature },
+      status: 'received',
+      event_type: event.type,
+    })
+    .select('id')
+    .single()
+
+  const logId: string | null = logEntry?.id ?? null
 
   // ========================================================================
   // ROUTAGE VERS LE HANDLER APPROPRIÉ
@@ -99,17 +106,15 @@ export async function handleStripeWebhook(req: NextRequest): Promise<NextRespons
         return NextResponse.json({ received: true })
     }
 
-    // Mise à jour du log webhook avec le résultat
-    if (result.transactionId) {
+    // Mise à jour du log webhook avec le résultat (par ID, pas ORDER/LIMIT qui est invalide sur UPDATE)
+    if (logId) {
       await admin
         .from('webhook_logs')
         .update({
           status: result.success ? 'processed' : 'error',
-          error_message: result.error,
+          error_message: result.error ?? null,
         })
-        .eq('event_type', event.type)
-        .order('created_at', { ascending: false })
-        .limit(1)
+        .eq('id', logId)
     }
 
     return result.response

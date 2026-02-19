@@ -33,6 +33,58 @@ export async function transactionExists(stripeSessionId: string): Promise<boolea
 }
 
 // ============================================================================
+// RÉCUPÉRATION DES ARTICLES PANIER (pending_cart_sessions)
+// ============================================================================
+
+/**
+ * Récupère les articles boutique depuis pending_cart_sessions (source de vérité).
+ * Contourne la limite 500 chars/champ des metadata Stripe.
+ * Retourne [] si introuvable (le handler doit gérer ce cas).
+ */
+export async function fetchPendingCartItems(stripeSessionId: string): Promise<BoutiqueItem[]> {
+  const admin = createAdminClient()
+
+  try {
+    const { data, error } = await admin
+      .from('pending_cart_sessions')
+      .select('items')
+      .eq('stripe_session_id', stripeSessionId)
+      .maybeSingle()
+
+    if (error || !data?.items) {
+      log.warn('⚠️ pending_cart_sessions introuvable pour session', {
+        stripe_session_id: stripeSessionId,
+      })
+      return []
+    }
+
+    const items = data.items as BoutiqueItem[]
+    log.info('📦 Articles récupérés depuis pending_cart_sessions', {
+      stripe_session_id: stripeSessionId,
+      count: items.length,
+    })
+    return items
+  } catch (err) {
+    log.error('❌ Erreur fetchPendingCartItems', {
+      stripe_session_id: stripeSessionId,
+      error: (err as Error).message,
+    })
+    return []
+  }
+}
+
+/**
+ * Supprime la session temporaire après traitement réussi
+ */
+async function cleanupPendingCartSession(stripeSessionId: string): Promise<void> {
+  const admin = createAdminClient()
+  await admin
+    .from('pending_cart_sessions')
+    .delete()
+    .eq('stripe_session_id', stripeSessionId)
+}
+
+// ============================================================================
 // CRÉATION DE TRANSACTION
 // ============================================================================
 
@@ -96,27 +148,30 @@ export async function createTransaction(
 // ============================================================================
 
 /**
- * Insère les articles d'une commande boutique
+ * Insère les articles d'une commande boutique et décrémente le stock.
+ * Retourne true ssi l'insertion order_items réussit (stock best-effort).
  */
 export async function insertOrderItems(
   transactionId: string,
-  boutiqueItems: BoutiqueItem[]
+  boutiqueItems: BoutiqueItem[],
+  stripeSessionId?: string
 ): Promise<boolean> {
   if (boutiqueItems.length === 0) return true
 
   const admin = createAdminClient()
 
   try {
-    // Récupérer les infos produits depuis la DB
+    // Récupérer les infos produits depuis la DB (stock inclus pour décrémentation)
     const productIds = boutiqueItems.map((item) => item.id)
     const { data: products } = await admin
       .from('products')
-      .select('id, name, price, image_url, description')
+      .select('id, name, price, image_url, description, stock')
       .in('id', productIds)
 
     const productsMap = new Map(products?.map((p) => [p.id, p]) || [])
 
-    // Préparer les items à insérer
+    // Préparer les items à insérer.
+    // Priorité au prix issu de pending_cart_sessions (prix réel facturé par Stripe).
     const orderItemsToInsert: OrderItemInsert[] = boutiqueItems.map((item) => {
       const product = productsMap.get(item.id)
       return {
@@ -125,7 +180,7 @@ export async function insertOrderItems(
         name: item.name || product?.name || 'Produit inconnu',
         description: product?.description || null,
         quantity: item.qty,
-        unit_price: item.price || product?.price || 0,
+        unit_price: item.price ?? product?.price ?? 0,
         image_url: product?.image_url || null,
       }
     })
@@ -146,12 +201,54 @@ export async function insertOrderItems(
       items_count: orderItemsToInsert.length,
     })
 
+    // -----------------------------------------------------------------------
+    // DÉCRÉMENTATION DU STOCK
+    // Chaque produit vendu voit son stock diminuer du nombre d'unités achetées.
+    // Le statut (in_stock / low_stock / out_of_stock) est mis à jour en conséquence.
+    // Les erreurs de stock ne bloquent pas : order_items est déjà persisté.
+    // -----------------------------------------------------------------------
+    const stockErrors: string[] = []
+    for (const item of boutiqueItems) {
+      const product = productsMap.get(item.id)
+      if (!product) continue
+
+      const newStock = Math.max(0, product.stock - item.qty)
+      const newStatus =
+        newStock === 0 ? 'out_of_stock' : newStock < 10 ? 'low_stock' : 'in_stock'
+
+      const { error: stockError } = await admin
+        .from('products')
+        .update({ stock: newStock, status: newStatus })
+        .eq('id', item.id)
+
+      if (stockError) {
+        stockErrors.push(`produit ${item.id}: ${stockError.message}`)
+      }
+    }
+
+    if (stockErrors.length > 0) {
+      log.error('⚠️ Erreurs partielles décrémentation stock (commande enregistrée)', {
+        transaction_id: transactionId,
+        errors: stockErrors,
+      })
+    } else {
+      log.info('✅ Stock décrémenté', {
+        transaction_id: transactionId,
+        products_updated: boutiqueItems.length,
+      })
+    }
+
     // Créer l'entrée initiale dans order_status_history
     await admin.from('order_status_history').insert({
       transaction_id: transactionId,
       status: 'pending',
       notes: 'Commande créée via Stripe Checkout',
     })
+
+    // Nettoyer la session temporaire après traitement réussi
+    if (stripeSessionId) {
+      await cleanupPendingCartSession(stripeSessionId)
+    }
 
     return true
   } catch (err) {

@@ -78,15 +78,17 @@ export function parseCalendarAccepted(value: string | undefined): boolean {
 }
 
 /**
- * Normalise une source en valeur connue
+ * Normalise une source en valeur connue.
+ * Fallback sur 'terrain' (et non 'boutique') pour ne pas traiter par erreur
+ * des paiements non-boutique comme des commandes avec order_items.
+ * La valeur 'landing_page' (ancienne migration backfill) est normalisée
+ * vers 'landing_page_donation' pour cohérence avec le code.
  */
 export function normalizeSource(source: string | undefined): string {
+  if (!source) return 'terrain'
+  if (source === 'landing_page') return 'landing_page_donation'
   const validSources = ['boutique', 'landing_page_donation', 'terrain']
-  if (source && validSources.includes(source)) {
-    return source
-  }
-  // Si pas de source valide, on considère que c'est la boutique par défaut
-  return source || 'boutique'
+  return validSources.includes(source) ? source : 'terrain'
 }
 
 /**

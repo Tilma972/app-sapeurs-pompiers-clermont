@@ -18,6 +18,7 @@ const log = createLogger('webhook/stripe/n8n')
 export interface N8nResult {
   success: boolean
   error?: string
+  invoiceNumber?: string
 }
 
 // ============================================================================
@@ -174,7 +175,7 @@ export async function triggerInvoice(params: InvoiceParams): Promise<N8nResult> 
       invoice_number: invoiceNumber,
     })
 
-    return { success: true }
+    return { success: true, invoiceNumber }
   } catch (err) {
     const error = err as Error
     log.error('❌ Échec génération facture boutique', {

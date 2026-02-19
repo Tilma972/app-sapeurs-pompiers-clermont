@@ -1,7 +1,6 @@
 import { createClient } from "@/lib/supabase/server"
 import { notFound } from "next/navigation"
 import { ProductDetail } from "@/components/shop/product-detail"
-import { CartProvider } from "@/lib/cart-context"
 
 // NOTE: We intentionally accept `props: unknown` and cast internally to `{ params: { productId: string } }`.
 // This avoids a type constraint mismatch with Next.js's internal `PageProps` generic which can
@@ -23,9 +22,6 @@ export default async function ProductPage(props: unknown) {
     notFound()
   }
 
-  return (
-    <CartProvider>
-      <ProductDetail product={product} />
-    </CartProvider>
-  )
+  // CartProvider est fourni par le layout (landing) — panier partagé sur toutes les pages.
+  return <ProductDetail product={product} />
 }

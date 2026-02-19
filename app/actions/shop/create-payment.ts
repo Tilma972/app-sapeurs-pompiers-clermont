@@ -1,6 +1,7 @@
 "use server"
 
 import { getStripe } from "@/lib/stripe/client"
+import { createAdminClient } from "@/lib/supabase/admin"
 
 function resolveBaseUrl() {
   const fromEnv = process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL
@@ -26,7 +27,7 @@ export async function createShopPayment(data: {
   }
 
   const totalAmount = data.items.reduce((sum, item) => sum + (item.price * item.quantity), 0)
-  
+
   if (totalAmount <= 0) {
     return { error: "Montant invalide" }
   }
@@ -35,7 +36,8 @@ export async function createShopPayment(data: {
   const base = resolveBaseUrl()
 
   try {
-    // Créer une session Checkout pour une meilleure UX
+    // Les articles ne sont PAS dans les metadata Stripe (limite 500 chars/champ).
+    // Ils sont stockés dans pending_cart_sessions, récupérés dans le webhook par stripe_session_id.
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: data.items.map(item => ({
@@ -56,10 +58,27 @@ export async function createShopPayment(data: {
       metadata: {
         source: 'boutique',
         customer_name: data.customerName || '',
-        items: JSON.stringify(data.items.map(i => ({ id: i.id, name: i.name, qty: i.quantity }))),
-        calendar_given: 'true', // Boutique = achat, pas un don fiscal
+        calendar_given: 'true',
       },
     })
+
+    // Stocker les articles en DB, indexés par stripe_session_id.
+    // Évite la limite 500 chars/champ des metadata Stripe.
+    const admin = createAdminClient()
+    const { error: cartError } = await admin.from('pending_cart_sessions').insert({
+      stripe_session_id: session.id,
+      items: data.items.map(i => ({
+        id: i.id,
+        name: i.name,
+        qty: i.quantity,
+        price: i.price,
+      })),
+    })
+
+    if (cartError) {
+      console.error('Erreur stockage pending_cart_sessions:', cartError)
+      // On ne bloque pas : le webhook peut toujours fonctionner sans les items détaillés
+    }
 
     return {
       url: session.url,

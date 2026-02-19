@@ -16,6 +16,8 @@ import {
   transactionExists,
   createTransaction,
   insertOrderItems,
+  fetchPendingCartItems,
+  updateInvoiceFields,
 } from '../services/transaction'
 import {
   sendBoutiqueConfirmationEmail,
@@ -36,12 +38,28 @@ export async function handleCheckoutSession(
   const donorName =
     session.customer_details?.name ?? session.metadata?.customer_name ?? null
 
-  // Parser les données des métadonnées
-  const boutiqueItems = parseBoutiqueItems(session.metadata?.items)
   const calendarAccepted = parseCalendarAccepted(session.metadata?.calendar_given)
   const userId = session.metadata?.user_id ?? null
   const tourneeId = session.metadata?.tournee_id ?? null
   const source = normalizeSource(session.metadata?.source)
+  const isBoutique = source === ('boutique' as typeof SOURCES.BOUTIQUE)
+
+  // ========================================================================
+  // RÉCUPÉRATION DES ARTICLES BOUTIQUE
+  // Source prioritaire : pending_cart_sessions (pas de limite 500 chars Stripe).
+  // Fallback : metadata.items (pour commandes créées avant la migration).
+  // ========================================================================
+  let boutiqueItems = isBoutique ? await fetchPendingCartItems(session.id) : []
+
+  if (isBoutique && boutiqueItems.length === 0) {
+    boutiqueItems = parseBoutiqueItems(session.metadata?.items)
+    if (boutiqueItems.length > 0) {
+      log.warn('⚠️ Fallback metadata.items utilisé (pending_cart_sessions absent)', {
+        session_id: session.id,
+        items_count: boutiqueItems.length,
+      })
+    }
+  }
 
   log.info('📥 Traitement checkout.session.completed', {
     session_id: session.id,
@@ -66,7 +84,6 @@ export async function handleCheckoutSession(
   // ========================================================================
   // CRÉATION DE LA TRANSACTION
   // ========================================================================
-  const isBoutique = source === ('boutique' as typeof SOURCES.BOUTIQUE)
   const notes = generateNotes(source, session.id)
 
   const result = await createTransaction({
@@ -102,10 +119,28 @@ export async function handleCheckoutSession(
   const tx = result.transaction
 
   // ========================================================================
-  // BOUTIQUE : Insertion des articles
+  // BOUTIQUE : Insertion des articles + décrémentation stock
+  // Si l'insertion échoue → 500 pour que Stripe retente (idempotence assurée).
+  // On ne confirme JAMAIS une commande sans order_items persistés.
   // ========================================================================
   if (isBoutique && boutiqueItems.length > 0) {
-    await insertOrderItems(tx.id, boutiqueItems)
+    const itemsInserted = await insertOrderItems(tx.id, boutiqueItems, session.id)
+
+    if (!itemsInserted) {
+      log.error('❌ Insertion order_items échouée — retry Stripe attendu', {
+        session_id: session.id,
+        transaction_id: tx.id,
+      })
+      return {
+        success: false,
+        response: NextResponse.json(
+          { error: 'Order items insertion failed, webhook will be retried' },
+          { status: 500 }
+        ),
+        transactionId: tx.id,
+        error: 'insertOrderItems failed',
+      }
+    }
   }
 
   // ========================================================================
@@ -120,18 +155,21 @@ export async function handleCheckoutSession(
   }
 
   // ========================================================================
-  // N8N : Reçu fiscal OU Facture
+  // N8N : Facture boutique OU Reçu fiscal don
   // ========================================================================
   if (isBoutique) {
-    // Facture pour les achats boutique
     const shippingAddress = session.metadata?.shipping_address ?? null
-    await triggerInvoice({
+    const invoiceResult = await triggerInvoice({
       transaction: tx,
       boutiqueItems,
       shippingAddress,
     })
+
+    // Enregistrer le numéro de facture en base dès qu'il est disponible
+    if (invoiceResult.success && invoiceResult.invoiceNumber) {
+      await updateInvoiceFields(tx.id, invoiceResult.invoiceNumber)
+    }
   } else {
-    // Reçu fiscal pour les dons
     await triggerFiscalReceipt({
       transaction: tx,
       calendarAccepted,
@@ -144,24 +182,16 @@ export async function handleCheckoutSession(
   // LOG FINAL
   // ========================================================================
   if (source === 'landing_page_donation') {
-    log.info('✅ Don landing page traité', {
-      session_id: session.id,
-      amount,
-      email: donorEmail,
-    })
+    log.info('✅ Don landing page traité', { session_id: session.id, amount, email: donorEmail })
   } else if (isBoutique) {
-    log.info('✅ Commande boutique traitée avec facture', {
+    log.info('✅ Commande boutique traitée', {
       session_id: session.id,
       amount,
       email: donorEmail,
       items_count: boutiqueItems.length,
     })
   } else {
-    log.info('✅ Don terrain traité', {
-      session_id: session.id,
-      amount,
-      email: donorEmail,
-    })
+    log.info('✅ Don terrain traité', { session_id: session.id, amount, email: donorEmail })
   }
 
   return {

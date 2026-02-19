@@ -4,7 +4,7 @@ import { useState } from "react"
 import { ShoppingCart } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { CartProvider, useCart } from "@/lib/cart-context"
+import { useCart } from "@/lib/cart-context"
 import { ProductCard } from "@/components/shop/product-card"
 import { CartModal } from "@/components/shop/cart-modal"
 import type { Database } from "@/lib/database.types"
@@ -76,10 +76,7 @@ function BoutiqueContent({ products }: BoutiqueClientProps) {
   )
 }
 
+// CartProvider est fourni par le layout (landing), pas besoin de le redéclarer ici.
 export function BoutiqueClient({ products }: BoutiqueClientProps) {
-  return (
-    <CartProvider>
-      <BoutiqueContent products={products} />
-    </CartProvider>
-  )
+  return <BoutiqueContent products={products} />
 }
