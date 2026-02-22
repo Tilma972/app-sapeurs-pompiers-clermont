@@ -1,117 +1,297 @@
-<a href="https://demo-nextjs-with-supabase.vercel.app/">
-  <img alt="Next.js and Supabase Starter Kit - the fastest way to build apps with Next.js and Supabase" src="https://demo-nextjs-with-supabase.vercel.app/opengraph-image.png">
-  <h1 align="center">Next.js and Supabase Starter Kit</h1>
-</a>
+# Amicale des Sapeurs-Pompiers de Clermont-l'Hérault
 
-<p align="center">
- The fastest way to build apps with Next.js and Supabase
-</p>
+Application interne (PWA) de gestion pour l'**Amicale des Sapeurs-Pompiers de Clermont-l'Hérault** (Hérault, 34).
 
-<p align="center">
-  <a href="#features"><strong>Features</strong></a> ·
-  <a href="#demo"><strong>Demo</strong></a> ·
-  <a href="#deploy-to-vercel"><strong>Deploy to Vercel</strong></a> ·
-  <a href="#clone-and-run-locally"><strong>Clone and run locally</strong></a> ·
-  <a href="#feedback-and-issues"><strong>Feedback and issues</strong></a>
-  <a href="#more-supabase-examples"><strong>More Examples</strong></a>
-</p>
-<br/>
+Gestion des tournées de calendriers, dons, reçus fiscaux, équipes, gamification, galerie photo, boîte à idées, boutique, comptes membres et page publique vitrine.
 
-## Features
+---
 
-- Works across the entire [Next.js](https://nextjs.org) stack
-  - App Router
-  - Pages Router
-  - Middleware
-  - Client
-  - Server
-  - It just works!
-- supabase-ssr. A package to configure Supabase Auth to use cookies
-- Password-based authentication block installed via the [Supabase UI Library](https://supabase.com/ui/docs/nextjs/password-based-auth)
-- Styling with [Tailwind CSS](https://tailwindcss.com)
-- Components with [shadcn/ui](https://ui.shadcn.com/)
-- Optional deployment with [Supabase Vercel Integration and Vercel deploy](#deploy-your-own)
-  - Environment variables automatically assigned to Vercel project
+## Stack technique
 
-## Demo
+| Couche | Technologie |
+|---|---|
+| Framework | **Next.js 16** (App Router, Turbopack) |
+| Langage | **TypeScript 5.9** (strict) |
+| React | **React 19** |
+| Base de données | **Supabase** (PostgreSQL + Auth + Storage + Realtime) |
+| Styles | **Tailwind CSS 3.4** + variables CSS (HSL) |
+| Composants UI | **shadcn/ui** (style New York, primitives Radix) |
+| Icônes | **Lucide React** |
+| Formulaires | **React Hook Form** + **Zod** |
+| Animations | **Framer Motion** |
+| Cartes | **Leaflet** + **React Leaflet** |
+| Paiements | **Stripe** (CB) + **HelloAsso** (dons) |
+| Emails | **Resend** |
+| IA | **Claude** (analyse d'idées) + **Whisper** (transcription vocale) |
+| Thème | **next-themes** (clair / sombre) |
+| Déploiement | **Vercel** |
 
-You can view a fully working demo at [demo-nextjs-with-supabase.vercel.app](https://demo-nextjs-with-supabase.vercel.app/).
+---
 
-## Deploy to Vercel
+## Prérequis
 
-Vercel deployment will guide you through creating a Supabase account and project.
+- **Node.js** >= 20
+- **npm** >= 10
+- Un projet **Supabase** (PostgreSQL + Auth + Storage)
+- Comptes **Stripe**, **HelloAsso**, **Resend** pour les intégrations tierces
 
-After installation of the Supabase integration, all relevant environment variables will be assigned to the project so the deployment is fully functioning.
+---
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fnext.js%2Ftree%2Fcanary%2Fexamples%2Fwith-supabase&project-name=nextjs-with-supabase&repository-name=nextjs-with-supabase&demo-title=nextjs-with-supabase&demo-description=This+starter+configures+Supabase+Auth+to+use+cookies%2C+making+the+user%27s+session+available+throughout+the+entire+Next.js+app+-+Client+Components%2C+Server+Components%2C+Route+Handlers%2C+Server+Actions+and+Middleware.&demo-url=https%3A%2F%2Fdemo-nextjs-with-supabase.vercel.app%2F&external-id=https%3A%2F%2Fgithub.com%2Fvercel%2Fnext.js%2Ftree%2Fcanary%2Fexamples%2Fwith-supabase&demo-image=https%3A%2F%2Fdemo-nextjs-with-supabase.vercel.app%2Fopengraph-image.png)
+## Installation
 
-The above will also clone the Starter kit to your GitHub, you can clone that locally and develop locally.
+### 1. Cloner le dépôt
 
-If you wish to just develop locally and not deploy to Vercel, [follow the steps below](#clone-and-run-locally).
+```bash
+git clone <url-du-repo>
+cd app-sapeurs-pompiers-clermont
+```
 
-## Clone and run locally
+### 2. Installer les dépendances
 
-1. You'll first need a Supabase project which can be made [via the Supabase dashboard](https://database.new)
+```bash
+npm install
+```
 
-2. Create a Next.js app using the Supabase Starter template npx command
+### 3. Configurer les variables d'environnement
 
-   ```bash
-   npx create-next-app --example with-supabase with-supabase-app
-   ```
+Copier le fichier d'exemple et renseigner les valeurs :
 
-   ```bash
-   yarn create next-app --example with-supabase with-supabase-app
-   ```
+```bash
+cp .env.example .env.local
+```
 
-   ```bash
-   pnpm create next-app --example with-supabase with-supabase-app
-   ```
+**Variables requises :**
 
-3. Use `cd` to change into the app's directory
+| Variable | Description |
+|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | URL du projet Supabase |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_OR_ANON_KEY` | Clé publique (anon) Supabase |
+| `SUPABASE_SERVICE_ROLE_KEY` | Clé service role (serveur uniquement) |
+| `NEXT_PUBLIC_SITE_URL` | URL publique du site |
+| `HELLOASSO_CLIENT_ID` / `HELLOASSO_CLIENT_SECRET` | OAuth HelloAsso |
+| `HELLOASSO_ORGANIZATION_SLUG` | Slug de l'organisation HelloAsso |
+| `HELLOASSO_WEBHOOK_SECRET` | Secret de vérification webhook HelloAsso |
+| `RESEND_API_KEY` / `RESEND_FROM` | Envoi d'emails (Resend) |
+| `OPENAI_API_KEY` | Transcription audio (Whisper) |
+| `ANTHROPIC_API_KEY` | Analyse IA des idées (Claude) |
 
-   ```bash
-   cd with-supabase-app
-   ```
+Voir `.env.example` pour la liste complète.
 
-4. Rename `.env.example` to `.env.local` and update the following:
+### 4. Appliquer les migrations
 
-   ```
-   NEXT_PUBLIC_SUPABASE_URL=[INSERT SUPABASE PROJECT URL]
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=[INSERT SUPABASE PROJECT API ANON KEY]
-   ```
+```bash
+npm run db:push
+```
 
-   Both `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` can be found in [your Supabase project's API settings](https://supabase.com/dashboard/project/_?showConnect=true)
+### 5. Générer les types Supabase
 
-5. You can now run the Next.js local development server:
+```bash
+npm run db:types
+```
 
-   ```bash
-   npm run dev
-   ```
+### 6. Lancer le serveur de développement
 
-   The starter kit should now be running on [localhost:3000](http://localhost:3000/).
+```bash
+npm run dev
+```
 
-6. This template comes with the default shadcn/ui style initialized. If you instead want other ui.shadcn styles, delete `components.json` and [re-install shadcn/ui](https://ui.shadcn.com/docs/installation/next)
+L'application est accessible sur [http://localhost:3000](http://localhost:3000).
 
-> Check out [the docs for Local Development](https://supabase.com/docs/guides/getting-started/local-development) to also run Supabase locally.
+---
 
-## Communes data: CSV → JSON → UI
+## Commandes
 
-- Source of truth: `Nomdelacommune-CodeINSEE.csv` (root).
-- Generated file: `data/communes-21.json` (consumed by `components/landing/Communes.tsx`).
-- Sync script: converts the CSV to the JSON used by the UI.
+| Commande | Description |
+|---|---|
+| `npm run dev` | Serveur de développement (Turbopack) |
+| `npm run build` | Build de production |
+| `npm start` | Lancer le serveur de production |
+| `npm run lint` | Linting ESLint |
+| `npm run typecheck` | Vérification des types TypeScript |
+| `npm run db:push` | Appliquer les migrations Supabase |
+| `npm run db:types` | Générer les types depuis la base de données |
+| `npm run clean` | Nettoyer le cache `.next` |
 
-Run the sync when the CSV changes: `npm run sync:communes`.
+---
 
-Notes:
-- Only the 21 communes present in the CSV are rendered in the UI (Paulhan is excluded if not in the CSV).
-- Populations are enriched from `data/insee-communes.json` when available; the total inhabitants shown on the section is computed dynamically from these values.
+## Structure du projet
 
-## Feedback and issues
+```
+app/
+├── (landing)/              # Pages publiques (vitrine, boutique, partenaires)
+├── (pwa)/                  # Application authentifiée (dashboard, tournées, admin...)
+├── auth/                   # Authentification (login, inscription, mot de passe)
+├── don/                    # Parcours de don public
+├── pay/                    # Pages de paiement
+├── recu/                   # Téléchargement de reçus fiscaux
+├── actions/                # Server Actions (mutations)
+└── api/                    # Route Handlers (webhooks, uploads, IA)
 
-Please file feedback and issues over on the [Supabase GitHub org](https://github.com/supabase/supabase/issues/new/choose).
+components/
+├── ui/                     # Composants shadcn/ui (ne pas modifier directement)
+├── landing/                # Sections page d'accueil
+├── admin/                  # Composants admin
+├── tournee/                # Gestion des tournées
+├── gallery/                # Galerie photo
+├── idees/                  # Boîte à idées
+├── gamification/           # Widgets de gamification
+└── ...                     # Autres modules métier
 
-## More Supabase examples
+lib/
+├── supabase/               # Clients Supabase + requêtes par domaine
+├── types/                  # Définitions TypeScript
+├── config.ts               # Constantes métier centralisées
+├── stripe/                 # Client Stripe
+├── helloasso/              # Client HelloAsso
+├── email/                  # Templates email (Resend)
+├── pdf/                    # Génération de reçus PDF
+└── utils.ts                # Utilitaires (cn, formatters...)
 
-- [Next.js Subscription Payments Starter](https://github.com/vercel/nextjs-subscription-payments)
-- [Cookie-based Auth and the Next.js 13 App Router (free course)](https://youtube.com/playlist?list=PL5S4mPUpp4OtMhpnp93EFSo42iQ40XjbF)
-- [Supabase Auth and the Next.js App Router](https://github.com/supabase/supabase/tree/master/examples/auth/nextjs)
+hooks/                      # Hooks React custom
+supabase/migrations/        # 115 fichiers de migration SQL
+public/                     # Assets statiques, manifest PWA, icônes
+docs/                       # Documentation détaillée (90+ fichiers)
+```
+
+---
+
+## Fonctionnalités principales
+
+### Page publique (Landing)
+- Présentation de l'amicale et de ses actions
+- Liste des 20 communes protégées
+- Parcours de don en ligne (Stripe + HelloAsso)
+- Boutique en ligne
+- Inscription partenaire
+
+### Espace membre (PWA)
+- **Dashboard** avec KPIs et statistiques en temps réel
+- **Tournées** : gestion des rondes de vente de calendriers avec carte interactive
+- **Calendriers** : suivi des ventes et objectifs
+- **Mon compte** : solde, rétributions, demandes de versement / dépôt
+- **Galerie photo** avec likes et commentaires en temps réel
+- **Boîte à idées** : soumission texte ou vocale, analyse IA, votes
+- **Annonces** : petites annonces internes
+- **Avantages** : réductions partenaires pour les membres
+- **Vie associative** : événements, pot d'équipe, cagnotte
+- **Gamification** : classements, défis, badges
+
+### Administration
+- Gestion des utilisateurs, équipes et rôles
+- Suivi des tournées et zones (GeoJSON)
+- Modération galerie
+- Gestion des partenaires et avantages
+- Commandes boutique et chèques
+- Reçus fiscaux et trésorerie
+- Webhooks et liste blanche d'inscription
+
+### Rôles
+
+| Rôle | Accès |
+|---|---|
+| `membre` | Espace membre standard |
+| `chef` | Gestion d'équipe + accès admin |
+| `admin` | Administration complète |
+| `tresorier` | Trésorerie + administration |
+
+---
+
+## Architecture
+
+### Groupes de routes
+- **`(landing)`** : pages publiques, pas d'authentification requise
+- **`(pwa)`** : shell applicatif authentifié, protégé par le middleware
+
+### Authentification
+- **Supabase Auth** avec sessions basées sur les cookies (`@supabase/ssr`)
+- Middleware de protection des routes privées
+- Redirection automatique des utilisateurs connectés vers `/dashboard`
+- Workflow d'approbation : les nouveaux comptes doivent être activés par un admin
+
+### Accès à la base de données
+- **Server Components / Server Actions** : `createClient()` depuis `lib/supabase/server.ts`
+- **Client Components** : `createClient()` depuis `lib/supabase/client.ts`
+- Ne jamais stocker le client Supabase dans une variable globale
+
+### Server Actions
+- Situées dans `app/actions/`
+- Pattern : validation → client Supabase → opération DB → revalidation → résultat
+- Retournent `{ success: boolean, error?: string }`
+
+### Configuration métier
+- Constantes centralisées dans `lib/config.ts` (prix calendriers, pourcentages rétribution, rôles, seuils...)
+
+---
+
+## Intégrations tierces
+
+### Stripe
+Paiements par carte bancaire pour les dons en ligne.
+- Client : `lib/stripe/`
+- Webhooks : `app/api/webhooks/stripe/`
+
+### HelloAsso
+Plateforme française de dons et paiements associatifs.
+- Client : `lib/helloasso/`
+- Webhooks : `app/api/helloasso-webhook/`
+
+### Resend
+Envoi d'emails transactionnels (reçus fiscaux, confirmations boutique).
+- Client : `lib/email/`
+
+### IA
+- **Claude (Anthropic)** : analyse sémantique des idées soumises
+- **Whisper (OpenAI)** : transcription audio → texte pour les idées vocales
+
+---
+
+## Base de données
+
+- **115 migrations SQL** dans `supabase/migrations/`
+- Types auto-générés : `lib/supabase/database.types.ts` (ne pas modifier à la main)
+- Régénérer : `npm run db:types`
+
+### Tables principales
+`profiles`, `equipes`, `tournees`, `transactions`, `donation_intents`, `fiscal_receipts`, `ideas`, `idea_votes`, `gallery_photos`, `gallery_likes`, `annonces`, `products`, `orders`, `partners`, `offers`, `versements`, `depot_fonds`, `challenges`, `leaderboards`
+
+---
+
+## Données communes
+
+- Source : `Nomdelacommune-CodeINSEE.csv` (racine)
+- Fichier généré : `data/communes-21.json` (consommé par le composant Communes)
+- Populations enrichies depuis `data/insee-communes.json`
+- Relancer la synchronisation si le CSV change : `npm run sync:communes`
+
+---
+
+## CI/CD
+
+### GitHub Actions
+- **`backup-daily.yml`** : sauvegarde quotidienne de la base de données et du storage Supabase vers Minio (3h UTC)
+
+### Déploiement
+- Déployé sur **Vercel** avec déploiement automatique depuis Git
+
+---
+
+## Documentation
+
+Une documentation détaillée est disponible dans le dossier `docs/` (90+ fichiers) couvrant :
+- Guides de déploiement et variables d'environnement
+- Système de design et modernisation UI
+- Intégrations (HelloAsso, Stripe, Resend)
+- Migrations et troubleshooting
+- Système de backup
+- Configuration PWA
+
+Fichiers clés à la racine :
+- `CLAUDE.md` — Instructions pour le développement assisté par IA
+- `TROUBLESHOOTING.md` — Problèmes courants et solutions
+- `PWA-SETUP.md` — Configuration PWA
+
+---
+
+## Licence
+
+Projet privé — Usage interne réservé à l'Amicale des Sapeurs-Pompiers de Clermont-l'Hérault.
