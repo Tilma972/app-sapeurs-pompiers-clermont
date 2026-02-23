@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { getCurrentUserClaims } from "@/lib/supabase/auth-cache";
 import { 
   Tournee, 
   TourneeCreate, 
@@ -14,16 +15,16 @@ import {
 export async function createTournee(tourneeData: TourneeCreate): Promise<Tournee | null> {
   const supabase = await createClient();
   
-  const { data: { user } } = await supabase.auth.getUser();
+  const claims = await getCurrentUserClaims();
   
-  if (!user) {
+  if (!claims?.sub) {
     return null;
   }
 
   const { data: tournee, error } = await supabase
     .from('tournees')
     .insert({
-      user_id: user.id,
+      user_id: claims.sub,
       ...tourneeData
     })
     .select()
@@ -43,9 +44,9 @@ export async function createTournee(tourneeData: TourneeCreate): Promise<Tournee
 export async function getTourneeById(tourneeId: string): Promise<Tournee | null> {
   const supabase = await createClient();
   
-  const { data: { user } } = await supabase.auth.getUser();
+  const claims = await getCurrentUserClaims();
   
-  if (!user) {
+  if (!claims?.sub) {
     return null;
   }
 
@@ -53,7 +54,7 @@ export async function getTourneeById(tourneeId: string): Promise<Tournee | null>
     .from('tournees')
     .select('*')
     .eq('id', tourneeId)
-    .eq('user_id', user.id)
+    .eq('user_id', claims.sub)
     .single();
 
   if (error) {
@@ -70,16 +71,16 @@ export async function getTourneeById(tourneeId: string): Promise<Tournee | null>
 export async function getActiveTournee(): Promise<Tournee | null> {
   const supabase = await createClient();
   
-  const { data: { user } } = await supabase.auth.getUser();
+  const claims = await getCurrentUserClaims();
   
-  if (!user) {
+  if (!claims?.sub) {
     return null;
   }
 
   const { data: tournee, error } = await supabase
     .from('tournees')
     .select('*')
-    .eq('user_id', user.id)
+    .eq('user_id', claims.sub)
     .eq('statut', 'active')
     .order('date_debut', { ascending: false })
     .limit(1)
@@ -99,16 +100,16 @@ export async function getActiveTournee(): Promise<Tournee | null> {
 export async function getUserTournees(): Promise<Tournee[]> {
   const supabase = await createClient();
   
-  const { data: { user } } = await supabase.auth.getUser();
+  const claims = await getCurrentUserClaims();
   
-  if (!user) {
+  if (!claims?.sub) {
     return [];
   }
 
   const { data: tournees, error } = await supabase
     .from('tournees')
     .select('*')
-    .eq('user_id', user.id)
+    .eq('user_id', claims.sub)
     .order('date_debut', { ascending: false });
 
   if (error) {
@@ -125,9 +126,9 @@ export async function getUserTournees(): Promise<Tournee[]> {
 export async function updateTournee(tourneeId: string, updates: TourneeUpdate): Promise<Tournee | null> {
   const supabase = await createClient();
   
-  const { data: { user } } = await supabase.auth.getUser();
+  const claims = await getCurrentUserClaims();
   
-  if (!user) {
+  if (!claims?.sub) {
     return null;
   }
 
@@ -135,7 +136,7 @@ export async function updateTournee(tourneeId: string, updates: TourneeUpdate): 
     .from('tournees')
     .update(updates)
     .eq('id', tourneeId)
-    .eq('user_id', user.id)
+    .eq('user_id', claims.sub)
     .select()
     .single();
 
@@ -209,14 +210,14 @@ export async function getTourneeDetailedStats(tourneeId: string): Promise<Tourne
 export async function getUserTourneeStats(): Promise<UserTourneeStats | null> {
   const supabase = await createClient();
   
-  const { data: { user } } = await supabase.auth.getUser();
+  const claims = await getCurrentUserClaims();
   
-  if (!user) {
+  if (!claims?.sub) {
     return null;
   }
 
   const { data, error } = await supabase.rpc('get_user_tournee_stats', {
-    user_uuid: user.id
+    user_uuid: claims.sub
   });
 
   if (error) {
@@ -233,9 +234,9 @@ export async function getUserTourneeStats(): Promise<UserTourneeStats | null> {
 export async function createNewActiveTournee(zone: string = 'Zone par défaut'): Promise<Tournee | null> {
   const supabase = await createClient();
   
-  const { data: { user } } = await supabase.auth.getUser();
+  const claims = await getCurrentUserClaims();
   
-  if (!user) {
+  if (!claims?.sub) {
     return null;
   }
 
@@ -244,14 +245,14 @@ export async function createNewActiveTournee(zone: string = 'Zone par défaut'):
     const { data: profile } = await supabase
       .from('profiles')
       .select('team_id')
-      .eq('id', user.id)
+      .eq('id', claims.sub)
       .single();
 
     // Vérifier s'il y a déjà une tournée active
     const { data: existingTournee } = await supabase
       .from('tournees')
       .select('id')
-      .eq('user_id', user.id)
+      .eq('user_id', claims.sub)
       .eq('statut', 'active')
       .single();
 
@@ -264,7 +265,7 @@ export async function createNewActiveTournee(zone: string = 'Zone par défaut'):
     const { data: newTournee, error } = await supabase
       .from('tournees')
       .insert({
-        user_id: user.id,
+        user_id: claims.sub,
         date_debut: new Date().toISOString(),
         statut: 'active',
         zone: zone,
@@ -297,9 +298,9 @@ export async function getActiveTourneeWithTransactions(): Promise<{
 } | null> {
   const supabase = await createClient();
   
-  const { data: { user } } = await supabase.auth.getUser();
+  const claims = await getCurrentUserClaims();
   
-  if (!user) {
+  if (!claims?.sub) {
     return null;
   }
 
@@ -308,7 +309,7 @@ export async function getActiveTourneeWithTransactions(): Promise<{
     const { data: tournee, error: tourneeError } = await supabase
       .from('tournees')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('user_id', claims.sub)
       .eq('statut', 'active')
       .order('date_debut', { ascending: false })
       .limit(1)
@@ -379,9 +380,9 @@ export async function getUserPersonalStats(): Promise<{
 } | null> {
   const supabase = await createClient();
 
-  const { data: { user } } = await supabase.auth.getUser();
+  const claims = await getCurrentUserClaims();
 
-  if (!user) {
+  if (!claims?.sub) {
     return null;
   }
 
@@ -390,7 +391,7 @@ export async function getUserPersonalStats(): Promise<{
     const { data: tournees, error } = await supabase
       .from('tournees')
       .select('calendriers_distribues, montant_collecte')
-      .eq('user_id', user.id)
+      .eq('user_id', claims.sub)
       .eq('statut', 'completed') // Uniquement les tournées clôturées
       .not('calendriers_distribues', 'is', null)
       .not('montant_collecte', 'is', null);
@@ -437,9 +438,9 @@ export async function getUserHistory(): Promise<{
 }[]> {
   const supabase = await createClient();
   
-  const { data: { user } } = await supabase.auth.getUser();
+  const claims = await getCurrentUserClaims();
   
-  if (!user) {
+  if (!claims?.sub) {
     return [];
   }
 
@@ -448,7 +449,7 @@ export async function getUserHistory(): Promise<{
     const { data: tournees, error: tourneesError } = await supabase
       .from('tournees')
       .select('id, date_fin, date_debut')
-      .eq('user_id', user.id)
+      .eq('user_id', claims.sub)
       .eq('statut', 'completed')
       .order('date_fin', { ascending: false })
       .limit(3);
@@ -504,8 +505,8 @@ export async function getLastCompletedTourneeSummary(): Promise<{
 } | null> {
   const supabase = await createClient();
 
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
+  const claims = await getCurrentUserClaims();
+  if (!claims?.sub) {
     return null;
   }
 
@@ -514,7 +515,7 @@ export async function getLastCompletedTourneeSummary(): Promise<{
     const { data: tournee, error: tourneeError } = await supabase
       .from('tournees')
       .select('id, date_fin, date_debut')
-      .eq('user_id', user.id)
+      .eq('user_id', claims.sub)
       .eq('statut', 'completed')
       .order('date_fin', { ascending: false })
       .limit(1)

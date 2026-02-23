@@ -4,6 +4,7 @@
  */
 
 import { createClient } from "@/lib/supabase/client";
+import { getCurrentUserClaims } from "@/lib/supabase/auth-cache";
 import type {
   Idea,
   IdeaWithAuthor,
@@ -107,7 +108,7 @@ export async function getIdeas(filters?: IdeaFilters) {
 export async function getIdeaById(ideaId: string) {
   const supabase = createClient();
   
-  const { data: { user } } = await supabase.auth.getUser();
+  const claims = await getCurrentUserClaims();
   
   const { data, error } = await supabase
     .from('ideas')
@@ -131,12 +132,12 @@ export async function getIdeaById(ideaId: string) {
 
   // Récupérer le vote de l'utilisateur si authentifié
   let userVote = null;
-  if (user) {
+  if (claims?.sub) {
     const { data: voteData } = await supabase
       .from('idea_votes')
       .select('vote_type')
       .eq('idea_id', ideaId)
-      .eq('user_id', user.id)
+      .eq('user_id', claims.sub)
       .maybeSingle();
     
     userVote = voteData?.vote_type || null;
@@ -165,9 +166,9 @@ export async function getIdeaById(ideaId: string) {
 export async function createIdea(ideaData: CreateIdeaData) {
   const supabase = createClient();
   
-  const { data: { user } } = await supabase.auth.getUser();
+  const claims = await getCurrentUserClaims();
   
-  if (!user) {
+  if (!claims?.sub) {
     throw new Error('User not authenticated');
   }
 
@@ -183,7 +184,7 @@ export async function createIdea(ideaData: CreateIdeaData) {
   const { data, error } = await supabase
     .from('ideas')
     .insert({
-      user_id: user.id,
+      user_id: claims.sub,
       titre: ideaData.titre,
       description: ideaData.description,
       audio_url: ideaData.audio_url || null,
@@ -211,9 +212,9 @@ export async function createIdea(ideaData: CreateIdeaData) {
 export async function updateIdea(ideaId: string, updates: UpdateIdeaData) {
   const supabase = createClient();
   
-  const { data: { user } } = await supabase.auth.getUser();
+  const claims = await getCurrentUserClaims();
   
-  if (!user) {
+  if (!claims?.sub) {
     throw new Error('User not authenticated');
   }
 
@@ -224,7 +225,7 @@ export async function updateIdea(ideaId: string, updates: UpdateIdeaData) {
     .eq('id', ideaId)
     .single();
 
-  if (!existingIdea || existingIdea.user_id !== user.id) {
+  if (!existingIdea || existingIdea.user_id !== claims.sub) {
     throw new Error('Unauthorized to update this idea');
   }
 
@@ -252,9 +253,9 @@ export async function updateIdea(ideaId: string, updates: UpdateIdeaData) {
 export async function deleteIdea(ideaId: string) {
   const supabase = createClient();
   
-  const { data: { user } } = await supabase.auth.getUser();
+  const claims = await getCurrentUserClaims();
   
-  if (!user) {
+  if (!claims?.sub) {
     throw new Error('User not authenticated');
   }
 
@@ -265,7 +266,7 @@ export async function deleteIdea(ideaId: string) {
     .eq('id', ideaId)
     .single();
 
-  if (!existingIdea || existingIdea.user_id !== user.id) {
+  if (!existingIdea || existingIdea.user_id !== claims.sub) {
     throw new Error('Unauthorized to delete this idea');
   }
 

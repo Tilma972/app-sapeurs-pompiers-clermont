@@ -2,24 +2,18 @@
 import { PwaBottomNav } from "@/components/layouts/pwa/pwa-bottom-nav"
 import { AppSidebar } from "@/components/app-sidebar"
 import { SidebarProvider } from "@/components/ui/sidebar"
-import { createClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
 import { getAvatarUrl } from "@/lib/utils/avatar"
+import { getUserWithProfile } from "@/lib/supabase/auth-cache"
 
 export default async function PwaLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const { user, profile } = await getUserWithProfile()
 
-  if (user) {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('is_active, first_name, last_name, avatar_url, full_name')
-      .eq('id', user.id)
-      .single()
+  if (user && profile) {
 
     if (profile && profile.is_active === false) {
       // Utilisateur non approuvé: renvoyer vers la landing avec un flag

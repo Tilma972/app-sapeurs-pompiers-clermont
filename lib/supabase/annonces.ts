@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/client"
+import { getCurrentUserClaims } from "@/lib/supabase/auth-cache"
 
 export type AnnonceStatut = "active" | "desactivee" | "vendue" | "reservee"
 
@@ -126,13 +127,13 @@ export async function getAnnonceById(id: string) {
 export async function getMyAnnonces() {
   const supabase = createClient()
 
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error("Non authentifié")
+  const claims = await getCurrentUserClaims()
+  if (!claims?.sub) throw new Error("Non authentifié")
 
   const { data, error } = await supabase
     .from("annonces")
     .select("*")
-    .eq("user_id", user.id)
+    .eq("user_id", claims.sub)
     .order("created_at", { ascending: false })
 
   if (error) {
@@ -149,8 +150,8 @@ export async function getMyAnnonces() {
 export async function createAnnonce(formData: AnnonceFormData) {
   const supabase = createClient()
 
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error("Non authentifié")
+  const claims = await getCurrentUserClaims()
+  if (!claims?.sub) throw new Error("Non authentifié")
 
   // Validation côté serveur
   if (!formData.titre || formData.titre.length < 5) {
@@ -175,7 +176,7 @@ export async function createAnnonce(formData: AnnonceFormData) {
   const { data, error } = await supabase
     .from("annonces")
     .insert({
-      user_id: user.id,
+      user_id: claims.sub,
       ...formData,
     })
     .select()
@@ -273,13 +274,13 @@ export async function deleteAnnonce(id: string) {
 export async function addToFavorites(annonceId: string) {
   const supabase = createClient()
 
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error("Non authentifié")
+  const claims = await getCurrentUserClaims()
+  if (!claims?.sub) throw new Error("Non authentifié")
 
   const { error } = await supabase
     .from("annonces_favoris")
     .insert({
-      user_id: user.id,
+      user_id: claims.sub,
       annonce_id: annonceId,
     })
 
@@ -295,13 +296,13 @@ export async function addToFavorites(annonceId: string) {
 export async function removeFromFavorites(annonceId: string) {
   const supabase = createClient()
 
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error("Non authentifié")
+  const claims = await getCurrentUserClaims()
+  if (!claims?.sub) throw new Error("Non authentifié")
 
   const { error } = await supabase
     .from("annonces_favoris")
     .delete()
-    .eq("user_id", user.id)
+    .eq("user_id", claims.sub)
     .eq("annonce_id", annonceId)
 
   if (error) {
@@ -316,8 +317,8 @@ export async function removeFromFavorites(annonceId: string) {
 export async function getMyFavorites() {
   const supabase = createClient()
 
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error("Non authentifié")
+  const claims = await getCurrentUserClaims()
+  if (!claims?.sub) throw new Error("Non authentifié")
 
   const { data, error } = await supabase
     .from("annonces_favoris")
@@ -333,7 +334,7 @@ export async function getMyFavorites() {
         )
       )
     `)
-    .eq("user_id", user.id)
+    .eq("user_id", claims.sub)
     .order("created_at", { ascending: false })
 
   if (error) {
@@ -351,13 +352,13 @@ export async function getMyFavorites() {
 export async function isFavorited(annonceId: string) {
   const supabase = createClient()
 
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return false
+  const claims = await getCurrentUserClaims()
+  if (!claims?.sub) return false
 
   const { data, error } = await supabase
     .from("annonces_favoris")
     .select("id")
-    .eq("user_id", user.id)
+    .eq("user_id", claims.sub)
     .eq("annonce_id", annonceId)
     .single()
 
