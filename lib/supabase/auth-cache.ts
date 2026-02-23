@@ -1,3 +1,5 @@
+'use server';
+
 /**
  * auth-cache.ts - Centralized authentication helpers with React.cache()
  * 
