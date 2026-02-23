@@ -1,0 +1,9 @@
+
+> typecheck
+> tsc -p tsconfig.json --noEmit
+
+app/api/webhooks/stripe-cagnotte/route.ts(81,37): error TS2339: Property 'targetAmount' does not exist on type '{ targetAmount: any; }[]'.
+app/api/webhooks/stripe-cagnotte/route.ts(94,55): error TS2339: Property 'targetAmount' does not exist on type '{ targetAmount: any; }[]'.
+prisma.config.ts(5,35): error TS2307: Cannot find module 'prisma/config' or its corresponding type declarations.
+scripts/test-db.ts(2,24): error TS7016: Could not find a declaration file for module 'pg'. 'C:/Users/calen/amicale-sp-app-prod/amicale-sp-prod/node_modules/pg/esm/index.mjs' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/pg` if it exists or add a new declaration (.d.ts) file containing `declare module 'pg';`
