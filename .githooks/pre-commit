@@ -1,0 +1,87 @@
+#!/usr/bin/env bash
+# ============================================================
+# pre-commit hook — Validation des fichiers de migration Supabase
+#
+# Règles :
+#   1. Format obligatoire : <14 chiffres>_<slug>.sql
+#      ex: 20260304153042_add_column_to_profiles.sql
+#
+#   2. Version (préfixe numérique) unique dans supabase/migrations/
+#      → pas deux fichiers avec le même timestamp
+#
+# Activation :
+#   git config core.hooksPath .githooks
+# ============================================================
+
+MIGRATIONS_DIR="supabase/migrations"
+ERRORS=0
+
+# ── Couleurs ──────────────────────────────────────────────────────────────────
+RED='\033[0;31m'; YELLOW='\033[1;33m'; GREEN='\033[0;32m'; NC='\033[0m'
+
+# ── 1. Fichiers de migration ajoutés/modifiés dans ce commit ─────────────────
+STAGED=$(git diff --cached --name-only --diff-filter=ACM | grep "^${MIGRATIONS_DIR}/.*\.sql$" || true)
+
+if [ -z "$STAGED" ]; then
+  exit 0   # Aucun fichier de migration concerné → rien à vérifier
+fi
+
+echo ""
+echo "  Supabase migration guard"
+echo "  ─────────────────────────────────────────"
+
+# ── 2. Validation du format des fichiers stagés ───────────────────────────────
+for filepath in $STAGED; do
+  filename=$(basename "$filepath")
+
+  # Format attendu : exactement 14 chiffres + underscore + slug alphanumérique + .sql
+  if ! echo "$filename" | grep -qE '^[0-9]{14}_[a-z0-9_]+\.sql$'; then
+    echo -e "  ${RED}ERREUR FORMAT${NC}  $filename"
+    echo -e "         Attendu : 20260304153042_mon_nom.sql  (14 chiffres, minuscules, underscores)"
+    ERRORS=$((ERRORS + 1))
+  fi
+done
+
+# ── 3. Détection doublons de version dans tout le dossier ────────────────────
+# Construire la liste complète : fichiers existants + fichiers stagés (sans les supprimés)
+DELETED=$(git diff --cached --name-only --diff-filter=D | grep "^${MIGRATIONS_DIR}/.*\.sql$" || true)
+
+# Collecter toutes les versions après commit simulé
+declare -A seen_versions
+
+for filepath in "${MIGRATIONS_DIR}"/*.sql; do
+  [ -f "$filepath" ] || continue
+  filename=$(basename "$filepath")
+
+  # Ignorer si ce fichier sera supprimé par ce commit
+  if echo "$DELETED" | grep -qF "${MIGRATIONS_DIR}/${filename}"; then
+    continue
+  fi
+
+  version=$(echo "$filename" | grep -oE '^[0-9]+')
+  [ -z "$version" ] && continue
+
+  if [ -n "${seen_versions[$version]}" ]; then
+    echo -e "  ${RED}ERREUR DOUBLON${NC}  version '$version' partagée par :"
+    echo -e "    - ${seen_versions[$version]}"
+    echo -e "    - $filename"
+    ERRORS=$((ERRORS + 1))
+  else
+    seen_versions[$version]=$filename
+  fi
+done
+
+# ── 4. Résultat ───────────────────────────────────────────────────────────────
+if [ "$ERRORS" -gt 0 ]; then
+  echo ""
+  echo -e "  ${RED}$ERRORS erreur(s) — commit bloqué.${NC}"
+  echo ""
+  echo -e "  ${YELLOW}Créer une migration correctement :${NC}"
+  echo -e "    pwsh scripts/new-migration.ps1 \"nom_de_la_migration\""
+  echo ""
+  exit 1
+fi
+
+echo -e "  ${GREEN}OK${NC} — toutes les migrations sont valides."
+echo ""
+exit 0
