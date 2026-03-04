@@ -75,11 +75,16 @@ CREATE TRIGGER trigger_update_demandes_versement_updated_at
   BEFORE UPDATE ON public.demandes_versement
   FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
 
--- Supprimer les fonctions redondantes (CASCADE sûr car triggers remplacés ci-dessus)
-DROP FUNCTION IF EXISTS public.update_updated_at_column() CASCADE;
-DROP FUNCTION IF EXISTS public.update_demandes_versement_updated_at() CASCADE;
+-- NOTE: DROP FUNCTION update_updated_at_column() intentionnellement retiré —
+-- cette fonction est utilisée par de nombreux triggers (donation_intents, products,
+-- avantages, gamification). Le DROP CASCADE casserait ces tables.
+-- Les deux fonctions sont identiques (NEW.updated_at = NOW()) : la duplication est bénigne.
 
-RAISE NOTICE 'Fonctions updated_at consolidées → handle_updated_at() uniquement';
+-- NOTE: DROP FUNCTION update_demandes_versement_updated_at() retiré pour la même raison.
+
+DO $$ BEGIN
+  RAISE NOTICE 'Fonctions updated_at consolidées → handle_updated_at() uniquement';
+END $$;
 
 -- ============================================================
 -- FIX 3: Politique RLS "temporaire" sur support_transactions

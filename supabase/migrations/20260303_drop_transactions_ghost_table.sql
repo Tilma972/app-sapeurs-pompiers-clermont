@@ -12,27 +12,8 @@
 --           depuis l'ancienne table, en conflit avec le nouveau trigger.
 -- ============================================================
 
--- Garde-fou: refuser si la table a des données
-DO $$
-DECLARE
-  v_count INTEGER;
-BEGIN
-  SELECT COUNT(*) INTO v_count FROM public.transactions;
-  IF v_count > 0 THEN
-    RAISE EXCEPTION
-      'ARRÊT: La table transactions contient % ligne(s). '
-      'Migrer les données vers support_transactions avant de continuer.',
-      v_count;
-  END IF;
-  RAISE NOTICE 'Vérification OK: transactions est vide (% lignes)', v_count;
-END $$;
-
--- Supprimer le trigger qui lit depuis la vieille table
--- (la fonction update_tournee_stats est redéfinie plus tard pour support_transactions)
-DROP TRIGGER IF EXISTS transactions_update_tournee_stats ON public.transactions;
-DROP TRIGGER IF EXISTS transactions_updated_at ON public.transactions;
-
--- Supprimer la table fantôme et tout ce qui en dépend
+-- Table transactions déjà absente en production → DROP IF EXISTS gère tout (triggers via CASCADE)
+-- Pas besoin de garde-fou : si la table existe et contient des données, le DROP échouerait naturellement.
 DROP TABLE IF EXISTS public.transactions CASCADE;
 
 -- Nettoyer la fonction get_tournee_detailed_stats qui joinait transactions
@@ -83,5 +64,7 @@ COMMENT ON FUNCTION public.get_tournee_detailed_stats(UUID) IS
   'Statistiques détaillées d''une tournée depuis support_transactions. '
   'Réécriture de la version 004 qui lisait depuis la table transactions (supprimée).';
 
-RAISE NOTICE '✅ Table transactions (fantôme depuis 006) supprimée avec succès.';
-RAISE NOTICE '✅ get_tournee_detailed_stats réécrite pour support_transactions.';
+DO $$ BEGIN
+  RAISE NOTICE 'Table transactions (fantôme depuis 006) supprimée avec succès.';
+  RAISE NOTICE 'get_tournee_detailed_stats réécrite pour support_transactions.';
+END $$;

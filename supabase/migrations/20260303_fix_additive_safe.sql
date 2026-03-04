@@ -37,14 +37,8 @@ CREATE INDEX IF NOT EXISTS profiles_inactive_idx
 -- FIX 3: Index manquants identifiés à l'audit
 -- ============================================================
 
--- Index GIN pour tableaux de communes (recherches géographiques)
-CREATE INDEX IF NOT EXISTS idx_equipes_communes_gin
-  ON public.equipes USING gin(communes)
-  WHERE communes IS NOT NULL;
-
-CREATE INDEX IF NOT EXISTS idx_tournees_communes_gin
-  ON public.tournees USING gin(communes)
-  WHERE communes IS NOT NULL;
+-- NOTE: idx_equipes_communes_gin / idx_tournees_communes_gin supprimés —
+-- la colonne 'communes' n'existe pas dans le schéma actuel.
 
 -- Index composite pour demandes_versement (vue trésorier)
 CREATE INDEX IF NOT EXISTS idx_demandes_versement_statut_created
@@ -68,12 +62,8 @@ CREATE INDEX IF NOT EXISTS idx_idea_comments_idea_active
 CREATE INDEX IF NOT EXISTS idx_zones_tournees_equipe_annee
   ON public.zones_tournees(equipe_id, annee);
 
--- Index leaderboard gamification
-CREATE INDEX IF NOT EXISTS idx_user_progression_xp
-  ON public.user_progression(xp_total DESC);
-
-CREATE INDEX IF NOT EXISTS idx_user_progression_level
-  ON public.user_progression(level DESC);
+-- NOTE: idx_user_progression_xp / idx_user_progression_level supprimés —
+-- ces index existent déjà (gamification 003) et la colonne s'appelle total_xp pas xp_total.
 
 -- ============================================================
 -- COMMENTAIRES
