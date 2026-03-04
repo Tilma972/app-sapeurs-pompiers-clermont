@@ -8,7 +8,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { PwaContainer } from "@/components/layouts/pwa/pwa-container";
 import { formatCurrency, formatDateLong } from "@/lib/formatters";
-import { getUserCompte, getPotEquipe, getMouvementsRetribution, getPotEquipeTournees } from "@/lib/supabase/compte";
+import { getUserCompte, getMouvementsRetribution, getPotEquipeTournees } from "@/lib/supabase/compte";
 import { getUserDemandes } from "@/lib/supabase/versement";
 import { getEquipeWithSettingsFromProfile } from "@/lib/supabase/equipes";
 import { RETRIBUTION_CONFIG, PAGINATION_CONFIG, VERSEMENT_CONFIG } from "@/lib/config";
@@ -35,13 +35,16 @@ export default async function MonComptePage() {
 
   const recommandationEquipe = eqWithSettings?.pourcentage_recommande_pot ?? RETRIBUTION_CONFIG.RECOMMANDE_POT_EQUIPE_DEFAULT;
 
-  // Pot d'équipe (uniquement si équipe existe)
-  const [potEquipe, potEquipeTournees] = eqWithSettings?.id
-    ? await Promise.all([
-        getPotEquipe(supabase, eqWithSettings.id),
-        getPotEquipeTournees(supabase, eqWithSettings.id),
-      ])
-    : [null, null];
+  // Pot d'équipe calculé depuis les tournées (uniquement si équipe existe)
+  const potEquipeTournees = eqWithSettings?.id
+    ? await getPotEquipeTournees(supabase, eqWithSettings.id)
+    : null;
+
+  // Historique filtré sur la campagne 2025 (tournées débutées entre nov 2024 et jan 2025)
+  const mouvements2025 = (mouvements ?? []).filter((m) => {
+    const d = new Date(m.created_at as string);
+    return d >= new Date('2024-11-01') && d <= new Date('2025-01-31');
+  });
 
   return (
     <PwaContainer>
@@ -80,7 +83,8 @@ export default async function MonComptePage() {
           </Alert>
         )}
 
-        <div className="grid gap-4 md:grid-cols-3">
+        {/* Métriques principales */}
+        <div className={`grid gap-4 ${montantNonDepose > 0 ? 'md:grid-cols-3' : 'md:grid-cols-2'}`}>
           <Card>
             <CardContent className="pt-6">
               <div className="text-sm text-muted-foreground mb-1">💰 Mon solde</div>
@@ -89,13 +93,15 @@ export default async function MonComptePage() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-sm text-muted-foreground mb-1">🏦 Fonds non déposés</div>
-              <div className="text-3xl font-bold">{formatCurrency(montantNonDepose)}</div>
-              <div className="text-xs text-muted-foreground mt-2">À remettre au trésorier</div>
-            </CardContent>
-          </Card>
+          {montantNonDepose > 0 && (
+            <Card>
+              <CardContent className="pt-6">
+                <div className="text-sm text-muted-foreground mb-1">🏦 Fonds non déposés</div>
+                <div className="text-3xl font-bold">{formatCurrency(montantNonDepose)}</div>
+                <div className="text-xs text-muted-foreground mt-2">À remettre au trésorier</div>
+              </CardContent>
+            </Card>
+          )}
 
           <Card>
             <CardContent className="pt-6">
@@ -106,9 +112,17 @@ export default async function MonComptePage() {
           </Card>
         </div>
 
-        {/* Détail des fonds collectés - Affiché uniquement si l'utilisateur a des fonds */}
+        {/* Détail des fonds collectés — collapsed par défaut */}
         {detailFonds.total_collecte > 0 && (
-          <DetailFondsCard detail={detailFonds} />
+          <details className="rounded-lg border bg-card">
+            <summary className="cursor-pointer px-6 py-4 flex items-center justify-between">
+              <span className="text-sm font-medium">📋 Détail de vos fonds collectés</span>
+              <span className="text-sm font-semibold">{formatCurrency(detailFonds.total_collecte)}</span>
+            </summary>
+            <div className="px-6 pb-4">
+              <DetailFondsCard detail={detailFonds} />
+            </div>
+          </details>
         )}
 
         {/* Pot d'équipe — Campagne calculée depuis les tournées complétées */}
@@ -128,22 +142,6 @@ export default async function MonComptePage() {
               </div>
             </CardContent>
           </Card>
-        )}
-
-        {/* Pot d'équipe (collapsible) - Affiché seulement si équipe ET pot existent */}
-        {eqWithSettings && potEquipe && (
-          <details className="rounded-lg border bg-card">
-            <summary className="cursor-pointer px-6 py-4 flex items-center justify-between">
-              <div>
-                <div className="text-sm text-muted-foreground">👥 Pot d&apos;équipe</div>
-                <div className="text-2xl font-bold">{formatCurrency(potEquipe.solde_disponible)}</div>
-              </div>
-              <div className="text-xs text-muted-foreground">Transparence: {eqWithSettings.mode_transparence || '—'}</div>
-            </summary>
-            <div className="p-4 border-t text-sm text-muted-foreground">
-              Détails des contributions disponibles selon le mode de transparence de l&apos;équipe.
-            </div>
-          </details>
         )}
 
         {/* Action: Demander un dépôt de fonds */}
@@ -212,11 +210,15 @@ export default async function MonComptePage() {
           </div>
         )}
 
-        {(mouvements && mouvements.length > 0) && (
-          <Card>
-            <CardContent className="pt-6 space-y-2">
-              <div className="text-sm font-medium mb-3">📊 Historique récent</div>
-              {(mouvements || []).map((m, idx) => (
+        {/* Historique récent — collapsed par défaut, filtré sur campagne 2025 */}
+        {mouvements2025.length > 0 && (
+          <details className="rounded-lg border bg-card">
+            <summary className="cursor-pointer px-6 py-4 flex items-center justify-between">
+              <span className="text-sm font-medium">📊 Historique récent</span>
+              <span className="text-xs text-muted-foreground">{mouvements2025.length} tournée{mouvements2025.length > 1 ? 's' : ''}</span>
+            </summary>
+            <div className="px-6 pb-4 space-y-2">
+              {mouvements2025.map((m, idx) => (
                 <div key={idx} className="flex items-center justify-between p-2 bg-muted/30 rounded text-sm">
                   <div className="text-muted-foreground">
                     {formatDateLong(m.created_at as string)}
@@ -227,24 +229,9 @@ export default async function MonComptePage() {
                   </div>
                 </div>
               ))}
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Lien vers Paramètres */}
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-sm text-muted-foreground mb-1">Paramètres</div>
-                <div className="text-base">Gérer ma préférence de répartition</div>
-              </div>
-              <Link href="/parametres">
-                <Button variant="secondary">Ouvrir</Button>
-              </Link>
             </div>
-          </CardContent>
-        </Card>
+          </details>
+        )}
       </div>
     </PwaContainer>
   );
