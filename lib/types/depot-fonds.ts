@@ -24,7 +24,7 @@ export interface DemandeDepotFonds {
 export interface DemandeDepotFondsAvecProfile extends DemandeDepotFonds {
   profiles: {
     full_name: string | null
-    team?: string | null  // Optional to avoid Supabase relation ambiguity with equipes table
+    equipes: { nom: string } | null
   } | null
   validateur?: {
     full_name: string | null

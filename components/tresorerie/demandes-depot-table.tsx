@@ -160,7 +160,7 @@ export function DemandesDepotTable({ demandes }: DemandesDepotTableProps) {
                         {demande.profiles?.full_name || 'Inconnu'}
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">
-                        {demande.profiles?.team || '-'}
+                        {demande.profiles?.equipes?.nom || '-'}
                       </TableCell>
                       <TableCell className="text-sm">
                         {format(new Date(demande.created_at), 'dd/MM/yyyy', { locale: fr })}

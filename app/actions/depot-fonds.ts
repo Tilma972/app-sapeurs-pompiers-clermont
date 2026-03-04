@@ -67,9 +67,14 @@ export async function creerDemandeDepotAction(input: CreerDemandeDepotInput) {
     // Récupérer les infos utilisateur pour l'email
     const { data: profile } = await supabase
       .from('profiles')
-      .select('full_name, team')
+      .select('full_name, team_id, equipes!profiles_team_id_fkey(nom)')
       .eq('id', user.id)
       .single()
+
+    // equipes is typed as array by generated types but PostgREST returns single object for FK
+    const equipeName = profile?.equipes
+      ? (Array.isArray(profile.equipes) ? profile.equipes[0]?.nom : (profile.equipes as unknown as { nom: string })?.nom)
+      : null
 
     // Envoyer email au trésorier
     try {
@@ -91,7 +96,7 @@ export async function creerDemandeDepotAction(input: CreerDemandeDepotInput) {
             subject: `🏦 Nouvelle demande de dépôt - ${profile?.full_name || 'Un sapeur-pompier'}`,
             html: `
               <h2>Nouvelle demande de dépôt de fonds</h2>
-              <p><strong>${profile?.full_name || 'Un sapeur-pompier'}</strong> ${profile?.team ? `(${profile.team})` : ''} souhaite déposer des fonds collectés.</p>
+              <p><strong>${profile?.full_name || 'Un sapeur-pompier'}</strong> ${equipeName ? `(${equipeName})` : ''} souhaite déposer des fonds collectés.</p>
 
               <div style="background: #f3f4f6; padding: 16px; border-radius: 8px; margin: 16px 0;">
                 <p style="margin: 4px 0;"><strong>Montant à déposer:</strong> ${input.montant_a_deposer.toFixed(2)}€</p>
