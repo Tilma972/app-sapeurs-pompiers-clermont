@@ -112,15 +112,19 @@ export default async function MonComptePage() {
         )}
 
         {/* Pot d'équipe — Campagne calculée depuis les tournées complétées */}
-        {eqWithSettings?.enable_retribution === true && potEquipeTournees && (
+        {eqWithSettings && potEquipeTournees && potEquipeTournees.total_collecte > 0 && (
           <Card>
-            <CardContent className="pt-6">
-              <div className="text-sm text-muted-foreground mb-1">
-                🏆 Pot d&apos;équipe · Campagne {potEquipeTournees.annee_campagne}
-              </div>
-              <div className="text-3xl font-bold">{formatCurrency(potEquipeTournees.part_equipe)}</div>
-              <div className="text-xs text-muted-foreground mt-2">
-                30% de {formatCurrency(potEquipeTournees.total_collecte)} collectés par l&apos;équipe
+            <CardContent className="pt-6 space-y-3">
+              <div className="text-sm font-medium">🏆 Pot d&apos;équipe</div>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Campagne {potEquipeTournees.annee_campagne}</span>
+                  <span className="font-semibold">{formatCurrency(potEquipeTournees.part_equipe)}</span>
+                </div>
+                <div className="flex items-center justify-between text-sm border-t pt-2">
+                  <span className="text-muted-foreground font-medium">Total disponible</span>
+                  <span className="font-bold">{formatCurrency(potEquipeTournees.part_equipe)}</span>
+                </div>
               </div>
             </CardContent>
           </Card>
