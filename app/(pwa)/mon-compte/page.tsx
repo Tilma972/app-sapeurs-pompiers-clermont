@@ -84,25 +84,31 @@ export default async function MonComptePage() {
         )}
 
         {/* Niveau 1 — Métriques principales */}
-        <div className={`grid gap-4 ${afficherPotEquipe ? 'grid-cols-2' : 'grid-cols-1'}`}>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-sm text-muted-foreground mb-1">💰 Mon solde</div>
+            <div className="text-3xl font-bold">{formatCurrency(compte?.solde_disponible)}</div>
+            <div className="text-xs text-muted-foreground mt-2">Disponible maintenant</div>
+          </CardContent>
+        </Card>
+
+        {afficherPotEquipe && (
           <Card>
-            <CardContent className="pt-6">
-              <div className="text-sm text-muted-foreground mb-1">💰 Mon solde</div>
-              <div className="text-3xl font-bold">{formatCurrency(compte?.solde_disponible)}</div>
-              <div className="text-xs text-muted-foreground mt-2">Disponible maintenant</div>
+            <CardContent className="pt-6 space-y-3">
+              <div className="text-sm font-medium">🏆 Pot d&apos;équipe</div>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Campagne {potEquipeTournees!.annee_campagne}</span>
+                  <span className="font-semibold">{formatCurrency(potEquipeTournees!.part_equipe)}</span>
+                </div>
+                <div className="flex items-center justify-between text-sm border-t pt-2">
+                  <span className="text-muted-foreground font-medium">Total disponible</span>
+                  <span className="font-bold">{formatCurrency(potEquipeTournees!.part_equipe)}</span>
+                </div>
+              </div>
             </CardContent>
           </Card>
-
-          {afficherPotEquipe && (
-            <Card>
-              <CardContent className="pt-6">
-                <div className="text-sm text-muted-foreground mb-1">🏆 Pot d&apos;équipe</div>
-                <div className="text-3xl font-bold">{formatCurrency(potEquipeTournees!.part_equipe)}</div>
-                <div className="text-xs text-muted-foreground mt-2">Campagne {potEquipeTournees!.annee_campagne}</div>
-              </CardContent>
-            </Card>
-          )}
-        </div>
+        )}
 
         {/* Niveau 2 — Actions */}
         {montantNonDepose > 0 && (
