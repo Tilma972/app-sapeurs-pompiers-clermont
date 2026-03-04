@@ -38,6 +38,7 @@ export type EquipeWithSettings = EquipeSettings & {
   id?: string
   nom?: string
   mode_transparence?: string
+  enable_retribution?: boolean | null
 }
 
 /**

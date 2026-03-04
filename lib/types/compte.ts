@@ -26,6 +26,16 @@ export type PotEquipe = {
 }
 
 /**
+ * Pot d'équipe calculé depuis les tournées complétées
+ * Indépendant des clôtures individuelles
+ */
+export type PotEquipeTournees = {
+  total_collecte: number
+  part_equipe: number
+  annee_campagne: number
+}
+
+/**
  * Mouvement de rétribution
  * Historique des transactions
  */

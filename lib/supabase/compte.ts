@@ -4,7 +4,7 @@
  */
 
 import { SupabaseClient } from "@supabase/supabase-js";
-import { CompteSolde, MouvementRetribution, PotEquipe } from "@/lib/types";
+import { CompteSolde, MouvementRetribution, PotEquipe, PotEquipeTournees } from "@/lib/types";
 import { DatabaseError, logError } from "@/lib/utils/error-handling";
 
 /**
@@ -124,6 +124,54 @@ export async function getMouvementsRetribution(
       metadata: { limit },
     });
     return [];
+  }
+}
+
+/**
+ * Calcule le pot d'équipe directement depuis les tournées complétées
+ * Indépendant des clôtures individuelles — affichage en lecture seule
+ */
+export async function getPotEquipeTournees(
+  supabase: SupabaseClient,
+  equipeId: string
+): Promise<PotEquipeTournees> {
+  try {
+    const { data, error } = await supabase
+      .from('tournees')
+      .select('montant_collecte, date_fin')
+      .eq('equipe_id', equipeId)
+      .eq('statut', 'completed');
+
+    if (error) {
+      throw new DatabaseError('Failed to fetch tournees for pot equipe', error);
+    }
+
+    const total_collecte = (data ?? []).reduce(
+      (sum, t) => sum + (t.montant_collecte ?? 0),
+      0
+    );
+
+    const maxDateFin = (data ?? []).reduce<string | null>(
+      (max, t) => (t.date_fin && (!max || t.date_fin > max) ? t.date_fin : max),
+      null
+    );
+
+    const annee_campagne = maxDateFin
+      ? new Date(maxDateFin).getFullYear()
+      : new Date().getFullYear();
+
+    return {
+      total_collecte,
+      part_equipe: total_collecte * 0.30,
+      annee_campagne,
+    };
+  } catch (error) {
+    logError(error, {
+      component: 'getPotEquipeTournees',
+      action: 'fetch',
+      metadata: { equipeId },
+    });
+    return { total_collecte: 0, part_equipe: 0, annee_campagne: new Date().getFullYear() };
   }
 }
 

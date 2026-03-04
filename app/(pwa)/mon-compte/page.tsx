@@ -8,7 +8,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { PwaContainer } from "@/components/layouts/pwa/pwa-container";
 import { formatCurrency, formatDateLong } from "@/lib/formatters";
-import { getUserCompte, getPotEquipe, getMouvementsRetribution } from "@/lib/supabase/compte";
+import { getUserCompte, getPotEquipe, getMouvementsRetribution, getPotEquipeTournees } from "@/lib/supabase/compte";
 import { getUserDemandes } from "@/lib/supabase/versement";
 import { getEquipeWithSettingsFromProfile } from "@/lib/supabase/equipes";
 import { RETRIBUTION_CONFIG, PAGINATION_CONFIG, VERSEMENT_CONFIG } from "@/lib/config";
@@ -36,9 +36,12 @@ export default async function MonComptePage() {
   const recommandationEquipe = eqWithSettings?.pourcentage_recommande_pot ?? RETRIBUTION_CONFIG.RECOMMANDE_POT_EQUIPE_DEFAULT;
 
   // Pot d'équipe (uniquement si équipe existe)
-  const potEquipe = eqWithSettings?.id 
-    ? await getPotEquipe(supabase, eqWithSettings.id) 
-    : null;
+  const [potEquipe, potEquipeTournees] = eqWithSettings?.id
+    ? await Promise.all([
+        getPotEquipe(supabase, eqWithSettings.id),
+        getPotEquipeTournees(supabase, eqWithSettings.id),
+      ])
+    : [null, null];
 
   return (
     <PwaContainer>
@@ -106,6 +109,21 @@ export default async function MonComptePage() {
         {/* Détail des fonds collectés - Affiché uniquement si l'utilisateur a des fonds */}
         {detailFonds.total_collecte > 0 && (
           <DetailFondsCard detail={detailFonds} />
+        )}
+
+        {/* Pot d'équipe — Campagne calculée depuis les tournées complétées */}
+        {eqWithSettings?.enable_retribution === true && potEquipeTournees && (
+          <Card>
+            <CardContent className="pt-6">
+              <div className="text-sm text-muted-foreground mb-1">
+                🏆 Pot d&apos;équipe · Campagne {potEquipeTournees.annee_campagne}
+              </div>
+              <div className="text-3xl font-bold">{formatCurrency(potEquipeTournees.part_equipe)}</div>
+              <div className="text-xs text-muted-foreground mt-2">
+                30% de {formatCurrency(potEquipeTournees.total_collecte)} collectés par l&apos;équipe
+              </div>
+            </CardContent>
+          </Card>
         )}
 
         {/* Pot d'équipe (collapsible) - Affiché seulement si équipe ET pot existent */}
