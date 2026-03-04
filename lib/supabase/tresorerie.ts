@@ -148,12 +148,11 @@ export async function getEquipesPotSummary(annee: number): Promise<EquipePotSumm
     const supabase = await createClient();
 
     try {
-        // 1. Équipes actives avec rétribution activée
+        // 1. Toutes les équipes actives (y compris sans rétribution activée)
         const { data: equipes, error: equipeError } = await supabase
             .from('equipes')
             .select('id, nom')
             .eq('actif', true)
-            .eq('enable_retribution', true)
             .order('nom');
 
         if (equipeError) throw equipeError;
