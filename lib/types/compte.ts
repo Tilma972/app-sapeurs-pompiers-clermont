@@ -44,3 +44,32 @@ export type MouvementRetribution = {
   montant_total_collecte: number | null
   montant_compte_perso: number | null
 }
+
+/**
+ * Solde antérieur d'une équipe pour une année donnée
+ * Saisi manuellement par le trésorier
+ */
+export type PotEquipeHistorique = {
+  id: string
+  equipe_id: string
+  annee: number
+  solde_anterieur: number
+  notes: string | null
+  created_by: string | null
+  created_at: string
+  updated_at: string
+}
+
+/**
+ * Résumé du pot d'équipe pour l'interface trésorier
+ * Combine le pot calculé depuis les tournées et le solde antérieur saisi
+ */
+export type EquipePotSummary = {
+  equipe_id: string
+  equipe_nom: string
+  part_equipe_campagne: number   // Calculé depuis les tournées complétées
+  annee_campagne: number
+  solde_anterieur: number        // Depuis pots_equipe_historique
+  total_disponible: number       // = part_equipe_campagne + solde_anterieur
+  historique_id: string | null   // null si pas encore saisi
+}

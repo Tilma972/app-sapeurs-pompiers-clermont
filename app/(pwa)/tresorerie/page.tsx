@@ -1,12 +1,13 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { isTreasurerRole } from "@/lib/config";
-import { getTresorerieKPIs, getDemandesEnAttente } from "@/lib/supabase/tresorerie";
+import { getTresorerieKPIs, getDemandesEnAttente, getEquipesPotSummary } from "@/lib/supabase/tresorerie";
 import { getToutesDemandesDepot } from "@/lib/supabase/depot-fonds";
 import { TresorerieKPI } from "@/components/tresorerie/tresorerie-kpi";
 import { DemandesEnAttenteListe } from "@/components/tresorerie/demandes-en-attente-liste";
 import { DemandesDepotTable } from "@/components/tresorerie/demandes-depot-table";
 import { EnregistrerDepotDirectButton } from "@/components/tresorerie/enregistrer-depot-direct-button";
+import { SoldesAnterieursSection } from "@/components/tresorerie/soldes-anterieurs-section";
 import { PwaContainer } from "@/components/layouts/pwa/pwa-container";
 
 export default async function TresoreriePage() {
@@ -27,10 +28,12 @@ export default async function TresoreriePage() {
   }
 
   // 2. Récupération des données
-  const [kpis, demandesEnAttente, demandesDepot] = await Promise.all([
+  const anneeCampagne = new Date().getFullYear();
+  const [kpis, demandesEnAttente, demandesDepot, equipesPotSummary] = await Promise.all([
     getTresorerieKPIs(),
     getDemandesEnAttente(),
     getToutesDemandesDepot(supabase).catch(() => []),
+    getEquipesPotSummary(anneeCampagne).catch(() => []),
   ]);
 
   return (
@@ -63,6 +66,14 @@ export default async function TresoreriePage() {
             Demandes de versement en attente
           </h2>
           <DemandesEnAttenteListe demandes={demandesEnAttente} />
+        </div>
+
+        {/* Soldes antérieurs par équipe */}
+        <div className="space-y-4">
+          <h2 className="text-xl font-semibold tracking-tight">
+            Soldes antérieurs par équipe
+          </h2>
+          <SoldesAnterieursSection summaries={equipesPotSummary} annee={anneeCampagne} />
         </div>
       </div>
     </PwaContainer>

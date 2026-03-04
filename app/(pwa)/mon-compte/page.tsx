@@ -8,7 +8,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { PwaContainer } from "@/components/layouts/pwa/pwa-container";
 import { formatCurrency, formatDateLong } from "@/lib/formatters";
-import { getUserCompte, getMouvementsRetribution, getPotEquipeTournees } from "@/lib/supabase/compte";
+import { getUserCompte, getMouvementsRetribution, getPotEquipeTournees, getSoldeAnterieur } from "@/lib/supabase/compte";
 import { getUserDemandes } from "@/lib/supabase/versement";
 import { getEquipeWithSettingsFromProfile } from "@/lib/supabase/equipes";
 import { RETRIBUTION_CONFIG, PAGINATION_CONFIG, VERSEMENT_CONFIG } from "@/lib/config";
@@ -40,13 +40,22 @@ export default async function MonComptePage() {
     ? await getPotEquipeTournees(supabase, eqWithSettings.id)
     : null;
 
+  // Solde antérieur saisi par le trésorier pour cette équipe et cette année de campagne
+  const soldeAnterieur = eqWithSettings?.id && potEquipeTournees
+    ? await getSoldeAnterieur(supabase, eqWithSettings.id, potEquipeTournees.annee_campagne)
+    : 0;
+
+  const totalDisponibleEquipe = (potEquipeTournees?.part_equipe ?? 0) + soldeAnterieur;
+
   // Historique filtré sur la campagne 2025 (tournées débutées entre nov 2024 et jan 2025)
   const mouvements2025 = (mouvements ?? []).filter((m) => {
     const d = new Date(m.created_at as string);
     return d >= new Date('2024-11-01') && d <= new Date('2025-01-31');
   });
 
-  const afficherPotEquipe = eqWithSettings && potEquipeTournees && potEquipeTournees.total_collecte > 0;
+  const afficherPotEquipe = eqWithSettings && potEquipeTournees && (
+    potEquipeTournees.total_collecte > 0 || soldeAnterieur > 0
+  );
 
   return (
     <PwaContainer>
@@ -96,8 +105,23 @@ export default async function MonComptePage() {
           <Card>
             <CardContent className="pt-6">
               <div className="text-sm text-muted-foreground mb-1">🏆 Pot d&apos;équipe · Campagne {potEquipeTournees!.annee_campagne}</div>
-              <div className="text-3xl font-bold">{formatCurrency(potEquipeTournees!.part_equipe)}</div>
+              <div className="text-3xl font-bold">{formatCurrency(totalDisponibleEquipe)}</div>
               <div className="text-xs text-muted-foreground mt-2">Total disponible</div>
+              {soldeAnterieur > 0 && potEquipeTournees!.total_collecte > 0 && (
+                <div className="mt-3 space-y-1 border-t pt-2">
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>Pot campagne {potEquipeTournees!.annee_campagne}</span>
+                    <span className="tabular-nums">{formatCurrency(potEquipeTournees!.part_equipe)}</span>
+                  </div>
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>Report solde antérieur</span>
+                    <span className="tabular-nums">{formatCurrency(soldeAnterieur)}</span>
+                  </div>
+                </div>
+              )}
+              {soldeAnterieur > 0 && potEquipeTournees!.total_collecte === 0 && (
+                <div className="text-xs text-muted-foreground mt-1">Report de solde antérieur</div>
+              )}
             </CardContent>
           </Card>
         )}

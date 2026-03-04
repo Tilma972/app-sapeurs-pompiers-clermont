@@ -176,6 +176,38 @@ export async function getPotEquipeTournees(
 }
 
 /**
+ * Récupère le solde antérieur d'une équipe pour une année donnée
+ * Saisi manuellement par le trésorier dans pots_equipe_historique
+ */
+export async function getSoldeAnterieur(
+  supabase: SupabaseClient,
+  equipeId: string,
+  annee: number
+): Promise<number> {
+  try {
+    const { data, error } = await supabase
+      .from('pots_equipe_historique')
+      .select('solde_anterieur')
+      .eq('equipe_id', equipeId)
+      .eq('annee', annee)
+      .maybeSingle();
+
+    if (error) {
+      throw new DatabaseError('Failed to fetch solde anterieur', error);
+    }
+
+    return data?.solde_anterieur ?? 0;
+  } catch (error) {
+    logError(error, {
+      component: 'getSoldeAnterieur',
+      action: 'fetch',
+      metadata: { equipeId, annee },
+    });
+    return 0;
+  }
+}
+
+/**
  * Met à jour la préférence de répartition
  */
 export async function updateUserPreference(
