@@ -46,6 +46,8 @@ export default async function MonComptePage() {
     return d >= new Date('2024-11-01') && d <= new Date('2025-01-31');
   });
 
+  const afficherPotEquipe = eqWithSettings && potEquipeTournees && potEquipeTournees.total_collecte > 0;
+
   return (
     <PwaContainer>
       <div className="space-y-6 pb-20">
@@ -63,7 +65,7 @@ export default async function MonComptePage() {
           </p>
         </div>
 
-        {/* Si l'utilisateur n'a pas encore de compte (pas de clôture) */}
+        {/* Alertes contextuelles */}
         {!compte && (
           <Alert>
             <AlertTitle>Pas encore de compte</AlertTitle>
@@ -72,8 +74,6 @@ export default async function MonComptePage() {
             </AlertDescription>
           </Alert>
         )}
-
-        {/* Si l'utilisateur n'a pas d'équipe */}
         {!eqWithSettings && (
           <Alert>
             <AlertTitle>Pas encore d&apos;équipe</AlertTitle>
@@ -83,8 +83,8 @@ export default async function MonComptePage() {
           </Alert>
         )}
 
-        {/* Métriques principales */}
-        <div className={`grid gap-4 ${montantNonDepose > 0 ? 'md:grid-cols-3' : 'md:grid-cols-2'}`}>
+        {/* Niveau 1 — Métriques principales */}
+        <div className={`grid gap-4 ${afficherPotEquipe ? 'grid-cols-2' : 'grid-cols-1'}`}>
           <Card>
             <CardContent className="pt-6">
               <div className="text-sm text-muted-foreground mb-1">💰 Mon solde</div>
@@ -93,58 +93,18 @@ export default async function MonComptePage() {
             </CardContent>
           </Card>
 
-          {montantNonDepose > 0 && (
+          {afficherPotEquipe && (
             <Card>
               <CardContent className="pt-6">
-                <div className="text-sm text-muted-foreground mb-1">🏦 Fonds non déposés</div>
-                <div className="text-3xl font-bold">{formatCurrency(montantNonDepose)}</div>
-                <div className="text-xs text-muted-foreground mt-2">À remettre au trésorier</div>
+                <div className="text-sm text-muted-foreground mb-1">🏆 Pot d&apos;équipe</div>
+                <div className="text-3xl font-bold">{formatCurrency(potEquipeTournees!.part_equipe)}</div>
+                <div className="text-xs text-muted-foreground mt-2">Campagne {potEquipeTournees!.annee_campagne}</div>
               </CardContent>
             </Card>
           )}
-
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-sm text-muted-foreground mb-1">🎯 Ma préférence</div>
-              <div className="text-3xl font-bold">{(compte?.pourcentage_pot_equipe_defaut ?? recommandationEquipe)}%</div>
-              <div className="text-xs text-muted-foreground mt-2">Part au pot d&apos;équipe</div>
-            </CardContent>
-          </Card>
         </div>
 
-        {/* Détail des fonds collectés — collapsed par défaut */}
-        {detailFonds.total_collecte > 0 && (
-          <details className="rounded-lg border bg-card">
-            <summary className="cursor-pointer px-6 py-4 flex items-center justify-between">
-              <span className="text-sm font-medium">📋 Détail de vos fonds collectés</span>
-              <span className="text-sm font-semibold">{formatCurrency(detailFonds.total_collecte)}</span>
-            </summary>
-            <div className="px-6 pb-4">
-              <DetailFondsCard detail={detailFonds} />
-            </div>
-          </details>
-        )}
-
-        {/* Pot d'équipe — Campagne calculée depuis les tournées complétées */}
-        {eqWithSettings && potEquipeTournees && potEquipeTournees.total_collecte > 0 && (
-          <Card>
-            <CardContent className="pt-6 space-y-3">
-              <div className="text-sm font-medium">🏆 Pot d&apos;équipe</div>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Campagne {potEquipeTournees.annee_campagne}</span>
-                  <span className="font-semibold">{formatCurrency(potEquipeTournees.part_equipe)}</span>
-                </div>
-                <div className="flex items-center justify-between text-sm border-t pt-2">
-                  <span className="text-muted-foreground font-medium">Total disponible</span>
-                  <span className="font-bold">{formatCurrency(potEquipeTournees.part_equipe)}</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Action: Demander un dépôt de fonds */}
+        {/* Niveau 2 — Actions */}
         {montantNonDepose > 0 && (
           <Card className="border-orange-500/20 bg-orange-50 dark:bg-orange-950/20">
             <CardContent className="pt-6">
@@ -166,7 +126,6 @@ export default async function MonComptePage() {
           </Card>
         )}
 
-        {/* Action: Demander un versement */}
         {compte && compte.solde_disponible && compte.solde_disponible >= VERSEMENT_CONFIG.MONTANT_MINIMUM_VERSEMENT && (
           <Card className="border-primary/20 bg-primary/5">
             <CardContent className="pt-6">
@@ -188,33 +147,23 @@ export default async function MonComptePage() {
           </Card>
         )}
 
-        {/* Mes demandes de dépôt de fonds */}
-        {demandesDepot && demandesDepot.length > 0 && (
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold">Mes demandes de dépôt</h2>
-              <Badge variant="outline">{demandesDepot.length}</Badge>
+        {/* Niveau 3 — Détails collapsed par défaut */}
+        {detailFonds.total_collecte > 0 && (
+          <details className="rounded-lg border bg-card">
+            <summary className="cursor-pointer px-6 py-4 flex items-center justify-between">
+              <span className="text-sm font-medium">📋 Détail de vos fonds collectés</span>
+              <span className="text-sm font-semibold">{formatCurrency(detailFonds.total_collecte)}</span>
+            </summary>
+            <div className="px-6 pb-4">
+              <DetailFondsCard detail={detailFonds} />
             </div>
-            <DemandesDepotListe demandes={demandesDepot} />
-          </div>
+          </details>
         )}
 
-        {/* Mes demandes de versement */}
-        {demandes && demandes.length > 0 && (
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold">Mes demandes de versement</h2>
-              <Badge variant="outline">{demandes.length}</Badge>
-            </div>
-            <DemandesListe demandes={demandes} />
-          </div>
-        )}
-
-        {/* Historique récent — collapsed par défaut, filtré sur campagne 2025 */}
         {mouvements2025.length > 0 && (
           <details className="rounded-lg border bg-card">
             <summary className="cursor-pointer px-6 py-4 flex items-center justify-between">
-              <span className="text-sm font-medium">📊 Historique récent</span>
+              <span className="text-sm font-medium">📊 Historique des tournées</span>
               <span className="text-xs text-muted-foreground">{mouvements2025.length} tournée{mouvements2025.length > 1 ? 's' : ''}</span>
             </summary>
             <div className="px-6 pb-4 space-y-2">
@@ -232,6 +181,42 @@ export default async function MonComptePage() {
             </div>
           </details>
         )}
+
+        {/* Niveau 4 — Bas de page : config et historique administratif */}
+        {demandes && demandes.length > 0 && (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold">Mes demandes de versement</h2>
+              <Badge variant="outline">{demandes.length}</Badge>
+            </div>
+            <DemandesListe demandes={demandes} />
+          </div>
+        )}
+
+        {demandesDepot && demandesDepot.length > 0 && (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold">Mes demandes de dépôt</h2>
+              <Badge variant="outline">{demandesDepot.length}</Badge>
+            </div>
+            <DemandesDepotListe demandes={demandesDepot} />
+          </div>
+        )}
+
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-sm text-muted-foreground mb-1">🎯 Ma préférence de répartition</div>
+                <div className="text-2xl font-bold">{(compte?.pourcentage_pot_equipe_defaut ?? recommandationEquipe)}%</div>
+                <div className="text-xs text-muted-foreground mt-1">Part au pot d&apos;équipe</div>
+              </div>
+              <Link href="/parametres">
+                <Button variant="secondary" size="sm">Modifier</Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </PwaContainer>
   );
