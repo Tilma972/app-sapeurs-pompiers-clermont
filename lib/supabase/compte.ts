@@ -138,7 +138,7 @@ export async function getPotEquipeTournees(
   try {
     const { data, error } = await supabase
       .from('tournees')
-      .select('montant_collecte, date_fin')
+      .select('montant_collecte, date_debut')
       .eq('equipe_id', equipeId)
       .eq('statut', 'completed');
 
@@ -151,13 +151,13 @@ export async function getPotEquipeTournees(
       0
     );
 
-    const maxDateFin = (data ?? []).reduce<string | null>(
-      (max, t) => (t.date_fin && (!max || t.date_fin > max) ? t.date_fin : max),
+    const maxDateDebut = (data ?? []).reduce<string | null>(
+      (max, t) => (t.date_debut && (!max || t.date_debut > max) ? t.date_debut : max),
       null
     );
 
-    const annee_campagne = maxDateFin
-      ? new Date(maxDateFin).getFullYear()
+    const annee_campagne = maxDateDebut
+      ? new Date(maxDateDebut).getFullYear()
       : new Date().getFullYear();
 
     return {
