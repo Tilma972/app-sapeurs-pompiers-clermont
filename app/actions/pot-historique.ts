@@ -54,10 +54,6 @@ export async function upsertSoldeAnterieurAction(input: {
     }
 
     // Validation métier
-    if (input.solde < 0) {
-      return { success: false, error: 'Le solde ne peut pas être négatif' }
-    }
-
     const currentYear = new Date().getFullYear()
     if (input.annee < 2020 || input.annee > currentYear + 1) {
       return { success: false, error: 'Année invalide' }

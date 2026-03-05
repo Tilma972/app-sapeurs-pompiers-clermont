@@ -143,7 +143,6 @@ export function SoldesAnterieursSection({ summaries, annee }: SoldesAnterieursPr
                     <TableCell>
                       <Input
                         type="number"
-                        min="0"
                         step="0.01"
                         value={row.solde}
                         onChange={(e) =>
