@@ -3,11 +3,13 @@ import { redirect } from "next/navigation";
 import { isTreasurerRole } from "@/lib/config";
 import { getTresorerieKPIs, getDemandesEnAttente, getEquipesPotSummary } from "@/lib/supabase/tresorerie";
 import { getToutesDemandesDepot } from "@/lib/supabase/depot-fonds";
+import { getAllDemandesPot } from "@/lib/supabase/pot-depenses";
 import { TresorerieKPI } from "@/components/tresorerie/tresorerie-kpi";
 import { DemandesEnAttenteListe } from "@/components/tresorerie/demandes-en-attente-liste";
 import { DemandesDepotTable } from "@/components/tresorerie/demandes-depot-table";
 import { EnregistrerDepotDirectButton } from "@/components/tresorerie/enregistrer-depot-direct-button";
 import { SoldesAnterieursSection } from "@/components/tresorerie/soldes-anterieurs-section";
+import { DemandesPotTresorier } from "@/components/pot-depenses/demandes-pot-tresorier";
 import { PwaContainer } from "@/components/layouts/pwa/pwa-container";
 
 export default async function TresoreriePage() {
@@ -29,11 +31,12 @@ export default async function TresoreriePage() {
 
   // 2. Récupération des données
   const anneeCampagne = new Date().getFullYear();
-  const [kpis, demandesEnAttente, demandesDepot, equipesPotSummary] = await Promise.all([
+  const [kpis, demandesEnAttente, demandesDepot, equipesPotSummary, demandesPot] = await Promise.all([
     getTresorerieKPIs(),
     getDemandesEnAttente(),
     getToutesDemandesDepot(supabase).catch(() => []),
     getEquipesPotSummary(anneeCampagne).catch(() => []),
+    getAllDemandesPot(supabase).catch(() => []),
   ]);
 
   return (
@@ -74,6 +77,14 @@ export default async function TresoreriePage() {
             Soldes antérieurs par équipe
           </h2>
           <SoldesAnterieursSection summaries={equipesPotSummary} annee={anneeCampagne} />
+        </div>
+
+        {/* Dépenses pot d'équipe */}
+        <div className="space-y-4">
+          <h2 className="text-xl font-semibold tracking-tight">
+            Dépenses pot d&apos;équipe
+          </h2>
+          <DemandesPotTresorier demandes={demandesPot} />
         </div>
       </div>
     </PwaContainer>
