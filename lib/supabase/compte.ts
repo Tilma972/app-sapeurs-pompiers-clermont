@@ -4,7 +4,7 @@
  */
 
 import { SupabaseClient } from "@supabase/supabase-js";
-import { CompteSolde, MouvementRetribution, PotEquipe } from "@/lib/types";
+import { CompteSolde, MouvementRetribution, PotEquipe, PotEquipeTournees } from "@/lib/types";
 import { DatabaseError, logError } from "@/lib/utils/error-handling";
 
 /**
@@ -124,6 +124,86 @@ export async function getMouvementsRetribution(
       metadata: { limit },
     });
     return [];
+  }
+}
+
+/**
+ * Calcule le pot d'équipe directement depuis les tournées complétées
+ * Indépendant des clôtures individuelles — affichage en lecture seule
+ */
+export async function getPotEquipeTournees(
+  supabase: SupabaseClient,
+  equipeId: string
+): Promise<PotEquipeTournees> {
+  try {
+    const { data, error } = await supabase
+      .from('tournees')
+      .select('montant_collecte, date_debut')
+      .eq('equipe_id', equipeId)
+      .eq('statut', 'completed');
+
+    if (error) {
+      throw new DatabaseError('Failed to fetch tournees for pot equipe', error);
+    }
+
+    const total_collecte = (data ?? []).reduce(
+      (sum, t) => sum + (t.montant_collecte ?? 0),
+      0
+    );
+
+    const maxDateDebut = (data ?? []).reduce<string | null>(
+      (max, t) => (t.date_debut && (!max || t.date_debut > max) ? t.date_debut : max),
+      null
+    );
+
+    const annee_campagne = maxDateDebut
+      ? new Date(maxDateDebut).getFullYear()
+      : new Date().getFullYear();
+
+    return {
+      total_collecte,
+      part_equipe: total_collecte * 0.30,
+      annee_campagne,
+    };
+  } catch (error) {
+    logError(error, {
+      component: 'getPotEquipeTournees',
+      action: 'fetch',
+      metadata: { equipeId },
+    });
+    return { total_collecte: 0, part_equipe: 0, annee_campagne: new Date().getFullYear() };
+  }
+}
+
+/**
+ * Récupère le solde antérieur d'une équipe pour une année donnée
+ * Saisi manuellement par le trésorier dans pots_equipe_historique
+ */
+export async function getSoldeAnterieur(
+  supabase: SupabaseClient,
+  equipeId: string,
+  annee: number
+): Promise<number> {
+  try {
+    const { data, error } = await supabase
+      .from('pots_equipe_historique')
+      .select('solde_anterieur')
+      .eq('equipe_id', equipeId)
+      .eq('annee', annee)
+      .maybeSingle();
+
+    if (error) {
+      throw new DatabaseError('Failed to fetch solde anterieur', error);
+    }
+
+    return data?.solde_anterieur ?? 0;
+  } catch (error) {
+    logError(error, {
+      component: 'getSoldeAnterieur',
+      action: 'fetch',
+      metadata: { equipeId, annee },
+    });
+    return 0;
   }
 }
 

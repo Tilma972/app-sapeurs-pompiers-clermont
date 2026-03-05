@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { EquipePotSummary } from "@/lib/types";
 
 
 export type TresorerieKPIs = {
@@ -134,6 +135,90 @@ export async function getDemandesEnAttente(): Promise<DemandeVersement[]> {
         });
     } catch (error) {
         console.error('Erreur lors de la récupération des demandes en attente:', error);
+        return [];
+    }
+}
+
+/**
+ * Récupère toutes les équipes ayant la rétribution activée
+ * avec leur pot campagne calculé et le solde antérieur saisi
+ * Utilisé dans le dashboard trésorier pour la saisie des soldes antérieurs
+ */
+export async function getEquipesPotSummary(annee: number): Promise<EquipePotSummary[]> {
+    const supabase = await createClient();
+
+    try {
+        // 1. Toutes les équipes actives (y compris sans rétribution activée)
+        const { data: equipes, error: equipeError } = await supabase
+            .from('equipes')
+            .select('id, nom')
+            .eq('actif', true)
+            .order('nom');
+
+        if (equipeError) throw equipeError;
+        if (!equipes || equipes.length === 0) return [];
+
+        const equipeIds = equipes.map((e) => e.id);
+
+        // 2. Tournées complétées pour ces équipes
+        const { data: tournees, error: tourneeError } = await supabase
+            .from('tournees')
+            .select('equipe_id, montant_collecte, date_debut')
+            .in('equipe_id', equipeIds)
+            .eq('statut', 'completed');
+
+        if (tourneeError) throw tourneeError;
+
+        // 3. Soldes antérieurs pour l'année donnée
+        const { data: historiques, error: histError } = await supabase
+            .from('pots_equipe_historique')
+            .select('id, equipe_id, solde_anterieur, notes')
+            .in('equipe_id', equipeIds)
+            .eq('annee', annee);
+
+        if (histError) throw histError;
+
+        // Index pour accès rapide
+        const histMap = new Map(
+            (historiques ?? []).map((h) => [h.equipe_id, h])
+        );
+
+        // 4. Calculer le pot campagne par équipe
+        const tourneesParEquipe = new Map<string, { total: number; maxDate: string | null }>();
+        for (const t of tournees ?? []) {
+            const current = tourneesParEquipe.get(t.equipe_id) ?? { total: 0, maxDate: null };
+            const newTotal = current.total + (t.montant_collecte ?? 0);
+            const newDate =
+                t.date_debut && (!current.maxDate || t.date_debut > current.maxDate)
+                    ? t.date_debut
+                    : current.maxDate;
+            tourneesParEquipe.set(t.equipe_id, { total: newTotal, maxDate: newDate });
+        }
+
+        return equipes.map((equipe) => {
+            const tourneeData = tourneesParEquipe.get(equipe.id);
+            const part_equipe_campagne = (tourneeData?.total ?? 0) * 0.30;
+
+            const annee_campagne = tourneeData?.maxDate
+                ? new Date(tourneeData.maxDate).getFullYear()
+                : annee;
+
+            const hist = histMap.get(equipe.id);
+            const solde_anterieur = hist?.solde_anterieur ?? 0;
+
+            return {
+                equipe_id: equipe.id,
+                equipe_nom: equipe.nom,
+                part_equipe_campagne,
+                annee_campagne,
+                solde_anterieur,
+                notes: hist?.notes ?? null,
+                total_disponible: part_equipe_campagne + solde_anterieur,
+                historique_id: hist?.id ?? null,
+            };
+        });
+    } catch (error) {
+        console.error('Erreur lors de la récupération des pots équipe:', error);
         return [];
     }
 }

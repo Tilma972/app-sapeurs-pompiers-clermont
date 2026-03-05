@@ -8,7 +8,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { PwaContainer } from "@/components/layouts/pwa/pwa-container";
 import { formatCurrency, formatDateLong } from "@/lib/formatters";
-import { getUserCompte, getPotEquipe, getMouvementsRetribution } from "@/lib/supabase/compte";
+import { getUserCompte, getMouvementsRetribution, getPotEquipeTournees, getSoldeAnterieur } from "@/lib/supabase/compte";
 import { getUserDemandes } from "@/lib/supabase/versement";
 import { getEquipeWithSettingsFromProfile } from "@/lib/supabase/equipes";
 import { RETRIBUTION_CONFIG, PAGINATION_CONFIG, VERSEMENT_CONFIG } from "@/lib/config";
@@ -35,10 +35,27 @@ export default async function MonComptePage() {
 
   const recommandationEquipe = eqWithSettings?.pourcentage_recommande_pot ?? RETRIBUTION_CONFIG.RECOMMANDE_POT_EQUIPE_DEFAULT;
 
-  // Pot d'équipe (uniquement si équipe existe)
-  const potEquipe = eqWithSettings?.id 
-    ? await getPotEquipe(supabase, eqWithSettings.id) 
+  // Pot d'équipe calculé depuis les tournées (uniquement si équipe existe)
+  const potEquipeTournees = eqWithSettings?.id
+    ? await getPotEquipeTournees(supabase, eqWithSettings.id)
     : null;
+
+  // Solde antérieur saisi par le trésorier pour cette équipe et cette année de campagne
+  const soldeAnterieur = eqWithSettings?.id && potEquipeTournees
+    ? await getSoldeAnterieur(supabase, eqWithSettings.id, potEquipeTournees.annee_campagne)
+    : 0;
+
+  const totalDisponibleEquipe = (potEquipeTournees?.part_equipe ?? 0) + soldeAnterieur;
+
+  // Historique filtré sur la campagne 2025 (tournées débutées entre nov 2024 et jan 2025)
+  const mouvements2025 = (mouvements ?? []).filter((m) => {
+    const d = new Date(m.created_at as string);
+    return d >= new Date('2024-11-01') && d <= new Date('2025-01-31');
+  });
+
+  const afficherPotEquipe = eqWithSettings && potEquipeTournees && (
+    potEquipeTournees.total_collecte > 0 || soldeAnterieur > 0
+  );
 
   return (
     <PwaContainer>
@@ -57,7 +74,7 @@ export default async function MonComptePage() {
           </p>
         </div>
 
-        {/* Si l'utilisateur n'a pas encore de compte (pas de clôture) */}
+        {/* Alertes contextuelles */}
         {!compte && (
           <Alert>
             <AlertTitle>Pas encore de compte</AlertTitle>
@@ -66,8 +83,6 @@ export default async function MonComptePage() {
             </AlertDescription>
           </Alert>
         )}
-
-        {/* Si l'utilisateur n'a pas d'équipe */}
         {!eqWithSettings && (
           <Alert>
             <AlertTitle>Pas encore d&apos;équipe</AlertTitle>
@@ -77,54 +92,41 @@ export default async function MonComptePage() {
           </Alert>
         )}
 
-        <div className="grid gap-4 md:grid-cols-3">
+        {/* Niveau 1 — Métriques principales */}
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-sm text-muted-foreground mb-1">💰 Mon solde</div>
+            <div className="text-3xl font-bold">{formatCurrency(compte?.solde_disponible)}</div>
+            <div className="text-xs text-muted-foreground mt-2">Disponible maintenant</div>
+          </CardContent>
+        </Card>
+
+        {afficherPotEquipe && (
           <Card>
             <CardContent className="pt-6">
-              <div className="text-sm text-muted-foreground mb-1">💰 Mon solde</div>
-              <div className="text-3xl font-bold">{formatCurrency(compte?.solde_disponible)}</div>
-              <div className="text-xs text-muted-foreground mt-2">Disponible maintenant</div>
+              <div className="text-sm text-muted-foreground mb-1">🏆 Pot d&apos;équipe · Campagne {potEquipeTournees!.annee_campagne}</div>
+              <div className="text-3xl font-bold">{formatCurrency(totalDisponibleEquipe)}</div>
+              <div className="text-xs text-muted-foreground mt-2">Total disponible</div>
+              {soldeAnterieur > 0 && potEquipeTournees!.total_collecte > 0 && (
+                <div className="mt-3 space-y-1 border-t pt-2">
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>Pot campagne {potEquipeTournees!.annee_campagne}</span>
+                    <span className="tabular-nums">{formatCurrency(potEquipeTournees!.part_equipe)}</span>
+                  </div>
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>Report solde antérieur</span>
+                    <span className="tabular-nums">{formatCurrency(soldeAnterieur)}</span>
+                  </div>
+                </div>
+              )}
+              {soldeAnterieur > 0 && potEquipeTournees!.total_collecte === 0 && (
+                <div className="text-xs text-muted-foreground mt-1">Report de solde antérieur</div>
+              )}
             </CardContent>
           </Card>
-
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-sm text-muted-foreground mb-1">🏦 Fonds non déposés</div>
-              <div className="text-3xl font-bold">{formatCurrency(montantNonDepose)}</div>
-              <div className="text-xs text-muted-foreground mt-2">À remettre au trésorier</div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-sm text-muted-foreground mb-1">🎯 Ma préférence</div>
-              <div className="text-3xl font-bold">{(compte?.pourcentage_pot_equipe_defaut ?? recommandationEquipe)}%</div>
-              <div className="text-xs text-muted-foreground mt-2">Part au pot d&apos;équipe</div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Détail des fonds collectés - Affiché uniquement si l'utilisateur a des fonds */}
-        {detailFonds.total_collecte > 0 && (
-          <DetailFondsCard detail={detailFonds} />
         )}
 
-        {/* Pot d'équipe (collapsible) - Affiché seulement si équipe ET pot existent */}
-        {eqWithSettings && potEquipe && (
-          <details className="rounded-lg border bg-card">
-            <summary className="cursor-pointer px-6 py-4 flex items-center justify-between">
-              <div>
-                <div className="text-sm text-muted-foreground">👥 Pot d&apos;équipe</div>
-                <div className="text-2xl font-bold">{formatCurrency(potEquipe.solde_disponible)}</div>
-              </div>
-              <div className="text-xs text-muted-foreground">Transparence: {eqWithSettings.mode_transparence || '—'}</div>
-            </summary>
-            <div className="p-4 border-t text-sm text-muted-foreground">
-              Détails des contributions disponibles selon le mode de transparence de l&apos;équipe.
-            </div>
-          </details>
-        )}
-
-        {/* Action: Demander un dépôt de fonds */}
+        {/* Niveau 2 — Actions */}
         {montantNonDepose > 0 && (
           <Card className="border-orange-500/20 bg-orange-50 dark:bg-orange-950/20">
             <CardContent className="pt-6">
@@ -146,7 +148,6 @@ export default async function MonComptePage() {
           </Card>
         )}
 
-        {/* Action: Demander un versement */}
         {compte && compte.solde_disponible && compte.solde_disponible >= VERSEMENT_CONFIG.MONTANT_MINIMUM_VERSEMENT && (
           <Card className="border-primary/20 bg-primary/5">
             <CardContent className="pt-6">
@@ -168,33 +169,27 @@ export default async function MonComptePage() {
           </Card>
         )}
 
-        {/* Mes demandes de dépôt de fonds */}
-        {demandesDepot && demandesDepot.length > 0 && (
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold">Mes demandes de dépôt</h2>
-              <Badge variant="outline">{demandesDepot.length}</Badge>
+        {/* Niveau 3 — Détails collapsed par défaut */}
+        {detailFonds.total_collecte > 0 && (
+          <details className="rounded-lg border bg-card">
+            <summary className="cursor-pointer px-6 py-4 flex items-center justify-between">
+              <span className="text-sm font-medium">📋 Détail de vos fonds collectés</span>
+              <span className="text-sm font-semibold">{formatCurrency(detailFonds.total_collecte)}</span>
+            </summary>
+            <div className="px-6 pb-4">
+              <DetailFondsCard detail={detailFonds} />
             </div>
-            <DemandesDepotListe demandes={demandesDepot} />
-          </div>
+          </details>
         )}
 
-        {/* Mes demandes de versement */}
-        {demandes && demandes.length > 0 && (
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold">Mes demandes de versement</h2>
-              <Badge variant="outline">{demandes.length}</Badge>
-            </div>
-            <DemandesListe demandes={demandes} />
-          </div>
-        )}
-
-        {(mouvements && mouvements.length > 0) && (
-          <Card>
-            <CardContent className="pt-6 space-y-2">
-              <div className="text-sm font-medium mb-3">📊 Historique récent</div>
-              {(mouvements || []).map((m, idx) => (
+        {mouvements2025.length > 0 && (
+          <details className="rounded-lg border bg-card">
+            <summary className="cursor-pointer px-6 py-4 flex items-center justify-between">
+              <span className="text-sm font-medium">📊 Historique des tournées</span>
+              <span className="text-xs text-muted-foreground">{mouvements2025.length} tournée{mouvements2025.length > 1 ? 's' : ''}</span>
+            </summary>
+            <div className="px-6 pb-4 space-y-2">
+              {mouvements2025.map((m, idx) => (
                 <div key={idx} className="flex items-center justify-between p-2 bg-muted/30 rounded text-sm">
                   <div className="text-muted-foreground">
                     {formatDateLong(m.created_at as string)}
@@ -205,20 +200,41 @@ export default async function MonComptePage() {
                   </div>
                 </div>
               ))}
-            </CardContent>
-          </Card>
+            </div>
+          </details>
         )}
 
-        {/* Lien vers Paramètres */}
+        {/* Niveau 4 — Bas de page : config et historique administratif */}
+        {demandes && demandes.length > 0 && (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold">Mes demandes de versement</h2>
+              <Badge variant="outline">{demandes.length}</Badge>
+            </div>
+            <DemandesListe demandes={demandes} />
+          </div>
+        )}
+
+        {demandesDepot && demandesDepot.length > 0 && (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold">Mes demandes de dépôt</h2>
+              <Badge variant="outline">{demandesDepot.length}</Badge>
+            </div>
+            <DemandesDepotListe demandes={demandesDepot} />
+          </div>
+        )}
+
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-sm text-muted-foreground mb-1">Paramètres</div>
-                <div className="text-base">Gérer ma préférence de répartition</div>
+                <div className="text-sm text-muted-foreground mb-1">🎯 Ma préférence de répartition</div>
+                <div className="text-2xl font-bold">{(compte?.pourcentage_pot_equipe_defaut ?? recommandationEquipe)}%</div>
+                <div className="text-xs text-muted-foreground mt-1">Part au pot d&apos;équipe</div>
               </div>
               <Link href="/parametres">
-                <Button variant="secondary">Ouvrir</Button>
+                <Button variant="secondary" size="sm">Modifier</Button>
               </Link>
             </div>
           </CardContent>
