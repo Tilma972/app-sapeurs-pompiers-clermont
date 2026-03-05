@@ -22,12 +22,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover'
-import { Badge } from '@/components/ui/badge'
 import { Loader2, Upload, Info, X, FileText } from 'lucide-react'
 import { formatCurrency } from '@/lib/formatters'
 
@@ -60,6 +54,7 @@ export function DemandePotForm({
   const [justificatifUrl, setJustificatifUrl] = useState<string | null>(null)
   const [estProvisoire, setEstProvisoire] = useState(false)
   const [uploading, setUploading] = useState(false)
+  const [infoOuverte, setInfoOuverte] = useState(false)
 
   const montantNum = parseFloat(montant.replace(',', '.')) || 0
   const montantValide = montantNum > 0 && montantNum <= soldeDisponible
@@ -171,18 +166,23 @@ export function DemandePotForm({
               Pot d&apos;équipe · {equipeNom}
             </CardDescription>
           </div>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="ghost" size="sm" className="gap-1 text-muted-foreground shrink-0">
-                <Info className="h-4 w-4" />
-                <span className="sr-only sm:not-sr-only text-xs">Comment ça marche ?</span>
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-80 text-sm" align="end">
-              <p>{INFO_BADGE_TEXT}</p>
-            </PopoverContent>
-          </Popover>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="gap-1 text-muted-foreground shrink-0"
+            onClick={() => setInfoOuverte((v) => !v)}
+            aria-expanded={infoOuverte}
+          >
+            <Info className="h-4 w-4" />
+            <span className="sr-only sm:not-sr-only text-xs">Comment ça marche ?</span>
+          </Button>
         </div>
+        {infoOuverte && (
+          <div className="mt-3 rounded-lg border bg-muted/50 p-3 text-sm text-muted-foreground">
+            {INFO_BADGE_TEXT}
+          </div>
+        )}
       </CardHeader>
 
       <form onSubmit={handleSubmit}>

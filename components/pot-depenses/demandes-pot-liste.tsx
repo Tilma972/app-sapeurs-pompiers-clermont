@@ -16,11 +16,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover'
 import { Info, ExternalLink, ChevronDown, ChevronUp } from 'lucide-react'
 import { formatCurrency, formatDate } from '@/lib/formatters'
 import type { DemandePotEquipeAvecRelations, StatutDemandePot } from '@/lib/supabase/pot-depenses'
@@ -230,17 +225,25 @@ export function DemandesPotListe({ demandes, equipeNom }: DemandesPotListeProps)
 }
 
 function InfoPopover() {
+  const [open, setOpen] = useState(false)
   return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <Button variant="ghost" size="sm" className="gap-1 text-muted-foreground shrink-0">
-          <Info className="h-4 w-4" />
-          <span className="sr-only sm:not-sr-only text-xs">Fonctionnement</span>
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-80 text-sm" align="end">
-        <p>{INFO_BADGE_TEXT}</p>
-      </PopoverContent>
-    </Popover>
+    <div className="shrink-0">
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        className="gap-1 text-muted-foreground"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+      >
+        <Info className="h-4 w-4" />
+        <span className="sr-only sm:not-sr-only text-xs">Fonctionnement</span>
+      </Button>
+      {open && (
+        <div className="mt-2 rounded-lg border bg-muted/50 p-3 text-sm text-muted-foreground max-w-xs">
+          {INFO_BADGE_TEXT}
+        </div>
+      )}
+    </div>
   )
 }
