@@ -156,9 +156,13 @@ export async function getPotEquipeTournees(
       null
     );
 
-    const annee_campagne = maxDateDebut
-      ? new Date(maxDateDebut).getFullYear()
-      : new Date().getFullYear();
+    // Règle métier : campagne N couvre novembre N → janvier N+1
+    // Une tournée de janvier N+1 appartient à la campagne N
+    const annee_campagne = (() => {
+      if (!maxDateDebut) return new Date().getFullYear();
+      const d = new Date(maxDateDebut);
+      return d.getMonth() === 0 ? d.getFullYear() - 1 : d.getFullYear();
+    })();
 
     return {
       total_collecte,
