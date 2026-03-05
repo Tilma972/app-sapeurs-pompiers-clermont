@@ -199,9 +199,13 @@ export async function getEquipesPotSummary(annee: number): Promise<EquipePotSumm
             const tourneeData = tourneesParEquipe.get(equipe.id);
             const part_equipe_campagne = (tourneeData?.total ?? 0) * 0.30;
 
-            const annee_campagne = tourneeData?.maxDate
-                ? new Date(tourneeData.maxDate).getFullYear()
-                : annee;
+            // Règle métier : campagne N couvre novembre N → janvier N+1
+            // Une tournée de janvier N+1 appartient à la campagne N
+            const annee_campagne = (() => {
+                if (!tourneeData?.maxDate) return annee;
+                const d = new Date(tourneeData.maxDate);
+                return d.getMonth() === 0 ? d.getFullYear() - 1 : d.getFullYear();
+            })();
 
             const hist = histMap.get(equipe.id);
             const solde_anterieur = hist?.solde_anterieur ?? 0;
