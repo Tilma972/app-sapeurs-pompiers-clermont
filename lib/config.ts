@@ -225,7 +225,7 @@ export const ROLES_CONFIG = {
   /**
    * Rôles avec accès admin
    */
-  ADMIN_ROLES: ['admin', 'chef'] as const,
+  ADMIN_ROLES: ['admin', 'chef_equipe'] as const,
 
   /**
    * Rôles avec accès trésorerie
@@ -235,7 +235,7 @@ export const ROLES_CONFIG = {
   /**
    * Rôles pouvant gérer une équipe
    */
-  TEAM_MANAGER_ROLES: ['admin', 'chef'] as const,
+  TEAM_MANAGER_ROLES: ['admin', 'chef_equipe'] as const,
 } as const;
 
 // ============================

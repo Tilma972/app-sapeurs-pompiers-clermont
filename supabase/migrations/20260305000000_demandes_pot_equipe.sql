@@ -77,7 +77,7 @@ CREATE POLICY "chef_insert_pot_depenses" ON demandes_pot_equipe
     AND EXISTS (
       SELECT 1 FROM profiles
       WHERE profiles.id = auth.uid()
-        AND profiles.role = 'chef'
+        AND profiles.role = 'chef_equipe'
         AND profiles.team_id = equipe_id
     )
   );
@@ -89,7 +89,7 @@ CREATE POLICY "chef_select_own_equipe_pot_depenses" ON demandes_pot_equipe
     EXISTS (
       SELECT 1 FROM profiles
       WHERE profiles.id = auth.uid()
-        AND profiles.role = 'chef'
+        AND profiles.role = 'chef_equipe'
         AND profiles.team_id = equipe_id
     )
   );
@@ -103,7 +103,7 @@ CREATE POLICY "chef_update_own_soumise_pot_depenses" ON demandes_pot_equipe
     AND EXISTS (
       SELECT 1 FROM profiles
       WHERE profiles.id = auth.uid()
-        AND profiles.role = 'chef'
+        AND profiles.role = 'chef_equipe'
     )
   )
   WITH CHECK (
@@ -111,7 +111,7 @@ CREATE POLICY "chef_update_own_soumise_pot_depenses" ON demandes_pot_equipe
     AND EXISTS (
       SELECT 1 FROM profiles
       WHERE profiles.id = auth.uid()
-        AND profiles.role = 'chef'
+        AND profiles.role = 'chef_equipe'
     )
   );
 

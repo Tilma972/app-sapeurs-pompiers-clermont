@@ -32,7 +32,7 @@ CREATE POLICY "chef_update_own_soumise_pot_depenses" ON demandes_pot_equipe
     AND EXISTS (
       SELECT 1 FROM profiles
       WHERE profiles.id = auth.uid()
-        AND profiles.role = 'chef'
+        AND profiles.role = 'chef_equipe'
     )
   )
   WITH CHECK (
@@ -41,6 +41,6 @@ CREATE POLICY "chef_update_own_soumise_pot_depenses" ON demandes_pot_equipe
     AND EXISTS (
       SELECT 1 FROM profiles
       WHERE profiles.id = auth.uid()
-        AND profiles.role = 'chef'
+        AND profiles.role = 'chef_equipe'
     )
   );

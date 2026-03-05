@@ -75,7 +75,7 @@ export async function soumettreDemandeAction(input: {
       return { success: false, error: 'Réservé au chef d\'équipe' }
     }
 
-    if (profile.role !== 'chef') {
+    if (profile.role !== 'chef_equipe') {
       return { success: false, error: 'Réservé au chef d\'équipe' }
     }
 
