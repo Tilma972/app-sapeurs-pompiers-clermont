@@ -38,7 +38,13 @@ jobs:
             | sudo tee /etc/apt/sources.list.d/pgdg.list
           sudo apt-get update -qq
           sudo apt-get install -y postgresql-client-17
+          # Forcer pg_dump 17 en tête de PATH (update-alternatives garde v16 par défaut)
+          sudo update-alternatives --install /usr/bin/pg_dump pg_dump /usr/lib/postgresql/17/bin/pg_dump 170
+          sudo update-alternatives --install /usr/bin/psql    psql    /usr/lib/postgresql/17/bin/psql    170
+          sudo update-alternatives --set pg_dump /usr/lib/postgresql/17/bin/pg_dump
+          sudo update-alternatives --set psql    /usr/lib/postgresql/17/bin/psql
           pg_dump --version
+          psql --version
 
       - name: 🗄️ Backup PostgreSQL
         env:
