@@ -16,6 +16,9 @@ import { DemandesListe } from "@/components/compte/demandes-liste";
 import { getMontantNonDepose, getDemandesDepotUtilisateur, getDetailFondsUtilisateur } from "@/lib/supabase/depot-fonds";
 import { DemandesDepotListe } from "@/components/compte/demandes-depot-liste";
 import { DetailFondsCard } from "@/components/compte/detail-fonds-card";
+import { getDemandesPotByEquipe, getSoldeDisponiblePot, equipaADesDemandesPot } from "@/lib/supabase/pot-depenses";
+import { DemandesPotListe } from "@/components/pot-depenses/demandes-pot-liste";
+import { DemandePotForm } from "@/components/pot-depenses/demande-pot-form";
 
 export default async function MonComptePage() {
   const supabase = await createClient();
@@ -47,6 +50,24 @@ export default async function MonComptePage() {
 
   const totalDisponibleEquipe = (potEquipeTournees?.part_equipe ?? 0) + soldeAnterieur;
 
+  // Données pot d'équipe — dépenses
+  const [demandesPot, aDesDemandesPot, soldeDisponiblePot] = eqWithSettings?.id && totalDisponibleEquipe > 0
+    ? await Promise.all([
+        getDemandesPotByEquipe(supabase, eqWithSettings.id),
+        equipaADesDemandesPot(supabase, eqWithSettings.id),
+        getSoldeDisponiblePot(supabase, eqWithSettings.id, totalDisponibleEquipe),
+      ])
+    : [[], false, 0];
+
+  // Profil pour le rôle
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single();
+
+  const isChef = profile?.role === 'chef';
+
   // Historique filtré sur la campagne 2025 (tournées débutées entre nov 2024 et jan 2025)
   const mouvements2025 = (mouvements ?? []).filter((m) => {
     const d = new Date(m.created_at as string);
@@ -56,6 +77,9 @@ export default async function MonComptePage() {
   const afficherPotEquipe = eqWithSettings && potEquipeTournees && (
     potEquipeTournees.total_collecte > 0 || soldeAnterieur > 0
   );
+
+  // Afficher la section dépenses pot si l'équipe a un pot ET (des demandes existantes OU l'utilisateur est chef)
+  const afficherPotDepenses = afficherPotEquipe && eqWithSettings && (aDesDemandesPot || isChef);
 
   return (
     <PwaContainer>
@@ -222,6 +246,29 @@ export default async function MonComptePage() {
               <Badge variant="outline">{demandesDepot.length}</Badge>
             </div>
             <DemandesDepotListe demandes={demandesDepot} />
+          </div>
+        )}
+
+        {/* Section pot d'équipe — dépenses */}
+        {afficherPotDepenses && eqWithSettings && eqWithSettings.id && (
+          <div className="space-y-4">
+            <h2 className="text-lg font-semibold">Dépenses du pot d&apos;équipe</h2>
+
+            {isChef && (
+              <DemandePotForm
+                equipeId={eqWithSettings.id}
+                equipeNom={eqWithSettings.nom ?? 'Mon équipe'}
+                soldeDisponible={soldeDisponiblePot}
+                totalDisponible={totalDisponibleEquipe}
+              />
+            )}
+
+            {aDesDemandesPot && (
+              <DemandesPotListe
+                demandes={demandesPot}
+                equipeNom={eqWithSettings.nom ?? undefined}
+              />
+            )}
           </div>
         )}
 
