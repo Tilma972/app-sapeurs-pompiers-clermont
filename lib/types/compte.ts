@@ -70,6 +70,7 @@ export type EquipePotSummary = {
   part_equipe_campagne: number   // Calculé depuis les tournées complétées
   annee_campagne: number
   solde_anterieur: number        // Depuis pots_equipe_historique
+  notes: string | null           // Notes saisies par le trésorier
   total_disponible: number       // = part_equipe_campagne + solde_anterieur
   historique_id: string | null   // null si pas encore saisi
 }

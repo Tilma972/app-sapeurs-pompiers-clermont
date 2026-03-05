@@ -172,7 +172,7 @@ export async function getEquipesPotSummary(annee: number): Promise<EquipePotSumm
         // 3. Soldes antérieurs pour l'année donnée
         const { data: historiques, error: histError } = await supabase
             .from('pots_equipe_historique')
-            .select('id, equipe_id, solde_anterieur')
+            .select('id, equipe_id, solde_anterieur, notes')
             .in('equipe_id', equipeIds)
             .eq('annee', annee);
 
@@ -212,6 +212,7 @@ export async function getEquipesPotSummary(annee: number): Promise<EquipePotSumm
                 part_equipe_campagne,
                 annee_campagne,
                 solde_anterieur,
+                notes: hist?.notes ?? null,
                 total_disponible: part_equipe_campagne + solde_anterieur,
                 historique_id: hist?.id ?? null,
             };
