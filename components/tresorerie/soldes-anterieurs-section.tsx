@@ -64,8 +64,8 @@ export function SoldesAnterieursSection({ summaries, annee }: SoldesAnterieursPr
     if (!row) return
 
     const soldeNum = parseFloat(row.solde)
-    if (isNaN(soldeNum) || soldeNum < 0) {
-      toast.error('Montant invalide — doit être un nombre positif')
+    if (isNaN(soldeNum)) {
+      toast.error('Montant invalide — doit être un nombre')
       return
     }
 
